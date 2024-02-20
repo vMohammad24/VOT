@@ -1,0 +1,31 @@
+{
+  "name": "vot",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "pino-pretty": "latest"
+  },
+  "scripts": {
+    "dev": "bun --watch src/index.ts | pino-pretty",
+    "prod": "bun src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.16.1",
+    "@discordx/pagination": "^3.5.0",
+    "@fastify/cors": "latest",
+    "@prisma/client": "latest",
+    "axios": "latest",
+    "discord.js": "^14.14.1",
+    "fastify": "latest",
+    "kazagumo": "latest",
+    "kazagumo-spotify": "latest",
+    "pino": "latest",
+    "prisma": "latest",
+    "query-string": "latest",
+    "shoukaku": "latest"
+  }
+}
