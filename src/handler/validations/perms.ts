@@ -1,0 +1,17 @@
+import type { GuildMember } from "discord.js";
+import type ICommand from "../interfaces/ICommand";
+import type { CommandContext } from "../interfaces/ICommand";
+
+export default function (command: ICommand, ctx: CommandContext) {
+    if (!command.perms) return true;
+    const { perms } = command;
+    const { member } = ctx;
+    if (perms === "dev") {
+        if (!ctx.handler.developers.includes(member.id)) return 'This command is only available to the bot developers';
+        else return true;
+    }
+    for (const perm of perms) {
+        if (!member.permissions.has(perm)) return `You are missing the \`${perm}\` permission`;
+    }
+    return true;
+}
