@@ -9,7 +9,7 @@ export default {
             if (inter.commandName !== "play") return;
             const query = inter.options.getString("query");
             if (!query) return inter.respond([{ name: "Provide a query to continue", value: "" }])
-            const results = await kazagumo.search(query, { requester: inter.member as GuildMember, engine: 'spotify' });
+            const results = await kazagumo.search(query, { requester: inter.member as GuildMember, engine: 'youtube' });
             const options = results.tracks.map((track, index) => ({
                 name: track.title,
                 value: track.uri!,

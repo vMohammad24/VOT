@@ -154,7 +154,6 @@ export default async function GuildPage({
                   guild={guild}
                   token={token.value}
                   channels={channels}
-                  apiUrl={apiUrl}
                   categories={categories}
                   roles={roles}
                 />

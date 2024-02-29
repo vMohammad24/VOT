@@ -105,30 +105,44 @@ export default class CommandHandler {
             const result = await validation.default(command, commandContext);
             if (result !== true) return result;
         }
-        await this.prisma.command.create({
-            data: {
-                User: {
-                    connectOrCreate: {
-                        where: {
-                            id: commandContext.member.id
-                        },
-                        create: {
-                            id: commandContext.member.id,
-                            name: commandContext.member.user.username,
-                            avatar: commandContext.member.user.displayAvatarURL({ extension: 'png' }),
+        await this.prisma.user.upsert({
+            where: {
+                id: commandContext.member.id,
+            },
+            update: {
+                name: commandContext.member.user.username,
+                avatar: commandContext.member.displayAvatarURL({ extension: 'png' }),
+                commands: {
+                    create: {
+                        commandId: command.name!,
+                        commandInfo: {
+                            args: commandContext.args || null,
+                            guild: commandContext.guild.id,
+                            channel: commandContext.channel.id,
+                            message: commandContext.message?.id || null,
+                            interaction: commandContext.interaction?.id || null,
                         }
                     }
-                },
-                commandId: command.name!,
-                commandInfo: {
-                    args: commandContext.args || null,
-                    guild: commandContext.guild.id,
-                    channel: commandContext.channel.id,
-                    message: commandContext.message?.id || null,
-                    interaction: commandContext.interaction?.id || null,
                 }
-            }
-        })
+            },
+            create: {
+                id: commandContext.member.id,
+                name: commandContext.member.user.username,
+                avatar: commandContext.member.displayAvatarURL({ extension: 'png' }),
+                commands: {
+                    create: {
+                        commandId: command.name!,
+                        commandInfo: {
+                            args: commandContext.args || null,
+                            guild: commandContext.guild.id,
+                            channel: commandContext.channel.id,
+                            message: commandContext.message?.id || null,
+                            interaction: commandContext.interaction?.id || null,
+                        }
+                    }
+                }
+            },
+        });
         const result = await command.execute(commandContext);
         return result;
     }

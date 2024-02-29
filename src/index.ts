@@ -5,15 +5,17 @@ import { Connectors, type NodeOption } from "shoukaku";
 import CommandHandler from "./handler/index";
 import axios from "axios";
 import Spotify from 'kazagumo-spotify'
-import fastify from "./api";
+import server from "./api";
+const isProduction = process.env.NODE_ENV === "production";
 const nodes: NodeOption[] = [
     {
-        url: '127.0.0.1:2333',
+        url: `${process.env.LAVALINK_URL}:2333`,
         name: 'local',
         auth: process.env.LAVALINK_PASSWORD!,
         secure: false,
     }
 ]
+console.log("Produciton mode: " + isProduction)
 
 const client = new Client({
     intents: [IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates,
@@ -41,7 +43,7 @@ const commandHandler = new CommandHandler({
     client,
     prisma,
     kazagumo,
-    prodMode: process.env.NODE_ENV === "production",
+    prodMode: isProduction,
     testServers: ["925779955500060762"],
     developers: ['921098159348924457', '981269274616295564'],
     commandsDir: `${import.meta.dir}/commands`,
@@ -57,12 +59,7 @@ client.on("ready", async (c) => {
         console.error(error.response?.data);
         return Promise.reject(error);
     });
-    fastify.listen({ port: parseInt(process.env.SERVER_PORT || '8080') }, function (err, address) {
-        if (err) {
-            fastify.log.error(err)
-            process.exit(1)
-        }
-    })
+    server.listen({ port: parseInt(process.env.SERVER_PORT || '8080') })
 })
 
 
