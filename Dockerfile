@@ -1,13 +1,15 @@
-# use the official Bun image
-# see all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:latest as base
-WORKDIR /usr/src/vot
-COPY . .
+FROM oven/bun:debian
+WORKDIR /home/vot
 
-# [optional] tests & build
-ENV NODE_ENV=production
-# copy production dependencies and source code into final image
-FROM base AS release
-USER bun
-EXPOSE 3000
-ENTRYPOINT [ "bun", "run", "prod" ]
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+COPY package.json ./
+COPY bun.lockb ./
+COPY src ./src
+COPY prisma ./prisma
+COPY .env ./
+RUN bun install
+EXPOSE 8080
+CMD [ "bun", "start" ]

@@ -1,20 +1,20 @@
-import Fastify from 'fastify'
+import express from 'express'
 import commandHandler from '..';
 import { getRedirectURL } from '../util/urls';
 import queryString from 'query-string';
-import cors from '@fastify/cors'
+import cors from 'cors'
+import bodyParser from 'body-parser';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel } from 'discord.js';
 import type { PrismaClient } from '@prisma/client';
 import axios from 'axios';
-const fastify = Fastify({
-    logger: true
-})
+
+const server = express()
 
 
-await fastify.register(cors)
-
+server.use(express.json())
+server.use(cors())
 // Declare a route
-fastify.get('/', function (req, res) {
+server.get('/', function (req, res) {
     const ping = commandHandler.client.ws.ping;
     const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const totalGuilds = commandHandler.client.guilds.cache.size;
@@ -23,7 +23,7 @@ fastify.get('/', function (req, res) {
     res.send({ ping, uptime, totalMembers, totalGuilds, totalCommands })
 })
 
-fastify.get('/commands', (req, res) => {
+server.get('/commands', (req, res) => {
     res.send(commandHandler.commands?.map(cmd => {
         if (cmd.category?.includes("dev")) return;
         return {
@@ -34,7 +34,7 @@ fastify.get('/commands', (req, res) => {
     }));
 })
 
-fastify.get('/commands/:command', (req, res) => {
+server.get('/commands/:command', (req, res) => {
     const name = (req.params as any).command;
     const command = commandHandler.commands!.find(cmd => cmd.name === name);
     if (!command) return res.send({ error: 'Command not found' });
@@ -44,16 +44,20 @@ fastify.get('/commands/:command', (req, res) => {
 const discordClientId = process.env.DISCORD_CLIENT_ID!;
 const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
 
-export const updateGuilds = async (userId: string, prisma: PrismaClient) => {
-    if (!userId || !prisma) {
-        return;
+export const updateGuilds = async (userId: string, prisma: PrismaClient): Promise<any> => {
+    console.log(`Updating guilds for user ${userId}`)
+    if (!prisma) {
+        return { error: "Prisma not found" }
     };
+    if (!userId) {
+        return { error: "Invalid user id not found" }
+    }
     const user = await prisma.user.findFirst({ where: { id: userId }, include: { discord: true } });
     if (!user) {
-        return;
+        return { error: "Invalid user" };
     }
     if (!user.discord) {
-        return
+        return { error: "user discord not found" };
     };
 
     const { discord } = user;
@@ -69,7 +73,6 @@ export const updateGuilds = async (userId: string, prisma: PrismaClient) => {
         if (ref && (ref as any).error) {
             return ref;
         }
-        await updateGuilds(userId, commandHandler.prisma);
         return;
     }
     if (resGuilds.error_description) {
@@ -130,6 +133,7 @@ export const updateGuilds = async (userId: string, prisma: PrismaClient) => {
 }
 
 const refreshToken = async (refreshToken: string) => {
+    console.log(`Refreshing token`)
     const tokenResponseData = await axios.post('https://discord.com/api/oauth2/token', {
         client_id: discordClientId,
         client_secret: discordClientSecret,
@@ -178,35 +182,35 @@ const refreshToken = async (refreshToken: string) => {
 
 
 
-fastify.get('/discord/guilds', async (req, res) => {
+server.get('/discord/guilds', async (req, res) => {
     const token = req.headers.authorization;
-    if (!token) return res.code(401).send({ error: 'Unauthorized' });
+    if (!token) return res.status(401).send({ error: 'Unauthorized' });
     const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-    if (!user) return res.code(401).send({ error: 'Unauthorized' });
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
     const guilds = await updateGuilds(user.id, commandHandler.prisma);
-    if ((guilds as any).error) {
-        return res.code(401).send(guilds);
+    if (guilds && (guilds as any).error) {
+        return res.status(401).send(guilds);
     }
     return res.send({ success: true });
 })
 
 
-fastify.get('/discord/guilds/:guild', async (req, res) => {
+server.get('/discord/guilds/:guild', async (req, res) => {
     const token = req.headers.authorization;
-    if (!token) return res.code(401).send({ error: 'Unauthorized' });
+    if (!token) return res.status(401).send({ error: 'Unauthorized' });
     const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-    if (!user) return res.code(401).send({ error: 'Unauthorized' });
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
     const guild = await commandHandler.prisma.guild.findFirst(
         {
-            where: { id: (req.params as any).guild, admins: { some: { id: user.id }, } },
+            where: { id: req.params.guild, admins: { some: { id: user.id }, } },
             include: {
                 TicketSettings: true
             }
         }
     );
-    if (!guild) return res.code(401).send({ error: 'Unauthorized' });
+    if (!guild) return res.status(401).send({ error: 'Unauthorized' });
     const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-    if (!isBotInGuild) return res.code(401).send({ error: 'notInGuild' });
+    if (!isBotInGuild) return res.status(401).send({ error: 'notInGuild' });
     const g = await commandHandler.client.guilds.cache.get(guild.id)!;
     const channels = await g.channels.cache;
     const textChannels = channels.filter(channel => channel.type === ChannelType.GuildText);
@@ -217,21 +221,21 @@ fastify.get('/discord/guilds/:guild', async (req, res) => {
     return res.send({ ...guild, textChannels, voiceChannels, categoryChannels, roles, memberCount });
 })
 
-fastify.patch('/discord/guilds/:guild', async (req, res) => {
+server.patch('/discord/guilds/:guild', async (req, res) => {
     const token = req.headers.authorization;
-    if (!token) return res.code(401).send({ error: 'Unauthorized' });
+    if (!token) return res.status(401).send({ error: 'Unauthorized' });
     const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-    if (!user) return res.code(401).send({ error: 'Unauthorized' });
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
     const guild = await commandHandler.prisma.guild.findFirst(
         {
-            where: { id: (req.params as any).guild, admins: { some: { id: user.id }, } },
+            where: { id: req.params.guild, admins: { some: { id: user.id }, } },
         }
     );
-    if (!guild) return res.code(401).send({ error: 'Unauthorized' });
+    if (!guild) return res.status(401).send({ error: 'Unauthorized' });
     const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-    if (!isBotInGuild) return res.code(401).send({ error: 'notInGuild' });
-    const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, ticketEmbedTitle, ticketEmbedDesc, ticketChannelId, ticketRoleId, ticketCategoryId } = JSON.parse(req.body as any);
-    let mes = 'nothing to update';
+    if (!isBotInGuild) return res.status(401).send({ error: 'notInGuild' });
+    const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, ticketEmbedTitle, ticketEmbedDesc, ticketChannelId, ticketRoleId, ticketCategoryId } = req.body;
+    let mes = 'Updated';
     if (prefix) {
         await commandHandler.prisma.guild.update({
             where: {
@@ -241,13 +245,13 @@ fastify.patch('/discord/guilds/:guild', async (req, res) => {
                 prefix: prefix,
             }
         })
-        mes = 'Updated prefix';
+        mes += ' prefix';
     }
     if (loggingChannel != undefined) {
         const g = commandHandler.client.guilds.cache.get(guild.id)
-        if (!g) return res.code(400).send({ error: 'Invalid guild' });
+        if (!g) return res.status(400).send({ error: 'Invalid guild' });
         const channel = g.channels.cache.get(loggingChannel);
-        if (!channel) return res.code(400).send({ error: 'Invalid channel' });
+        if (!channel) return res.status(400).send({ error: 'Invalid channel' });
         await commandHandler.prisma.guild.update({
             where: {
                 id: guild.id,
@@ -256,11 +260,11 @@ fastify.patch('/discord/guilds/:guild', async (req, res) => {
                 loggingChannel: loggingChannel,
             }
         })
-        mes = 'Updated logging channel';
+        mes += ' logging channel';
     }
     if (welcomeChannel && welcomeEmbedDescription && welcomeEmbedTitle) {
         const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(welcomeChannel);
-        if (!channel) return res.code(400).send({ error: 'Invalid channel' });
+        if (!channel) return res.status(400).send({ error: 'Invalid channel' });
         await commandHandler.prisma.welcomeSettings.upsert({
             where: {
                 guildId: guild.id,
@@ -277,7 +281,7 @@ fastify.patch('/discord/guilds/:guild', async (req, res) => {
                 guildId: guild.id,
             }
         })
-        mes = 'Updated welcome channel';
+        mes += ' welcome channel';
     }
     if (ticketEmbedTitle && ticketEmbedDesc) {
         const recentChannelId = (await commandHandler.prisma.ticketSettings.findUnique({ where: { guildId: guild.id } }))?.channelId;
@@ -305,12 +309,12 @@ fastify.patch('/discord/guilds/:guild', async (req, res) => {
                 categoryId: ticketCategoryId,
             }
         })
-        mes = 'Updated ticket embed';
+        mes += ' ticket embed';
         if (ticketSettings.channelId) {
             const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(ticketSettings.channelId) as GuildTextBasedChannel;
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId('create_ticket').setLabel('Create Ticket').setEmoji('🎫').setStyle(ButtonStyle.Primary));
             if (ticketSettings.messageId) {
-                if (!channel) return res.code(400).send({ error: 'Invalid channel' });
+                if (!channel) return res.status(400).send({ error: 'Invalid channel' });
                 const message = (recentChannelId === ticketSettings.channelId ? await channel.messages.fetch(ticketSettings.messageId) : null);
                 if (message) {
                     await message.edit({
@@ -359,10 +363,11 @@ fastify.patch('/discord/guilds/:guild', async (req, res) => {
             }
         }
     }
+    if (mes.split(" ").length < 2) mes += " Nothing";
     return res.send({ success: true, message: mes });
 })
 
-fastify.get('/discord/callback', async (req, res) => {
+server.get('/discord/callback', async (req, res) => {
     const { code, refresh_token } = req.query as any;
     if (!code && !refresh_token) return res.redirect('https://discord.com/api/oauth2/authorize?' + queryString.stringify({
         client_id: discordClientId,
@@ -391,7 +396,7 @@ fastify.get('/discord/callback', async (req, res) => {
     });
     const tokenResponse = await tokenResponseData.data as any;
     if (tokenResponse.error === "invalid_grant") {
-        return res.code(403).send({
+        return res.status(403).send({
             success: false,
             message: "Invalid code"
         })
@@ -498,7 +503,7 @@ fastify.get('/discord/callback', async (req, res) => {
 
 const spotifyClientId = process.env.SPOTIFY_CLIENT_ID!;
 const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
-fastify.get('/spotify/callback', async (req, res) => {
+server.get('/spotify/callback', async (req, res) => {
     const { code } = req.query as any;
     const token = req.headers.authorization;
     const scopes = 'user-read-playback-state user-read-currently-playing user-modify-playback-state'
@@ -532,7 +537,7 @@ fastify.get('/spotify/callback', async (req, res) => {
         },
     }).then(res => res.data) as any;
     if (tokenRes.error) {
-        return res.code(401).send(tokenRes);
+        return res.status(401).send(tokenRes);
     }
     if (user.spotify) {
         await commandHandler.prisma.spotify.update({
@@ -566,4 +571,4 @@ fastify.get('/spotify/callback', async (req, res) => {
     });
 })
 
-export default fastify;
+export default server;

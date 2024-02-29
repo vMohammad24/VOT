@@ -43,7 +43,7 @@ export default async function Home() {
           </h1>
           <TypewriterEffectSmooth words={description} />
         </div>
-        {/* <div
+        <div
           id="cards"
           className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center w-fit max-w-7xl m-auto"
         >
@@ -56,7 +56,7 @@ export default async function Home() {
             title="Total Commands Ran"
             value={commandsRan.toString()}
           />
-        </div> */}
+        </div>
       </div>
     </main>
   );
