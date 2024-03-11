@@ -20,10 +20,10 @@ export default async function Commands() {
     <main className="bg-slate-900 min-h-screen text-white overflow-hidden pt-16">
       <div className="absolute left-1/2 -translate-x-1/2 min-w-full flex">
         <div
-          className="grid content-center justify-items-center gap-x-2 gap-y-2"
+          className="flexbox content-center justify-items-center gap-x-2 gap-y-2"
           id="commands"
         >
-          {commands.map((command) => {
+          {commands.filter((e) => e != null).map((command) => {
             return (
               <Card key={command.name} className="w-80">
                 <CardHeader>

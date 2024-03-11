@@ -1,0 +1,33 @@
+services:
+  database:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=iamlikewaytoooolazy
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=vot
+    networks:
+      - vot
+    ports:
+      - "5432:5432"
+    expose:
+      - 2333
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx6G
+    volumes:
+      - ./application.yml:/opt/Lavalink/application.yml
+      - ./plugins/:/opt/Lavalink/plugins/
+    networks:
+      - vot
+    expose:
+      - 2333
+    ports:
+      - "2333:2333"
+
+networks:
+  vot:
+    name: vot

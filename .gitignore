@@ -100,12 +100,11 @@ web_modules/
 
 # dotenv environment variable files
 
-.env
+
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
-docker-compose.yml
 # parcel-bundler cache (https://parceljs.org/)
 
 .parcel-cache
