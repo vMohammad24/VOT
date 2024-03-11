@@ -31,7 +31,7 @@ server.get('/commands', (req, res) => {
             description: cmd.description,
             category: cmd.category,
         }
-    }));
+    }).filter((e) => e != null));
 })
 
 server.get('/commands/:command', (req, res) => {
