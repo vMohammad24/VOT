@@ -28,6 +28,7 @@ export default function PrefixInputBox({
             method: "PATCH",
             headers: {
               Authorization: token,
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ prefix: value }),
           }).then((res) => res.json());

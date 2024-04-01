@@ -15,26 +15,24 @@ export default async function Commands() {
     .then((data) => {
       commands = data;
     });
-  console.log(commands);
   return (
     <main className="bg-slate-900 min-h-screen text-white overflow-hidden pt-16">
       <div className="absolute left-1/2 -translate-x-1/2 min-w-full flex">
-        <div
-          className="flexbox content-center justify-items-center gap-x-2 gap-y-2"
-          id="commands"
-        >
-          {commands.filter((e) => e != null).map((command) => {
-            return (
-              <Card key={command.name} className="w-80">
-                <CardHeader>
-                  <CardTitle>{command.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{command.description}</CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="grid grid-flow-row-dense grid-cols-5 justify-stretch gap-5 p-10">
+          {commands
+            .filter((e) => e != null)
+            .map((command) => {
+              return (
+                <Card key={command.name}>
+                  <CardHeader>
+                    <CardTitle>{command.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{command.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       </div>
     </main>

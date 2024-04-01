@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["cdn.discordapp.com", "res.cloudinary.com"],
+    remotePatterns: [{ hostname: "*.discordapp.com" }],
   },
 };
 

@@ -1,9 +1,12 @@
+import type { APIApplicationCommandInteraction, CommandInteraction, GuildTextBasedChannel } from "discord.js";
 import type { IListener } from "../handler/listenres";
+import { getRows, sendPanel } from "../util/music";
 
 export default {
-    name: "music",
+    name: "Lavalink Handler",
     description: "Music related events",
-    execute: async ({ client, kazagumo, prisma, logger }) => {
+    execute: async (handler) => {
+        const { client, kazagumo, logger, executeCommand, commands } = handler;
         kazagumo.shoukaku.on('ready', (name) => logger.info(`Lavalink ${name}: Ready!`));
         kazagumo.shoukaku.on('error', (name, error) => console.error(`Lavalink ${name}: Error Caught,`, error));
         kazagumo.shoukaku.on('close', (name, code, reason) => logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`));
@@ -23,5 +26,76 @@ export default {
                     }
             }
         })
+
+        kazagumo.on('playerStart', (player, track) => {
+            const member = player.queue.current?.requester;
+            if (!member) return;
+            const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
+            if (!channel) return;
+            // check if the player was resumed or started
+            sendPanel(kazagumo, channel.guild);
+        })
+
+        client.on('interactionCreate', async (inter) => {
+            if (inter.isButton()) {
+                const player = kazagumo.getPlayer(inter.guildId!);
+                if (!player) {
+                    inter.reply({ content: "No player found", ephemeral: true });
+                    return;
+                };
+                if (inter.customId === "pause") {
+                    player.pause(true);
+                    inter.update({
+                        components: getRows("Resume")
+                    })
+                } else if (inter.customId === "resume") {
+                    player.pause(false)
+                    inter.update({
+                        components: getRows("Pause")
+                    })
+                    // inter.message.delete();
+                } else if (inter.customId === "skip") {
+                    player.skip();
+                    inter.message?.delete();
+                } else if (inter.customId === "queue") {
+                    executeCommand.call(handler, commands?.find(cmd => cmd.name === "queue")!, inter)
+                } else if (inter.customId === "stop") {
+                    player.destroy();
+                    inter.message?.delete();
+                } else if (inter.customId === "loop") {
+                    player.setLoop(player.loop === "queue" ? "none" : "queue");
+                    inter.update({
+                        components: getRows(player.playing ? "Pause" : "Resume", player.loop === "queue")
+                    })
+                } else if (inter.customId === "shuffle") {
+                    player.queue.shuffle();
+                    inter.update({
+                        content: "Queue shuffled by " + inter.user.username
+                    })
+                } else if (inter.customId === "volume") {
+                    const volume = player.volume * 100;
+                    inter.reply({ content: `Current volume is ${volume}. Please enter a new volume level from 1-100`, ephemeral: true });
+                    const collector = (inter.channel as GuildTextBasedChannel).createMessageCollector({ time: 15000, filter: m => m.author.id === inter.user.id });
+                    collector.on('collect', async m => {
+                        m.delete();
+                        const newVolume = parseInt(m.content);
+                        if (isNaN(newVolume) || newVolume < 1 || newVolume > 100) {
+                            inter.followUp({ content: "Invalid volume level, please enter a number from 1-100", ephemeral: true });
+                            return;
+                        }
+                        player.setVolume(newVolume);
+                        inter.followUp({ content: `Volume set to ${newVolume}`, ephemeral: true });
+                        inter.update({
+                            content: `Volume set to ${newVolume} by ${inter.user.username}`
+                        })
+                        collector.stop();
+                    });
+                    collector.on('end', (collected, reason) => {
+                        if (reason === "time" && !collected) inter.followUp({ content: "Volume selection timed out", ephemeral: true });
+                    });
+                }
+            }
+        })
+
     }
 } as IListener

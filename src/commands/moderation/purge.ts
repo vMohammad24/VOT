@@ -18,9 +18,9 @@ export default {
                 ephemeral: true
             }
         }
-        (channel as GuildTextBasedChannel).bulkDelete(amount);
+        const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(amount);
         return {
-            content: `Purged ${amount} messages`,
+            content: `Purged ${deletedMessages.size} messages`,
             ephemeral: true
         }
     },

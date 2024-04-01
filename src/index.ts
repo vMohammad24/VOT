@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Client, IntentsBitField } from "discord.js";
 import { Kazagumo, Plugins } from "kazagumo";
 import { Connectors, type NodeOption } from "shoukaku";
@@ -6,6 +7,10 @@ import CommandHandler from "./handler/index";
 import axios from "axios";
 import Spotify from 'kazagumo-spotify'
 import server from "./api";
+import { scheduleJob, scheduledJobs } from "node-schedule";
+import { endGiveaway } from "./util/giveaways";
+import Redis from "ioredis";
+import { createPrismaRedisCache } from "prisma-redis-middleware";
 const isProduction = process.env.NODE_ENV === "production";
 const nodes: NodeOption[] = [
     {
@@ -15,8 +20,6 @@ const nodes: NodeOption[] = [
         secure: false,
     }
 ]
-console.log("Produciton mode: " + isProduction)
-
 const client = new Client({
     intents: [IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates,
     IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildModeration]
@@ -39,6 +42,17 @@ const kazagumo = new Kazagumo({
 
 
 const prisma = new PrismaClient();
+const redis = new Redis()
+const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
+    models: [
+        { model: "User", excludeMethods: ["findMany"] },
+    ],
+    storage: { type: "redis", options: { client: redis, invalidation: { referencesTTL: 300 } } },
+    cacheTime: 300,
+    excludeModels: ["TicketSettings", "Ticket", "Discord", "Spotify", "WelcomeSettings"],
+});
+
+prisma.$use(cacheMiddleware);
 const commandHandler = new CommandHandler({
     client,
     prisma,
@@ -50,7 +64,21 @@ const commandHandler = new CommandHandler({
     globalPrefix: ";",
     listenersDir: `${import.meta.dir}/listeners`,
 })
+commandHandler.logger.info(`Starting in ${isProduction ? "production" : "development"} mode`)
 client.on("ready", async (c) => {
+    const giveaways = await prisma.giveaway.findMany();
+    for (const giveaway of giveaways) {
+        if (!giveaway.ended) {
+            if (giveaway.end < new Date()) {
+                endGiveaway(commandHandler, giveaway.id);
+                continue;
+            }
+            if (scheduledJobs[giveaway.id]) return;
+            scheduleJob(giveaway.id, giveaway.end, async () => {
+                endGiveaway(commandHandler, giveaway.id);
+            });
+        }
+    }
     commandHandler.logger.info(`Logged in as ${c.user.displayName}`)
     axios.defaults.headers.common["Accept-Encoding"] = "gzip";
     axios.interceptors.response.use(function (response) {

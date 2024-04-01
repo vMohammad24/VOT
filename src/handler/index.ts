@@ -3,7 +3,7 @@ import type LegacyHandler from "./interfaces/LegacyHandler";
 import SlashCommandHandler from "./slash";
 import type ICommand from "./interfaces/ICommand";
 import type { CommandContext } from "./interfaces/ICommand";
-import { CommandInteraction, GuildMember, MessagePayload, type Message, ChatInputCommandInteraction } from "discord.js";
+import { GuildMember, type Message, ChatInputCommandInteraction, type Interaction } from "discord.js";
 import LegacyCommandHandler from "./legacy";
 import ListenerHandler from "./listenres";
 import { Glob } from "bun";
@@ -46,6 +46,7 @@ export default class CommandHandler {
                     name: commandName,
                     category: categoryName
                 });
+                if (modifiedData.disabled) continue;
                 handler.commands.push(modifiedData);
                 if (modifiedData.init) await modifiedData.init(this);
                 this.logger.info(`Initilaized command ${modifiedData.name} in ${modifiedData.category}`)
@@ -61,12 +62,14 @@ export default class CommandHandler {
     }
 
 
-    public async executeCommand(command: ICommand, ctx: CommandInteraction | Message) {
+    public async executeCommand(command: ICommand, ctx: Interaction | Message) {
         let commandContext: CommandContext;
         const getPlayer = (member: GuildMember) => {
-            const player = this.kazagumo.getPlayer(member.guild.id) || null;
+            if (!member) return;
+            if (!member.guild) return;
+            const player = this.kazagumo.getPlayer(member.guild.id);
             if (!member.voice.channelId) return null;
-            if (player && player.voiceId !== member.voice.channelId) return null;
+            if (player && player.voiceId !== member.voice.channelId) return;
             if (!player && command.needsPlayer) return this.kazagumo.createPlayer({
                 guildId: member.guild.id,
                 voiceId: member.voice.channelId,
@@ -78,25 +81,27 @@ export default class CommandHandler {
             const interaction = ctx as ChatInputCommandInteraction;
             commandContext = {
                 interaction,
+                user: interaction.user,
                 channel: interaction.channel!,
                 guild: interaction.guild!,
                 handler: this,
                 member: interaction.member! as GuildMember,
                 args: [],
                 message: null,
-                player: await getPlayer(interaction.member as GuildMember)
+                player: await getPlayer(interaction.member as GuildMember) || undefined
             }
         } else {
             const message = ctx as Message;
             commandContext = {
                 interaction: null,
+                user: message.author,
                 channel: message.channel,
                 guild: message.guild!,
                 handler: this,
                 member: message.member!,
                 args: message.content.split(" ").slice(1),
                 message,
-                player: await getPlayer(message.member as GuildMember)
+                player: await getPlayer(message.member as GuildMember) || undefined
             }
         }
         const validationDir = path.join(import.meta.dir, "validations");
@@ -107,17 +112,17 @@ export default class CommandHandler {
         }
         await this.prisma.user.upsert({
             where: {
-                id: commandContext.member.id,
+                id: commandContext.user.id,
             },
             update: {
-                name: commandContext.member.user.username,
-                avatar: commandContext.member.displayAvatarURL({ extension: 'png' }),
+                name: commandContext.user.username,
+                avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
                 commands: {
                     create: {
                         commandId: command.name!,
                         commandInfo: {
                             args: commandContext.args || null,
-                            guild: commandContext.guild.id,
+                            guild: commandContext.guild && commandContext.guild.id || null,
                             channel: commandContext.channel.id,
                             message: commandContext.message?.id || null,
                             interaction: commandContext.interaction?.id || null,
@@ -126,9 +131,9 @@ export default class CommandHandler {
                 }
             },
             create: {
-                id: commandContext.member.id,
-                name: commandContext.member.user.username,
-                avatar: commandContext.member.displayAvatarURL({ extension: 'png' }),
+                id: commandContext.user.id,
+                name: commandContext.user.username,
+                avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
                 commands: {
                     create: {
                         commandId: command.name!,

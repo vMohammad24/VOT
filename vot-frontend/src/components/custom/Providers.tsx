@@ -4,11 +4,14 @@
 
 import { ThemeProvider } from "next-themes";
 import React, { ReactNode } from "react";
+import { TooltipProvider } from "../ui/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark">
-      {children}
-    </ThemeProvider>
+    <TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="dark">
+        {children}
+      </ThemeProvider>
+    </TooltipProvider>
   );
 }

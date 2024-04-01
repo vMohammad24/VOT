@@ -14,7 +14,7 @@ const getLogChannel = async (prisma: PrismaClient, guild: Guild) => {
 
 export default {
     description: "Listens for logs",
-    name: "logs",
+    name: "Logs Handler",
     execute: ({ client, prisma, kazagumo }) => {
         client.on("messageDelete", async (message) => {
             const logChannel = await getLogChannel(prisma, message.guild!);

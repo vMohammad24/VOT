@@ -5,32 +5,6 @@ import { Pagination, PaginationType, type PaginationItem } from "@discordx/pagin
 export default {
     description: "Displays all commands",
     cooldown: 5000,
-    init: async ({ client, commands }) => {
-        client.on('interactionCreate', async (inter) => {
-            if (!inter.isButton()) return;
-            if (inter.customId.startsWith('select-')) {
-                const category = inter.customId.split('-')[1];
-                const cmds = commands!.filter(cmd => cmd.category === category);
-                const embeds = cmds.map(cmd => {
-                    return {
-                        embeds: [
-                            new EmbedBuilder()
-                                .setTitle(cmd.name!)
-                                .setDescription(cmd.description)
-                                .setColor("Green")
-                                .setTimestamp()
-                        ]
-                    }
-                })
-                const pag = await new Pagination(inter, embeds, {
-                    type: PaginationType.SelectMenu,
-                    pageText: cmds.map(cmd => cmd.name!),
-                    showStartEnd: false,
-                    initialPage: 0,
-                }).send();
-            }
-        })
-    },
     execute: async ({ message, interaction, handler, channel }) => {
         const categories = handler.commands!.map(cmd => cmd.category).filter((value, index, self) => self.indexOf(value) === index);
         const embeds: PaginationItem[] = categories.map(category => {

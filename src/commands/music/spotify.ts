@@ -1,13 +1,20 @@
 import { EmbedBuilder, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { getCurrentlyPlaying, pausePlayer } from "../../util/spotify";
+import { sendPanel } from "../../util/music";
 
 export default {
     description: "Gets your current playing song from spotify and adds it to the queue",
     needsPlayer: true,
-    execute: async ({ member, handler, player, interaction }) => {
+    execute: async ({ member, handler, player, interaction, guild }) => {
         interaction?.deferReply({ ephemeral: true });
         const res = await getCurrentlyPlaying(member.id, handler.prisma)
+        if (res.error) {
+            return {
+                content: res.error
+            }
+        }
+        if (!player) return;
         const trackURI = res.item.external_urls.spotify;
         if (!trackURI) return {
             content: "No track playing",
@@ -21,11 +28,15 @@ export default {
             content: "No track found",
             ephemeral: true
         };
-        player!.queue.add(track)
-        if (!player!.playing) await player!.play();
+        if (player.queue.current) {
+            player.queue.add(track);
+            if (!player.playing) player.play();
+        } else {
+            player.play(track);
+        }
         const a = await pausePlayer(member.id, handler.prisma);
-        if (player?.queue.current?.identifier === track.identifier) {
-            player!.seek(parseInt(res.progress_ms))
+        if (player.queue.current?.identifier === track.identifier) {
+            player.seek(parseInt(res.progress_ms))
         }
         const embed = new EmbedBuilder()
             .setTitle("Added to queue")
