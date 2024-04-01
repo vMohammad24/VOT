@@ -1,6 +1,7 @@
 services:
-  database:
+  postgres:
     image: postgres
+    container_name: postgres
     restart: always
     environment:
       - POSTGRES_PASSWORD=iamlikewaytoooolazy
@@ -12,8 +13,10 @@ services:
       - "5432:5432"
     expose:
       - 2333
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4
+    image: ghcr.io/lavalink-devs/lavalink
     container_name: lavalink
     restart: unless-stopped
     environment:
@@ -27,7 +30,18 @@ services:
       - 2333
     ports:
       - "2333:2333"
-
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - vot
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./db/cache:/data
 networks:
   vot:
     name: vot

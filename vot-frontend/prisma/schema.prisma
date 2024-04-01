@@ -7,39 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model GAItem {
-  id         String   @id @default(uuid())
-  name       String
-  value      String?
-  giveaway   Giveaway @relation(fields: [giveawayId], references: [id])
-  giveawayId String
-}
-
 model Giveaway {
   id          String   @id @default(uuid())
-  name        String
-  description String
+  title       String
+  description String?
+  hoster      User     @relation(fields: [hosterId], references: [id], "giveawayHoster")
   createdAt   DateTime @default(now())
   end         DateTime
-  winners     String[]
+  winners     User[]   @relation("giveawayWinners")
+  entrants    User[]   @relation("giveawayEntrants")
+  channelId   String
+  messageId   String?
   winnerCount Int
-  items       GAItem[]
   guild       Guild    @relation(fields: [guildId], references: [id])
   guildId     String
+  hosterId    String
+  ended       Boolean  @default(false)
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String?    @unique
-  email     String?    @unique
-  token     String     @unique @default(cuid())
-  avatar    String
-  playlists Playlist[]
-  commands  Command[]
-  tickets   Ticket[]
-  guilds    Guild[]
-  spotify   Spotify?
-  discord   Discord?
+  id               String     @id @default(uuid())
+  name             String?    @unique
+  email            String?    @unique
+  token            String     @unique @default(cuid())
+  tier             Int        @default(0)
+  avatar           String
+  playlists        Playlist[]
+  commands         Command[]
+  tickets          Ticket[]
+  guilds           Guild[]
+  spotify          Spotify?
+  discord          Discord?
+  giveawaysHosted  Giveaway[] @relation("giveawayHoster")
+  enteredGiveaways Giveaway[] @relation("giveawayEntrants")
+  giveawaysWon     Giveaway[] @relation("giveawayWinners")
+  guildMembers     Member[]
+}
+
+model Member {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  guild         Guild     @relation(fields: [guildId], references: [id])
+  guildId       String
+  exp           Int       @default(0)
+  level         Int       @default(0)
+  messagesToday Int       @default(0)
+  lastMessage   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([userId, guildId])
 }
 
 model Discord {
@@ -94,6 +112,7 @@ model Guild {
   name            String
   prefix          String           @default(";")
   icon            String?
+  tier            Int              @default(0)
   playlists       Playlist[]
   admins          User[]
   tickets         Ticket[]
@@ -101,6 +120,7 @@ model Guild {
   loggingChannel  String?
   TicketSettings  TicketSettings?
   WelcomeSettings WelcomeSettings?
+  members         Member[]
 }
 
 model Ticket {

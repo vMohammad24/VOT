@@ -44,29 +44,30 @@ export default function LoggingComboBox({
     setValue(currentValue === value ? "" : currentValue);
     setOpen(false);
     if (currentValue === "") return;
-    // const res = await fetch(`${apiUrl}discord/guilds/${guildId}`, {
-    //   method: "PATCH",
-    //   body: JSON.stringify({
-    //     loggingChannel: currentValue,
-    //   }),
-    //   headers: {
-    //     authorization: token,
-    //   },
-    // }).then((res) => res.json());
-    // if (res.error) {
-    //   toast({
-    //     title: "Error",
-    //     description: res.error,
-    //     color: "red",
-    //     variant: "destructive",
-    //   });
-    // } else {
-    //   toast({
-    //     title: "Success",
-    //     description: res.message,
-    //     color: "green",
-    //   });
-    // }
+    const res = await fetch(`${apiUrl}discord/guilds/${guildId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        loggingChannel: currentValue,
+      }),
+      headers: {
+        authorization: token,
+        "Content-Type": "application/json",
+      },
+    }).then((res) => res.json());
+    if (res.error) {
+      toast({
+        title: "Error",
+        description: res.error,
+        color: "red",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: res.message,
+        color: "green",
+      });
+    }
   };
   return (
     <Popover open={open} onOpenChange={setOpen}>

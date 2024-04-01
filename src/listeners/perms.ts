@@ -2,11 +2,11 @@ import { updateGuilds } from "../api";
 import type { IListener } from "../handler/listenres";
 
 export default {
-    name: "perms",
+    name: "Permission updater",
     description: "Listens for permission changes for the dashboard",
     execute: ({ client, prisma }) => {
         client.on("guildMemberUpdate", async (oldUser, user) => {
-            updateGuilds(user.id)
+            updateGuilds(user.id, prisma)
         })
     }
 } as IListener

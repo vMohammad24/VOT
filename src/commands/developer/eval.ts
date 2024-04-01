@@ -1,3 +1,4 @@
+
 import { ApplicationCommandOptionType, Colors, EmbedBuilder, ModalBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
@@ -6,6 +7,7 @@ export default {
     description: "Allows the developer to evaluate code",
     aliases: ['e'],
     perms: "dev",
+    userInstall: true,
     options: [
         {
             name: "code",

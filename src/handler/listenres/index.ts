@@ -17,6 +17,7 @@ export default class ListenerHandler {
         for await (const file of this.glob.scan({ absolute: false, cwd: listenersDir })) {
             const listener = await import(join(listenersDir, file));
             this.listeners.push(listener.default as IListener);
+            listener.default.execute(this.handler)
             this.handler.logger.info(`Initialized listener ${listener.default.name}`)
         }
     }

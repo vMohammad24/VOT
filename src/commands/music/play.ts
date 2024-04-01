@@ -1,23 +1,25 @@
-import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { getRows, sendPanel } from "../../util/music";
 
 export default {
     description: "Adds a song to the queue",
     init: async ({ client, kazagumo }) => {
         client.on("interactionCreate", async (inter) => {
-            if (!inter.isAutocomplete()) return;
-            if (inter.commandName !== "play") return;
-            const query = inter.options.getString("query");
-            if (!query) return inter.respond([{ name: "Provide a query to continue", value: "" }])
-            const results = await kazagumo.search(query, { requester: inter.member as GuildMember, engine: 'youtube' });
-            const options = results.tracks.map((track, index) => ({
-                name: track.title,
-                value: track.uri!,
-            }))
-            try {
-                inter.respond(options.slice(0, 25))
-            } catch (error) {
-                inter.respond([{ name: "An error has occured", value: "" }])
+            if (inter.isAutocomplete()) {
+                if (inter.commandName !== "play") return;
+                const query = inter.options.getString("query");
+                if (!query) return inter.respond([{ name: "Provide a query to continue", value: "" }])
+                const results = await kazagumo.search(query, { requester: inter.member as GuildMember });
+                const options = results.tracks.map((track, index) => ({
+                    name: track.title,
+                    value: track.uri!,
+                }))
+                try {
+                    inter.respond(options)
+                } catch (error) {
+                    inter.respond([{ name: "An error has occured", value: "" }])
+                }
             }
         })
     },
@@ -75,8 +77,10 @@ export default {
         });;
         embed.setDescription(`${embed.data.description}\n\nGo to <#${member.voice.channelId}> to manage the queue`);
         if (!player.playing) player.play();
+        // sendPanel(kazagumo, guild);
         return {
-            embeds: [embed]
+            embeds: [embed],
+            ephemeral: true
         }
     }
 } as ICommand

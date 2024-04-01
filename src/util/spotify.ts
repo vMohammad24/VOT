@@ -6,9 +6,10 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
             userId
         }
     });
-    if (!spotify || !spotify.expiresAt) return;
+    if (!spotify || !spotify.expiresAt) return { error: "Spotify account not linked." };
     if (spotify.expiresAt < new Date("UTC")) {
         await refreshToken(spotify, prisma);
+        await setTimeout(() => { }, 500)
         return await getCurrentlyPlaying(userId, prisma);
     }
     const res = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
@@ -18,10 +19,16 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
     }).catch(async e => {
         if (e.response.status == 401) {
             await refreshToken(spotify, prisma);
+            await setTimeout(() => { }, 500)
             return await getCurrentlyPlaying(userId, prisma);
         }
     }).then(res => res.data) as any;
-
+    console.log(res)
+    if (res && res.error && res.error.status && res.error.status == 401) {
+        await refreshToken(spotify, prisma);
+        await setTimeout(() => { }, 500)
+        return await getCurrentlyPlaying(userId, prisma);
+    }
     return res;
 }
 

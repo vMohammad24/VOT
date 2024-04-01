@@ -4,7 +4,7 @@ import { getRedirectURL } from '../util/urls';
 import queryString from 'query-string';
 import cors from 'cors'
 import bodyParser from 'body-parser';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel, type TextBasedChannel } from 'discord.js';
 import type { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 
@@ -13,6 +13,9 @@ const server = express()
 
 server.use(express.json())
 server.use(cors())
+server.use(bodyParser.urlencoded({
+    extended: true
+}));
 // Declare a route
 server.get('/', function (req, res) {
     const ping = commandHandler.client.ws.ping;
@@ -45,7 +48,7 @@ const discordClientId = process.env.DISCORD_CLIENT_ID!;
 const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
 
 export const updateGuilds = async (userId: string, prisma: PrismaClient): Promise<any> => {
-    console.log(`Updating guilds for user ${userId}`)
+    // console.log(`Updating guilds for user ${userId}`)
     if (!prisma) {
         return { error: "Prisma not found" }
     };
@@ -133,7 +136,7 @@ export const updateGuilds = async (userId: string, prisma: PrismaClient): Promis
 }
 
 const refreshToken = async (refreshToken: string) => {
-    console.log(`Refreshing token`)
+    // console.log(`Refreshing token`)
     const tokenResponseData = await axios.post('https://discord.com/api/oauth2/token', {
         client_id: discordClientId,
         client_secret: discordClientSecret,
@@ -173,7 +176,8 @@ const refreshToken = async (refreshToken: string) => {
                         token: tokenResponse.access_token,
                         refreshToken: tokenResponse.refresh_token,
                     }
-                }
+                },
+                avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
             }
         })
     }
@@ -234,7 +238,8 @@ server.patch('/discord/guilds/:guild', async (req, res) => {
     if (!guild) return res.status(401).send({ error: 'Unauthorized' });
     const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
     if (!isBotInGuild) return res.status(401).send({ error: 'notInGuild' });
-    const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, ticketEmbedTitle, ticketEmbedDesc, ticketChannelId, ticketRoleId, ticketCategoryId } = req.body;
+    // console.log("body: " + JSON.stringify(req.body))
+    const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, oldChannel, oldMessage, shouldUpdateTickets } = req.body;
     let mes = 'Updated';
     if (prefix) {
         await commandHandler.prisma.guild.update({
@@ -283,84 +288,29 @@ server.patch('/discord/guilds/:guild', async (req, res) => {
         })
         mes += ' welcome channel';
     }
-    if (ticketEmbedTitle && ticketEmbedDesc) {
-        const recentChannelId = (await commandHandler.prisma.ticketSettings.findUnique({ where: { guildId: guild.id } }))?.channelId;
-        const ticketSettings = await commandHandler.prisma.ticketSettings.upsert({
-            where: {
-                guildId: guild.id,
-            },
-            update: {
-                embedTitle: ticketEmbedTitle,
-                embedDesc: ticketEmbedDesc,
-                channelId: ticketChannelId,
-                roleId: ticketRoleId,
-                categoryId: ticketCategoryId,
-            },
-            create: {
-                embedTitle: ticketEmbedTitle,
-                embedDesc: ticketEmbedDesc,
-                channelId: ticketChannelId,
-                guild: {
-                    connect: {
-                        id: guild.id
-                    }
-                },
-                roleId: ticketRoleId,
-                categoryId: ticketCategoryId,
-            }
-        })
+    if (shouldUpdateTickets) {
+        const ticketSettings = await commandHandler.prisma.ticketSettings.findFirst({ where: { guildId: guild.id } });
+        if (!ticketSettings || !ticketSettings.embedTitle || !ticketSettings.embedDesc) return;
         mes += ' ticket embed';
         if (ticketSettings.channelId) {
             const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(ticketSettings.channelId) as GuildTextBasedChannel;
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId('create_ticket').setLabel('Create Ticket').setEmoji('🎫').setStyle(ButtonStyle.Primary));
-            if (ticketSettings.messageId) {
-                if (!channel) return res.status(400).send({ error: 'Invalid channel' });
-                const message = (recentChannelId === ticketSettings.channelId ? await channel.messages.fetch(ticketSettings.messageId) : null);
-                if (message) {
-                    await message.edit({
-                        embeds: [{
-                            title: ticketEmbedTitle,
-                            description: ticketEmbedDesc,
-                            color: 0x00ff00,
-                        }],
-                        components: [row]
-                    })
-                } else {
-                    const message = await channel.send({
-                        embeds: [{
-                            title: ticketEmbedTitle,
-                            description: ticketEmbedDesc,
-                            color: 0x00ff00,
-                        }],
-                        components: [row]
-                    })
-                    await commandHandler.prisma.ticketSettings.update({
-                        where: {
-                            id: ticketSettings.id
-                        },
-                        data: {
-                            messageId: message.id
-                        }
-                    })
+            const message = await channel.send({
+                embeds: [{
+                    title: ticketSettings.embedTitle,
+                    description: ticketSettings.embedDesc,
+                    color: 0x00ff00,
+                }],
+                components: [row]
+            })
+            await commandHandler.prisma.ticketSettings.update({
+                where: {
+                    id: ticketSettings.id
+                },
+                data: {
+                    messageId: message.id
                 }
-            } else {
-                const message = await channel.send({
-                    embeds: [{
-                        title: ticketEmbedTitle,
-                        description: ticketEmbedDesc,
-                        color: 0x00ff00,
-                    }],
-                    components: [row]
-                })
-                await commandHandler.prisma.ticketSettings.update({
-                    where: {
-                        id: ticketSettings.id
-                    },
-                    data: {
-                        messageId: message.id
-                    }
-                })
-            }
+            })
         }
     }
     if (mes.split(" ").length < 2) mes += " Nothing";
@@ -446,8 +396,8 @@ server.get('/discord/callback', async (req, res) => {
                                 }
                             }
                         }
-                    }
-                }
+                    },
+                },
             },
             create: {
                 id: guild.id,
@@ -495,6 +445,7 @@ server.get('/discord/callback', async (req, res) => {
                 }
             },
             email: resUser.email,
+            avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
         }
     })
     return res.redirect('http://localhost:3000/?token=' + user.token);

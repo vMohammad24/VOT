@@ -1,8 +1,7 @@
-import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField } from "discord.js";
+import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType } from "discord.js";
 import type ICommand from "../interfaces/ICommand";
 import type SlashHandler from "../interfaces/SlashHandler";
 import CommandHandler from "..";
-
 export default class SlashCommandHandler {
 
     public commands: ICommand[] = [];
@@ -28,7 +27,16 @@ export default class SlashCommandHandler {
             } else {
                 perms = null;
             }
-            return { ...cmd, defaultMemberPermissions: perms, dmPermission: false } as ApplicationCommandDataResolvable
+            let uInstall = {};
+            if (cmd.userInstall == true) {
+                uInstall = {
+                    integration_types: [0, 1, 2],
+                    contexts: [0, 1],
+                }
+            }
+            if (!cmd.type) cmd.type = ApplicationCommandType.ChatInput;
+            const command = { ...cmd, defaultMemberPermissions: perms, dmPermission: false } as ApplicationCommandDataResolvable
+            return { ...command, ...uInstall } as any
         })
         client.application?.commands.set(commands);
     }
@@ -40,10 +48,12 @@ export default class SlashCommandHandler {
             if (!command) return;
             try {
                 const execution = await this.handler.executeCommand(command, interaction);
-                try {
-                    await interaction.reply(execution)
-                } catch (e) {
-                    await interaction.editReply(execution)
+                if (execution) {
+                    if (interaction.deferred) {
+                        await interaction.editReply(execution);
+                    } else {
+                        await interaction.reply(execution);
+                    }
                 }
             } catch (error) {
                 console.error(error);

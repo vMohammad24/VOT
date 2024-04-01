@@ -33,6 +33,7 @@ export default {
         new Pagination(message ? message : interaction!, embeds, {
             type: PaginationType.SelectMenu,
             pageText: queueWithCurrent.map((q, i) => `${q.title} - ${i + 1}/${queueWithCurrent.length}`),
+            ephemeral: true
         }).send();
 
     }
