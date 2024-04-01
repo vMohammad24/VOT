@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=iamlikewaytoooolazy
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=vot
+    networks:
+      - vot
+    expose:
+      - 2333
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx6G
+    volumes:
+      - ./application.yml:/opt/Lavalink/application.yml
+      - ./plugins/:/opt/Lavalink/plugins/
+    networks:
+      - vot
+    expose:
+      - 2333
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - vot
+    expose:
+      - 6379
+    volumes:
+      - ./db/cache:/data
+  vot:
+    build: .
+    container_name: vot
+    restart: always
+    networks:
+      - vot
+    depends_on:
+      - postgres
+      - lavalink
+      - redis
+networks:
+  vot:
+    name: vot
