@@ -23,6 +23,7 @@
     "@radix-ui/react-tabs": "latest",
     "@radix-ui/react-toast": "latest",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@sentry/nextjs": "^7.105.0",
     "@types/ioredis": "^5.0.0",
     "class-variance-authority": "latest",
     "clsx": "latest",
