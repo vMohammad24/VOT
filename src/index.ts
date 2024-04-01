@@ -42,7 +42,9 @@ const kazagumo = new Kazagumo({
 
 
 const prisma = new PrismaClient();
-const redis = new Redis()
+const redis = new Redis({
+    host: process.env.NODE_ENV === 'production' ? 'redis' : 'localhost',
+})
 const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
     models: [
         { model: "User", excludeMethods: ["findMany"] },

@@ -40,6 +40,8 @@ services:
     build: .
     container_name: vot
     restart: always
+    env_file:
+      - .env.prod
     networks:
       - vot
     depends_on:

@@ -8,7 +8,9 @@ const prisma =
     globalForPrisma.prisma ||
     new PrismaClient()
 
-const redis = new Redis()
+const redis = new Redis({
+    host: process.env.NODE_ENV === 'production' ? 'redis' : 'localhost',
+})
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 
