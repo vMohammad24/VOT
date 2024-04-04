@@ -14,7 +14,7 @@ const getLogChannel = async (prisma: PrismaClient, guild: Guild) => {
             icon: guild.icon || "",
         },
     });
-    if (!guild) return null;
+    if (!guild || !g) return null;
     return (guild.channels.cache.get(g.loggingChannel) as GuildTextBasedChannel) || null;
 }
 
