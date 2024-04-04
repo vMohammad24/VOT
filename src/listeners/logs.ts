@@ -3,13 +3,19 @@ import type { IListener } from "../handler/listenres";
 import { AuditLogEvent, EmbedBuilder, Guild, type GuildTextBasedChannel, type TextBasedChannel } from "discord.js";
 
 const getLogChannel = async (prisma: PrismaClient, guild: Guild) => {
-    const g = await prisma.guild.findUnique({
+    const g = await prisma.guild.upsert({
         where: {
             id: guild.id
-        }
+        },
+        update: {},
+        create: {
+            id: guild.id,
+            name: guild.name,
+            icon: guild.icon || "",
+        },
     });
     if (!guild) return null;
-    return guild.channels.cache.get(g.loggingChannel) as GuildTextBasedChannel;
+    return (guild.channels.cache.get(g.loggingChannel) as GuildTextBasedChannel) || null;
 }
 
 export default {
@@ -17,9 +23,9 @@ export default {
     name: "Logs Handler",
     execute: ({ client, prisma, kazagumo }) => {
         client.on("messageDelete", async (message) => {
+            if (message.author!.bot) return;
             const logChannel = await getLogChannel(prisma, message.guild!);
             if (!logChannel) return;
-            if (message.author!.bot) return;
             // check if it was deleted by the bot
             const embed = new EmbedBuilder()
                 .setTitle("Message Deleted")
@@ -39,10 +45,10 @@ export default {
             logChannel.send({ embeds: [embed] });
         })
         client.on("messageUpdate", async (oldMessage, newMessage) => {
-            const logChannel = await getLogChannel(prisma, oldMessage.guild!);
-            if (!logChannel) return;
             if (oldMessage.author!.bot) return;
             if (oldMessage.content === newMessage.content) return;
+            const logChannel = await getLogChannel(prisma, oldMessage.guild!);
+            if (!logChannel) return;
             const embed = new EmbedBuilder()
                 .setTitle(`Message Updated`)
                 .setDescription(`[Jump to message](${oldMessage.url})`)
