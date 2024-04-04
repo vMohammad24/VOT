@@ -42,6 +42,8 @@ services:
     restart: always
     env_file:
       - .env.prod
+    environment:
+      - NODE_ENV=production
     networks:
       - vot
     depends_on:
