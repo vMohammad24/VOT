@@ -84,14 +84,10 @@ export default {
                             return;
                         }
                         player.setVolume(newVolume);
-                        inter.followUp({ content: `Volume set to ${newVolume}`, ephemeral: true });
                         inter.update({
                             content: `Volume set to ${newVolume} by ${inter.user.username}`
                         })
                         collector.stop();
-                    });
-                    collector.on('end', (collected, reason) => {
-                        if (reason === "time" && !collected) inter.followUp({ content: "Volume selection timed out", ephemeral: true });
                     });
                 }
             }
