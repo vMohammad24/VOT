@@ -7,10 +7,10 @@ services:
       - POSTGRES_PASSWORD=iamlikewaytoooolazy
       - POSTGRES_USER=postgres
       - POSTGRES_DB=vot
-    networks:
-      - vot
     ports:
       - "5432:5432"
+    networks:
+      - vot
     expose:
       - 2333
     volumes:
@@ -24,24 +24,50 @@ services:
     volumes:
       - ./application.yml:/opt/Lavalink/application.yml
       - ./plugins/:/opt/Lavalink/plugins/
+    ports:
+      - "2333:2333"
     networks:
       - vot
     expose:
       - 2333
-    ports:
-      - "2333:2333"
   redis:
     image: redis
     container_name: redis
     restart: always
+    ports:
+      - "6379:6379"
     networks:
       - vot
     expose:
       - 6379
-    ports:
-      - "6379:6379"
     volumes:
       - ./db/cache:/data
+  # vot:
+  #   build: .
+  #   container_name: vot
+  #   restart: always
+  #   ports:
+  #     - "8080:8080"
+  #   env_file:
+  #     - .env.prod
+  #   environment:
+  #     - NODE_ENV=production
+  #   networks:
+  #     - vot
+  #   depends_on:
+  #     - postgres
+  #     - lavalink
+  #     - redis
+  # vot_frontend:
+  #   build: ./vot-frontend
+  #   container_name: vot_frontend
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - vot
+  #   depends_on:
+  #     - vot
 networks:
   vot:
     name: vot

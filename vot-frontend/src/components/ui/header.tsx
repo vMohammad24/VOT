@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { apiUrl } from "@/lib/utils";
 
-export default async () => {
+export default async function Header() {
   const token = cookies().get("token")?.value;
   const isLoggedIn = token ? true : false;
   const user = isLoggedIn
@@ -42,4 +42,4 @@ export default async () => {
       user={user || undefined}
     />
   );
-};
+}

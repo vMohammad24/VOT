@@ -9,6 +9,8 @@ services:
       - POSTGRES_DB=vot
     networks:
       - vot
+    ports:
+      - "5432:5432"
     expose:
       - 2333
     volumes:
@@ -26,6 +28,8 @@ services:
       - vot
     expose:
       - 2333
+    ports:
+      - "2333:2333"
   redis:
     image: redis
     container_name: redis
@@ -34,22 +38,10 @@ services:
       - vot
     expose:
       - 6379
+    ports:
+      - "6379:6379"
     volumes:
       - ./db/cache:/data
-  vot:
-    build: .
-    container_name: vot
-    restart: always
-    env_file:
-      - .env.prod
-    environment:
-      - NODE_ENV=production
-    networks:
-      - vot
-    depends_on:
-      - postgres
-      - lavalink
-      - redis
 networks:
   vot:
     name: vot

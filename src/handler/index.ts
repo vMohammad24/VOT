@@ -49,7 +49,7 @@ export default class CommandHandler {
                 if (modifiedData.disabled) continue;
                 handler.commands.push(modifiedData);
                 if (modifiedData.init) await modifiedData.init(this);
-                this.logger.info(`Initilaized command ${modifiedData.name} in ${modifiedData.category}`)
+                this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`)
             }
             const Ilegacy = handler as LegacyHandler;
             const Islash = handler as SlashHandler;
