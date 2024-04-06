@@ -46,6 +46,7 @@ export const WavyBackground = ({
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
@@ -83,7 +84,7 @@ export const WavyBackground = ({
     }
   };
 
-  let animationId: number;
+  let animationId: number = 0;
   const render = () => {
     ctx.fillStyle = backgroundFill || "black";
     ctx.globalAlpha = waveOpacity || 0.5;
@@ -97,7 +98,7 @@ export const WavyBackground = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [animationId, init]);
 
   return (
     <div

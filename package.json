@@ -10,8 +10,8 @@
     "pino-pretty": "latest"
   },
   "scripts": {
-    "dev": "bun --watch src/index.ts | pino-pretty",
-    "start": "bunx prisma db push && bun src/index.ts | pino-pretty"
+    "dev": "bun --bun --watch src/index.ts | pino-pretty",
+    "start": "bunx prisma db push && bun --bun src/index.ts | pino-pretty"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

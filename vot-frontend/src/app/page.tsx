@@ -19,6 +19,7 @@ export default async function Home() {
     totalGuilds: string;
     totalCommands: string;
   } | null = null;
+  console.log(apiUrl);
   await fetch(apiUrl)
     .then(async (res) => await res.json())
     .then((data) => {
