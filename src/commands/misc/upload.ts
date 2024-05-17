@@ -1,8 +1,8 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { uploadFile } from "../../util/nest";
-import { File } from 'buffer';
 import { UserTier } from "../../handler/interfaces/ICommand";
+import axios from "axios";
 export default {
     name: "upload",
     description: "Upload a file to nest.rip",
@@ -15,10 +15,15 @@ export default {
     }],
     userTier: UserTier.Beta,
     execute: async ({ interaction }) => {
+        interaction?.deferReply({ ephemeral: true });
         const file = interaction!.options.get("file", true).attachment;
         if (!file) return interaction!.reply("No file provided.");
-        const url = file.proxyURL;
-        const res = await uploadFile(url);
-        interaction!.reply(res);
+        const content = (await axios.get(file.url, { responseType: "arraybuffer" })).data;
+        const f = new File([content], file.name);
+        const res = await uploadFile(f);
+        return {
+            content: res.accessibleURL,
+            ephemeral: true
+        };
     }
 } as ICommand

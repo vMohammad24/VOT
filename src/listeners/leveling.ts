@@ -34,7 +34,7 @@ export default {
             })
             if (member.messagesToday >= 100) return;
             if (member.lastMessage && member.lastMessage.getDate() > Date.now() - 60000) return;
-            const expGained = Math.max(message.content.length / 2, 20)
+            const expGained = Math.min(message.content.length / 2, 20)
             const newExp = member.exp + expGained
             if (newExp >= 1000) {
                 member.exp = newExp - 100

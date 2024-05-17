@@ -6,6 +6,7 @@ import { sendPanel } from "../../util/music";
 export default {
     description: "Gets your current playing song from spotify and adds it to the queue",
     needsPlayer: true,
+    aliases: ["sp"],
     execute: async ({ member, handler, player, interaction, guild }) => {
         interaction?.deferReply({ ephemeral: true });
         const res = await getCurrentlyPlaying(member.id, handler.prisma)
@@ -29,21 +30,24 @@ export default {
             ephemeral: true
         };
         if (player.queue.current) {
-            player.queue.add(track);
+            await player.queue.add(track);
             if (!player.playing) player.play();
         } else {
-            player.play(track);
+            await player.play(track);
         }
         const a = await pausePlayer(member.id, handler.prisma);
-        if (player.queue.current?.identifier === track.identifier) {
-            player.seek(parseInt(res.progress_ms))
-        }
         const embed = new EmbedBuilder()
             .setTitle("Added to queue")
             .setColor("Green")
             .setDescription(`Added ${track.title || "Error getting title"} to the queue`)
             .setThumbnail(track.thumbnail || null)
             .setFooter({ text: a.error || null })
+        if (player.queue.current?.realUri == track.realUri && res.progress_ms) {
+            await player.seek(parseInt(res.progress_ms))
+            // minute:second
+            const seekedTo = new Date(parseInt(res.progress_ms)).toISOString().substr(14, 5)
+            embed.setDescription(embed.data.description + ` and seeked to ${seekedTo}`)
+        }
         return {
             embeds: [embed],
             ephemeral: true

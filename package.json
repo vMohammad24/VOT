@@ -19,6 +19,7 @@
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
     "@discordx/pagination": "^3.5.0",
+    "@napi-rs/canvas": "^0.1.52",
     "@prisma/client": "latest",
     "@types/ioredis": "^5.0.0",
     "axios": "latest",
@@ -29,6 +30,7 @@
     "ioredis": "^5.3.2",
     "kazagumo": "latest",
     "kazagumo-spotify": "latest",
+    "musicard": "^2.0.5",
     "node-schedule": "^2.1.1",
     "pino": "latest",
     "prisma": "latest",

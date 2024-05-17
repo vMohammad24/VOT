@@ -3,16 +3,26 @@ server: # REST and WS server
   address: 0.0.0.0
   http2:
     enabled: false # Whether to enable HTTP/2 support
+plugins:
+  youtube:
+    enabled: true
+    clients: ["MUSIC", "ANDROID", "WEB"]
 lavalink:
+  plugins:
+    # Replace VERSION with the current version as shown by the Releases tab or a long commit hash for snapshots.
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.1.0"
+      snapshot: false # Set to true if you want to use a snapshot version.
   server:
     password: "youshallnotpass"
     sources:
-      youtube: true
+      # The default Youtube source is now deprecated and won't receive further updates. Please use https://github.com/lavalink-devs/youtube-source#plugin instead.
+      youtube: false
       bandcamp: true
       soundcloud: true
       twitch: true
       vimeo: true
-      http: true
+      nico: true
+      http: true # warning: keeping HTTP enabled without a proxy configured could expose your server's IP address.
       local: false
     filters: # All filters are enabled by default
       volume: true
@@ -37,19 +47,19 @@ lavalink:
     soundcloudSearchEnabled: true
     gc-warnings: true
     #ratelimit:
-    #ipBlocks: ["1.0.0.0/8", "..."] # list of ip blocks
-    #excludedIps: ["...", "..."] # ips which should be explicit excluded from usage by lavalink
-    #strategy: "RotateOnBan" # RotateOnBan | LoadBalance | NanoSwitch | RotatingNanoSwitch
-    #searchTriggersFail: true # Whether a search 429 should trigger marking the ip as failing
-    #retryLimit: -1 # -1 = use default lavaplayer value | 0 = infinity | >0 = retry will happen this numbers times
+      #ipBlocks: ["1.0.0.0/8", "..."] # list of ip blocks
+      #excludedIps: ["...", "..."] # ips which should be explicit excluded from usage by lavalink
+      #strategy: "RotateOnBan" # RotateOnBan | LoadBalance | NanoSwitch | RotatingNanoSwitch
+      #searchTriggersFail: true # Whether a search 429 should trigger marking the ip as failing
+      #retryLimit: -1 # -1 = use default lavaplayer value | 0 = infinity | >0 = retry will happen this numbers times
     #youtubeConfig: # Required for avoiding all age restrictions by YouTube, some restricted videos still can be played without.
-    #email: "" # Email of Google account
-    #password: "" # Password of Google account
+      #email: "" # Email of Google account
+      #password: "" # Password of Google account
     #httpConfig: # Useful for blocking bad-actors from ip-grabbing your music node and attacking it, this way only the http proxy will be attacked
-    #proxyHost: "localhost" # Hostname of the proxy, (ip or domain)
-    #proxyPort: 3128 # Proxy port, 3128 is the default for squidProxy
-    #proxyUser: "" # Optional user for basic authentication fields, leave blank if you don't use basic auth
-    #proxyPassword: "" # Password for basic authentication
+      #proxyHost: "localhost" # Hostname of the proxy, (ip or domain)
+      #proxyPort: 3128 # Proxy port, 3128 is the default for squidProxy
+      #proxyUser: "" # Optional user for basic authentication fields, leave blank if you don't use basic auth
+      #proxyPassword: "" # Password for basic authentication
 
 metrics:
   prometheus:
@@ -57,7 +67,8 @@ metrics:
     endpoint: /metrics
 
 sentry:
-  dsn: "https://07c884873d485d741df790d9adfa4399@o4507011032940544.ingest.us.sentry.io/4507011034054656"
+  dsn: ""
+  environment: ""
 #  tags:
 #    some_key: some_value
 #    another_key: another_value
@@ -77,6 +88,7 @@ logging:
     includeQueryString: true
     includePayload: true
     maxPayloadLength: 10000
+
 
   logback:
     rollingpolicy:

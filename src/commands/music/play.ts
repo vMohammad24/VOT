@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { getRows, sendPanel } from "../../util/music";
+import { getPanel, getRows, sendPanel } from "../../util/music";
 
 export default {
     description: "Adds a song to the queue",
@@ -76,8 +76,7 @@ export default {
             }
         });;
         embed.setDescription(`${embed.data.description}\n\nGo to <#${member.voice.channelId}> to manage the queue`);
-        if (!player.playing) player.play();
-        // sendPanel(kazagumo, guild);
+        player.play();
         return {
             embeds: [embed],
             ephemeral: true

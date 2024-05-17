@@ -19,9 +19,9 @@ export default {
         required: false
     }],
     userTier: UserTier.Premium,
-    execute: async ({ interaction }) => {
-        const url = interaction!.options.get("url", true).value as string;
-        const password = interaction!.options.get("password", false)?.value as string | undefined;
+    execute: async ({ interaction, args }) => {
+        const url = args[0]
+        const password = args[1];
         const res = await shortenUrl(url, password);
         interaction!.reply({ content: res, ephemeral: true });
     }

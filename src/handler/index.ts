@@ -74,6 +74,7 @@ export default class CommandHandler {
                 guildId: member.guild.id,
                 voiceId: member.voice.channelId,
                 textId: member.voice.channelId,
+                deaf: true
             })
             return player;
         }

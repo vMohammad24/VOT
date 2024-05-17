@@ -21,7 +21,8 @@ export default {
                     "Content-Type": "application/json"
                 }
             })
-            const tags = (res.data as string[]).filter((tag) => tag.length > 0).splice(0, 25);
+            const search = inter.options.getString("tag");
+            const tags = (res.data as string[]).filter((tag) => tag.length > 0).filter(tag => search ? tag.includes(search) : true).slice(0, 25);
             const options = tags.map((tag: string) => ({
                 name: tag,
                 value: tag
