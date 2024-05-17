@@ -23,7 +23,6 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
             return await getCurrentlyPlaying(userId, prisma);
         }
     }).then(res => res.data) as any;
-    console.log(res)
     if (res && res.error && res.error.status && res.error.status == 401) {
         await refreshToken(spotify, prisma);
         await setTimeout(() => { }, 500)

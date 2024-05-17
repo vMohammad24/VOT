@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { EmbedBuilder, ChannelType, PermissionFlagsBits, CategoryChannel, ActionRowBuilder, ButtonBuilder, ButtonStyle, Guild, GuildMember, type GuildTextBasedChannel, ButtonInteraction } from "discord.js";
 import { getLogChannel } from "./util";
 import Confirm from "./confirm";
+import { uploadFile } from "./nest";
 
 export async function createTicket(prisma: PrismaClient, member: GuildMember, reason: string) {
     const { guild } = member;
@@ -102,13 +103,14 @@ export async function closeTicket(prisma: PrismaClient, channel: GuildTextBasedC
     // }
     // const uploadedData = await uploadFile([content])
     // console.log(uploadedData)
+    const cdnId = await transcriptTicket(prisma, chan);
     await prisma.ticket.update({
         where: {
             id: ticketData.id
         },
         data: {
             open: false,
-            // transcriptId: uploadedData.cdnFileName
+            transcriptId: cdnId
         }
     })
     const logChannel = (await getLogChannel(prisma, channel.guild));
@@ -116,13 +118,44 @@ export async function closeTicket(prisma: PrismaClient, channel: GuildTextBasedC
         .setTitle('Ticket Closed')
         .setDescription(`Ticket ${chan.name} has been closed`)
         .setAuthor({ name: closedBy.user.displayName, iconURL: closedBy.user.displayAvatarURL() })
-        // .addFields({
-        //     name: 'Transcript',
-        //     value: `[Download](https://cdn.nest.rip/uploads/${uploadedData.cdnFileName})`
-        // })
+        .addFields({
+            name: 'Transcript',
+            value: `[Download](https://cdn.nest.rip/uploads/${cdnId})`
+        })
         .setColor('Red')
         .setTimestamp()
     logChannel?.send({ embeds: [logEmbed] })
     await chan.delete()
     return { content: "Ticked closed. " }
+}
+
+export async function transcriptTicket(prisma: PrismaClient, channel: GuildTextBasedChannel) {
+    const ticketData = await prisma.ticket.findFirst({
+        where: {
+            channelId: channel.id
+        }
+    })
+    if (!ticketData) {
+        const embed = new EmbedBuilder()
+            .setTitle('Error')
+            .setDescription('This is not a ticket channel')
+            .setColor('Red')
+        return { embeds: [embed] }
+    }
+    const messages = await channel.messages.fetch();
+    const json = []
+    for (const message of messages.values()) {
+        if (!message) continue;
+        if (message.author.bot) continue;
+        json.push({
+            timestamp: message.createdTimestamp,
+            avatar: message.author.displayAvatarURL({ size: 4096 }),
+            content: message.content,
+            username: message.author.username,
+            attachements: message.attachments.map(attachment => attachment.url),
+        })
+    }
+    const file = new File([JSON.stringify(json)], 'transcript.json', { type: 'application/json' })
+    const uploadedData = await uploadFile(file)
+    return uploadedData.cdnFileName
 }

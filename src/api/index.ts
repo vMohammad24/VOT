@@ -9,7 +9,7 @@ import type { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 
 const server = express()
-
+const upSince = Date.now();
 
 server.use(express.json())
 server.use(cors())
@@ -22,8 +22,7 @@ server.get('/', function (req, res) {
     const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const totalGuilds = commandHandler.client.guilds.cache.size;
     const totalCommands = commandHandler.commands!.length;
-    const uptime = commandHandler.client.uptime;
-    res.send({ ping, uptime, totalMembers, totalGuilds, totalCommands })
+    res.send({ ping, upSince, totalMembers, totalGuilds, totalCommands })
 })
 
 server.get('/commands', (req, res) => {

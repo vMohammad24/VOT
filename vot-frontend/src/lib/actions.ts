@@ -7,7 +7,7 @@ export const submitTicketSettings = async (data: any, guildId: string, token: st
     if (!user) return console.log({ error: "User not found" });
     const guild = await prisma.guild.findUnique({ where: { id: guildId }, include: { admins: true } });
     if (!guild) return console.log({ error: "Guild not found" });
-    if (!guild.admins.includes(user)) return console.log({ error: user.name + " is not an admin of this guild" });
+    if (!guild.admins.map(a => a.id).includes(user.id)) return console.log({ error: user.name + " is not an admin of this guild" });
     const oldSettings = (await prisma.ticketSettings.findFirst({ where: { guildId: guildId } }));
     const actualData = {
         categoryId: data.category,

@@ -29,15 +29,30 @@ export default {
 
         kazagumo.on('playerStart', (player, track) => {
             const member = player.queue.current?.requester;
-            if (!member) return;
-            const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
-            if (!channel) return;
-            // check if the player was resumed or started
-            sendPanel(kazagumo, channel.guild);
+            if (member) {
+                const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
+                if (channel) {
+                    sendPanel(kazagumo, channel.guild);
+                }
+            }
+        })
+
+        kazagumo.on('playerEnd', async (player) => {
+            const channelId = player.voiceId;
+            const messageId = player.data.get('messageId');
+            const guildId = player.guildId;
+            if (messageId && channelId && guildId) {
+                const msg = (await ((await (await client.guilds.fetch(guildId)).channels.fetch(channelId)) as GuildTextBasedChannel).messages.fetch(messageId))
+                if (msg) {
+                    await msg.delete();
+                }
+            }
         })
 
         client.on('interactionCreate', async (inter) => {
+            const ids = ["pause", "resume", "skip", "queue", "stop", "loop", "shuffle", "volume"];
             if (inter.isButton()) {
+                if (!ids.includes(inter.customId)) return;
                 const player = kazagumo.getPlayer(inter.guildId!);
                 if (!player) {
                     inter.reply({ content: "No player found", ephemeral: true });
@@ -77,14 +92,14 @@ export default {
                     inter.reply({ content: `Current volume is ${volume}. Please enter a new volume level from 1-100`, ephemeral: true });
                     const collector = (inter.channel as GuildTextBasedChannel).createMessageCollector({ time: 15000, filter: m => m.author.id === inter.user.id });
                     collector.on('collect', async m => {
-                        m.delete();
+                        await m.delete();
                         const newVolume = parseInt(m.content);
                         if (isNaN(newVolume) || newVolume < 1 || newVolume > 100) {
                             inter.followUp({ content: "Invalid volume level, please enter a number from 1-100", ephemeral: true });
                             return;
                         }
-                        player.setVolume(newVolume);
-                        inter.update({
+                        await player.setVolume(newVolume);
+                        await inter.update({
                             content: `Volume set to ${newVolume} by ${inter.user.username}`
                         })
                         collector.stop();

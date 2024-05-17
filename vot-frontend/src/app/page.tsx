@@ -14,7 +14,7 @@ export default async function Home() {
   let stats: {
     [key: string]: string; // Add index signature
     ping: string;
-    uptime: string;
+    upSince: string;
     totalMembers: string;
     totalGuilds: string;
     totalCommands: string;
@@ -26,11 +26,11 @@ export default async function Home() {
       stats = data;
     });
   const commandsRan = await prisma.command.count();
-  const uptimeAsDate = new Date(parseInt(stats!.uptime));
-  const uptime = `${uptimeAsDate.getUTCHours()}h ${uptimeAsDate.getUTCMinutes()}m ${uptimeAsDate.getUTCSeconds()}s`;
+  const upSince = parseInt(stats!.upSince);
   const description = "A multi-purpose Discord bot.".split(" ").map((word) => {
     return { text: word, className: "text-4xl" };
   });
+  const up = new Date(Date.now() - upSince).toISOString().slice(11, 19);
   return (
     <main className="bg-slate-900 min-h-screen text-white overflow-hidden">
       <TokenLoader />
@@ -42,14 +42,14 @@ export default async function Home() {
           >
             Welcome to <b>VOT</b>
           </h1>
-          <TypewriterEffectSmooth words={description} />
+          <TypewriterEffect words={description} />
         </div>
         <div
           id="cards"
           className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center w-fit max-w-7xl m-auto"
         >
           <StatsCard title="VOT's Ping" value={stats!.ping} />
-          <StatsCard title="Uptime" value={uptime} />
+          <StatsCard title="Uptime" value={up} />
           <StatsCard title="Total Members" value={stats!.totalMembers} />
           <StatsCard title="Total Guilds" value={stats!.totalGuilds} />
           <StatsCard title="Total Commands" value={stats!.totalCommands} />
