@@ -125,7 +125,7 @@ model Guild {
 }
 
 model Ticket {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   channelId    String
   transcriptId String?
   open         Boolean  @default(true)

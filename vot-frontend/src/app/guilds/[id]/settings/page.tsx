@@ -52,8 +52,7 @@ export default async function GuildSettingsPage({
         <CardTitle>Settings</CardTitle>
         <CardDescription>Change settings for {guild.name}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2">
+      <CardContent className="grid md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Prefix</CardTitle>
@@ -87,7 +86,6 @@ export default async function GuildSettingsPage({
               />
             </CardContent>
           </Card>
-        </div>
       </CardContent>
     </Card>
   );

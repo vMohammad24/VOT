@@ -1,4 +1,4 @@
-"use client";
+"use client";;
 import { Info, PenLine, Settings, Ticket, Triangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 interface Props {
@@ -20,7 +19,6 @@ export default function GuildLayout({ children, params: { id } }: Props) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return usePathname().split("/").pop()!;
   };
-  console.log(getCurrentPath());
   const NavMenu = () => {
     const guildLink = `/guilds/${id}`;
 

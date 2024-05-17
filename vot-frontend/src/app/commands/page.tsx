@@ -18,7 +18,7 @@ export default async function Commands() {
   return (
     <main className="bg-slate-900 min-h-screen text-white overflow-hidden pt-16">
       <div className="absolute left-1/2 -translate-x-1/2 min-w-full flex">
-        <div className="grid grid-flow-row-dense grid-cols-5 justify-stretch gap-5 p-10">
+        <div className="grid grid-flow-row-dense justify-stretch gap-5 p-10 md:grid-cols-5">
           {commands
             .filter((e) => e != null)
             .map((command) => {

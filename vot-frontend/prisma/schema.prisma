@@ -26,11 +26,11 @@ model Giveaway {
 }
 
 model User {
-  id               String     @id @default(uuid())
-  name             String?    @unique
-  email            String?    @unique
-  token            String     @unique @default(cuid())
-  tier             Int        @default(0)
+  id               String         @id @default(uuid())
+  name             String?        @unique
+  email            String?        @unique
+  token            String         @unique @default(cuid())
+  tier             Int            @default(0)
   avatar           String
   playlists        Playlist[]
   commands         Command[]
@@ -38,10 +38,11 @@ model User {
   guilds           Guild[]
   spotify          Spotify?
   discord          Discord?
-  giveawaysHosted  Giveaway[] @relation("giveawayHoster")
-  enteredGiveaways Giveaway[] @relation("giveawayEntrants")
-  giveawaysWon     Giveaway[] @relation("giveawayWinners")
+  giveawaysHosted  Giveaway[]     @relation("giveawayHoster")
+  enteredGiveaways Giveaway[]     @relation("giveawayEntrants")
+  giveawaysWon     Giveaway[]     @relation("giveawayWinners")
   guildMembers     Member[]
+  musicSettings    MusicSettings?
 }
 
 model Member {
@@ -124,7 +125,7 @@ model Guild {
 }
 
 model Ticket {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   channelId    String
   transcriptId String?
   open         Boolean  @default(true)
@@ -160,4 +161,16 @@ model WelcomeSettings {
   updatedAt  DateTime @updatedAt
   guild      Guild    @relation(fields: [guildId], references: [id])
   guildId    String   @unique
+}
+
+model MusicSettings {
+  id        String    @id @default(uuid())
+  panelType PanelType @default(EMBED)
+  User      User      @relation(fields: [userId], references: [id])
+  userId    String    @unique
+}
+
+enum PanelType {
+  EMBED
+  IMAGE
 }

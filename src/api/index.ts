@@ -456,7 +456,7 @@ const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
 server.get('/spotify/callback', async (req, res) => {
     const { code } = req.query as any;
     const token = req.headers.authorization;
-    const scopes = 'user-read-playback-state user-read-currently-playing user-modify-playback-state'
+    const scopes = 'user-read-playback-state user-read-currently-playing'
     const state = crypto.randomUUID();
     if (!code)
         return res.redirect('https://accounts.spotify.com/authorize?' +
@@ -489,31 +489,48 @@ server.get('/spotify/callback', async (req, res) => {
     if (tokenRes.error) {
         return res.status(401).send(tokenRes);
     }
-    if (user.spotify) {
-        await commandHandler.prisma.spotify.update({
-            where: {
-                userId: user.id
-            },
-            data: {
-                token: tokenRes.access_token,
-                refreshToken: tokenRes.refresh_token,
-                expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
-            }
-        })
-    } else {
-        await commandHandler.prisma.spotify.create({
-            data: {
-                token: tokenRes.access_token,
-                refreshToken: tokenRes.refresh_token,
-                expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
-                user: {
-                    connect: {
-                        id: user.id
-                    }
-                }
-            }
-        })
-    }
+    // if (user.spotify) {
+    //     await commandHandler.prisma.spotify.update({
+    //         where: {
+    //             userId: user.id
+    //         },
+    //         data: {
+    //             token: tokenRes.access_token,
+    //             refreshToken: tokenRes.refresh_token,
+    //             expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
+    //         }
+    //     })
+    // } else {
+    //     await commandHandler.prisma.spotify.create({
+    //         data: {
+    //             token: tokenRes.access_token,
+    //             refreshToken: tokenRes.refresh_token,
+    //             expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
+    //             user: {
+    //                 connect: {
+    //                     id: user.id
+    //                 }
+    //             }
+    //         }
+    //     })
+    // }
+
+    await commandHandler.prisma.spotify.upsert({
+        where: {
+            userId: user.id
+        },
+        update: {
+            token: tokenRes.access_token,
+            refreshToken: tokenRes.refresh_token,
+            expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
+        },
+        create: {
+            token: tokenRes.access_token,
+            refreshToken: tokenRes.refresh_token,
+            expiresAt: new Date(Date.now() + tokenRes.expires_in * 1000),
+            userId: user.id
+        }
+    })
 
     return res.send({
         success: true,

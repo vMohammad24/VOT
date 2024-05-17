@@ -123,10 +123,10 @@ export default class CommandHandler {
                         commandId: command.name!,
                         commandInfo: {
                             args: commandContext.args || null,
-                            guild: commandContext.guild && commandContext.guild.id || null,
-                            channel: commandContext.channel.id,
-                            message: commandContext.message?.id || null,
-                            interaction: commandContext.interaction?.id || null,
+                            guild: commandContext?.guild && commandContext.guild.id || null,
+                            channel: commandContext?.channel?.id || null,
+                            message: commandContext?.message?.id || null,
+                            interaction: commandContext?.interaction?.id || null,
                         }
                     }
                 }
@@ -140,10 +140,10 @@ export default class CommandHandler {
                         commandId: command.name!,
                         commandInfo: {
                             args: commandContext.args || null,
-                            guild: commandContext.guild.id,
-                            channel: commandContext.channel.id,
-                            message: commandContext.message?.id || null,
-                            interaction: commandContext.interaction?.id || null,
+                            guild: commandContext?.guild?.id || null,
+                            channel: commandContext?.channel?.id || null,
+                            message: commandContext?.message?.id || null,
+                            interaction: commandContext?.interaction?.id || null,
                         }
                     }
                 }

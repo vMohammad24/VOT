@@ -2,7 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    remotePatterns: [{ hostname: "*.discordapp.com" }],
+    remotePatterns: [{ hostname: "*.discordapp.com" }, {hostname: "*.discordapp.net"}, {hostname: "cdn.nest.rip"}],
   },
   output: "standalone",
 };
