@@ -1,7 +1,8 @@
-import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType } from "discord.js";
+import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand } from "discord.js";
 import type ICommand from "../interfaces/ICommand";
 import type SlashHandler from "../interfaces/SlashHandler";
 import CommandHandler from "..";
+import commandHandler from "../..";
 export default class SlashCommandHandler {
 
     public commands: ICommand[] = [];
@@ -13,7 +14,17 @@ export default class SlashCommandHandler {
         this.initListener(client);
     }
 
-    public initCommands(client: Client) {
+    private filterObject<T extends object, U extends object>(obj: T, allowedKeys: (keyof U)[]): Partial<U> {
+        const result = {} as Partial<U>;
+        for (const key in obj) {
+            if (allowedKeys.includes(key as unknown as keyof U)) {
+                result[key as unknown as keyof U] = obj[key] as unknown as U[keyof U];
+            }
+        }
+        return result;
+    }
+
+    public async initCommands(client: Client) {
         const commands = this.commands.map(cmd => {
             let perms: bigint | null = 0n;
             if (cmd.perms && cmd.perms != "dev") {
@@ -30,15 +41,29 @@ export default class SlashCommandHandler {
             let uInstall = {};
             if (cmd.userInstall == true) {
                 uInstall = {
-                    integration_types: [0, 1, 2],
-                    contexts: [0, 1],
+                    integration_types: [0, 1],
+                    contexts: [0, 1, 2],
                 }
             }
             if (!cmd.type) cmd.type = ApplicationCommandType.ChatInput;
-            const command = { ...cmd, defaultMemberPermissions: perms, dmPermission: false } as ApplicationCommandDataResolvable
-            return { ...command, ...uInstall } as any
+            const command = this.filterObject({ ...cmd, defaultMemberPermissions: perms || 0, dmPermission: false, ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'type', 'defaultMemberPermissions', 'dmPermission'])
+            // remove any property under command that doesnt exist in ApplicationCommandDataResolvable
+
+            return command;
         })
-        client.application?.commands.set(commands);
+        // client.application?.commands.set(commands);
+        try {
+            commandHandler.logger.info('Started refreshing application (/) commands.');
+
+            await client.rest.put(Routes.applicationCommands(client.user!.id), {
+                body: JSON.parse(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))
+            });
+
+            commandHandler.logger.info('Successfully reloaded application (/) commands.');
+            commandHandler.logger.info(`Commands: ${(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))}`)
+        } catch (error) {
+            commandHandler.logger.error(error);
+        }
     }
 
     public initListener(client: Client) {

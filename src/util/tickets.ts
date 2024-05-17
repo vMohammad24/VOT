@@ -3,6 +3,7 @@ import { EmbedBuilder, ChannelType, PermissionFlagsBits, CategoryChannel, Action
 import { getLogChannel } from "./util";
 import Confirm from "./confirm";
 import { uploadFile } from "./nest";
+import axios from "axios";
 
 export async function createTicket(prisma: PrismaClient, member: GuildMember, reason: string) {
     const { guild } = member;
@@ -152,10 +153,16 @@ export async function transcriptTicket(prisma: PrismaClient, channel: GuildTextB
             avatar: message.author.displayAvatarURL({ size: 4096 }),
             content: message.content,
             username: message.author.username,
-            attachements: message.attachments.map(attachment => attachment.url),
+            roleColor: message.member?.displayColor,
+            attachments: message.attachments.map(async attachment => {
+                const file = new File([(await axios.get(attachment.proxyURL, { responseType: "blob" })).data], attachment.name, { type: attachment.contentType || undefined })
+                const uploadedData = await uploadFile(file)
+                return uploadedData.cdnFileName
+
+            }),
         })
     }
-    const file = new File([JSON.stringify(json)], 'transcript.json', { type: 'application/json' })
+    const file = new File([JSON.stringify(json)], `${ticketData.id}.json`, { type: 'application/json' })
     const uploadedData = await uploadFile(file)
     return uploadedData.cdnFileName
 }

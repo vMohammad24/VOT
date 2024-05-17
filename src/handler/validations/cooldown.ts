@@ -2,13 +2,13 @@ import type ICommand from "../interfaces/ICommand";
 import type { CommandContext } from "../interfaces/ICommand";
 export default async function (command: ICommand, ctx: CommandContext) {
     const { cooldown } = command;
-    const { handler, member } = ctx;
+    const { handler, user } = ctx;
     const { prisma } = handler;
     if (!cooldown) return true;
     const pCommand = await prisma.command.findFirst({
         where: {
             commandId: command.name,
-            userId: member.id
+            userId: user.id
         },
         orderBy: {
             createdAt: "desc"

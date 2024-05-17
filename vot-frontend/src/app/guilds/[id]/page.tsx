@@ -3,12 +3,8 @@ import { apiUrl } from "@/lib/utils";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import LoggingComboBox from "./components/LoggingComboBox";
-import PrefixInputBox from "./components/PrefixInputBox";
-import TicketPanel from "./components/TicketPanel";
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/custom/StatsCard";
-import { CardContent } from "@/components/ui/card";
 export default async function GuildPage({
   params,
 }: {
@@ -108,7 +104,7 @@ export default async function GuildPage({
       <h3 className="font-bold text-3xl text-center mb-2">
         Currently managing: {guild.name}
       </h3>
-      <div className="flex justify-between gap-2 p-2">
+      <div className="md:flex justify-between gap-2 p-2">
         <StatsCard title="Members" value={guildInfo.memberCount} />
         <StatsCard
           title="Channels"

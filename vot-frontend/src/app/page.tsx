@@ -1,5 +1,6 @@
 import StatsCard from "@/components/custom/StatsCard";
 import TokenLoader from "@/components/custom/TokenLoader";
+import UptimeCard from "@/components/custom/UptimeCard";
 import {
   TypewriterEffect,
   TypewriterEffectSmooth,
@@ -8,6 +9,7 @@ import prisma from "@/lib/prisma";
 import { apiUrl } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default async function Home() {
   const token = cookies().get("token");
@@ -28,17 +30,16 @@ export default async function Home() {
   const commandsRan = await prisma.command.count();
   const upSince = parseInt(stats!.upSince);
   const description = "A multi-purpose Discord bot.".split(" ").map((word) => {
-    return { text: word, className: "text-4xl" };
+    return { text: word, className: "md:text-4xl" };
   });
-  const up = new Date(Date.now() - upSince).toISOString().slice(11, 19);
   return (
     <main className="bg-slate-900 min-h-screen text-white overflow-hidden">
       <TokenLoader />
-      <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full">
+      <div className="absolute m-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full">
         <div className="flex flex-col align-middle items-center">
           <h1
             id="welcome"
-            className="ease-linear animate-in fade-in zoom-in duration-100 text-6xl font-bold text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% bg-clip-text "
+            className="ease-linear text-5xl animate-in fade-in duration-500 font-bold text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% bg-clip-text md:text-6xl"
           >
             Welcome to <b>VOT</b>
           </h1>
@@ -49,7 +50,7 @@ export default async function Home() {
           className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center w-fit max-w-7xl m-auto"
         >
           <StatsCard title="VOT's Ping" value={stats!.ping} />
-          <StatsCard title="Uptime" value={up} />
+          <UptimeCard title="Uptime" value={upSince} />
           <StatsCard title="Total Members" value={stats!.totalMembers} />
           <StatsCard title="Total Guilds" value={stats!.totalGuilds} />
           <StatsCard title="Total Commands" value={stats!.totalCommands} />
