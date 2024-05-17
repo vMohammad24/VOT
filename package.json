@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "bun --bun --watch src/index.ts | pino-pretty",
-    "start": "bunx prisma db push && bun --bun src/index.ts | pino-pretty"
+    "start": "bunx prisma db push && NODE_ENV=production  bun --bun src/index.ts | pino-pretty"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
