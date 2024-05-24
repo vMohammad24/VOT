@@ -10,7 +10,7 @@ export default {
         required: true
     }],
     perms: ["ManageMessages"],
-    execute: async ({ channel, args }) => {
+    execute: async ({ channel, args, message }) => {
         const amount = parseInt(args[0]);
         if (!amount || isNaN(amount)) {
             return {
@@ -18,6 +18,7 @@ export default {
                 ephemeral: true
             }
         }
+        await message?.delete();
         const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(amount, true);
         return {
             content: `Purged ${deletedMessages.size} messages`,

@@ -10,7 +10,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>
       <ThemeProvider attribute="class" defaultTheme="dark">
-        {children}
+        <div className="bg-base">{children}</div>
       </ThemeProvider>
     </TooltipProvider>
   );

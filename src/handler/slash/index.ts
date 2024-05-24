@@ -60,7 +60,7 @@ export default class SlashCommandHandler {
             });
 
             commandHandler.logger.info('Successfully reloaded application (/) commands.');
-            commandHandler.logger.info(`Commands: ${(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))}`)
+            // commandHandler.logger.info(`Commands: ${(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))}`)
         } catch (error) {
             commandHandler.logger.error(error);
         }
@@ -71,18 +71,23 @@ export default class SlashCommandHandler {
             if (!interaction.isCommand()) return;
             const command = this.commands.find(cmd => cmd.name === interaction.commandName);
             if (!command) return;
+            let result = {};
             try {
-                const execution = await this.handler.executeCommand(command, interaction);
-                if (execution) {
-                    if (interaction.deferred) {
-                        await interaction.editReply(execution);
-                    } else {
-                        await interaction.reply(execution);
-                    }
-                }
+                result = await this.handler.executeCommand(command, interaction);
             } catch (error) {
-                console.error(error);
-                await interaction.reply({ content: 'There was an error while executing this command, please try again later', ephemeral: true });
+                this.handler.logger.error(error);
+                result = { content: 'There was an error while executing this command, please try again later', ephemeral: true };
+            }
+            if (result) {
+                if (interaction.replied) {
+                    await interaction.followUp(result);
+                }
+                if (interaction.deferred) {
+                    await interaction.editReply(result);
+                }
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply(result);
+                }
             }
         })
     }

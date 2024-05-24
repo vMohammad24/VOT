@@ -33,9 +33,9 @@ export default async function Home() {
     return { text: word, className: "md:text-4xl" };
   });
   return (
-    <main className="bg-slate-900 min-h-screen text-white overflow-hidden">
+    <main className=" min-h-screen  overflow-hidden">
       <TokenLoader />
-      <div className="absolute m-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full">
+      <div className="m-0 min-w-full">
         <div className="flex flex-col align-middle items-center">
           <h1
             id="welcome"

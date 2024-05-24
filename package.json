@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
-    "@discordx/pagination": "^3.5.0",
+    "@discordx/pagination": "^3.5.1",
     "@napi-rs/canvas": "^0.1.52",
     "@prisma/client": "latest",
     "@types/ioredis": "^5.0.0",

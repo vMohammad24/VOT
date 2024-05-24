@@ -18,7 +18,7 @@ export default async function GuildPage({
   if (!token) {
     return (
       <main className="min-h-screen flex justify-center items-center">
-        <h1 className="text-white text-xl">Not Logged In</h1>
+        <h1 className=" text-xl">Not Logged In</h1>
       </main>
     );
   }
@@ -26,7 +26,7 @@ export default async function GuildPage({
   if (!user) {
     return (
       <main className="min-h-screen flex justify-center items-center">
-        <h1 className="text-white text-xl">Not Logged In</h1>
+        <h1 className=" text-xl">Not Logged In</h1>
       </main>
     );
   }
@@ -44,21 +44,21 @@ export default async function GuildPage({
   if (!ticket) {
     return (
       <main className="min-h-screen flex justify-center items-center">
-        <h1 className="text-white text-xl">Ticket not found</h1>
+        <h1 className=" text-xl">Ticket not found</h1>
       </main>
     );
   }
   if ((!ticket.Guild.admins.some((admin) => admin.id === user.id)) && (ticket.userId !== user.id)) {
     return (
       <main className="min-h-screen flex justify-center items-center">
-        <h1 className="text-white text-xl">You do not have permission to view this ticket</h1>
+        <h1 className=" text-xl">You do not have permission to view this ticket</h1>
       </main>
     );
   }
   const transcript = (await (await fetch(`https://cdn.nest.rip/uploads/${ticket.transcriptId}`)).json() as Message[]).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   const tsTs = transcript.map((message) => new Date(message.timestamp));
   return (
-    <main className="bg-slate-900 min-h-screen flex justify-center items-center">
+    <main className=" min-h-screen flex justify-center items-center">
       <div className="bg-slate-800 p-6 bg-blend-darken rounded-lg shadow-md max-w-3xl w-full">
         <div className="space-y-4">
           {transcript.map((message, i) => (
@@ -69,7 +69,7 @@ export default async function GuildPage({
               <div>
                 <p className="text-sm">{message.username} <span className="text-gray-400">{tsTs[i].toLocaleTimeString()} - {tsTs[i].toLocaleDateString()}</span></p>
                 <div>
-                  <p className="text-white">{message.content}</p>
+                  <p className="">{message.content}</p>
                   {message.attachments && message.attachments.map((attachment, i) => (
                     <Image key={i} src={"https://cdn.nest.rip/uploads/" + attachment} alt="attachment" width={412} height={412} className="rounded-md"/>
                   ))}

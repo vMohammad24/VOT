@@ -37,7 +37,11 @@ export default class LegacyCommandHandler {
             };
             const execution = await this.handler.executeCommand(command, message);
             if (execution) {
-                const msg = await message.reply(execution);
+                try {
+                    await message.reply(execution);
+                } catch (e) {
+                    await message.channel.send(execution);
+                }
             }
 
         })

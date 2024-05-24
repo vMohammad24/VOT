@@ -20,19 +20,19 @@ export default async function Header() {
     {
       name: "Home",
       link: "/",
-      icon: <HomeIcon className="h-4 w-4 text-neutral-500 dark:text-white" />,
+      icon: <HomeIcon className="h-4 w-4 text-neutral-500 dark:" />,
     },
     {
       name: "Commands",
       link: "/commands",
       icon: (
-        <TerminalIcon className="h-4 w-4 text-neutral-500 dark:text-white" />
+        <TerminalIcon className="h-4 w-4 text-neutral-500 dark:" />
       ),
     },
     {
       name: "Guilds",
       link: "/guilds",
-      icon: <HotelIcon className="h-4 w-4 text-neutral-500 dark:text-white" />,
+      icon: <HotelIcon className="h-4 w-4 text-neutral-500 dark:" />,
     },
   ];
   return (

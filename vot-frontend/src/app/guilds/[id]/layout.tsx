@@ -94,7 +94,7 @@ export default function GuildLayout({ children, params: { id } }: Props) {
   return (
     <section>
       <NavMenu />
-      <main className="ml-16 bg-slate-900">{children}</main>
+      <main className="ml-16 bg-base min-h-screen">{children}</main>
     </section>
   );
 }
