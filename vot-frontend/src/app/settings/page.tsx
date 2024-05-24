@@ -22,7 +22,7 @@ export default async function Settings() {
   if (!user) return <Link href="/">GO back</Link>;
   const isSpotifyLinked = user.spotify !== null;
   return (
-    <main className="bg-slate-900 min-h-screen text-foreground overflow-hidden">
+    <main className=" min-h-screen text-foreground overflow-hidden">
       <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
         <Card>
           <CardHeader>

@@ -30,6 +30,7 @@ export default {
             inter.respond(options)
         })
     },
+    userInstall: true,
     execute: async ({ args }) => {
         const tag = args[0];
         const reqUrl = `https://cataas.com/cat?json=true${tag ? '&tag=' + tag : ''}`;

@@ -6,6 +6,7 @@ export default {
     description: "Get a random raccoon image",
     aliases: ["raccoon"],
     name: "raccoon",
+    userInstall: true,
     execute: async () => {
         const res = (await axios.get("https://api.racc.lol/v1/raccoon?json=true"));
         const data = res.data.data;

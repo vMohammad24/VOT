@@ -76,9 +76,30 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
                 oldMessage.delete().catch(() => null);
             }
         }
-        const message = await voiceChannel.send({ embeds: [playingEmbed], components: getRows("Pause") });
-        player.data.set("messageId", message.id)
-        return message;
+        const musicSettings = await prisma.musicSettings.findFirst({
+            where: {
+                userId: member.id,
+            }
+        })
+        const panelType: "EMBED" | "IMAGE" = musicSettings?.panelType || "EMBED";
+        let msg;
+        if (panelType === "IMAGE") {
+            const progress = new Date(player.queue.current?.position!).getTime() / new Date(player.queue.current?.length!).getTime();
+            const panel = await ClassicPro({
+                author: track.author,
+                name: track.title,
+                thumbnailImage: track.thumbnail,
+                // minutes:seconds
+                startTime: new Date(player.queue.current?.position || 0).toISOString().substring(14, 19),
+                endTime: new Date(player.queue.current?.length!).toISOString().substring(14, 19),
+                progress: progress,
+            })
+            msg = (await voiceChannel.send({ files: [panel], components: getRows("Pause") }));
+        } else {
+            msg = (await voiceChannel.send({ embeds: [playingEmbed], components: getRows("Pause") }));
+        }
+        player.data.set("messageId", msg.id)
+        return msg;
     }
 }
 

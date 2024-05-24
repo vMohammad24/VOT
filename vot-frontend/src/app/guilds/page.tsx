@@ -1,17 +1,3 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { apiUrl } from "@/lib/utils";
@@ -70,7 +56,7 @@ export default async function Guilds() {
     },
   });
   return (
-    <main className="bg-slate-900 min-h-screen text-white overflow-hidden">
+    <main className=" min-h-screen text-text overflow-hidden">
       <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
         <GuildCarousal guilds={guilds} />
       </div>

@@ -65,20 +65,16 @@ export default async function GuildPage({
   });
   if (!guild) {
     return (
-      <main className="bg-slate-900 min-h-screen text-white ">
         <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
           Guild not found
         </div>
-      </main>
     );
   }
   if (guild.admins.some((admin) => admin.id === user.id) === false) {
     return (
-      <main className="bg-slate-900 min-h-screen text-white ">
         <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
           You are not an admin of {guild.name}
         </div>
-      </main>
     );
   }
   const guildInfo = await fetch(apiUrl + "discord/guilds/" + guildId, {
@@ -89,18 +85,16 @@ export default async function GuildPage({
 
   if (guildInfo.error == "notInGuild") {
     return (
-      <main className="bg-slate-900 min-h-screen text-white ">
         <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
           <Link href={apiUrl + "discord/invite"} className="justify-center">
             <Button>Invite VOT</Button>
           </Link>
         </div>
-      </main>
     );
   }
 
   return (
-    <main className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <>
       <h3 className="font-bold text-3xl text-center mb-2">
         Currently managing: {guild.name}
       </h3>
@@ -112,10 +106,10 @@ export default async function GuildPage({
         />
         <StatsCard title="Current Prefix" value={guildInfo.prefix} />
       </div>
-    </main>
+      </>
   );
   // return (
-  //   <main className="bg-slate-900 min-h-screen text-white ">
+  //   <main className=" min-h-screen  ">
   //     <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-max min-h-max ">
   //       <Tabs defaultValue="Info" className="w-[800px] h-[800px]">
   //         <h3 className="font-bold text-xl text-center mb-2 text-slate-400">

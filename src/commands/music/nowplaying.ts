@@ -6,7 +6,7 @@ export default {
     description: "Shows the current song",
     requireChannel: true,
     guildOnly: true,
-    needsPlayer: true,
+    aliases: ["np"],
     execute: async ({ interaction, guild, player, handler }) => {
         const msg = await getPanel(handler.kazagumo, guild);
         if (!msg) return {

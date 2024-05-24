@@ -18,23 +18,23 @@ interface GuildCarousalProps {
 
 export default function GuildCarousal({ guilds }: GuildCarousalProps) {
   return (
-    <Carousel className="w-full max-w-sm">
+    <Carousel className="w-full max-w-sm min-h-full border-none">
       <CarouselContent className="-ml-1">
         {guilds.map((guild, index) => (
           <CarouselItem
             key={index}
-            className="pl-1 shadow-zinc-500 transition-shadow hover:shadow-xl"
+            className="pl-1 transition-shadow hover:shadow-xl"
           >
             <Link href={`/guilds/${guild.id}`} className="select-none">
               <div className="p-1">
                 <Card>
-                  <CardContent className="flex flex-col gap-2 aspect-square items-center justify-center p-8">
+                  <CardContent className="bg-blend-overlay flex flex-col gap-2 aspect-square items-center justify-center p-8">
                     {guild.icon && (
                       <Image
-                        src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=512`}
+                        src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=1024`}
                         alt={guild.name}
-                        width={128}
-                        height={128}
+                        width={1024}
+                        height={1024}
                         className="rounded-md"
                       />
                     )}
