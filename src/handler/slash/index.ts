@@ -1,4 +1,4 @@
-import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand } from "discord.js";
+import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand, ApplicationCommandOptionType } from "discord.js";
 import type ICommand from "../interfaces/ICommand";
 import type SlashHandler from "../interfaces/SlashHandler";
 import CommandHandler from "..";
@@ -27,6 +27,7 @@ export default class SlashCommandHandler {
     public async initCommands(client: Client) {
         const commands = this.commands.map(cmd => {
             let perms: bigint | null = 0n;
+            if (!cmd.options) cmd.options = [];
             if (cmd.perms && cmd.perms != "dev") {
                 for (const perm of cmd.perms) {
                     for (const [key, value] of Object.entries(PermissionsBitField.Flags)) {
@@ -44,11 +45,15 @@ export default class SlashCommandHandler {
                     integration_types: [0, 1],
                     contexts: [0, 1, 2],
                 }
+                cmd.options?.push({
+                    name: "silent",
+                    description: "ephemeral's the response",
+                    type: ApplicationCommandOptionType.Boolean,
+                    required: false
+                })
             }
             if (!cmd.type) cmd.type = ApplicationCommandType.ChatInput;
             const command = this.filterObject({ ...cmd, defaultMemberPermissions: perms || 0, dmPermission: false, ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'type', 'defaultMemberPermissions', 'dmPermission'])
-            // remove any property under command that doesnt exist in ApplicationCommandDataResolvable
-
             return command;
         })
         // client.application?.commands.set(commands);
@@ -79,6 +84,9 @@ export default class SlashCommandHandler {
                 result = { content: 'There was an error while executing this command, please try again later', ephemeral: true };
             }
             if (result) {
+                if (interaction.options.get("silent", false)?.value == true) {
+                    (result as any).ephemeral = true;
+                }
                 if (interaction.replied) {
                     await interaction.followUp(result);
                 }
