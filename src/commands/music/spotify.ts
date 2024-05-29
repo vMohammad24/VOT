@@ -1,7 +1,6 @@
 import { EmbedBuilder, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { getCurrentlyPlaying, pausePlayer } from "../../util/spotify";
-import { sendPanel } from "../../util/music";
 
 export default {
     description: "Gets your current playing song from spotify and adds it to the queue",
