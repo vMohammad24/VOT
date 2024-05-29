@@ -37,7 +37,7 @@ export default {
             const expGained = Math.min(message.content.length / 2, 20)
             const newExp = member.exp + expGained
             if (newExp >= 1000) {
-                member.exp = newExp - 100
+                member.exp = 0
                 member.level += 1
                 const embed = new EmbedBuilder()
                     .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
@@ -45,7 +45,7 @@ export default {
                     .setDescription(`Congratulations to ${message.author} for leveling up to level ${member.level}!`)
                     .setColor("Random")
                     .setTimestamp()
-                await message.reply({ embeds: [embed] })
+                await message.reply({ embeds: [embed], allowedMentions: {} })
             } else {
                 member.exp = newExp
             }
