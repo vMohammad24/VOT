@@ -42,7 +42,7 @@ export default {
                 create: {
                     guildId: message.guild!.id,
                     exp: 0,
-                    level: 0,
+                    level: 1,
                     userId: user.id,
                 }
             })
