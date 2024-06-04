@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { createCanvas } from "@napi-rs/canvas";
 
@@ -14,13 +14,16 @@ export default {
     execute: async ({ message, member, handler, guild }) => {
         const user = message?.mentions?.members?.first() || member;
 
-        const prismaUser = handler.prisma.member.findFirst({
+        const prismaUser = await handler.prisma.member.findFirst({
             where: {
                 guildId: guild.id,
                 userId: user.id
             }
         })
-        const ctx = createCanvas(300, 200).getContext('2d');
+        if (!prismaUser) return;
+        const embed = new EmbedBuilder()
+            .setAuthor({ name: user.displayName, iconURL: user.avatarURL() || undefined })
+            .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${prismaUser.level * 10}`)
 
     }
 } as ICommand
