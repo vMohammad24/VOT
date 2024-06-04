@@ -23,7 +23,7 @@ export default {
         if (!prismaUser) return;
         const embed = new EmbedBuilder()
             .setAuthor({ name: user.displayName, iconURL: user.avatarURL() || undefined })
-            .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${prismaUser.level * 10}`)
+            .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${prismaUser.level * 1000}`)
             .setColor('Random')
         return {
             embeds: [embed]
