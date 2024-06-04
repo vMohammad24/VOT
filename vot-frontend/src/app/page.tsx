@@ -35,7 +35,7 @@ export default async function Home() {
   return (
     <main className=" min-h-screen  overflow-hidden">
       <TokenLoader />
-      <div className="m-0 min-w-full">
+      <div className="absolute m-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full">
         <div className="flex flex-col align-middle items-center">
           <h1
             id="welcome"
@@ -43,7 +43,7 @@ export default async function Home() {
           >
             Welcome to <b>VOT</b>
           </h1>
-          <TypewriterEffect words={description} />
+          <TypewriterEffect words={description} className="text-white" />
         </div>
         <div
           id="cards"

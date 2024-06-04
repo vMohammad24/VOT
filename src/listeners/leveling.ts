@@ -22,6 +22,20 @@ export default {
         })
         client.on("messageCreate", async (message) => {
             if (message.author.bot) return;
+            const user = await prisma.user.upsert({
+                where: {
+                    id: message.author.id,
+                },
+                update: {
+                    name: message.author.username,
+                    avatar: message.author.displayAvatarURL({ extension: 'png' })
+                },
+                create: {
+                    id: message.author.id,
+                    name: message.author.username,
+                    avatar: message.author.displayAvatarURL({ extension: 'png' }),
+                },
+            });
             const member = await prisma.member.upsert({
                 where: { userId_guildId: { guildId: message.guild!.id, userId: message.author.id } },
                 update: {},
@@ -29,14 +43,14 @@ export default {
                     guildId: message.guild!.id,
                     exp: 0,
                     level: 0,
-                    userId: message.author.id,
+                    userId: user.id,
                 }
             })
             if (member.messagesToday >= 100) return;
-            if (member.lastMessage && member.lastMessage.getDate() > Date.now() - 60000) return;
+            if (member.lastMessage && member.lastMessage.getDate() < Date.now() - 60000) return;
             const expGained = Math.min(message.content.length / 2, 20)
             const newExp = member.exp + expGained
-            if (newExp >= 1000) {
+            if (newExp >= 1000 * member.level) {
                 member.exp = 0
                 member.level += 1
                 const embed = new EmbedBuilder()
