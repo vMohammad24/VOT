@@ -24,6 +24,10 @@ export default {
         const embed = new EmbedBuilder()
             .setAuthor({ name: user.displayName, iconURL: user.avatarURL() || undefined })
             .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${prismaUser.level * 10}`)
+            .setColor('Random')
+        return {
+            embeds: [embed]
+        }
 
     }
 } as ICommand
