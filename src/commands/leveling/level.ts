@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { createCanvas } from "@napi-rs/canvas";
+import { expNeededForLevel } from "../../listeners/leveling";
 
 export default {
     description: "Displays your current level or the level of a selected user",
@@ -13,7 +14,6 @@ export default {
     ],
     execute: async ({ message, member, handler, guild }) => {
         const user = message?.mentions?.members?.first() || member;
-
         const prismaUser = await handler.prisma.member.findFirst({
             where: {
                 guildId: guild.id,
@@ -23,7 +23,7 @@ export default {
         if (!prismaUser) return;
         const embed = new EmbedBuilder()
             .setAuthor({ name: user.displayName, iconURL: user.avatarURL() || undefined })
-            .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${prismaUser.level * 1000}`)
+            .setDescription(`Currently on level ${prismaUser.level}\n Progress: ${prismaUser.exp}/${expNeededForLevel(prismaUser.level + 1)}`)
             .setColor('Random')
         return {
             embeds: [embed]

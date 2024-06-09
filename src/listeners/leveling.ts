@@ -2,6 +2,10 @@ import { EmbedBuilder } from "discord.js";
 import type ICommand from "../handler/interfaces/ICommand";
 import type { IListener } from "../handler/listenres";
 
+export const expNeededForLevel = (needed: number) => {
+    return 5 * Math.pow(needed, 2) + 50 * needed + 100
+}
+
 export default {
     name: "Leveling System",
     description: "Leveling related events",
@@ -48,11 +52,11 @@ export default {
             })
             // if (member.messagesToday >= 100) return;
             console.log(member.lastMessage?.getTime(), Date.now())
-            if (member.lastMessage && member.lastMessage.getTime() < Date.now() / 1000 - 2000) return;
+            if (member.lastMessage && member.lastMessage.getTime() < Date.now() - 3000) return;
             const expGained = Math.min(message.content.length / 2, 20)
             console.log(`${message.author.tag} gained ${expGained} exp.`)
             const newExp = member.exp + expGained
-            if (newExp >= member.level * 5.25) {
+            if (newExp >= expNeededForLevel(member.level + 1)) {
                 member.exp = 0
                 member.level += 1
                 const embed = new EmbedBuilder()
