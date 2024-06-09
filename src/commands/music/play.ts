@@ -36,7 +36,7 @@ export default {
     needsPlayer: true,
     execute: async ({ player, handler, guild, member, args }) => {
         const { kazagumo } = handler;
-        if (!player) return { content: "tf" }
+        if (!player) return { content: "Get in a voice channel first", ephemeral: true }
         const query = args.join(" ");
         if (!query) {
             player.play();
@@ -76,7 +76,7 @@ export default {
             }
         });;
         embed.setDescription(`${embed.data.description}\n\nGo to <#${member.voice.channelId}> to manage the queue`);
-        player.play();
+        if (!player.playing) player.play();
         return {
             embeds: [embed],
             ephemeral: true

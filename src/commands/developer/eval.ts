@@ -17,6 +17,9 @@ export default {
         }
     ],
     execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
+        if (args[args.length - 1].toLowerCase() == "true" || args[args.length - 1].toLowerCase() == "false") {
+            args = args.slice(0, -1)
+        }
         let code = args.join(" ");
         const embed = new EmbedBuilder()
             .setTitle("Eval")
