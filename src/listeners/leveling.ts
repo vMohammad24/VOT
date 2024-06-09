@@ -52,7 +52,7 @@ export default {
             const expGained = Math.min(message.content.length / 2, 20)
             console.log(`${message.author.tag} gained ${expGained} exp.`)
             const newExp = member.exp + expGained
-            if (newExp >= 1000 * member.level) {
+            if (newExp >= member.level * 1.25) {
                 member.exp = 0
                 member.level += 1
                 const embed = new EmbedBuilder()
