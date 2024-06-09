@@ -84,8 +84,8 @@ export default class SlashCommandHandler {
                 result = { content: 'There was an error while executing this command, please try again later', ephemeral: true };
             }
             if (result) {
-                if (interaction.options.get("silent", false)?.value == true) {
-                    (result as InteractionReplyOptions).ephemeral = true;
+                if (typeof interaction.options.get("silent", false)?.value == "boolean") {
+                    (result as InteractionReplyOptions).ephemeral = interaction.options.get("silent", false)?.value as boolean;
                 }
                 if (interaction.replied) {
                     await interaction.followUp(result);
