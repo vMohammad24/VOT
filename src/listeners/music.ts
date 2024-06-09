@@ -61,12 +61,12 @@ export default {
                 if (inter.customId === "pause") {
                     player.pause(true);
                     inter.update({
-                        components: getRows("Resume")
+                        components: getRows(player)
                     })
                 } else if (inter.customId === "resume") {
                     player.pause(false)
                     inter.update({
-                        components: getRows("Pause")
+                        components: getRows(player)
                     })
                     // inter.message.delete();
                 } else if (inter.customId === "skip") {
@@ -80,7 +80,7 @@ export default {
                 } else if (inter.customId === "loop") {
                     player.setLoop(player.loop === "queue" ? "none" : "queue");
                     inter.update({
-                        components: getRows(player.playing ? "Pause" : "Resume", player.loop === "queue")
+                        components: getRows(player)
                     })
                 } else if (inter.customId === "shuffle") {
                     player.queue.shuffle();

@@ -3,7 +3,9 @@ import type { Kazagumo, KazagumoPlayer } from "kazagumo";
 import prisma from "../../vot-frontend/src/lib/prisma";
 import { ClassicPro } from "musicard";
 
-export function getRows(status: "Resume" | "Pause", looping: boolean = false) {
+export function getRows(player: KazagumoPlayer) {
+    const status = player.paused ? "Pause" : "Resume";
+    const looping = player.loop != "none";
     const row = new ActionRowBuilder<ButtonBuilder>()
         .setComponents(
             (status === "Pause" ? new ButtonBuilder()
@@ -94,9 +96,9 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
                 endTime: new Date(player.queue.current?.length!).toISOString().substring(14, 19),
                 progress: progress,
             })
-            msg = (await voiceChannel.send({ files: [panel], components: getRows("Pause") }));
+            msg = (await voiceChannel.send({ files: [panel], components: getRows(player) }));
         } else {
-            msg = (await voiceChannel.send({ embeds: [playingEmbed], components: getRows("Pause") }));
+            msg = (await voiceChannel.send({ embeds: [playingEmbed], components: getRows(player) }));
         }
         player.data.set("messageId", msg.id)
         return msg;
