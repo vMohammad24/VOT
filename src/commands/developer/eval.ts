@@ -17,7 +17,7 @@ export default {
         }
     ],
     execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
-        if (args[args.length - 1] == "true" || args[args.length - 1] == "false") {
+        if (args[args.length - 1] == "True" || args[args.length - 1] == "False") {
             args.pop();
         }
         let code = args.join(" ");
