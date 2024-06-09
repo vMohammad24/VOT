@@ -109,7 +109,7 @@ export default class CommandHandler {
         for await (const validationFile of this.glob.scan({ cwd: validationDir })) {
             const validation = await import(path.join(validationDir, validationFile));
             const result = await validation.default(command, commandContext);
-            if (result !== true) return result;
+            if (result != true) return result;
         }
         await this.prisma.user.upsert({
             where: {
