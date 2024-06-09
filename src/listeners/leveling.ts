@@ -49,6 +49,7 @@ export default {
             if (member.messagesToday >= 100) return;
             if (member.lastMessage && member.lastMessage.getDate() < Date.now() - 60000) return;
             const expGained = Math.min(message.content.length / 2, 20)
+            console.log(`${message.author.tag} gained ${expGained} exp.`)
             const newExp = member.exp + expGained
             if (newExp >= 1000 * member.level) {
                 member.exp = 0

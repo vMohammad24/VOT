@@ -32,13 +32,19 @@ export default class LegacyCommandHandler {
             const command = this.commands.find(cmd => cmd.name === commandName || cmd.aliases?.includes(commandName));
             if (!command) return;
             if (command.slashOnly) {
-                const msg = await message.reply("This command is only available as a slash command")
+                const msg = await message.reply({
+                    content: "This command is only available as a slash command",
+                    allowedMentions: {}
+                })
                 return;
             };
             const execution = await this.handler.executeCommand(command, message);
             if (execution) {
                 try {
-                    await message.reply(execution);
+                    await message.reply({
+                        allowedMentions: {},
+                        ...execution
+                    });
                 } catch (e) {
                     await message.channel.send(execution);
                 }
