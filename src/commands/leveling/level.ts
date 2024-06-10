@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { createCanvas } from "@napi-rs/canvas";
 import { expNeededForLevel } from "../../listeners/leveling";
@@ -12,8 +12,8 @@ export default {
             type: ApplicationCommandOptionType.User
         }
     ],
-    execute: async ({ message, member, handler, guild }) => {
-        const user = message?.mentions?.members?.first() || member;
+    execute: async ({ message, member, handler, guild, interaction }) => {
+        const user = message?.mentions?.members?.first() || interaction?.options.getMember('user') as GuildMember || member;
         const prismaUser = await handler.prisma.member.findFirst({
             where: {
                 guildId: guild.id,
