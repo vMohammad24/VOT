@@ -52,8 +52,7 @@ export default {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isAutocomplete()) return;
             if (interaction.commandName != "playlist") return;
-            console.log(interaction.options)
-            if (interaction.options.getFocused() == "name") {
+            if (interaction.options.getSubcommand() == "play") {
                 const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
                 const choices = playlists.map((playlist) => {
                     return {
@@ -63,10 +62,20 @@ export default {
                 })
                 interaction.respond(choices);
             }
-            if (interaction.options.getSubcommand() == "update" && interaction.options.getFocused() == "track") {
+            if (interaction.options.getSubcommand() == "update") {
                 const playlistName = interaction.options.getString("name", true);
                 const trackName = interaction.options.getString("track", true);
                 const action = interaction.options.getString("action", true);
+                if (!playlistName) {
+                    const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
+                    const choices = playlists.map((playlist) => {
+                        return {
+                            name: playlist.name,
+                            value: playlist.id
+                        }
+                    })
+                    interaction.respond(choices);
+                }
                 const playlist = await prisma.playlist.findFirst({
                     where: {
                         OR: [
