@@ -51,8 +51,8 @@ export default {
     init: async ({ client, prisma, kazagumo }) => {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isAutocomplete()) return;
-            if (interaction.commandName !== "playlist") return;
-            if (interaction.options.getSubcommand() == "play" || (interaction.options.getSubcommand() == "update" && interaction.options.getFocused() == "name")) {
+            if (interaction.commandName != "playlist") return;
+            if (interaction.options.getFocused() == "name") {
                 const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
                 const choices = playlists.map((playlist) => {
                     return {
