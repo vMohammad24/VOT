@@ -12,6 +12,7 @@ export default {
             type: ApplicationCommandOptionType.Integer
         }
     ],
+    aliases: ["sk"],
     execute: async ({ player, member, args }) => {
         if (!player) return {
             content: "No player found",

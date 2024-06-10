@@ -52,7 +52,7 @@ export default {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isAutocomplete()) return;
             if (interaction.commandName !== "playlist") return;
-            if (interaction.options.getSubcommand() == "play") {
+            if (interaction.options.getSubcommand() == "play" || (interaction.options.getSubcommand() == "update" && interaction.options.getFocused() == "name")) {
                 const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
                 const choices = playlists.map((playlist) => {
                     return {
@@ -61,7 +61,8 @@ export default {
                     }
                 })
                 interaction.respond(choices);
-            } else if (interaction.options.getSubcommand() == "update") {
+            }
+            if (interaction.options.getSubcommand() == "update" && interaction.options.getFocused() == "track") {
                 const playlistName = interaction.options.getString("name", true);
                 const trackName = interaction.options.getString("track", true);
                 const action = interaction.options.getString("action", true);
@@ -145,7 +146,8 @@ export default {
                     name: "name",
                     description: "The name of the playlist",
                     type: ApplicationCommandOptionType.String,
-                    required: true
+                    required: true,
+                    autocomplete: true
                 },
                 {
                     name: "action",
