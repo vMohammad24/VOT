@@ -6,6 +6,7 @@ export default {
     description: "Creates a giveaway",
     name: "gcreate",
     slashOnly: true,
+    perms: ["Administrator"],
     init: async (handler) => {
         handler.client.on('interactionCreate', async (interaction) => {
             if (!interaction.isModalSubmit()) return;
