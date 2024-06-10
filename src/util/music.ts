@@ -4,7 +4,7 @@ import prisma from "../../vot-frontend/src/lib/prisma";
 import { ClassicPro } from "musicard";
 
 export function getRows(player: KazagumoPlayer) {
-    const status = player.paused ? "Pause" : "Resume";
+    const status = player.paused ? "Resume" : "Pause";
     const looping = player.loop != "none";
     const row = new ActionRowBuilder<ButtonBuilder>()
         .setComponents(
