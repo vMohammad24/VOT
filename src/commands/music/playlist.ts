@@ -51,7 +51,7 @@ export default {
     init: async ({ client, prisma, kazagumo }) => {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isAutocomplete()) return;
-            if (interaction.commandName != "playlist") return;
+            if (interaction.commandName !== "playlist") return;
             if (interaction.options.getSubcommand() == "play") {
                 const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
                 const choices = playlists.map((playlist) => {
@@ -61,21 +61,10 @@ export default {
                     }
                 })
                 interaction.respond(choices);
-            }
-            if (interaction.options.getSubcommand() == "update") {
+            } else if (interaction.options.getSubcommand() == "update") {
                 const playlistName = interaction.options.getString("name", true);
                 const trackName = interaction.options.getString("track", true);
                 const action = interaction.options.getString("action", true);
-                if (!playlistName) {
-                    const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
-                    const choices = playlists.map((playlist) => {
-                        return {
-                            name: playlist.name,
-                            value: playlist.id
-                        }
-                    })
-                    interaction.respond(choices);
-                }
                 const playlist = await prisma.playlist.findFirst({
                     where: {
                         OR: [
@@ -156,8 +145,7 @@ export default {
                     name: "name",
                     description: "The name of the playlist",
                     type: ApplicationCommandOptionType.String,
-                    required: true,
-                    autocomplete: true
+                    required: true
                 },
                 {
                     name: "action",
