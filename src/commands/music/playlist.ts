@@ -52,7 +52,7 @@ export default {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isAutocomplete()) return;
             if (interaction.commandName != "playlist") return;
-            console.log(interaction.options.getFocused())
+            console.log(interaction.options)
             if (interaction.options.getFocused() == "name") {
                 const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
                 const choices = playlists.map((playlist) => {
