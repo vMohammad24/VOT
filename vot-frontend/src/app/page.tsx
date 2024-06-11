@@ -30,7 +30,7 @@ export default async function Home() {
   const commandsRan = await prisma.command.count();
   const upSince = parseInt(stats!.upSince);
   const description = "A multi-purpose Discord bot.".split(" ").map((word) => {
-    return { text: word, className: "md:text-4xl" };
+    return { text: word, className: "md:text-4xl text-white" };
   });
   return (
     <main className=" min-h-screen  overflow-hidden">
