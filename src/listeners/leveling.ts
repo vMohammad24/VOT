@@ -1,9 +1,18 @@
-import { EmbedBuilder } from "discord.js";
+import { ChannelType, EmbedBuilder, GuildMember, Message, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../handler/interfaces/ICommand";
 import type { IListener } from "../handler/listenres";
 
 export const expNeededForLevel = (needed: number) => {
     return 5 * Math.pow(needed, 2) + 50 * needed + 100
+}
+
+const shouldGetExp = (message: Message) => {
+    if (message.author.bot) return false;
+    if (!message.guild) return false;
+    const channel = message.channel as GuildTextBasedChannel;
+    const blacklistedChannels = ["dev", "staff", "ticket", "mod-logs", "logs", "admin"]
+    if (blacklistedChannels.includes(channel.name)) return false;
+    return true
 }
 
 export default {
@@ -25,7 +34,7 @@ export default {
             }, 1000 * 60 * 60 * 24)
         })
         client.on("messageCreate", async (message) => {
-            if (message.author.bot) return;
+            if (!shouldGetExp(message)) return;
             const user = await prisma.user.upsert({
                 where: {
                     id: message.author.id,
