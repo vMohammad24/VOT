@@ -5,6 +5,7 @@ import axios from "axios";
 export default {
     name: "watchdog",
     description: "Check the staff and watchdog bans in the last minute",
+    userInstall: true,
     execute: async () => {
         const res = await axios.get(
             `https://api.plancke.io/hypixel/v1/punishmentStats`
