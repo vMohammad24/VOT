@@ -11,7 +11,7 @@ export default function (command: ICommand, ctx: CommandContext) {
         else return true;
     }
     for (const perm of perms) {
-        if (!member.permissions.has(perm)) return `You are missing the \`${perm}\` permission`;
+        if (!member.permissions.has(perm)) return { content: `You are missing the \`${perm}\` permission`, ephermal: true };
     }
     return true;
 }

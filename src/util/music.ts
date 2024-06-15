@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember, type Guild, type GuildTextBasedChannel } from "discord.js";
 import type { Kazagumo, KazagumoPlayer } from "kazagumo";
-import prisma from "../../vot-frontend/src/lib/prisma";
 import { ClassicPro } from "musicard";
+import commandHandler from "..";
 
 export function getRows(player: KazagumoPlayer) {
     const status = player.paused ? "Resume" : "Pause";
@@ -78,7 +78,7 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
                 oldMessage.delete().catch(() => null);
             }
         }
-        const musicSettings = await prisma.musicSettings.findFirst({
+        const musicSettings = await commandHandler.prisma.musicSettings.findFirst({
             where: {
                 userId: member.id,
             }

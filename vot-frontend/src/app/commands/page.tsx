@@ -16,7 +16,7 @@ export default async function Commands() {
       commands = data;
     });
   return (
-    <main className=" min-h-screen  overflow-hidden pt-16">
+    <main className="min-h-screen pt-20">
       <div className="absolute left-1/2 -translate-x-1/2 min-w-full flex">
         <div className="grid grid-flow-row-dense justify-stretch gap-5 p-10 md:grid-cols-5">
           {commands
