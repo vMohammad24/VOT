@@ -1,6 +1,7 @@
 
 import { ApplicationCommandOptionType, Colors, EmbedBuilder, ModalBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { transpile } from 'typescript'
 
 export default {
     name: 'eval',
@@ -30,15 +31,17 @@ export default {
             embed.setDescription("``nuh uh``");
             return { embeds: [embed] }
         }
+        const startTime = new Date();
         try {
             if (code.startsWith('```')) {
                 code = code.replace(/```/g, "")
             }
-            let evaled = await eval(code);
-            embed.setDescription(`\`\`\`js\n${evaled}\`\`\``)
+            const evaluatedResult = Function(`"use strict";return ${code}`)()
+            embed.setDescription(`\`\`\`js\n${evaluatedResult}\`\`\``)
         } catch (e) {
             embed.setDescription(`\`\`\`js\n${e}\`\`\``)
         }
+        embed.setFooter({ text: `Took ${new Date().getTime() - startTime.getTime()}ms` })
         return { embeds: [embed] }
     }
 } as ICommand

@@ -1,5 +1,6 @@
 import type { PrismaClient, Spotify } from "@prisma/client";
 import axios from "axios";
+import commandHandler from "..";
 export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) {
     const spotify = await prisma.spotify.findUnique({
         where: {
@@ -9,7 +10,6 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
     if (!spotify || !spotify.expiresAt) return { error: "Spotify account not linked." };
     if (spotify.expiresAt < new Date("UTC")) {
         await refreshToken(spotify, prisma);
-        await setTimeout(() => { }, 500)
         return await getCurrentlyPlaying(userId, prisma);
     }
     const res = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
@@ -77,5 +77,6 @@ export async function refreshToken(spotify: Spotify, prisma: PrismaClient) {
             expiresAt: new Date(Date.now() + resData.expires_in)
         }
     })
+    commandHandler.logger.info(`Refreshed spotify token for ${spotify.userId}`)
     return resData.access_token;
 }

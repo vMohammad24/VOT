@@ -1,5 +1,4 @@
 import { ChannelType, EmbedBuilder, GuildMember, Message, type GuildTextBasedChannel } from "discord.js";
-import type ICommand from "../handler/interfaces/ICommand";
 import type { IListener } from "../handler/listenres";
 
 export const expNeededForLevel = (needed: number) => {

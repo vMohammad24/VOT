@@ -25,7 +25,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body
         className={cn(
-          `mocha min-h-screen font-sans antialiased text-text ${fontSans.variable}`
+          `${fontSans.variable}`
         )}
       >
         <Header />

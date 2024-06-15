@@ -9,7 +9,6 @@ COPY package.json ./
 COPY bun.lockb ./
 COPY src ./src
 COPY prisma ./prisma
-COPY .env ./
 RUN bun install
 EXPOSE 8080
 CMD [ "bun", "start" ]
