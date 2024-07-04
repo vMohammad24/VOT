@@ -19,6 +19,7 @@ export default function GuildLayout({ children, params: { id } }: Props) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return usePathname().split("/").pop()!;
   };
+  
   const NavMenu = () => {
     const guildLink = `/guilds/${id}`;
 

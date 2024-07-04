@@ -4,9 +4,12 @@ import { getLogChannel } from "./util";
 import Confirm from "./confirm";
 import { uploadFile } from "./nest";
 import axios from "axios";
+import commandHandler from "..";
+import { getFrontEndURL } from "./urls";
 
-export async function createTicket(prisma: PrismaClient, member: GuildMember, reason: string) {
+export async function createTicket(member: GuildMember, reason: string) {
     const { guild } = member;
+    const { prisma } = commandHandler;
     const ticketSettings = await prisma.ticketSettings.findUnique({
         where: {
             guildId: guild.id!
@@ -20,7 +23,7 @@ export async function createTicket(prisma: PrismaClient, member: GuildMember, re
         }
     })
     if (alreadyExists) {
-        return { error: "You already have an open ticket" };
+        return { error: "You already have an open ticket <#" + alreadyExists.channelId + ">" };
     }
     const channel = await guild?.channels.create({
         name: `ticket-${member.displayName}`,
@@ -53,12 +56,13 @@ export async function createTicket(prisma: PrismaClient, member: GuildMember, re
             guildId: guild.id!,
             channelId: channel.id,
             userId: member.id,
-            open: true
+            open: true,
+            reason
         }
     })
     const embed = new EmbedBuilder()
         .setTitle('Ticket Created')
-        .setDescription(`Please wait for a staff member to assist you`)
+        .setDescription("Open Reason:\n```" + reason + "```")
         .setColor('Green')
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -67,7 +71,7 @@ export async function createTicket(prisma: PrismaClient, member: GuildMember, re
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🔒')
     )
-    channel!.send({ embeds: [embed], components: [row], content: `<@${member.id}>` })
+    channel!.send({ embeds: [embed], components: [row], content: `<@${member.id}>, please wait for a staff member to respond` })
     const logEmbed = new EmbedBuilder()
         .setTitle('Ticket Created')
         .setDescription(`${channel.name} has been created for ${reason}`)
@@ -80,7 +84,8 @@ export async function createTicket(prisma: PrismaClient, member: GuildMember, re
 }
 
 
-export async function closeTicket(prisma: PrismaClient, channel: GuildTextBasedChannel, closedBy: GuildMember) {
+export async function closeTicket(channel: GuildTextBasedChannel, closedBy: GuildMember) {
+    const { prisma } = commandHandler;
     const ticketData = await prisma.ticket.findFirst({
         where: {
             channelId: channel.id
@@ -104,7 +109,8 @@ export async function closeTicket(prisma: PrismaClient, channel: GuildTextBasedC
     // }
     // const uploadedData = await uploadFile([content])
     // console.log(uploadedData)
-    const cdnId = await transcriptTicket(prisma, chan);
+    const ticketOwner = await channel.guild?.members.fetch(ticketData.userId);
+    const cdnId = await transcriptTicket(chan);
     await prisma.ticket.update({
         where: {
             id: ticketData.id
@@ -119,18 +125,30 @@ export async function closeTicket(prisma: PrismaClient, channel: GuildTextBasedC
         .setTitle('Ticket Closed')
         .setDescription(`Ticket ${chan.name} has been closed`)
         .setAuthor({ name: closedBy.user.displayName, iconURL: closedBy.user.displayAvatarURL() })
-        .addFields({
-            name: 'Transcript',
-            value: `[Download](https://cdn.nest.rip/uploads/${cdnId})`
-        })
         .setColor('Red')
         .setTimestamp()
-    logChannel?.send({ embeds: [logEmbed] })
+    const userEmbed = new EmbedBuilder()
+        .setTitle('Ticket Closed')
+        .setAuthor({ name: closedBy.user.displayName, iconURL: closedBy.user.displayAvatarURL() })
+        .setDescription(`A ticket you have opened in ${chan.guild.name} has been closed`)
+        .setTimestamp()
+        .setColor('Red')
+        .setFooter({ text: `Ticket ID: ${ticketData.id}` })
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+            .setLabel('Transcript')
+            .setStyle(ButtonStyle.Link)
+            .setEmoji('📋')
+            .setURL(`${getFrontEndURL()}/ticket/${ticketData.id}`)
+    )
+    logChannel?.send({ embeds: [logEmbed], components: [actionRow] })
+    await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] })
     await chan.delete()
     return { content: "Ticked closed. " }
 }
 
-export async function transcriptTicket(prisma: PrismaClient, channel: GuildTextBasedChannel) {
+export async function transcriptTicket(channel: GuildTextBasedChannel) {
+    const { prisma } = commandHandler;
     const ticketData = await prisma.ticket.findFirst({
         where: {
             channelId: channel.id

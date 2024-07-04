@@ -88,7 +88,7 @@ export default function TicketPanel({
   );
   const [state, formAction] = useFormState(handleSub, null);
   return (
-    <>
+    <div className="rounded-md">
       <CardHeader>
         <h2 className="font-bold text-center">Ticket Embed Settings</h2>
       </CardHeader>
@@ -320,6 +320,6 @@ export default function TicketPanel({
           </form>
         </Form>
       </CardContent>
-    </>
+    </div>
   );
 }

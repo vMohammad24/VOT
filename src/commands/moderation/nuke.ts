@@ -1,11 +1,17 @@
-import { EmbedBuilder, type BaseGuildTextChannel, type GuildTextBasedChannel } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, type BaseGuildTextChannel, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
     description: "Nukes a channel",
     perms: ["ManageChannels", "ManageMessages", "ManageGuild"],
-    execute: async ({ channel, guild, member }) => {
-        const c = channel as BaseGuildTextChannel;
+    options: [{
+        name: "channel",
+        description: "The channel to nuke",
+        type: ApplicationCommandOptionType.Channel,
+        required: false
+    }],
+    execute: async ({ channel, guild, member, message, interaction }) => {
+        const c = (message?.mentions.channels.first() || interaction?.options.getChannel("channel", false) || channel) as BaseGuildTextChannel;
         if (!c) {
             return "Please provide a valid channel";
         }
@@ -15,11 +21,11 @@ export default {
                 c.delete("Nuked");
                 const embed = new EmbedBuilder()
                     .setTitle("Nuked")
-                    .setDescription(`Channel ${c.name} has been nuked`)
+                    .setDescription(`#${c.name} has been nuked`)
                     .setColor("Random")
-                    .setTimestamp(Date.now())
-                    .setFooter({ text: `Nuked by ${member.displayName}`, iconURL: member.user.displayAvatarURL() })
-                    .setImage("https://c.tenor.com/jkRrt2SrlMkAAAAC/pepe-nuke.gif");
+                    .setTimestamp()
+                    .setFooter({ text: `Nuked by ${member.user.displayName}`, iconURL: member.user.displayAvatarURL() })
+                    .setImage("https://cdn.nest.rip/uploads/73134e91-7998-4e63-b9e6-11832b4f7cac.gif");
                 await ch.send({ embeds: [embed] });
             })
             .catch((err) => {

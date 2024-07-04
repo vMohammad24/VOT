@@ -8,7 +8,7 @@ export default {
     description: "Allows the developer to evaluate code",
     aliases: ['e'],
     perms: "dev",
-    userInstall: true,
+    type: "dmOnly",
     options: [
         {
             name: "code",

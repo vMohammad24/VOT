@@ -39,12 +39,16 @@ export default class SlashCommandHandler {
             } else {
                 perms = null;
             }
-            let uInstall = {};
-            if (cmd.userInstall == true) {
-                uInstall = {
-                    integration_types: [0, 1],
-                    contexts: [0, 1, 2],
-                }
+            const uInstall = {
+                contexts: [] as number[],
+                integration_types: [] as number[],
+            };
+
+            if (!cmd.type) cmd.type = "guildOnly";
+
+            if (cmd.type == "installable") {
+                uInstall.contexts.push(2)
+                uInstall.integration_types.push(1)
                 cmd.options?.push({
                     name: "silent",
                     description: "ephemeral's the response",
@@ -52,8 +56,24 @@ export default class SlashCommandHandler {
                     required: false
                 })
             }
-            if (!cmd.type) cmd.type = ApplicationCommandType.ChatInput;
-            const command = this.filterObject({ ...cmd, defaultMemberPermissions: perms || 0, dmPermission: false, ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'type', 'defaultMemberPermissions', 'dmPermission'])
+            if (cmd.type == "guildOnly") {
+                uInstall.contexts.push(0)
+                uInstall.integration_types.push(0)
+            }
+
+            if (cmd.type == "dmOnly") {
+                uInstall.contexts.push(1)
+                uInstall.integration_types.push(0)
+            }
+
+            if (cmd.type == "all") {
+                uInstall.contexts.push(0)
+                uInstall.contexts.push(1)
+                uInstall.contexts.push(2)
+                uInstall.integration_types.push(0)
+                uInstall.integration_types.push(1)
+            }
+            const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'default_member_permissions', 'dmPermission'])
             return command;
         })
         // client.application?.commands.set(commands);

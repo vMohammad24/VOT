@@ -71,13 +71,13 @@ client.on("ready", async (c) => {
     const giveaways = await prisma.giveaway.findMany();
     for (const giveaway of giveaways) {
         if (!giveaway.ended) {
-            if (giveaway.end < new Date()) {
-                endGiveaway(commandHandler, giveaway.id);
+            if (giveaway.end.getTime() < Date.now()) {
+                endGiveaway(giveaway.id);
                 continue;
             }
             if (scheduledJobs[giveaway.id]) return;
             scheduleJob(giveaway.id, giveaway.end, async () => {
-                endGiveaway(commandHandler, giveaway.id);
+                endGiveaway(giveaway.id);
             });
         }
     }

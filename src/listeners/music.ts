@@ -51,43 +51,52 @@ export default {
 
         client.on('interactionCreate', async (inter) => {
             const ids = ["pause", "resume", "skip", "queue", "stop", "loop", "shuffle", "volume"];
-            if (inter.isButton()) {
-                if (!ids.includes(inter.customId)) return;
-                const player = kazagumo.getPlayer(inter.guildId!);
-                if (!player) {
-                    inter.reply({ content: "No player found", ephemeral: true });
-                    return;
-                };
-                if (inter.customId === "pause") {
+            if (!inter.isButton()) return;
+            if (!ids.includes(inter.customId)) return;
+            const player = kazagumo.getPlayer(inter.guildId!);
+            if (!player) {
+                inter.reply({ content: "No player found", ephemeral: true });
+                return;
+            };
+            switch (inter.customId) {
+                case "pause":
                     player.pause(true);
                     inter.update({
-                        components: getRows(player)
-                    })
-                } else if (inter.customId === "resume") {
-                    player.pause(false)
+                        components: getRows(player),
+                        content: `Paused by ${inter.user.username}`
+                    });
+                    break;
+                case "resume":
+                    player.pause(false);
                     inter.update({
-                        components: getRows(player)
-                    })
-                    // inter.message.delete();
-                } else if (inter.customId === "skip") {
+                        components: getRows(player),
+                        content: `Resumed by ${inter.user.username}`
+                    });
+                    break;
+                case "skip":
                     player.skip();
                     inter.message?.delete();
-                } else if (inter.customId === "queue") {
-                    executeCommand.call(handler, commands?.find(cmd => cmd.name === "queue")!, inter)
-                } else if (inter.customId === "stop") {
+                    break;
+                case "queue":
+                    executeCommand.call(handler, commands?.find(cmd => cmd.name === "queue")!, inter);
+                    break;
+                case "stop":
                     player.destroy();
                     inter.message?.delete();
-                } else if (inter.customId === "loop") {
+                    break;
+                case "loop":
                     player.setLoop(player.loop === "queue" ? "none" : "queue");
                     inter.update({
                         components: getRows(player)
-                    })
-                } else if (inter.customId === "shuffle") {
+                    });
+                    break;
+                case "shuffle":
                     player.queue.shuffle();
                     inter.update({
                         content: "Queue shuffled by " + inter.user.username
-                    })
-                } else if (inter.customId === "volume") {
+                    });
+                    break;
+                case "volume":
                     const volume = player.volume * 100;
                     inter.reply({ content: `Current volume is ${volume}. Please enter a new volume level from 1-100`, ephemeral: true });
                     const collector = (inter.channel as GuildTextBasedChannel).createMessageCollector({ time: 15000, filter: m => m.author.id === inter.user.id });
@@ -101,11 +110,16 @@ export default {
                         await player.setVolume(newVolume);
                         await inter.update({
                             content: `Volume set to ${newVolume} by ${inter.user.username}`
-                        })
+                        });
                         collector.stop();
                     });
-                }
+                    break;
+                default:
+                    inter.reply({ content: "Invalid command", ephemeral: true });
+                    break;
             }
+
+
         })
 
     }

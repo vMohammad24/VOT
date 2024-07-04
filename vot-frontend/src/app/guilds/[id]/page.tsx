@@ -94,7 +94,7 @@ export default async function GuildPage({
   }
 
   return (
-    <>
+    <main className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 rounded-lg">
       <h3 className="font-bold text-3xl text-center mb-2">
         Currently managing: {guild.name}
       </h3>
@@ -106,7 +106,7 @@ export default async function GuildPage({
         />
         <StatsCard title="Current Prefix" value={guildInfo.prefix} />
       </div>
-      </>
+      </main>
   );
   // return (
   //   <main className=" min-h-screen  ">

@@ -21,7 +21,6 @@ export default async function Home() {
     totalGuilds: string;
     totalCommands: string;
   } | null = null;
-  console.log(apiUrl);
   await fetch(apiUrl)
     .then(async (res) => await res.json())
     .then((data) => {
@@ -33,9 +32,9 @@ export default async function Home() {
     return { text: word, className: "md:text-4xl text-white" };
   });
   return (
-    <main className="min-h-screen">
+    <>
       <TokenLoader />
-      <div className="absolute m-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full pt-32">
+      <div className="md:min-h-screen m-0 min-w-full pt-32">
         <div className="flex flex-col align-middle items-center">
           <h1
             id="welcome"
@@ -60,6 +59,6 @@ export default async function Home() {
           />
         </div>
       </div>
-    </main>
+    </>
   );
 }

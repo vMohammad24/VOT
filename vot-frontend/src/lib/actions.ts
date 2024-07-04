@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "./prisma";
+import { apiUrl, getApiUrl } from "./utils";
 
 export const submitTicketSettings = async (data: any, guildId: string, token: string) => {
     const user = await prisma.user.findUnique({ where: { token: token } });
@@ -22,7 +23,7 @@ export const submitTicketSettings = async (data: any, guildId: string, token: st
         update: actualData,
         create: actualData,
     })
-    await fetch(`${process.env.API_URL}discord/guilds/${guildId}`, {
+    const res = await (await fetch(`${apiUrl}discord/guilds/${guildId}`, {
         method: "PATCH",
         body: JSON.stringify({
             oldChannel: oldSettings?.channelId,
@@ -33,7 +34,8 @@ export const submitTicketSettings = async (data: any, guildId: string, token: st
             authorization: token,
             "Content-Type": "application/json",
         },
-    })
+    })).text()
+    // console.log(res)
     return upd ? { success: true } : { error: "An error occurred" }
 };
 

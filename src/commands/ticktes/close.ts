@@ -6,7 +6,7 @@ export default {
     name: "close",
     description: "Close a ticket",
     execute: async ({ handler, member, channel }) => {
-        const ticket = await closeTicket(handler.prisma, channel as GuildTextBasedChannel, member);
+        const ticket = await closeTicket(channel as GuildTextBasedChannel, member);
         if (!ticket) return;
         if (ticket.error) {
             const embed = new EmbedBuilder()

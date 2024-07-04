@@ -3,6 +3,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, EmbedBuilder, Gui
 import schedule from 'node-schedule';
 import { getFrontEndURL } from "./urls";
 import type CommandHandler from "../handler";
+import commandHandler from "..";
 export async function createGiveaway(handler: CommandHandler, hoster: GuildMember, title: string, description: string, duration: number, winners: number, channel: GuildTextBasedChannel) {
     const { prisma, client } = handler;
     const embed = new EmbedBuilder()
@@ -80,16 +81,17 @@ export async function createGiveaway(handler: CommandHandler, hoster: GuildMembe
         }
     })
     schedule.scheduleJob(data.id, endsAt, async () => {
-        endGiveaway(handler, data.id);
+        endGiveaway(data.id);
     });
     return data;
 }
 
-export async function endGiveaway({ client, prisma, prodMode }: CommandHandler, giveawayId: string) {
+export async function endGiveaway(giveawayId: string) {
+    const { client, prisma, prodMode } = commandHandler;
     if (!giveawayId) return;
     const giveaway = await prisma.giveaway.findUnique({ where: { id: giveawayId }, include: { entrants: true } });
     if (!giveaway) return;
-    const winners = pickWinners(giveaway, giveaway.winnerCount);
+    const winners = pickWinners(giveaway);
     const guild = await client.guilds.fetch(giveaway.guildId);
     const channel = guild.channels.cache.get(giveaway.channelId) as GuildTextBasedChannel;
     if (!channel) return;
@@ -110,7 +112,7 @@ export async function endGiveaway({ client, prisma, prodMode }: CommandHandler, 
         }
     });
     const congrats = await message.reply({ content: `Congratulations to ${winners.map(w => `<@${w.id}>`).join(', ')} for winning the giveaway!`, components: [] });
-    const url = `${getFrontEndURL(prodMode)}/giveaway/${giveaway.id}`
+    const url = `${getFrontEndURL()}/giveaway/${giveaway.id}`
     const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
@@ -121,11 +123,12 @@ export async function endGiveaway({ client, prisma, prodMode }: CommandHandler, 
     message.edit({ embeds: [embed], content: `🎉 🎉 🎉 [Giveaway Ended](${congrats.url}) 🎉 🎉 🎉`, components: [row] });
 }
 
-export async function rerollGiveaway(client: Client, prisma: PrismaClient, giveawayId: string) {
+export async function rerollGiveaway(giveawayId: string) {
+    const { client, prisma } = commandHandler;
     if (!giveawayId) return;
     const giveaway = await prisma.giveaway.findUnique({ where: { id: giveawayId }, include: { entrants: true } });
     if (!giveaway) return;
-    const winners = pickWinners(giveaway, giveaway.winnerCount);
+    const winners = pickWinners(giveaway);
     const guild = await client.guilds.fetch(giveaway.guildId);
     const channel = guild.channels.cache.get(giveaway.channelId) as GuildTextBasedChannel;
     if (!channel) return;
@@ -143,11 +146,16 @@ export async function rerollGiveaway(client: Client, prisma: PrismaClient, givea
 }
 
 
-export function pickWinners(ga: Giveaway, winners: number) {
+export function pickWinners(ga: Giveaway) {
     const giveaway = ga as any;
-    const winnerArray = [];
-    for (let i = 0; i < winners; i++) {
-        winnerArray.push(giveaway.entrants[Math.floor(Math.random() * giveaway.entrants.length)]);
+    const winners: any[] = [];
+    if (ga.winnerCount <= 0) return winners;
+    if (giveaway.entrants.length <= 0) return winners;
+    if (giveaway.entrants.length < ga.winnerCount) {
+        giveaway.winnerCount = giveaway.entrants.length;
     }
-    return winnerArray;
+    for (let i = 0; i < ga.winnerCount; i++) {
+        winners.push(giveaway.entrants[Math.floor(Math.random() * giveaway.entrants.length)]);
+    }
+    return winners;
 }

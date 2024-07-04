@@ -5,7 +5,7 @@ import axios from "axios";
 export default {
     name: "watchdog",
     description: "Check the staff and watchdog bans in the last minute",
-    userInstall: true,
+    type: "installable",
     execute: async () => {
         const res = await axios.get(
             `https://api.plancke.io/hypixel/v1/punishmentStats`
@@ -32,7 +32,7 @@ export default {
                 );
             return { embeds: [embed] }
         } else {
-            console.log(res.data);
+            // console.log(res.data);
             return "No results found";
         }
     }

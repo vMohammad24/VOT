@@ -4,7 +4,7 @@ import { getRedirectURL } from '../util/urls';
 import queryString from 'query-string';
 import cors from 'cors'
 import bodyParser from 'body-parser';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel, type TextBasedChannel } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Guild, GuildMember, PermissionFlagsBits, type GuildTextBasedChannel, type TextBasedChannel } from 'discord.js';
 import type { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 
@@ -45,11 +45,12 @@ server.get('/commands/:command', (req, res) => {
 
 const discordClientId = process.env.DISCORD_CLIENT_ID!;
 const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
-
-export const updateGuilds = async (userId: string, prisma: PrismaClient): Promise<any> => {
-    // console.log(`Updating guilds for user ${userId}`)
+const lastUpdateForUser: Map<string, Date> = new Map();
+export const updateGuilds = async (userId: string): Promise<any> => {
+    console.log(`Updating guilds for user ${userId}`)
+    const { prisma } = commandHandler;
     if (!prisma) {
-        return { error: "Prisma not found" }
+        return { error: "Prisma not found (somehow)" }
     };
     if (!userId) {
         return { error: "Invalid user id not found" }
@@ -63,6 +64,12 @@ export const updateGuilds = async (userId: string, prisma: PrismaClient): Promis
     };
 
     const { discord } = user;
+    const lastUpdate = lastUpdateForUser.get(user.id);
+    if (lastUpdate && Date.now() - lastUpdate.getTime() < 5 * 60 * 1000) {
+        console.log(`Skipping update for ${user.id} because it's been less than 5 minutes`)
+        return;
+    }
+    lastUpdateForUser.set(user.id, new Date());
     const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
         headers: {
             Authorization: `Bearer ${discord.token}`,
@@ -132,6 +139,50 @@ export const updateGuilds = async (userId: string, prisma: PrismaClient): Promis
             })
         }
     }
+    // const allGuilds = commandHandler.client.guilds.cache;
+    // const guildsInAdmin = [];
+    // for (const [, guild] of allGuilds) {
+    //     const admins: GuildMember[] = []
+    //     for (const mem of guild.members.cache) {
+    //         if (mem[1].user.bot) continue;
+    //         if (mem[1].permissions.has('Administrator')) {
+    //             admins.push(mem[1]);
+    //             if (mem[1].id == userId) guildsInAdmin.push(guild)
+    //         }
+    //     }
+    //     if (!admins.length) continue
+    //     if (!guild) continue
+
+    //     const pGuild = await commandHandler.prisma.guild.upsert({
+    //         where: {
+    //             id: guild.id
+    //         },
+    //         update: {
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 connectOrCreate: admins.map(m => ({ where: { id: m.user.id }, create: { id: m.user.id, avatar: m.user.avatar, name: m.user.username } }))
+    //             }
+    //         },
+    //         create: {
+    //             id: guild.id,
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 connectOrCreate: admins.map(m => ({ where: { id: m.user.id }, create: { id: m.user.id, avatar: m.user.avatar, name: m.user.username } }))
+    //             }
+    //         },
+    //         include: {
+    //             admins: {
+    //                 select: {
+    //                     name: true
+    //                 }
+    //             }
+    //         }
+    //     })
+    //     console.log(pGuild)
+    // }
+    // return guildsInAdmin
 }
 
 const refreshToken = async (refreshToken: string) => {
@@ -190,7 +241,7 @@ server.get('/discord/guilds', async (req, res) => {
     if (!token) return res.status(401).send({ error: 'Unauthorized' });
     const user = await commandHandler.prisma.user.findUnique({ where: { token } });
     if (!user) return res.status(401).send({ error: 'Unauthorized' });
-    const guilds = await updateGuilds(user.id, commandHandler.prisma);
+    const guilds = await updateGuilds(user.id);
     if (guilds && (guilds as any).error) {
         return res.status(401).send(guilds);
     }
@@ -321,7 +372,7 @@ server.get('/discord/callback', async (req, res) => {
     if (!code && !refresh_token) return res.redirect('https://discord.com/api/oauth2/authorize?' + queryString.stringify({
         client_id: discordClientId,
         response_type: 'code',
-        redirect_uri: getRedirectURL('discord', commandHandler.prodMode),
+        redirect_uri: getRedirectURL('discord'),
         scope: 'identify guilds email'
     }))
     const isRefresh = refresh_token && !code;
@@ -335,7 +386,7 @@ server.get('/discord/callback', async (req, res) => {
         client_secret: discordClientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: getRedirectURL('discord', commandHandler.prodMode),
+        redirect_uri: getRedirectURL('discord'),
         scope: 'identif,+guilds,email',
     }, {
         headers: {
@@ -359,78 +410,79 @@ server.get('/discord/callback', async (req, res) => {
     if (resUser.error_description) {
         return res.send(resUser);
     }
-    const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
-        headers: {
-            authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`
-        },
-    });
-    const resGuilds = await guildsRes.data as any;
-    if (resGuilds.error_description) {
-        return res.send(resGuilds);
-    }
-    const guilds = (resGuilds as any[]).filter(guild => (guild.permissions & 0x20) === 0x20);
-    for (const guild of guilds) {
-        const g = await commandHandler.prisma.guild.upsert({
-            where: {
-                id: guild.id,
-            },
-            update: {
-                name: guild.name,
-                icon: guild.icon,
-                admins: {
-                    connectOrCreate: {
-                        where: {
-                            id: resUser.id,
-                        },
-                        create: {
-                            id: resUser.id,
-                            name: resUser.username,
-                            email: resUser.email,
-                            avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
-                            discord: {
-                                create: {
-                                    expiresAt: new Date(Date.now() + tokenResponse.expires_in),
-                                    token: tokenResponse.access_token,
-                                    refreshToken: tokenResponse.refresh_token,
-                                }
-                            }
-                        }
-                    },
-                },
-            },
-            create: {
-                id: guild.id,
-                name: guild.name,
-                icon: guild.icon,
-                admins: {
-                    connectOrCreate: {
-                        where: {
-                            id: resUser.id,
-                        },
-                        create: {
-                            id: resUser.id,
-                            name: resUser.username,
-                            email: resUser.email,
-                            avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
-                            discord: {
-                                create: {
-                                    expiresAt: new Date(Date.now() + tokenResponse.expires_in),
-                                    token: tokenResponse.access_token,
-                                    refreshToken: tokenResponse.refresh_token,
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-        })
-    }
+    // const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
+    //     headers: {
+    //         authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`
+    //     },
+    // });
+    // const resGuilds = await guildsRes.data as any;
+    // if (resGuilds.error_description) {
+    //     return res.send(resGuilds);
+    // }
+    // const guilds = (resGuilds as any[]).filter(guild => (guild.permissions & 0x20) === 0x20);
+    // for (const guild of guilds) {
+    //     const g = await commandHandler.prisma.guild.upsert({
+    //         where: {
+    //             id: guild.id,
+    //         },
+    //         update: {
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 connectOrCreate: {
+    //                     where: {
+    //                         id: resUser.id,
+    //                     },
+    //                     create: {
+    //                         id: resUser.id,
+    //                         name: resUser.username,
+    //                         email: resUser.email,
+    //                         avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
+    //                         discord: {
+    //                             create: {
+    //                                 expiresAt: new Date(Date.now() + tokenResponse.expires_in),
+    //                                 token: tokenResponse.access_token,
+    //                                 refreshToken: tokenResponse.refresh_token,
+    //                             }
+    //                         }
+    //                     }
+    //                 },
+    //             },
+    //         },
+    //         create: {
+    //             id: guild.id,
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 connectOrCreate: {
+    //                     where: {
+    //                         id: resUser.id,
+    //                     },
+    //                     create: {
+    //                         id: resUser.id,
+    //                         name: resUser.username,
+    //                         email: resUser.email,
+    //                         avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
+    //                         discord: {
+    //                             create: {
+    //                                 expiresAt: new Date(Date.now() + tokenResponse.expires_in),
+    //                                 token: tokenResponse.access_token,
+    //                                 refreshToken: tokenResponse.refresh_token,
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //     })
+    // }
+    updateGuilds(resUser.id)
     let user = await commandHandler.prisma.user.findUnique({ where: { id: resUser.id } });
-    user = await commandHandler.prisma.user.update({
+    user = await commandHandler.prisma.user.upsert({
         where: {
             id: resUser.id,
         },
-        data: {
+        update: {
             discord: {
                 connectOrCreate: {
                     where: {
@@ -445,6 +497,24 @@ server.get('/discord/callback', async (req, res) => {
             },
             email: resUser.email,
             avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
+        },
+        create: {
+            discord: {
+                connectOrCreate: {
+                    where: {
+                        userId: resUser.id,
+                    },
+                    create: {
+                        expiresAt: new Date(Date.now() + tokenResponse.expires_in),
+                        token: tokenResponse.access_token,
+                        refreshToken: tokenResponse.refresh_token,
+                    }
+                }
+            },
+            email: resUser.email,
+            avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
+            id: resUser.id,
+            name: resUser.username,
         }
     })
     return res.redirect('http://localhost:3000/?token=' + user.token);
@@ -464,7 +534,7 @@ server.get('/spotify/callback', async (req, res) => {
                 response_type: 'code',
                 client_id: spotifyClientId,
                 scope: scopes,
-                redirect_uri: getRedirectURL('spotify', commandHandler.prodMode),
+                redirect_uri: getRedirectURL('spotify'),
                 state
             }));
     if (!token) return res.redirect('/discord/callback')
@@ -478,7 +548,7 @@ server.get('/spotify/callback', async (req, res) => {
     const tokenRes = await axios.post('https://accounts.spotify.com/api/token', {
         grant_type: 'authorization_code',
         code,
-        redirect_uri: getRedirectURL('spotify', commandHandler.prodMode),
+        redirect_uri: getRedirectURL('spotify'),
     }, {
         method: "POST",
         headers: {

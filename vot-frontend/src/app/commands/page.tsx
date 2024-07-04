@@ -9,18 +9,18 @@ import { apiUrl } from "../../lib/utils";
 export default async function Commands() {
   let commands: { name: string; description: string; category: string }[] = [];
   await fetch(apiUrl + "commands", {
-    cache: "reload",
+    cache: "default",
   })
     .then(async (res) => await res.json())
     .then((data) => {
       commands = data;
     });
+  commands.sort((a, b) => a.name.localeCompare(b.name));
   return (
     <main className="min-h-screen pt-20">
-      <div className="absolute left-1/2 -translate-x-1/2 min-w-full flex">
+      <div className="min-w-full flex">
         <div className="grid grid-flow-row-dense justify-stretch gap-5 p-10 md:grid-cols-5">
           {commands
-            .filter((e) => e != null)
             .map((command) => {
               return (
                 <Card key={command.name}>
