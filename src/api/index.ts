@@ -1,6 +1,6 @@
 import express from 'express'
 import commandHandler from '..';
-import { getRedirectURL } from '../util/urls';
+import { getFrontEndURL, getRedirectURL } from '../util/urls';
 import queryString from 'query-string';
 import cors from 'cors'
 import bodyParser from 'body-parser';
@@ -517,7 +517,7 @@ server.get('/discord/callback', async (req, res) => {
             name: resUser.username,
         }
     })
-    return res.redirect('http://localhost:3000/?token=' + user.token);
+    return res.redirect(getFrontEndURL() + '/?token=' + user.token);
 })
 
 
