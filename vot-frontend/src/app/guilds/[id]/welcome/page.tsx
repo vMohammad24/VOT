@@ -19,6 +19,9 @@ export default async function GuildTicketsPage({
       Authorization: token.value,
     },
   }).then((res) => res.json());
+  if (guildInfo.error) {
+    return <div>{guildInfo.error}</div>;
+  }
   const channels = (guildInfo.textChannels as any[]).map((channel) => {
     return {
       value: channel.id,

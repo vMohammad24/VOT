@@ -17,7 +17,7 @@ export async function shortenUrl(url: string, password?: string) {
         password,
         urlType: "Normal",
         length: 5,
-        domain: "cdn.vmohammad.wiki",
+        domain: process.env.NEST_SHORTS_DOMAIN,
         subDomain: "",
         EmbedType: "Target"
     }, {

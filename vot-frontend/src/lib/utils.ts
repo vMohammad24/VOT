@@ -10,4 +10,4 @@ export function getApiUrl() {
   return isProd ? process.env.API_URL : process.env.API_URL_DEV;
 }
 
-export const apiUrl = process.env.API_URL || "/api/";
+export const apiUrl = getApiUrl()!;

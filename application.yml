@@ -13,7 +13,7 @@ lavalink:
     - dependency: "dev.lavalink.youtube:youtube-plugin:1.1.0"
       snapshot: false # Set to true if you want to use a snapshot version.
   server:
-    password: "youshallnotpass"
+    password: "wS2WzhJDpPLuRkBmMqXEyAGx9vC7QHn8dVTNeYKrb435Zt6"
     sources:
       # The default Youtube source is now deprecated and won't receive further updates. Please use https://github.com/lavalink-devs/youtube-source#plugin instead.
       youtube: false

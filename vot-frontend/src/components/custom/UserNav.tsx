@@ -45,11 +45,6 @@ export default function UserNav({ user, className }: UserNavProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href={`/users/${user.id}`}>
-            <DropdownMenuItem className="cursor-pointer">
-              Profile
-            </DropdownMenuItem>
-          </Link>
           <Link href="/settings">
             <DropdownMenuItem className="cursor-pointer">
               Settings

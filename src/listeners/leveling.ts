@@ -60,11 +60,11 @@ export default {
                     userId: user.id,
                 }
             })
-            // if (member.messagesToday >= 100) return;
-            console.log(member.lastMessage?.getTime(), Date.now())
-            if (member.lastMessage && member.lastMessage.getTime() > Date.now() - 3000) return;
+            if (member.messagesToday >= 100) return;
+            // console.log(member.lastMessage?.getTime(), Date.now())
+            if (member.lastMessage && member.lastMessage.getTime() > Date.now() - 5000) return;
             const expGained = Math.min(message.content.length / 2, 20)
-            console.log(`${message.author.tag} gained ${expGained} exp.`)
+            // console.log(`${message.author.tag} gained ${expGained} exp.`)
             const newExp = member.exp + expGained
             if (newExp >= expNeededForLevel(member.level + 1)) {
                 member.exp = 0
@@ -80,6 +80,7 @@ export default {
                 member.exp = newExp
             }
             member.lastMessage = new Date()
+            member.messagesToday++;
             await prisma.member.update({
                 where: { userId_guildId: { guildId: message.guild!.id, userId: message.author.id } },
                 data: member

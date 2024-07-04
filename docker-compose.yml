@@ -38,7 +38,7 @@ services:
     profiles:
       - prod
     environment:
-      - POSTGRES_PASSWORD=insanelysecurepassword
+      - POSTGRES_PASSWORD=ecNkXsfsu66NGSxIGyivymbUgGl
       - POSTGRES_USER=bot
       - POSTGRES_DB=vot
     networks:

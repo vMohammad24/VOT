@@ -16,22 +16,6 @@ export default {
                         .setDescription(commands.filter(cmd => cmd.category === category).map(cmd => `**${cmd.name}** - ${cmd.description}`).join("\n"))
                         .setColor("Green")
                         .setTimestamp()
-                ],
-                components: [
-                    {
-                        type: ComponentType.ActionRow,
-                        components: [
-                            {
-                                type: ComponentType.Button,
-                                label: "Select",
-                                style: ButtonStyle.Primary,
-                                customId: "select-" + category,
-                                emoji: {
-                                    name: "🔍"
-                                }
-                            }
-                        ]
-                    }
                 ]
             }
         })

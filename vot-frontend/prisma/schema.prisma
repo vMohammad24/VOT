@@ -31,7 +31,7 @@ model User {
   email            String?        @unique
   token            String         @unique @default(cuid())
   tier             Int            @default(0)
-  avatar           String
+  avatar           String?
   playlists        Playlist[]
   commands         Command[]
   tickets          Ticket[]
@@ -43,6 +43,7 @@ model User {
   giveawaysWon     Giveaway[]     @relation("giveawayWinners")
   guildMembers     Member[]
   musicSettings    MusicSettings?
+  lastUpdated      DateTime       @default(now()) @updatedAt
 }
 
 model Member {
@@ -128,6 +129,7 @@ model Ticket {
   id           String   @id @default(uuid())
   channelId    String
   transcriptId String?
+  reason       String?  @default("No reason specified")
   open         Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -20,7 +20,7 @@ export default {
         const giveaway = messageId ? await handler.prisma.giveaway.findFirst({ where: { messageId } }) : await handler.prisma.giveaway.findFirst({ where: { channelId: interaction.channelId }, orderBy: { createdAt: "desc" } });;
         if (!giveaway) return interaction.reply({ content: "Couldn't find giveaway.", ephemeral: true });
         if (giveaway.end > new Date()) return interaction.reply({ content: "The giveaway has not ended yet", ephemeral: true });
-        await rerollGiveaway(handler.client, handler.prisma, giveaway.id).then(() => {
+        await rerollGiveaway(giveaway.id).then(() => {
             interaction.reply({ content: "Rerolled the giveaway", ephemeral: true });
         }).catch((e) => {
             interaction.reply({ content: "An error occurred", ephemeral: true });

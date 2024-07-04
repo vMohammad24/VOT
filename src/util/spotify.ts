@@ -1,7 +1,8 @@
-import type { PrismaClient, Spotify } from "@prisma/client";
+import type { Spotify } from "@prisma/client";
 import axios from "axios";
 import commandHandler from "..";
-export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) {
+export async function getCurrentlyPlaying(userId: string) {
+    const { prisma } = commandHandler;
     const spotify = await prisma.spotify.findUnique({
         where: {
             userId
@@ -9,8 +10,8 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
     });
     if (!spotify || !spotify.expiresAt) return { error: "Spotify account not linked." };
     if (spotify.expiresAt < new Date("UTC")) {
-        await refreshToken(spotify, prisma);
-        return await getCurrentlyPlaying(userId, prisma);
+        await refreshToken(spotify);
+        return await getCurrentlyPlaying(userId);
     }
     const res = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
         headers: {
@@ -18,20 +19,21 @@ export async function getCurrentlyPlaying(userId: string, prisma: PrismaClient) 
         }
     }).catch(async e => {
         if (e.response.status == 401) {
-            await refreshToken(spotify, prisma);
+            await refreshToken(spotify);
             await setTimeout(() => { }, 500)
-            return await getCurrentlyPlaying(userId, prisma);
+            return await getCurrentlyPlaying(userId);
         }
     }).then(res => res.data) as any;
     if (res && res.error && res.error.status && res.error.status == 401) {
-        await refreshToken(spotify, prisma);
+        await refreshToken(spotify);
         await setTimeout(() => { }, 500)
-        return await getCurrentlyPlaying(userId, prisma);
+        return await getCurrentlyPlaying(userId);
     }
     return res;
 }
 
-export async function pausePlayer(userId: string, prisma: PrismaClient) {
+export async function pausePlayer(userId: string) {
+    const { prisma } = commandHandler;
 
     const spotify = await prisma.spotify.findUnique({
         where: {
@@ -40,8 +42,8 @@ export async function pausePlayer(userId: string, prisma: PrismaClient) {
     });
     if (!spotify || !spotify.expiresAt) return;
     if (spotify.expiresAt < new Date("UTC")) {
-        await refreshToken(spotify, prisma);
-        return await pausePlayer(userId, prisma);
+        await refreshToken(spotify);
+        return await pausePlayer(userId);
     }
     try {
         const res = await axios.put('https://api.spotify.com/v1/me/player/pause', {
@@ -56,7 +58,8 @@ export async function pausePlayer(userId: string, prisma: PrismaClient) {
 }
 
 
-export async function refreshToken(spotify: Spotify, prisma: PrismaClient) {
+export async function refreshToken(spotify: Spotify) {
+    const { prisma } = commandHandler;
     const params = new URLSearchParams();
     params.append('grant_type', 'refresh_token');
     params.append('refresh_token', spotify.refreshToken!);

@@ -22,5 +22,5 @@ bunx prisma db push
 To run (normally):
 
 ```bash
-bun run src/index.ts
+docker compose --profile prod up -d
 ```

@@ -8,7 +8,7 @@ export default {
     aliases: ["sp"],
     execute: async ({ member, handler, player, interaction, guild }) => {
         interaction?.deferReply({ ephemeral: true });
-        const res = await getCurrentlyPlaying(member.id, handler.prisma)
+        const res = await getCurrentlyPlaying(member.id)
         if (res.error) {
             return {
                 content: res.error
@@ -34,7 +34,7 @@ export default {
         } else {
             await player.play(track);
         }
-        const a = await pausePlayer(member.id, handler.prisma);
+        const a = await pausePlayer(member.id);
         const embed = new EmbedBuilder()
             .setTitle("Added to queue")
             .setColor("Green")

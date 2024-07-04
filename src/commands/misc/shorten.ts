@@ -6,7 +6,7 @@ import { UserTier } from "../../handler/interfaces/ICommand";
 export default {
     name: "shorten",
     description: "Shorten a URL",
-    userInstall: true,
+    type: "all",
     options: [{
         name: "url",
         type: ApplicationCommandOptionType.String,

@@ -67,7 +67,7 @@ export default async function GuildPage({
                 <Image src={message.avatar} alt="avatar" width={50} height={50} className="rounded-full"/>
               </div>
               <div>
-                <p className="text-sm">{message.username} <span className="text-gray-400">{tsTs[i].toLocaleTimeString()} - {tsTs[i].toLocaleDateString()}</span></p>
+                <p className={`text-sm text-[${message.roleColor}]`}>{message.username} <span className="text-gray-400">{tsTs[i].toLocaleTimeString()} - {tsTs[i].toLocaleDateString()}</span></p>
                 <div>
                   <p className="">{message.content}</p>
                   {message.attachments && message.attachments.map((attachment, i) => (

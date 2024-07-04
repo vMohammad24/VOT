@@ -17,9 +17,19 @@ interface GuildCarousalProps {
 }
 
 export default function GuildCarousal({ guilds }: GuildCarousalProps) {
+  if(guilds.length === 0) {
+    guilds = [{
+      id: "..",
+      name: "None",
+      icon: null,
+      loggingChannel: null,
+      prefix: '',
+      tier: 0,
+    }]
+  }
   return (
     <Carousel className="w-full max-w-sm min-h-full border-none">
-      <CarouselContent className="-ml-1">
+      <CarouselContent className="-ml-0.5">
         {guilds.map((guild, index) => (
           <CarouselItem
             key={index}

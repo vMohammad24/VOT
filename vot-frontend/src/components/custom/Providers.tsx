@@ -1,5 +1,3 @@
-// app/providers.jsx
-
 "use client";
 
 import { ThemeProvider } from "next-themes";
@@ -8,10 +6,10 @@ import { TooltipProvider } from "../ui/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <TooltipProvider>
       <ThemeProvider attribute="class" defaultTheme="dark">
-        <div className="mocha font-sans antialiased text-text bg-base h-full">{children}</div>
+        <TooltipProvider>
+          <div className="min-h-max mocha font-sans antialiased text-text bg-base">{children}</div>
+        </TooltipProvider>
       </ThemeProvider>
-    </TooltipProvider>
   );
 }
