@@ -4,7 +4,7 @@ import path from 'path';
 export default {
     description: "test command for devs",
     perms: "dev",
-    // disabled: true,
+    disabled: true,
     execute: async ({ interaction, handler }) => {
         const canvas = createCanvas(300, 320)
         const ctx = canvas.getContext('2d')
