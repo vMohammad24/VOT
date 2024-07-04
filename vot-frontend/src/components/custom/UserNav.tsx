@@ -29,7 +29,7 @@ export default function UserNav({ user, className }: UserNavProps) {
           className={"relative h-8 w-8 rounded-full " + className}
         >
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatar} alt="userAvatar" />
+            <AvatarImage src={user.avatar || ""} alt="userAvatar" />
             <AvatarFallback>{user.name}</AvatarFallback>
           </Avatar>
         </Button>
