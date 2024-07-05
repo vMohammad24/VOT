@@ -24,6 +24,7 @@ export default async function Guilds() {
       Authorization: token.value,
     },
   }).then((res) => res.json());
+  console.log(`res1: ${JSON.stringify(res)}`);
   if (res.error) {
     const discord = await prisma.discord.findUnique({
       where: {
@@ -37,14 +38,14 @@ export default async function Guilds() {
         </>
       );
     }
-    await fetch(
+    console.log(`res2: ` + await fetch(
       apiUrl + "discord/callback?refresh_token=" + discord.refreshToken,
       {
         headers: {
           Authorization: token.value,
         },
       }
-    ).then((res) => res.json());
+    ).then((res) => res.json()));
   }
   const guilds = await prisma.guild.findMany({
     where: {
