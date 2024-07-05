@@ -19,11 +19,9 @@ const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
     storage: { type: "redis", options: { client: redis as any, invalidation: { referencesTTL: 300 }, log: console } },
     cacheTime: 300,
     excludeMethods: ["findUnique"],
-    onMiss: (key) => {
-        console.log("miss", key);
-    },
+    excludeModels: ["Spotify"],
     onError: (key) => {
-        console.log("error", key);
+        console.error("error", key);
     },
 });
 
