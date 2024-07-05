@@ -47,13 +47,13 @@ const discordClientId = process.env.DISCORD_CLIENT_ID!;
 const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
 const lastUpdateForUser: Map<string, Date> = new Map();
 export const updateGuilds = async (userId: string): Promise<any> => {
-    console.log(`Updating guilds for user ${userId}`)
+    //console.log(`Updating guilds for user ${userId}`)
     const { prisma } = commandHandler;
     if (!prisma) {
         return { error: "Prisma not found (somehow)" }
     };
     if (!userId) {
-        return { error: "Invalid user id not found" }
+        return { error: "Invalid user id" }
     }
     const user = await prisma.user.findFirst({ where: { id: userId }, include: { discord: true } });
     if (!user) {
@@ -66,10 +66,8 @@ export const updateGuilds = async (userId: string): Promise<any> => {
     const { discord } = user;
     const lastUpdate = lastUpdateForUser.get(user.id);
     if (lastUpdate && Date.now() - lastUpdate.getTime() < 5 * 60 * 1000) {
-        console.log(`Skipping update for ${user.id} because it's been less than 5 minutes`)
-        return;
+        return { error: "maybe later" };
     }
-    lastUpdateForUser.set(user.id, new Date());
     const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
         headers: {
             Authorization: `Bearer ${discord.token}`,
@@ -77,12 +75,12 @@ export const updateGuilds = async (userId: string): Promise<any> => {
         },
     });
     const resGuilds = await guildsRes.data as any;
-    if (guildsRes.status == 401) {
+    if (guildsRes.status == 401 || guildsRes.status == 400) {
         const ref = await refreshToken(discord.refreshToken);
-        if (ref && (ref as any).error) {
+        if (typeof ref != "string") {
             return ref;
         }
-        return;
+        return await updateGuilds(userId);
     }
     if (resGuilds.error_description) {
         return { error: resGuilds.error_description };
@@ -139,6 +137,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
             })
         }
     }
+    lastUpdateForUser.set(user.id, new Date());
     // const allGuilds = commandHandler.client.guilds.cache;
     // const guildsInAdmin = [];
     // for (const [, guild] of allGuilds) {
@@ -218,7 +217,10 @@ const refreshToken = async (refreshToken: string) => {
     });
     const resUser = await userRes.data as any;
     if (resUser.error_description) {
-        return;
+        return {
+            error: resUser.error_description,
+            code: 401
+        };
     }
     if (resUser.id) {
         await commandHandler.prisma.user.update({
@@ -401,7 +403,7 @@ server.get('/discord/callback', async (req, res) => {
         },
     });
     const tokenResponse = await tokenResponseData.data as any;
-    if (tokenResponse.error === "invalid_grant") {
+    if (tokenResponse.error == "invalid_grant") {
         return res.status(403).send({
             success: false,
             message: "Invalid code"
@@ -482,7 +484,10 @@ server.get('/discord/callback', async (req, res) => {
     //         },
     //     })
     // }
-    updateGuilds(resUser.id)
+    const guildsRes = await updateGuilds(resUser.id)
+    if (guildsRes.code == 401 || guildsRes.code == 400) {
+        return res.status(401).send(guildsRes)
+    }
     let user = await commandHandler.prisma.user.findUnique({ where: { id: resUser.id } });
     user = await commandHandler.prisma.user.upsert({
         where: {
