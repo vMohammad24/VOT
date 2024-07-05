@@ -37,6 +37,7 @@
     "prisma": "^5.15.1",
     "prisma-redis-middleware": "^4.8.0",
     "query-string": "latest",
+    "sharp": "^0.33.4",
     "shoukaku": "latest"
   }
 }
