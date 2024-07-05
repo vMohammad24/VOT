@@ -198,6 +198,12 @@ const refreshToken = async (refreshToken: string) => {
             'Accept-Encoding': 'identity'
         },
     });
+    if (tokenResponseData.status == 401) {
+        return {
+            error: "Invalid refresh token, please reauthorize",
+            code: 401
+        }
+    }
     const tokenResponse = await tokenResponseData.data as any;
     if (tokenResponse.error === "invalid_grant") {
         return {
