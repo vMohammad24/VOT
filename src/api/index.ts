@@ -14,17 +14,19 @@ import {
     type GuildTextBasedChannel,
 } from 'discord.js';
 import axios from 'axios';
+import discord from './discord';
+import spotify from './spotify';
 
-const server = express()
+const app = express()
 const upSince = Date.now();
 
-server.use(express.json())
-server.use(cors())
-server.use(bodyParser.urlencoded({
+app.use(express.json())
+app.use(cors())
+app.use(bodyParser.urlencoded({
     extended: true
 }));
 // Declare a route
-server.get('/', function (req, res) {
+app.get('/', function (req, res) {
     const ping = commandHandler.client.ws.ping;
     const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const totalGuilds = commandHandler.client.guilds.cache.size;
@@ -32,7 +34,7 @@ server.get('/', function (req, res) {
     res.send({ ping, upSince, totalMembers, totalGuilds, totalCommands })
 })
 
-server.get('/commands', (req, res) => {
+app.get('/commands', (req, res) => {
     const commands: {
         name: string,
         description: string
@@ -51,7 +53,7 @@ server.get('/commands', (req, res) => {
     res.send(commands);
 })
 
-server.get('/commands/:command', (req, res) => {
+app.get('/commands/:command', (req, res) => {
     const name = (req.params as any).command;
     const command = commandHandler.commands!.find(cmd => cmd.name === name);
     if (!command) return res.send({ error: 'Command not found' });
@@ -59,4 +61,6 @@ server.get('/commands/:command', (req, res) => {
 })
 
 
-export default server;
+discord(app);
+spotify(app);
+export default app;
