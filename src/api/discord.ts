@@ -181,91 +181,29 @@ export default (server: Express) => {
         if (resUser.error_description) {
             return res.send(resUser);
         }
-        // const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
-        //     headers: {
-        //         authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`
-        //     },
-        // });
-        // const resGuilds = await guildsRes.data as any;
-        // if (resGuilds.error_description) {
-        //     return res.send(resGuilds);
-        // }
-        // const guilds = (resGuilds as any[]).filter(guild => (guild.permissions & 0x20) === 0x20);
-        // for (const guild of guilds) {
-        //     const g = await commandHandler.prisma.guild.upsert({
-        //         where: {
-        //             id: guild.id,
-        //         },
-        //         update: {
-        //             name: guild.name,
-        //             icon: guild.icon,
-        //             admins: {
-        //                 connectOrCreate: {
-        //                     where: {
-        //                         id: resUser.id,
-        //                     },
-        //                     create: {
-        //                         id: resUser.id,
-        //                         name: resUser.username,
-        //                         email: resUser.email,
-        //                         avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
-        //                         discord: {
-        //                             create: {
-        //                                 expiresAt: new Date(Date.now() + tokenResponse.expires_in),
-        //                                 token: tokenResponse.access_token,
-        //                                 refreshToken: tokenResponse.refresh_token,
-        //                             }
-        //                         }
-        //                     }
-        //                 },
-        //             },
-        //         },
-        //         create: {
-        //             id: guild.id,
-        //             name: guild.name,
-        //             icon: guild.icon,
-        //             admins: {
-        //                 connectOrCreate: {
-        //                     where: {
-        //                         id: resUser.id,
-        //                     },
-        //                     create: {
-        //                         id: resUser.id,
-        //                         name: resUser.username,
-        //                         email: resUser.email,
-        //                         avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
-        //                         discord: {
-        //                             create: {
-        //                                 expiresAt: new Date(Date.now() + tokenResponse.expires_in),
-        //                                 token: tokenResponse.access_token,
-        //                                 refreshToken: tokenResponse.refresh_token,
-        //                             }
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         },
-        //     })
-        // }
         const guildsRes = await updateGuilds(resUser.id)
         if (guildsRes && (guildsRes.code == 401 || guildsRes.code == 400)) {
             return res.status(401).send(guildsRes)
         }
-        let user = await commandHandler.prisma.user.findUnique({ where: { id: resUser.id } });
-        user = await commandHandler.prisma.user.upsert({
+        const user = await commandHandler.prisma.user.upsert({
             where: {
                 id: resUser.id,
             },
             update: {
                 discord: {
-                    connectOrCreate: {
-                        where: {
-                            userId: resUser.id,
-                        },
+                    upsert: {
                         create: {
                             expiresAt: new Date(Date.now() + tokenResponse.expires_in),
                             token: tokenResponse.access_token,
                             refreshToken: tokenResponse.refresh_token,
+                        },
+                        update: {
+                            expiresAt: new Date(Date.now() + tokenResponse.expires_in),
+                            token: tokenResponse.access_token,
+                            refreshToken: tokenResponse.refresh_token,
+                        },
+                        where: {
+                            userId: resUser.id,
                         }
                     }
                 },

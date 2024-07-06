@@ -26,22 +26,7 @@ export default async function GuildPage({
     },
   }).then((res) => res.json());
   if (res.error) {
-    const discord = await prisma.discord.findUnique({
-      where: {
-        userId: user.id,
-      },
-    });
-    if (!discord) {
-      return redirect(apiUrl + "discord/callback");
-    }
-    await fetch(
-      apiUrl + "discord/callback?refresh_token=" + discord.refreshToken,
-      {
-        headers: {
-          Authorization: token.value,
-        },
-      }
-    ).then((res) => res.json());
+    return redirect(apiUrl + "discord/callback");
   }
   const { id: guildId } = params;
   const guild = await prisma.guild.findUnique({
