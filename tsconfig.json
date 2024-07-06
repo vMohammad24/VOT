@@ -17,6 +17,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    // i have no idea
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }

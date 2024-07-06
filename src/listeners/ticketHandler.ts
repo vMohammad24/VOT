@@ -1,5 +1,5 @@
 import { Events, GuildMember, EmbedBuilder, type GuildTextBasedChannel, ModalBuilder, ActionRowBuilder, type ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import type { IListener } from "../handler/listenres";
+import type { IListener } from "../handler/ListenerHandler";
 import { createTicket, closeTicket } from "../util/tickets";
 
 export default {

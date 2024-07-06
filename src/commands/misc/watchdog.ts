@@ -32,7 +32,6 @@ export default {
                 );
             return { embeds: [embed] }
         } else {
-            // console.log(res.data);
             return "No results found";
         }
     }

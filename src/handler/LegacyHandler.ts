@@ -1,8 +1,8 @@
 import { type Client } from "discord.js";
-import type ICommand from "../interfaces/ICommand";
+import type ICommand from "./interfaces/ICommand";
 import type { Kazagumo } from "kazagumo";
-import CommandHandler from "..";
-import type LegacyHandler from "../interfaces/LegacyHandler";
+import CommandHandler from ".";
+import type LegacyHandler from "./interfaces/ILegacyHandler";
 
 export default class LegacyCommandHandler {
 
@@ -29,7 +29,7 @@ export default class LegacyCommandHandler {
             if (!message.content.startsWith(prefix)) return;
             const commandName = message.content.slice(prefix.length).split(" ")[0];
             if (!commandName) return;
-            const command = this.commands.find(cmd => cmd.name === commandName || cmd.aliases?.includes(commandName));
+            const command = this.commands.find(cmd => cmd.name?.toLowerCase() == commandName.toLowerCase() || cmd.aliases?.map(a => a.toLowerCase()).includes(commandName.toLowerCase()));
             if (!command) return;
             if (command.slashOnly) {
                 const msg = await message.reply({

@@ -1,5 +1,4 @@
 import StatsCard from "@/components/custom/StatsCard";
-import TokenLoader from "@/components/custom/TokenLoader";
 import UptimeCard from "@/components/custom/UptimeCard";
 import {
   TypewriterEffect,
@@ -33,7 +32,6 @@ export default async function Home() {
   });
   return (
     <>
-      <TokenLoader />
       <div className="md:min-h-screen m-0 min-w-full pt-32">
         <div className="flex flex-col align-middle items-center">
           <h1

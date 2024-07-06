@@ -24,7 +24,7 @@ export default {
         })
         const embed = new EmbedBuilder()
             .setTitle("Leaderboard")
-            .setDescription(`**Top 10**\n\n${prismaMembers.map((member, index) => `${index + 1}. ${member.user.name}: ${member.level}`).join("\n")}`)
+            .setDescription(`**Top 10**\n\n${prismaMembers.map((member, index) => `**${index + 1}**. ${member.user.name}: ${member.level}`).join("\n")}`)
             .setColor("Random")
 
         return {

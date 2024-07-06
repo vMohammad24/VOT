@@ -2,50 +2,27 @@ import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { apiUrl } from "@/lib/utils";
 import GuildCarousal from "./components/GuildCarousal";
+import { redirect } from "next/navigation";
 export default async function Guilds() {
   const token = cookies().get("token");
   if (!token) {
-    return (
-      <>
-        <h1>Not Logged In</h1>
-      </>
-    );
+    redirect(apiUrl + "discord/callback");
+    
   }
-  const user = await prisma.user.findUnique({ where: { token: token.value } });
+  const user = await prisma.user.findUnique({ where: { token: token.value }, select: {discord: true, id: true} });
   if (!user) {
-    return (
-      <>
-        <h1>Not Logged In</h1>
-      </>
-    );
+    redirect(apiUrl + "discord/callback");
   }
   const res = await fetch(apiUrl + "discord/guilds", {
     headers: {
       Authorization: token.value,
     },
   }).then((res) => res.json());
-  console.log(`res1: ${JSON.stringify(res)}`);
   if (res.error) {
-    const discord = await prisma.discord.findUnique({
-      where: {
-        userId: user.id,
-      },
-    });
+    const {discord} = user;
     if (!discord) {
-      return (
-        <>
-          <h1>Not Logged In</h1>
-        </>
-      );
+      return redirect(apiUrl + "discord/callback");
     }
-    console.log(`res2: ` + await fetch(
-      apiUrl + "discord/callback?refresh_token=" + discord.refreshToken,
-      {
-        headers: {
-          Authorization: token.value,
-        },
-      }
-    ).then((res) => res.json()));
   }
   const guilds = await prisma.guild.findMany({
     where: {

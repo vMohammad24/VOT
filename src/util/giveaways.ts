@@ -1,5 +1,5 @@
 import type { Giveaway, PrismaClient } from "@prisma/client";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, EmbedBuilder, GuildMember, type GuildBasedChannel, type GuildTextBasedChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, EmbedBuilder, GuildMember, type GuildBasedChannel, type GuildTextBasedChannel, type MessageActionRowComponent } from "discord.js";
 import schedule from 'node-schedule';
 import { getFrontEndURL } from "./urls";
 import type CommandHandler from "../handler";
@@ -16,7 +16,7 @@ export async function createGiveaway(handler: CommandHandler, hoster: GuildMembe
             new ButtonBuilder()
                 .setCustomId('enter_giveaway')
                 .setEmoji('🎉')
-                .setStyle(ButtonStyle.Success)
+                .setStyle(ButtonStyle.Success),
         )
     const message = await channel.send({
         embeds: [embed], content: '🎉 🎉 🎉 Giveaway 🎉 🎉 🎉', components: [row]
@@ -49,6 +49,16 @@ export async function createGiveaway(handler: CommandHandler, hoster: GuildMembe
             end: endsAt,
         }
     });
+    const editedComp = message.components;
+    const comp = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+            new ButtonBuilder()
+                .setURL(getFrontEndURL() + `/giveaway/${data.id}`)
+                .setLabel('Summary')
+                .setStyle(ButtonStyle.Link)
+        )
+    editedComp.push(comp as any);
+    await message.edit({ embeds: [embed], components: editedComp });
     client.on('interactionCreate', async (interaction) => {
         if (!interaction.isButton()) return;
         if (interaction.customId === 'enter_giveaway') {

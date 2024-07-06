@@ -5,6 +5,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/custom/StatsCard";
+import InviteButton from "../components/InviteButton";
+import { redirect } from "next/navigation";
 export default async function GuildPage({
   params,
 }: {
@@ -12,19 +14,11 @@ export default async function GuildPage({
 }) {
   const token = cookies().get("token");
   if (!token) {
-    return (
-      <>
-        <h1>Not Logged In</h1>
-      </>
-    );
+    redirect(apiUrl + "discord/callback");
   }
   const user = await prisma.user.findUnique({ where: { token: token.value } });
   if (!user) {
-    return (
-      <>
-        <h1>Not Logged In</h1>
-      </>
-    );
+    redirect(apiUrl + "discord/callback");
   }
   const res = await fetch(apiUrl + "discord/guilds", {
     headers: {
@@ -38,11 +32,7 @@ export default async function GuildPage({
       },
     });
     if (!discord) {
-      return (
-        <>
-          <h1>Not Logged In</h1>
-        </>
-      );
+      return redirect(apiUrl + "discord/callback");
     }
     await fetch(
       apiUrl + "discord/callback?refresh_token=" + discord.refreshToken,
@@ -84,13 +74,7 @@ export default async function GuildPage({
   }).then((res) => res.json());
 
   if (guildInfo.error == "notInGuild") {
-    return (
-        <div className="absolute m-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-fit">
-          <Link href={apiUrl + "discord/invite"} className="justify-center">
-            <Button>Invite VOT</Button>
-          </Link>
-        </div>
-    );
+    return <InviteButton />
   }
 
   return (

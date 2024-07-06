@@ -1,8 +1,8 @@
 import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand, ApplicationCommandOptionType, type Interaction, type InteractionReplyOptions } from "discord.js";
-import type ICommand from "../interfaces/ICommand";
-import type SlashHandler from "../interfaces/SlashHandler";
-import CommandHandler from "..";
-import commandHandler from "../..";
+import type ICommand from "./interfaces/ICommand";
+import type SlashHandler from "./interfaces/ISlashHandler";
+import CommandHandler from ".";
+import commandHandler from "..";
 export default class SlashCommandHandler {
 
     public commands: ICommand[] = [];
@@ -74,6 +74,7 @@ export default class SlashCommandHandler {
                 uInstall.integration_types.push(1)
             }
             const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'default_member_permissions', 'dmPermission'])
+            command.name = cmd.name?.toLowerCase();
             return command;
         })
         // client.application?.commands.set(commands);
@@ -94,7 +95,7 @@ export default class SlashCommandHandler {
     public initListener(client: Client) {
         client.on('interactionCreate', async (interaction) => {
             if (!interaction.isCommand()) return;
-            const command = this.commands.find(cmd => cmd.name === interaction.commandName);
+            const command = this.commands.find(cmd => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
             if (!command) return;
             let result = {};
             try {

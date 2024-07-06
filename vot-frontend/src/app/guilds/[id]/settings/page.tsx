@@ -10,6 +10,7 @@ import LoggingComboBox from "../components/LoggingComboBox";
 import PrefixInputBox from "../components/PrefixInputBox";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
+import InviteButton from "../../components/InviteButton";
 
 export default async function GuildSettingsPage({
   params: { id: guildId },
@@ -25,8 +26,8 @@ export default async function GuildSettingsPage({
       Authorization: token.value,
     },
   }).then((res) => res.json());
-  if (guildInfo.error) {
-    return <div>{guildInfo.error}</div>;
+  if (guildInfo.error == "notInGuild") {
+    return <InviteButton />
   }
   const channels = (guildInfo.textChannels as any[]).map((channel) => {
     return {

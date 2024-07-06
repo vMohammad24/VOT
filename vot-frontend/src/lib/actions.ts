@@ -5,10 +5,10 @@ import { apiUrl, getApiUrl } from "./utils";
 
 export const submitTicketSettings = async (data: any, guildId: string, token: string) => {
     const user = await prisma.user.findUnique({ where: { token: token } });
-    if (!user) return;//console.log({ error: "User not found" });
+    if (!user) return;
     const guild = await prisma.guild.findUnique({ where: { id: guildId }, include: { admins: true } });
-    if (!guild) return;// console.log({ error: "Guild not found" });
-    if (!guild.admins.map(a => a.id).includes(user.id)) return;// console.log({ error: user.name + " is not an admin of this guild" });
+    if (!guild) return;
+    if (!guild.admins.map(a => a.id).includes(user.id)) return;
     const oldSettings = (await prisma.ticketSettings.findFirst({ where: { guildId: guildId } }));
     const actualData = {
         categoryId: data.category,
@@ -35,16 +35,15 @@ export const submitTicketSettings = async (data: any, guildId: string, token: st
             "Content-Type": "application/json",
         },
     })).text()
-    // console.log(res)
     return upd ? { success: true } : { error: "An error occurred" }
 };
 
 
 export const submitWelcomeSettings = async (data: any, guildId: string, token: string) => {
     const user = await prisma.user.findUnique({ where: { token: token } });
-    if (!user) return;// console.log({ error: "User not found" });
+    if (!user) return;
     const guild = await prisma.guild.findUnique({ where: { id: guildId, admins: { some: { id: user.id } } }, include: { admins: true } });
-    if (!guild) return; //console.log({ error: "Guild not found" });
+    if (!guild) return;
     const oldSettings = (await prisma.welcomeSettings.findFirst({ where: { guildId: guildId } }));
     const actualData = {
         channelId: data.channel,

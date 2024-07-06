@@ -1,5 +1,5 @@
-import { updateGuilds } from "../api";
-import type { IListener } from "../handler/listenres";
+import { updateGuilds } from "../api/apiUtils";
+import type { IListener } from "../handler/ListenerHandler";
 
 export default {
     name: "Permission updater",

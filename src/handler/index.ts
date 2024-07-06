@@ -1,11 +1,11 @@
-import type SlashHandler from "./interfaces/SlashHandler"
-import type LegacyHandler from "./interfaces/LegacyHandler";
-import SlashCommandHandler from "./slash";
+import type SlashHandler from "./interfaces/ISlashHandler"
+import type LegacyHandler from "./interfaces/ILegacyHandler";
+import SlashCommandHandler from "./SlashHandler";
 import type ICommand from "./interfaces/ICommand";
 import type { CommandContext } from "./interfaces/ICommand";
 import { GuildMember, type Message, ChatInputCommandInteraction, type Interaction } from "discord.js";
-import LegacyCommandHandler from "./legacy";
-import ListenerHandler from "./listenres";
+import LegacyCommandHandler from "./LegacyHandler";
+import ListenerHandler from "./ListenerHandler";
 import { Glob } from "bun";
 import path from 'path';
 import PinoLogger from "pino";
@@ -44,7 +44,7 @@ export default class CommandHandler {
                 const command = await import(path.join(commandsDir, file));
                 const modifiedData = Object.assign({}, command.default, {
                     name: commandName,
-                    category: categoryName
+                    category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
                 });
                 if (modifiedData.disabled) continue;
                 handler.commands.push(modifiedData);
