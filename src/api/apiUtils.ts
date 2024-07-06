@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, type APIGuild, type GuildMember } from "discord.js";
+import { PermissionFlagsBits, type APIGuild, type APIUser, type GuildMember } from "discord.js";
 import commandHandler from "..";
 import axios from "axios";
 
@@ -26,88 +26,93 @@ export const updateGuilds = async (userId: string): Promise<any> => {
     };
 
     const { discord } = user;
-    const lastUpdate = lastUpdateForUser.get(user.id);
-    if (lastUpdate && Date.now() - lastUpdate.getTime() < 5 * 60 * 1000) {
-        return { error: "maybe later" };
-    }
-    console.log("updating guilds for " + userId);
-    const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
-        headers: {
-            Authorization: `Bearer ${discord.token}`,
-            'Accept-Encoding': 'identity'
-        },
-    });
-    const resGuilds = await guildsRes.data as APIGuild[];
-    if (guildsRes.status == 401 || guildsRes.status == 400) {
-        const ref = await refreshToken(discord.refreshToken);
-        if (typeof ref != "string") {
-            return ref;
+    try {
+        const lastUpdate = lastUpdateForUser.get(user.id);
+        if (lastUpdate && Date.now() - lastUpdate.getTime() < 60 * 1000) {
+            return { error: "maybe later" };
         }
-        return await updateGuilds(userId);
-    }
-    const why = resGuilds as any;
-    if (why.error_description) {
-        return { error: why.error_description };
-    }
-    const guilds = resGuilds.filter((g) => {
-        const isOwner = g.owner;
-        if (isOwner) return true;
-        if (!g.permissions) return false;
-        const perms = BigInt(g.permissions!);
-        return perms & PermissionFlagsBits.Administrator;
-    })
-    const allGuilds = await prisma.guild.findMany({
-        where: {
-            admins: {
-                some: {
-                    id: user.id
+        console.log("updating guilds for " + userId);
+        const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
+            headers: {
+                Authorization: `Bearer ${discord.token}`,
+                'Accept-Encoding': 'identity'
+            },
+        });
+        const resGuilds = await guildsRes.data as APIGuild[];
+        if (guildsRes.status == 401 || guildsRes.status == 400) {
+            const ref = await refreshToken(discord.refreshToken);
+            if (typeof ref != "string") {
+                return ref;
+            }
+            return await updateGuilds(userId);
+        }
+        const why = resGuilds as any;
+        if (why.error_description) {
+            return { error: why.error_description };
+        }
+        const guilds = resGuilds.filter((g) => {
+            const isOwner = g.owner;
+            if (isOwner) return true;
+            if (!g.permissions) return false;
+            const perms = BigInt(g.permissions!);
+            return perms & PermissionFlagsBits.Administrator;
+        })
+        const allGuilds = await prisma.guild.findMany({
+            where: {
+                admins: {
+                    some: {
+                        id: user.id
+                    }
                 }
             }
-        }
-    })
-    for (const guild of guilds) {
-        const g = await commandHandler.prisma.guild.upsert({
-            where: {
-                id: guild.id,
-            },
-            update: {
-                name: guild.name,
-                icon: guild.icon,
-                admins: {
-                    connect: {
-                        id: user.id,
-                    }
-                }
-            },
-            create: {
-                id: guild.id,
-                name: guild.name,
-                icon: guild.icon,
-                admins: {
-                    connect: {
-                        id: user.id,
-                    }
-                }
-            },
         })
-    }
-    for (const guild of allGuilds) {
-        if (!guilds.find(g => g.id === guild.id)) {
-            await commandHandler.prisma.guild.update({
+        for (const guild of guilds) {
+            const g = await commandHandler.prisma.guild.upsert({
                 where: {
                     id: guild.id,
                 },
-                data: {
+                update: {
+                    name: guild.name,
+                    icon: guild.icon,
                     admins: {
-                        disconnect: {
-                            id: user.id
+                        connect: {
+                            id: user.id,
                         }
                     }
-                }
+                },
+                create: {
+                    id: guild.id,
+                    name: guild.name,
+                    icon: guild.icon,
+                    admins: {
+                        connect: {
+                            id: user.id,
+                        }
+                    }
+                },
             })
         }
+        for (const guild of allGuilds) {
+            if (!guilds.find(g => g.id === guild.id)) {
+                await commandHandler.prisma.guild.update({
+                    where: {
+                        id: guild.id,
+                    },
+                    data: {
+                        admins: {
+                            disconnect: {
+                                id: user.id
+                            }
+                        }
+                    }
+                })
+            }
+        }
+        lastUpdateForUser.set(user.id, new Date());
+    } catch (e) {
+        console.error(`Error updating guilds for ${userId}`, e);
+        return { error: "Error updating guilds" };
     }
-
     // const allGuilds = commandHandler.client.guilds.cache;
     // const guildsInAdmin = [];
     // for (const [, guild] of allGuilds) {
@@ -197,10 +202,11 @@ export const refreshToken = async (refreshToken: string) => {
             authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`
         },
     });
-    const resUser = await userRes.data as any;
-    if (resUser.error_description) {
+    const resUser = await userRes.data as APIUser;
+    const errorHandling = resUser as any;
+    if (errorHandling.error_description) {
         return {
-            error: resUser.error_description,
+            error: errorHandling.error_description,
             code: 401
         };
     }

@@ -46,7 +46,7 @@ export default class SlashCommandHandler {
 
             if (!cmd.type) cmd.type = "guildOnly";
 
-            if (cmd.type == "installable") {
+            if (cmd.type == "installable" || cmd.type == "all") {
                 uInstall.contexts.push(2)
                 uInstall.integration_types.push(1)
                 cmd.options?.push({
@@ -56,7 +56,7 @@ export default class SlashCommandHandler {
                     required: false
                 })
             }
-            if (cmd.type == "guildOnly") {
+            if (cmd.type == "guildOnly" || cmd.type == "all") {
                 uInstall.contexts.push(0)
                 uInstall.integration_types.push(0)
             }
@@ -64,14 +64,6 @@ export default class SlashCommandHandler {
             if (cmd.type == "dmOnly") {
                 uInstall.contexts.push(1)
                 uInstall.integration_types.push(0)
-            }
-
-            if (cmd.type == "all") {
-                uInstall.contexts.push(0)
-                uInstall.contexts.push(1)
-                uInstall.contexts.push(2)
-                uInstall.integration_types.push(0)
-                uInstall.integration_types.push(1)
             }
             const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, ['integration_types', 'contexts', 'name', 'description', 'options', 'default_member_permissions', 'dmPermission'])
             command.name = cmd.name?.toLowerCase();
