@@ -18,7 +18,6 @@ export default {
         }
     ],
     execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
-        // console.log(args)
         if (typeof args[args.length - 1] == "boolean") {
             args.pop();
         }

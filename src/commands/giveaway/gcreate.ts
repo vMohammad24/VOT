@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ApplicationCommandOptionType, EmbedBuilder, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { createGiveaway } from "../../util/giveaways";
+import { parseTime } from "../../util/util";
 
 export default {
     description: "Creates a giveaway",
@@ -21,28 +22,9 @@ export default {
                 interaction.reply({ content: "Please fill out all the fields", ephemeral: true })
                 return;
             }
-            const durationRegex = /(\d+)([smhdw])/;
-            const durationMatch = duration.match(durationRegex);
-            if (!durationMatch) {
-                interaction.reply({ content: "Invalid duration", ephemeral: true })
-                return;
-            }
-            let durationValue = parseInt(durationMatch[1]);
-            const durationType = durationMatch[2];
-            if (isNaN(durationValue)) {
-                interaction.reply({ content: "Invalid duration", ephemeral: true })
-                return;
-            }
-            if (durationType === "m") durationValue *= 60;
-            if (durationType === "h") durationValue *= 3600;
-            if (durationType === "d") durationValue *= 86400;
-            if (durationType === "w") durationValue *= 604800;
-            if (durationValue < 60) {
-                interaction.reply({ content: "Duration must be at least 1 minute", ephemeral: true })
-                return;
-            }
-            if (durationValue > 604800) {
-                interaction.reply({ content: "Duration must be at most 1 week", ephemeral: true })
+            const durationValue = parseTime(duration);
+            if (durationValue > 262_980_1) {
+                interaction.reply({ content: "Duration must be at most a month", ephemeral: true })
                 return;
             }
             const winnersValue = parseInt(winners);
@@ -51,7 +33,7 @@ export default {
                 return;
             }
             if (winnersValue < 1) {
-                interaction.reply({ content: "Winners must be at least 1", ephemeral: true })
+                interaction.reply({ content: "There must be at least 1 winner", ephemeral: true })
                 return;
             }
             const ga = await createGiveaway(handler, interaction.member as GuildMember, title, description, durationValue, winnersValue, channel as GuildTextBasedChannel);

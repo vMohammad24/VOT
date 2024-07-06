@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client/extension";
-import type { IListener } from "../handler/listenres";
+import type { IListener } from "../handler/ListenerHandler";
 import { AuditLogEvent, ChannelType, EmbedBuilder, Guild, type GuildTextBasedChannel, type TextBasedChannel } from "discord.js";
 import commandHandler from "..";
 

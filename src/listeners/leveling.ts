@@ -1,5 +1,5 @@
 import { ChannelType, EmbedBuilder, GuildMember, Message, type GuildTextBasedChannel } from "discord.js";
-import type { IListener } from "../handler/listenres";
+import type { IListener } from "../handler/ListenerHandler";
 
 export const expNeededForLevel = (needed: number) => {
     return 5 * Math.pow(needed, 2) + 50 * needed + 100
@@ -61,10 +61,8 @@ export default {
                 }
             })
             if (member.messagesToday >= 100) return;
-            // console.log(member.lastMessage?.getTime(), Date.now())
             if (member.lastMessage && member.lastMessage.getTime() > Date.now() - 5000) return;
             const expGained = Math.min(message.content.length / 2, 20)
-            // console.log(`${message.author.tag} gained ${expGained} exp.`)
             const newExp = member.exp + expGained
             if (newExp >= expNeededForLevel(member.level + 1)) {
                 member.exp = 0

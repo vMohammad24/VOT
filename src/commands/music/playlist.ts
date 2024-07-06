@@ -139,7 +139,7 @@ export default {
         {
             name: "update",
             type: ApplicationCommandOptionType.Subcommand,
-            description: "Remove/Add a track to a playlist",
+            description: "Add/Remove a track to a playlist",
             options: [
                 {
                     name: "name",

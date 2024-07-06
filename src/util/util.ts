@@ -100,3 +100,34 @@ export async function getTwoMostUsedColors(img: Image): Promise<RGB[]> {
 
     return centroids.map(centroid => centroid.map(Math.round) as RGB);
 }
+export function parseTime(timestr: string): number {
+    timestr = timestr.replace(/(\s|,|and)/g, "")
+        .replace(/(-?\d+|[a-z]+)/gi, "$1 ")
+        .trim();
+    const vals: string[] = timestr.split(/\s+/);
+    let time: number = 0;
+    try {
+        for (let j = 0; j < vals.length; j += 2) {
+            let num: number = parseInt(vals[j], 10);
+            switch (vals[j + 1].toLowerCase()) {
+                case "m":
+                    num *= 60;
+                    break;
+                case "h":
+                    num *= 60 * 60;
+                    break;
+                case "d":
+                    num *= 60 * 60 * 24;
+                    break;
+                case "w":
+                    num *= 60 * 60 * 24 * 7;
+                    break;
+                default:
+                    break;
+            }
+            time += num;
+        }
+    } catch (ignored) { }
+    return time;
+}
+

@@ -1,5 +1,5 @@
 import type { APIApplicationCommandInteraction, CommandInteraction, GuildTextBasedChannel } from "discord.js";
-import type { IListener } from "../handler/listenres";
+import type { IListener } from "../handler/ListenerHandler";
 import { getRows, sendPanel } from "../util/music";
 
 export default {

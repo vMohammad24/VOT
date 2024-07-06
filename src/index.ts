@@ -49,7 +49,7 @@ const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
     models: [
         { model: "User", excludeMethods: ["findMany"] },
     ],
-    storage: { type: "redis", options: { client: redis, invalidation: { referencesTTL: 300 } } },
+    storage: { type: "redis", options: { client: redis as any, invalidation: { referencesTTL: 300 } } },
     cacheTime: 300,
     excludeModels: ["TicketSettings", "Ticket", "Discord", "Spotify", "WelcomeSettings"],
 });

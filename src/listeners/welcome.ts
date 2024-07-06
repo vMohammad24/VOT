@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "@discordjs/builders";
-import type { IListener } from "../handler/listenres";
+import type { IListener } from "../handler/ListenerHandler";
 
 export default {
     name: "Welcome messages",

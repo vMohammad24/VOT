@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
 interface Message {
     username: string, content: string, timestamp: string, attachments: string[], roleColor: string, avatar: string
@@ -16,19 +17,11 @@ export default async function GuildPage({
 }) {
   const token = cookies().get("token");
   if (!token) {
-    return (
-      <main className="min-h-screen flex justify-center items-center">
-        <h1 className=" text-xl">Not Logged In</h1>
-      </main>
-    );
+      return redirect(apiUrl + "discord/callback");
   }
   const user = await prisma.user.findUnique({ where: { token: token.value } });
   if (!user) {
-    return (
-      <main className="min-h-screen flex justify-center items-center">
-        <h1 className=" text-xl">Not Logged In</h1>
-      </main>
-    );
+      return redirect(apiUrl + "discord/callback");
   }
   const ticketId = params.id;
   const ticket = await prisma.ticket.findUnique({

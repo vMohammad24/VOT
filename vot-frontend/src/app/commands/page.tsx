@@ -9,7 +9,7 @@ import { apiUrl } from "../../lib/utils";
 export default async function Commands() {
   let commands: { name: string; description: string; category: string }[] = [];
   await fetch(apiUrl + "commands", {
-    cache: "default",
+    cache: "no-cache",
   })
     .then(async (res) => await res.json())
     .then((data) => {

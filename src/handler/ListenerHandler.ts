@@ -1,5 +1,5 @@
 import { join } from "path";
-import type CommandHandler from "..";
+import type CommandHandler from ".";
 import type { Glob } from "bun";
 
 export default class ListenerHandler {

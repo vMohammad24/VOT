@@ -100,15 +100,6 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
     }
     const chan = await channel.guild?.channels.fetch(channel.id) as GuildTextBasedChannel;
     if (!chan) return { error: "An error occurred while fetching the channel" };
-    // const messages = await chan.messages.fetch();
-    // let content = "";
-    // for (const message of messages.values()) {
-    //     if (!message) continue;
-    //     if (message.author.bot) continue;
-    //     content += `(${message.createdTimestamp}) (${message.author.username}) ${message.content}\n`
-    // }
-    // const uploadedData = await uploadFile([content])
-    // console.log(uploadedData)
     const ticketOwner = await channel.guild?.members.fetch(ticketData.userId);
     const cdnId = await transcriptTicket(chan);
     await prisma.ticket.update({

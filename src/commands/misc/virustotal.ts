@@ -41,7 +41,6 @@ export default {
                 embed.addFields({ name: name, value: text, inline: true })
             }
         }
-        // console.log(res.data)
         if (res.data.response_code === 1) {
             return {
                 embeds: [embed]

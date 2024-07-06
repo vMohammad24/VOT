@@ -16,7 +16,7 @@ if (process.env.NODE_ENV != 'production') globalForPrisma.prisma = prisma
 
 
 const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
-    storage: { type: "redis", options: { client: redis as any, invalidation: { referencesTTL: 300 }, log: console } },
+    storage: { type: "redis", options: { client: redis as any, invalidation: { referencesTTL: 300 } } },
     cacheTime: 300,
     excludeMethods: ["findUnique"],
     excludeModels: ["Spotify"],
