@@ -6,11 +6,11 @@ import { Connectors, type NodeOption } from "shoukaku";
 import CommandHandler from "./handler/index";
 import axios from "axios";
 import Spotify from 'kazagumo-spotify'
-import server from "./api";
 import { scheduleJob, scheduledJobs } from "node-schedule";
 import { endGiveaway } from "./util/giveaways";
 import Redis from "ioredis";
 import { createPrismaRedisCache } from "prisma-redis-middleware";
+import app from "./api";
 const isProduction = process.env.NODE_ENV === "production";
 const nodes: NodeOption[] = [
     {
@@ -89,7 +89,9 @@ client.on("ready", async (c) => {
         console.error(error.response?.data);
         return Promise.reject(error);
     });
-    server.listen({ port: parseInt(process.env.SERVER_PORT || '8080') })
+    app.listen(process.env.PORT || 8080, () => {
+        commandHandler.logger.info(`API listening on port ${process.env.PORT || 8080}`)
+    })
 })
 
 
