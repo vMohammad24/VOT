@@ -71,7 +71,7 @@ client.on("ready", async (c) => {
     const giveaways = await prisma.giveaway.findMany();
     for (const giveaway of giveaways) {
         if (!giveaway.ended) {
-            if (giveaway.end.getTime() < Date.now()) {
+            if (new Date(giveaway.end).getTime() < Date.now()) {
                 endGiveaway(giveaway.id);
                 continue;
             }

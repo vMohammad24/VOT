@@ -248,7 +248,7 @@ export default (server: Express) => {
         //     })
         // }
         const guildsRes = await updateGuilds(resUser.id)
-        if (guildsRes.code == 401 || guildsRes.code == 400) {
+        if (guildsRes && (guildsRes.code == 401 || guildsRes.code == 400)) {
             return res.status(401).send(guildsRes)
         }
         let user = await commandHandler.prisma.user.findUnique({ where: { id: resUser.id } });

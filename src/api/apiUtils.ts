@@ -1,4 +1,4 @@
-import type { GuildMember } from "discord.js";
+import { PermissionFlagsBits, type APIGuild, type GuildMember } from "discord.js";
 import commandHandler from "..";
 import axios from "axios";
 
@@ -8,7 +8,7 @@ export const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
 export const spotifyClientId = process.env.SPOTIFY_CLIENT_ID!;
 export const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
 
-
+const lastUpdateForUser = new Map<string, Date>();
 export const updateGuilds = async (userId: string): Promise<any> => {
     const { prisma } = commandHandler;
     if (!prisma) {
@@ -21,108 +21,62 @@ export const updateGuilds = async (userId: string): Promise<any> => {
     if (!user) {
         return { error: "Invalid user" };
     }
-    // if (!user.discord) {
-    //     return { error: "user discord not found" };
-    // };
+    if (!user.discord) {
+        return { error: "user discord not found" };
+    };
 
-    // const { discord } = user;
-    // const lastUpdate = lastUpdateForUser.get(user.id);
-    // if (lastUpdate && Date.now() - lastUpdate.getTime() < 5 * 60 * 1000) {
-    //     return { error: "maybe later" };
-    // }
-    // const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
-    //     headers: {
-    //         Authorization: `Bearer ${discord.token}`,
-    //         'Accept-Encoding': 'identity'
-    //     },
-    // });
-    // const resGuilds = await guildsRes.data as any;
-    // if (guildsRes.status == 401 || guildsRes.status == 400) {
-    //     const ref = await refreshToken(discord.refreshToken);
-    //     if (typeof ref != "string") {
-    //         return ref;
-    //     }
-    //     return await updateGuilds(userId);
-    // }
-    // if (resGuilds.error_description) {
-    //     return { error: resGuilds.error_description };
-    // }
-    // const guilds = (resGuilds as any[]).filter(guild => (guild.permissions & 0x20) === 0x20);
-    // const allGuilds = await prisma.guild.findMany({
-    //     where: {
-    //         admins: {
-    //             some: {
-    //                 id: user.id
-    //             }
-    //         }
-    //     }
-    // })
-    // for (const guild of guilds) {
-    //     const g = await commandHandler.prisma.guild.upsert({
-    //         where: {
-    //             id: guild.id,
-    //         },
-    //         update: {
-    //             name: guild.name,
-    //             icon: guild.icon,
-    //             admins: {
-    //                 connect: {
-    //                     id: user.id,
-    //                 }
-    //             }
-    //         },
-    //         create: {
-    //             id: guild.id,
-    //             name: guild.name,
-    //             icon: guild.icon,
-    //             admins: {
-    //                 connect: {
-    //                     id: user.id,
-    //                 }
-    //             }
-    //         },
-    //     })
-    // }
-    // for (const guild of allGuilds) {
-    //     if (!guilds.find(g => g.id === guild.id)) {
-    //         await commandHandler.prisma.guild.update({
-    //             where: {
-    //                 id: guild.id,
-    //             },
-    //             data: {
-    //                 admins: {
-    //                     disconnect: {
-    //                         id: user.id
-    //                     }
-    //                 }
-    //             }
-    //         })
-    //     }
-    // }
-    const allGuilds = commandHandler.client.guilds.cache;
-    const guildsInAdmin = [];
-    for (const [, guild] of allGuilds) {
-        const admins: GuildMember[] = []
-        for (const [, mem] of guild.members.cache) {
-            if (mem.user.bot) continue;
-            if (mem.permissions.has('Administrator')) {
-                admins.push(mem);
+    const { discord } = user;
+    const lastUpdate = lastUpdateForUser.get(user.id);
+    if (lastUpdate && Date.now() - lastUpdate.getTime() < 5 * 60 * 1000) {
+        return { error: "maybe later" };
+    }
+    console.log("updating guilds for " + userId);
+    const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
+        headers: {
+            Authorization: `Bearer ${discord.token}`,
+            'Accept-Encoding': 'identity'
+        },
+    });
+    const resGuilds = await guildsRes.data as APIGuild[];
+    if (guildsRes.status == 401 || guildsRes.status == 400) {
+        const ref = await refreshToken(discord.refreshToken);
+        if (typeof ref != "string") {
+            return ref;
+        }
+        return await updateGuilds(userId);
+    }
+    const why = resGuilds as any;
+    if (why.error_description) {
+        return { error: why.error_description };
+    }
+    const guilds = resGuilds.filter((g) => {
+        const isOwner = g.owner;
+        if (isOwner) return true;
+        if (!g.permissions) return false;
+        const perms = BigInt(g.permissions!);
+        return perms & PermissionFlagsBits.Administrator;
+    })
+    const allGuilds = await prisma.guild.findMany({
+        where: {
+            admins: {
+                some: {
+                    id: user.id
+                }
             }
         }
-        if (!guild) continue
+    })
+    for (const guild of guilds) {
         const g = await commandHandler.prisma.guild.upsert({
             where: {
-                id: guild.id
+                id: guild.id,
             },
             update: {
                 name: guild.name,
                 icon: guild.icon,
                 admins: {
-                    set: admins.map(m => {
-                        return {
-                            id: m.id
-                        }
-                    })
+                    connect: {
+                        id: user.id,
+                    }
                 }
             },
             create: {
@@ -130,33 +84,88 @@ export const updateGuilds = async (userId: string): Promise<any> => {
                 name: guild.name,
                 icon: guild.icon,
                 admins: {
-                    connectOrCreate: admins.map(m => {
-                        return {
-                            where: {
-                                id: m.id
-                            },
-                            create: {
-                                id: m.id,
-                                name: m.user.username,
-                                avatar: m.user.avatar
-                            }
-                        }
-                    })
-                }
-            },
-            include: {
-                admins: {
-                    select: {
-                        id: true
+                    connect: {
+                        id: user.id,
                     }
                 }
-            }
+            },
         })
-        if (g.admins.includes({ id: userId })) {
-            guildsInAdmin.push(g)
+    }
+    for (const guild of allGuilds) {
+        if (!guilds.find(g => g.id === guild.id)) {
+            await commandHandler.prisma.guild.update({
+                where: {
+                    id: guild.id,
+                },
+                data: {
+                    admins: {
+                        disconnect: {
+                            id: user.id
+                        }
+                    }
+                }
+            })
         }
     }
-    return guildsInAdmin
+
+    // const allGuilds = commandHandler.client.guilds.cache;
+    // const guildsInAdmin = [];
+    // for (const [, guild] of allGuilds) {
+    //     const admins: GuildMember[] = []
+    //     for (const [, mem] of guild.members.cache) {
+    //         if (mem.user.bot) continue;
+    //         if (mem.permissions.has('Administrator')) {
+    //             admins.push(mem);
+    //         }
+    //     }
+    //     if (!guild) continue
+    //     const g = await commandHandler.prisma.guild.upsert({
+    //         where: {
+    //             id: guild.id
+    //         },
+    //         update: {
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 set: admins.map(m => {
+    //                     return {
+    //                         id: m.id
+    //                     }
+    //                 })
+    //             }
+    //         },
+    //         create: {
+    //             id: guild.id,
+    //             name: guild.name,
+    //             icon: guild.icon,
+    //             admins: {
+    //                 connectOrCreate: admins.map(m => {
+    //                     return {
+    //                         where: {
+    //                             id: m.id
+    //                         },
+    //                         create: {
+    //                             id: m.id,
+    //                             name: m.user.username,
+    //                             avatar: m.user.avatar
+    //                         }
+    //                     }
+    //                 })
+    //             }
+    //         },
+    //         include: {
+    //             admins: {
+    //                 select: {
+    //                     id: true
+    //                 }
+    //             }
+    //         }
+    //     })
+    //     if (g.admins.includes({ id: userId })) {
+    //         guildsInAdmin.push(g)
+    //     }
+    // }
+    // return guildsInAdmin
 }
 export const refreshToken = async (refreshToken: string) => {
     const tokenResponseData = await axios.post('https://discord.com/api/oauth2/token', {
