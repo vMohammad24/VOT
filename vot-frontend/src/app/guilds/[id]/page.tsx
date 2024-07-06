@@ -26,6 +26,7 @@ export default async function GuildPage({
     },
   }).then((res) => res.json());
   if (res.error) {
+    console.error(`had an error while loading guild: ${params.id} for user: ${user.id}: `, res.error);
     return redirect(apiUrl + "discord/callback");
   }
   const { id: guildId } = params;
