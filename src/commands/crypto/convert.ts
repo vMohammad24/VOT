@@ -1,0 +1,90 @@
+import axios from "axios";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+
+
+const exchangeRates: { key: string, name: string, value: number, unit: string }[] = [];
+
+const loadExchangeRates = async () => {
+    const res = await axios.get(`https://api.coingecko.com/api/v3/exchange_rates`);
+    const rates = res.data.rates;
+    exchangeRates.length = 0;
+    for (const [key, value] of Object.entries(rates)) {
+        const v = value as any;
+        exchangeRates.push({
+            key,
+            ...v
+        })
+    }
+}
+
+export default {
+    description: "Convert currencies",
+    type: "all",
+    options: [
+        {
+            name: "amount",
+            description: "amount of currency",
+            type: ApplicationCommandOptionType.Integer,
+            required: true
+        },
+        {
+            name: "from",
+            description: "the currency to convert from",
+            type: ApplicationCommandOptionType.String,
+            required: true,
+            autocomplete: true
+        },
+        {
+            name: "to",
+            description: "the currency to convert to",
+            type: ApplicationCommandOptionType.String,
+            required: true,
+            autocomplete: true
+        }],
+    init: async (handler) => {
+        handler.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isAutocomplete()) return;
+            if (interaction.commandName != "convert") return;
+            if (exchangeRates.length == 0) await loadExchangeRates();
+            const from = interaction.options.getFocused();
+            interaction.respond(exchangeRates.map(x => ({ name: x.name, value: x.key })).filter(x => x.name.includes(from)).slice(0, 25))
+        })
+    },
+    aliases: ["convert"],
+    execute: async ({ args }) => {
+        const a = args[0];
+        let from = args[1];
+        let to = args[2];
+
+        if (!a || !from || !to) return {
+            content: "Invalid input",
+            ephemeral: true
+        }
+        if (exchangeRates.length == 0) await loadExchangeRates();
+        const amount = parseFloat(a);
+        if (isNaN(amount)) return {
+            content: "Invalid amount",
+            ephemeral: true
+        }
+        for (const x of exchangeRates) {
+            if (x.name.toLowerCase() == from.toLowerCase()) from = x.key;
+            if (x.name.toLowerCase() == to.toLowerCase()) to = x.key;
+        }
+        if (!exchangeRates.find(x => x.key == from)) return {
+            content: "Invalid from currency",
+            ephemeral: true
+        }
+        if (!exchangeRates.find(x => x.key == to)) return {
+            content: "Invalid to currency",
+            ephemeral: true
+        }
+        const fromValue = exchangeRates.find(x => x.key == from)!;
+        const toValue = exchangeRates.find(x => x.key == to)!;
+        const res = amount * (toValue.value / fromValue.value);
+        return {
+            content: `${amount}${fromValue.unit} is ${res}${toValue.unit}`
+        }
+
+    }
+} as ICommand

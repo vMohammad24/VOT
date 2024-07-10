@@ -9,7 +9,7 @@ const shouldGetExp = (message: Message) => {
     if (message.author.bot) return false;
     if (!message.guild) return false;
     const channel = message.channel as GuildTextBasedChannel;
-    const blacklistedChannels = ["dev", "staff", "ticket", "mod-logs", "logs", "admin"]
+    const blacklistedChannels = ["dev", "staff", "ticket", "logs", "admin"]
     for (const blacklisted of blacklistedChannels) {
         if (channel.name.includes(blacklisted)) return false
     }

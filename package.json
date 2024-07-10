@@ -36,6 +36,7 @@
     "pino": "^9.2.0",
     "prisma": "^5.16.1",
     "prisma-redis-middleware": "^4.8.0",
+    "puppeteer": "^22.12.1",
     "query-string": "latest",
     "shoukaku": "latest"
   }

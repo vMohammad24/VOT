@@ -98,7 +98,7 @@ export default class SlashCommandHandler {
             }
             if (result) {
                 if (typeof interaction.options.get("silent", false)?.value == "boolean") {
-                    (result as InteractionReplyOptions).ephemeral = interaction.options.get("silent", false)?.value as boolean;
+                    (result as any).ephemeral = interaction.options.get("silent", false)?.value as boolean;
                 }
                 if (interaction.replied) {
                     await interaction.followUp(result);
