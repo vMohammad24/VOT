@@ -5,23 +5,27 @@ import { ApplicationCommandOptionType } from "discord.js";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration' // import plugin
 import { parseTime } from "../../util/util";
+import puppeteer from "puppeteer";
 dayjs.extend(duration) // use plugin
 
 export default {
     description: "test command for devs",
     perms: "dev",
-    options: [{
-        name: "test",
-        description: "test",
-        type: ApplicationCommandOptionType.String,
-        required: true
-    }],
-    disabled: true,
     execute: async ({ interaction, handler, args }) => {
-        const duration = args[0]
-        const a = parseTime(duration)
-        console.log(a)
-        return new Date(Date.now() + a * 1000).toLocaleString()
+        const url = `https://google.com`;
+        const browser = await puppeteer.launch({ headless: true });
+        // Create a new page
+        const page = await browser.newPage();
+        // Navigate to the URL
+        await page.goto(url);
+        // Capture a screenshot
+        const screenshot = await page.screenshot({ optimizeForSpeed: true });
+
+        return {
+            files: [
+                screenshot
+            ]
+        }
 
     }
 } as ICommand;
