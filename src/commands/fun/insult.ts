@@ -12,7 +12,7 @@ export default {
         required: false,
     }],
     execute: async ({ args }) => {
-        const lang = args[0] || "en";
+        const lang = args.get("language") as string || "en";
         const reqUrl = `https://evilinsult.com/generate_insult.php?lang=${lang}&type=json`;
         const res = (await axios.get(reqUrl));
         const { insult } = res.data;

@@ -37,7 +37,7 @@ export default {
     execute: async ({ player, handler, guild, member, args }) => {
         const { kazagumo } = handler;
         if (!player) return { content: "Get in a voice channel first", ephemeral: true }
-        const query = args.join(" ");
+        const query = args.get("query") as string;
         if (!query) {
             player.play();
             return {

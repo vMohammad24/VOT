@@ -18,7 +18,7 @@ export default {
             content: "No player found",
             ephemeral: true
         }
-        const amount = parseInt(args[0]) || 1;
+        const amount = args.get("amount") || 1;
         if (member.voice && member.voice.channelId == player.voiceId) {
             let skippedSongs = 0;
             for (let i = 0; i < amount; i++) {

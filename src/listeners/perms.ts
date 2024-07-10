@@ -6,7 +6,7 @@ export default {
     description: "Listens for permission changes for the dashboard",
     execute: ({ client, prisma }) => {
         client.on("guildMemberUpdate", async (oldUser, user) => {
-            if (oldUser.roles != user.roles) await updateGuilds(user.id);
+            // if (oldUser.roles != user.roles) await updateGuilds(user.id);
         })
 
     }

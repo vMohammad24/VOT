@@ -32,7 +32,7 @@ export default {
     },
     type: "all",
     execute: async ({ args }) => {
-        const tag = args[0];
+        const tag = args.get("tag") as string || undefined;
         const reqUrl = `https://cataas.com/cat?json=true${tag ? '&tag=' + tag : ''}`;
         const res = (await axios.get(reqUrl));
         const url = 'https://cataas.com/cat/' + res.data._id;

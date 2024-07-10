@@ -15,7 +15,7 @@ export default {
     }],
     type: "all",
     execute: async ({ interaction, args }) => {
-        const url = args[0];
+        const url = args.get("url") as string || undefined;
         if (!url) return {
             content: "No url provided.",
             ephemeral: true

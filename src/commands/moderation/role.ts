@@ -20,9 +20,9 @@ export default {
             required: true
         }
     ],
-    execute: async ({ message, guild, member: ranBy, interaction }) => {
-        const member = (message?.mentions.members?.first() || interaction?.options.getMember("member")) as GuildMember;
-        const role = (message?.mentions.roles?.first() || interaction?.options.getRole("role")) as Role;
+    execute: async ({ args, guild, member: ranBy, interaction }) => {
+        const member = args.get("member") as GuildMember;
+        const role = args.get("role") as Role;
         if (!member) return { content: "Member not found.", ephemeral: true };
         if (!role) return { content: "Role not found.", ephemeral: true };
         if (role.position >= ranBy.roles.highest.position && guild.ownerId != ranBy.id) return { content: "You cannot add or remove a role higher or equal than your own.", ephemeral: true };

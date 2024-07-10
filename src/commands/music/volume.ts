@@ -18,7 +18,7 @@ export default {
                 ephemeral: true
             }
         }
-        const volume = parseInt(args[0]);
+        const volume = args.get("volume");
         if (isNaN(volume)) return {
             content: "Invalid volume",
             ephemeral: true
