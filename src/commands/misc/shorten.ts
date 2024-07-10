@@ -21,9 +21,13 @@ export default {
     }],
     userTier: UserTier.Premium,
     execute: async ({ interaction, args }) => {
-        const url = args[0]
-        const password = args[1];
+        const url = args.get("url");
+        const password = args.get("password") as string || undefined;
+        if (!url) return {
+            content: "Please provide a URL to shorten",
+            ephemeral: true
+        }
         const res = await shortenUrl(url, password);
-        interaction!.reply({ content: res, ephemeral: true });
+        return { content: res, ephemeral: true };
     }
 } as ICommand

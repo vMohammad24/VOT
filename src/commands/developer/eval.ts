@@ -18,10 +18,7 @@ export default {
         }
     ],
     execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
-        if (typeof args[args.length - 1] == "boolean") {
-            args.pop();
-        }
-        let code = args.join(" ");
+        let code = args.get('code');
         const embed = new EmbedBuilder()
             .setTitle("Eval")
             .setColor(Colors.NotQuiteBlack)

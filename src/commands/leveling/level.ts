@@ -16,8 +16,8 @@ export default {
             type: ApplicationCommandOptionType.User
         }
     ],
-    execute: async ({ message, member, handler, guild, interaction }) => {
-        const user = message?.mentions?.members?.first() || interaction?.options.getMember('user') as GuildMember || member;
+    execute: async ({ args, handler, guild, member }) => {
+        const user = args.get("user") as GuildMember || member;
         const prismaUser = await handler.prisma.member.findFirst({
             where: {
                 guildId: guild.id,

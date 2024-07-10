@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
@@ -21,8 +21,8 @@ export default {
     ],
     perms: ["BanMembers"],
     execute: async ({ args, guild, member }) => {
-        const user = guild.members.cache.get(args[0]);
-        const reason = (args[1] || "No reason provided") + ` - Softbanned by ${member.user.tag}`;
+        const user = args.get("user") as GuildMember;
+        const reason = args.get("reason") || "No reason provided" + ` - Softbanned by ${member.user.tag}`;
         if (!user) return "User not found";
         if (!user.bannable) return { content: "I cannot ban this user", ephemeral: true };
         if (user.id === member.id) return { content: "You cannot softban yourself", ephemeral: true };

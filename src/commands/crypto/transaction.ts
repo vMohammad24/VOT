@@ -14,7 +14,7 @@ export default {
     }],
     type: "all",
     execute: async ({ args, interaction }) => {
-        const txid = args[0];
+        const txid = args.get("txid") as string;
         if (!txid) return {
             content: "Invalid txid",
             ephemeral: true

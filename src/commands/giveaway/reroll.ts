@@ -13,18 +13,16 @@ export default {
             required: false
         }
     ],
-    slashOnly: true,
-    execute: async ({ handler, interaction }) => {
-        if (!interaction) return;
-        const messageId = interaction.options.getString("message_id", false);
-        const giveaway = messageId ? await handler.prisma.giveaway.findFirst({ where: { messageId } }) : await handler.prisma.giveaway.findFirst({ where: { channelId: interaction.channelId }, orderBy: { createdAt: "desc" } });;
-        if (!giveaway) return interaction.reply({ content: "Couldn't find giveaway.", ephemeral: true });
-        if (giveaway.end > new Date()) return interaction.reply({ content: "The giveaway has not ended yet", ephemeral: true });
+    execute: async ({ handler, interaction, args, channel }) => {
+        const messageId = args.get("message_id") as string || undefined;
+        const giveaway = messageId ? await handler.prisma.giveaway.findFirst({ where: { messageId } }) : await handler.prisma.giveaway.findFirst({ where: { channelId: channel.id }, orderBy: { createdAt: "desc" } });;
+        if (!giveaway) return { content: "Couldn't find giveaway.", ephemeral: true };
+        if (giveaway.end > new Date()) return { content: "The giveaway has not ended yet", ephemeral: true }
         await rerollGiveaway(giveaway.id).then(() => {
-            interaction.reply({ content: "Rerolled the giveaway", ephemeral: true });
+            return { content: "Rerolled the giveaway", ephemeral: true }
         }).catch((e) => {
-            interaction.reply({ content: "An error occurred", ephemeral: true });
             console.error(`An error occurred while rerolling ${giveaway.id}: ${e}`);
+            return { content: "An error occurred", ephemeral: true }
         })
 
     }

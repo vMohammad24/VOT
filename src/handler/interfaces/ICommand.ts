@@ -1,6 +1,7 @@
 import type { ApplicationCommandOption, ApplicationCommandType, ChatInputCommandInteraction, Client, CommandInteraction, Guild, GuildMember, InteractionReplyOptions, Message, MessagePayload, PermissionFlags, PermissionResolvable, TextBasedChannel, TextChannel, User } from "discord.js";
 import type CommandHandler from "..";
 import type { KazagumoPlayer } from "kazagumo";
+import type { Argument, ArgumentMap } from "../validations/args";
 
 
 export enum UserTier {
@@ -33,7 +34,7 @@ export default interface ICommand {
 
 export interface CommandContext {
     message: Message | null;
-    args: string[];
+    args: ArgumentMap<any>;
     guild: Guild;
     member: GuildMember;
     user: User;

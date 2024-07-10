@@ -14,7 +14,7 @@ export default {
         if (!player) {
             return { content: "No player found", ephemeral: true }
         }
-        const to = args[0];
+        const to = args.get("position");
         if (!to) {
             return {
                 content: "No position provided",

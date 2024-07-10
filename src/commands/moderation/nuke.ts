@@ -10,8 +10,8 @@ export default {
         type: ApplicationCommandOptionType.Channel,
         required: false
     }],
-    execute: async ({ channel, guild, member, message, interaction }) => {
-        const c = (message?.mentions.channels.first() || interaction?.options.getChannel("channel", false) || channel) as BaseGuildTextChannel;
+    execute: async ({ channel, guild, member, args }) => {
+        const c = args.get("channel") as BaseGuildTextChannel || channel;
         if (!c) {
             return "Please provide a valid channel";
         }

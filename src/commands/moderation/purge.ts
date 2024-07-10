@@ -11,7 +11,7 @@ export default {
     }],
     perms: ["ManageMessages"],
     execute: async ({ channel, args, message }) => {
-        const amount = parseInt(args[0]);
+        const amount = args.get("amount") as number;
         if (!amount || isNaN(amount)) {
             return {
                 content: "Invalid amount",
