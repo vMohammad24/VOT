@@ -3,8 +3,8 @@ import { ApplicationCommandOptionType, Colors, EmbedBuilder, ModalBuilder } from
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
-    name: 'ban',
-    description: "Bans a user from using VOT",
+    name: 'blacklist',
+    description: "Bans/Unbans a user from using VOT",
     perms: "dev",
     type: "dmOnly",
     options: [
