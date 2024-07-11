@@ -31,6 +31,7 @@ model User {
   email            String?        @unique
   token            String         @unique @default(cuid())
   tier             Int            @default(0)
+  banned           Boolean        @default(false)
   avatar           String?
   playlists        Playlist[]
   commands         Command[]
