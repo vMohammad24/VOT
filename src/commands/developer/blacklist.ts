@@ -9,14 +9,14 @@ export default {
     type: "dmOnly",
     options: [
         {
-            name: "userId",
+            name: "user_id",
             description: "The user to ban",
             type: ApplicationCommandOptionType.String,
             required: true,
         }
     ],
     execute: async ({ args, handler }) => {
-        const userId = args.get("userId");
+        const userId = args.get("user_id");
         if (!userId) return {
             content: "Please provide a user id",
             ephemeral: true
