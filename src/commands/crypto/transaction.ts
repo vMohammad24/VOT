@@ -13,6 +13,7 @@ export default {
         required: true,
     }],
     type: "all",
+    cooldown: 60 * 1000,
     execute: async ({ args, interaction }) => {
         const txid = args.get("txid") as string;
         if (!txid) return {
