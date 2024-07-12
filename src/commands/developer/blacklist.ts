@@ -37,6 +37,7 @@ export default {
             user.banned = true;
             content = `${user.name} has been banned`
         }
+        await prisma.user.update({ data: user, where: { id: user.id } })
         return {
             content
         }
