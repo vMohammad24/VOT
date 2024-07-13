@@ -20,10 +20,10 @@ export default {
     type: "all",
     execute: async ({ args }) => {
         const tag = args.get("tag") as string || undefined;
-        const reqUrl = `https://foodish-api.com/api/${encodeURI(tag || "")}`;
+        const reqUrl = `https://foodish-api.com/api${tag ? "/images/" + tag : ''}`;
         const res = (await axios.get(reqUrl));
         const url = res.data.image;
-        if (res.status !== 200) {
+        if (!url) {
             return {
                 content: "An error has occured",
                 ephemeral: true
