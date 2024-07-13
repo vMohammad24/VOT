@@ -1,8 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type { Guild, GuildTextBasedChannel } from "discord.js";
 import { loadImage, createCanvas, Image } from "@napi-rs/canvas";
-import kmeans from '@stdlib/ml-incr-kmeans';
-import ndarray from '@stdlib/ndarray-ctor';
 export const getLogChannel = async (prisma: PrismaClient, guild: Guild) => {
     const g = await prisma.guild.findUnique({
         where: {
