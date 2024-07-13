@@ -1,6 +1,6 @@
 
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Client, IntentsBitField } from "discord.js";
+import { Client, EmbedBuilder, IntentsBitField, Webhook, WebhookClient } from "discord.js";
 import { Kazagumo, Plugins } from "kazagumo";
 import { Connectors, type NodeOption } from "shoukaku";
 import CommandHandler from "./handler/index";
@@ -11,6 +11,7 @@ import { endGiveaway } from "./util/giveaways";
 import Redis from "ioredis";
 import { createPrismaRedisCache } from "prisma-redis-middleware";
 import app from "./api";
+import { inspect } from "bun";
 const isProduction = process.env.NODE_ENV === "production";
 const nodes: NodeOption[] = [
     {
@@ -23,6 +24,10 @@ const nodes: NodeOption[] = [
 const client = new Client({
     intents: [IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates,
     IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildModeration]
+})
+
+const errorsWebhook = new WebhookClient({
+    url: process.env.WEBHOOK_URL!
 })
 
 
@@ -93,6 +98,107 @@ client.on("ready", async (c) => {
         commandHandler.logger.info(`API listening on port ${process.env.PORT || 8080}`)
     })
 })
+
+process.on("unhandledRejection", (reason, p) => {
+    commandHandler.logger.error("Unhandled Rejection at: Promise ", p, " reason: ", reason);
+    const embed = new EmbedBuilder();
+    embed
+        .setTitle("Unhandled Rejection/Catch")
+        .setURL("https://nodejs.org/api/process.html#event-unhandledrejection")
+        .addFields(
+            {
+                name: "Reason",
+                value: `\`\`\`${inspect(reason, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            },
+            {
+                name: "Promise",
+                value: `\`\`\`${inspect(p, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            }
+        )
+        .setTimestamp();
+
+    return errorsWebhook.send({ embeds: [embed] });
+});
+
+process.on("uncaughtException", (err, origin) => {
+    commandHandler.logger.error("Uncaught Exception at: ", origin, " reason: ", err);
+    const embed = new EmbedBuilder();
+    embed
+        .setTitle("Uncaught Exception/Catch")
+        .setURL("https://nodejs.org/api/process.html#event-uncaughtexception")
+        .addFields(
+            {
+                name: "Error",
+                value: `\`\`\`${inspect(err, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            },
+            {
+                name: "Origin",
+                value: `\`\`\`${inspect(origin, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            }
+        )
+        .setTimestamp();
+
+    return errorsWebhook.send({ embeds: [embed] });
+});
+
+process.on("uncaughtExceptionMonitor", (err, origin) => {
+    commandHandler.logger.error("Uncaught Exception at: ", origin, " reason: ", err);
+    const embed = new EmbedBuilder();
+    embed
+        .setTitle("Uncaught Exception Monitor")
+        .setURL(
+            "https://nodejs.org/api/process.html#event-uncaughtexceptionmonitor"
+        )
+        .addFields(
+            {
+                name: "Error",
+                value: `\`\`\`${inspect(err, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            },
+            {
+                name: "Origin",
+                value: `\`\`\`${inspect(origin, { depth: 0 }).slice(0, 1000)}\`\`\``,
+            }
+        )
+        .setTimestamp();
+
+    return errorsWebhook.send({ embeds: [embed] });
+});
+
+process.on("multipleResolves", (type, promise, reason) => {
+    commandHandler.logger.error("Multiple Resolves: ", type, " reason: ", reason);
+});
+
+process.on("warning", (warn) => {
+    commandHandler.logger.warn("Warning: ", warn);
+    const embed = new EmbedBuilder();
+    embed
+        .setTitle("Uncaught Exception Monitor Warning")
+        .setURL("https://nodejs.org/api/process.html#event-warning")
+        .addFields({
+            name: "Warning",
+            value: `\`\`\`${inspect(warn, { depth: 0 }).slice(0, 1000)}\`\`\``,
+        })
+        .setTimestamp();
+
+    return errorsWebhook.send({ embeds: [embed] });
+});
+
+
+
+client.on("error", (err) => {
+    console.log(err);
+
+    const embed = new EmbedBuilder();
+    embed
+        .setTitle("Discord API Error")
+        .setURL("https://discordjs.guide/popular-topics/errors.html#api-errors")
+        .setDescription(
+            `\`\`\`${inspect(err, { depth: 0 }).slice(0, 1000)}\`\`\``
+        )
+        .setTimestamp();
+
+    return errorsWebhook.send({ embeds: [embed] });
+});
 
 
 export default commandHandler;
