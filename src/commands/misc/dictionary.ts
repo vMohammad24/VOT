@@ -17,24 +17,31 @@ export default {
             content: "Please provide a word",
             ephemeral: true
         }
-        const reqUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
-        const res = (await axios.get(reqUrl));
-        if (res.status == 404) {
+        try {
+            const reqUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+            const res = (await axios.get(reqUrl));
+            if (res.status == 404) {
+                return {
+                    content: "Word not found",
+                    ephemeral: true
+                }
+            }
+            const { data } = res;
+            const embed = new EmbedBuilder()
+                .setTitle(data[0].word)
+                .setDescription(data[0].meanings[0].definitions[0].definition)
+                .setColor("Random")
+                .setTimestamp()
+                .setFooter({ text: "Powered by dictionaryapi" })
+
             return {
-                content: "Word not found",
+                embeds: [embed]
+            }
+        } catch (e) {
+            return {
+                content: (e as any).response.data.message || "An error has occured",
                 ephemeral: true
             }
-        }
-        const { data } = res;
-        const embed = new EmbedBuilder()
-            .setTitle(data[0].word)
-            .setDescription(data[0].meanings[0].definitions[0].definition)
-            .setColor("Random")
-            .setTimestamp()
-            .setFooter({ text: "Powered by dictionaryapi" })
-
-        return {
-            embeds: [embed]
         }
     }
 } as ICommand
