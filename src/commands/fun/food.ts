@@ -1,0 +1,43 @@
+import axios from "axios";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+
+export default {
+    description: "Get a food picture",
+    name: "food",
+    options: [{
+        name: "tag",
+        description: "The tag you want to search for",
+        type: ApplicationCommandOptionType.String,
+        required: false,
+        choices: ['biryani', 'burger', 'butter-chicken', 'dessert', 'dosa', 'idly', 'pasta', 'pizza', 'rice', 'samosa'].map(a => {
+            return {
+                name: a,
+                value: a
+            }
+        })
+    }],
+    type: "all",
+    execute: async ({ args }) => {
+        const tag = args.get("tag") as string || undefined;
+        const reqUrl = `https://foodish-api.com/api/${encodeURI(tag || "")}`;
+        const res = (await axios.get(reqUrl));
+        const url = res.data.image;
+        if (res.status !== 200) {
+            return {
+                content: "An error has occured",
+                ephemeral: true
+            }
+        }
+        return {
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Food")
+                    .setImage(url)
+                    .setColor("Random")
+                    .setTimestamp()
+                    .setFooter({ text: "Powered by foodish" })
+            ]
+        }
+    }
+} as ICommand
