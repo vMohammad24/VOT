@@ -22,6 +22,7 @@ elysia.get('/commands', () => {
     }[] = []
     const cmds = commandHandler.commands!;
     for (const command of cmds) {
+        if (command.perms == "dev") continue;
         if (command.options) {
             for (const option of command.options!) {
                 if (option.type == ApplicationCommandOptionType.Subcommand) {
