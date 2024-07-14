@@ -3,15 +3,15 @@ import queryString from "query-string";
 import commandHandler from "..";
 import { getRedirectURL } from "../util/urls";
 import { spotifyClientId, spotifyClientSecret } from "./apiUtils";
-import type { Express } from "express";
-export default (server: Express) => {
-    server.get('/spotify/callback', async (req, res) => {
-        const { code } = req.query as any;
-        const token = req.headers.authorization;
+import type Elysia from "elysia";
+export default (server: Elysia) => {
+    server.get('/spotify/callback', async ({ query, headers, redirect, set }) => {
+        const { code } = query as any;
+        const token = headers.authorization;
         const scopes = 'user-read-playback-state user-read-currently-playing'
         const state = crypto.randomUUID();
         if (!code)
-            return res.redirect('https://accounts.spotify.com/authorize?' +
+            return redirect('https://accounts.spotify.com/authorize?' +
                 queryString.stringify({
                     response_type: 'code',
                     client_id: spotifyClientId,
@@ -19,14 +19,14 @@ export default (server: Express) => {
                     redirect_uri: getRedirectURL('spotify'),
                     state
                 }));
-        if (!token) return res.redirect('/discord/callback')
+        if (!token) return redirect('/discord/callback')
         const user = await commandHandler.prisma.user.findUnique({
             where: { token }, select: {
                 id: true,
                 spotify: true
             }
         })
-        if (!user) return res.redirect('/discord/callback')
+        if (!user) return redirect('/discord/callback')
         const tokenRes = await axios.post('https://accounts.spotify.com/api/token', {
             grant_type: 'authorization_code',
             code,
@@ -39,7 +39,8 @@ export default (server: Express) => {
             },
         }).then(res => res.data) as any;
         if (tokenRes.error) {
-            return res.status(401).send(tokenRes);
+            set.status = 401;
+            return tokenRes;
         }
         // if (user.spotify) {
         //     await commandHandler.prisma.spotify.update({
@@ -84,9 +85,9 @@ export default (server: Express) => {
             }
         })
 
-        return res.send({
+        return {
             success: true,
             message: "Successfully regisetred user"
-        });
+        };
     })
 }

@@ -1,40 +1,21 @@
-import express from 'express'
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '..';
-import { getFrontEndURL, getRedirectURL } from '../util/urls';
-import queryString from 'query-string';
-import cors from 'cors'
-import bodyParser from 'body-parser';
-import {
-    ActionRowBuilder,
-    ApplicationCommandOptionType,
-    ButtonBuilder,
-    ButtonStyle,
-    ChannelType,
-    GuildMember,
-    type GuildTextBasedChannel,
-} from 'discord.js';
-import axios from 'axios';
 import discord from './discord';
 import spotify from './spotify';
+import Elysia from 'elysia';
 
-const app = express()
 const upSince = Date.now();
+const elysia = new Elysia();
 
-app.use(express.json())
-app.use(cors())
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-// Declare a route
-app.get('/', function (req, res) {
+elysia.get('/', function () {
     const ping = commandHandler.client.ws.ping;
     const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const totalGuilds = commandHandler.client.guilds.cache.size;
     const totalCommands = commandHandler.commands!.length;
-    res.send({ ping, upSince, totalMembers, totalGuilds, totalCommands })
+    return { ping, upSince, totalMembers, totalGuilds, totalCommands }
 })
 
-app.get('/commands', (req, res) => {
+elysia.get('/commands', () => {
     const commands: {
         name: string,
         description: string
@@ -50,17 +31,21 @@ app.get('/commands', (req, res) => {
         }
         commands.push({ name: command.name!, description: command.description })
     }
-    res.send(commands);
+    return commands;
 })
 
-app.get('/commands/:command', (req, res) => {
-    const name = (req.params as any).command;
+elysia.get('/commands/:name', ({ params: { name }, set }) => {
     const command = commandHandler.commands!.find(cmd => cmd.name === name);
-    if (!command) return res.send({ error: 'Command not found' });
-    res.send(command);
+    if (!command) {
+        set.status = 404;
+        return {
+            error: "Command not found"
+        }
+    }
+    return command;
 })
 
 
-discord(app);
-spotify(app);
-export default app;
+discord(elysia);
+spotify(elysia);
+export default elysia;

@@ -4,38 +4,67 @@ import queryString from "query-string";
 import commandHandler from "..";
 import { getRedirectURL, getFrontEndURL } from "../util/urls";
 import { discordClientId, discordClientSecret, updateGuilds } from "./apiUtils";
-import type { Express } from 'express';
-export default (server: Express) => {
-    server.get('/discord/guilds', async (req, res) => {
-        const token = req.headers.authorization;
-        if (!token) return res.status(401).send({ error: 'Unauthorized' });
+import type Elysia from "elysia";
+export default (elysia: Elysia) => {
+    elysia.get('/discord/guilds', async ({ headers, set }) => {
+        const token = headers.authorization;
+        if (!token) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        };
         const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-        if (!user) return res.status(401).send({ error: 'Unauthorized' });
+        if (!user) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         const guilds = await updateGuilds(user.id);
         if (guilds && (guilds as any).error) {
-            return res.status(401).send(guilds);
+            set.status = 400;
+            return { error: (guilds as any).error }
         }
-        return res.send({ success: true });
+        return { success: true };
     })
 
 
-    server.get('/discord/guilds/:guild', async (req, res) => {
-        const token = req.headers.authorization;
-        if (!token) return res.status(401).send({ error: 'Unauthorized' });
+    elysia.get('/discord/guilds/:id', async ({ headers, set, params: { id } }) => {
+        const token = headers.authorization;
+        if (!token) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-        if (!user) return res.status(401).send({ error: 'Unauthorized' });
+        if (!user) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         await updateGuilds(user.id);
         const guild = await commandHandler.prisma.guild.findFirst(
             {
-                where: { id: req.params.guild, admins: { some: { id: user.id }, } },
+                where: { id: id, admins: { some: { id: user.id }, } },
                 include: {
                     TicketSettings: true
                 }
             }
         );
-        if (!guild) return res.status(401).send({ error: 'Unauthorized' });
+        if (!guild) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-        if (!isBotInGuild) return res.status(401).send({ error: 'notInGuild' });
+        if (!isBotInGuild) {
+            set.status = 400;
+            return { error: 'notInGuild' }
+        }
         const g = await commandHandler.client.guilds.cache.get(guild.id)!;
         const channels = await g.channels.cache;
         const textChannels = channels.filter(channel => channel.type === ChannelType.GuildText);
@@ -43,24 +72,42 @@ export default (server: Express) => {
         const categoryChannels = channels.filter(channel => channel.type === ChannelType.GuildCategory);
         const memberCount = g.memberCount;
         const roles = g.roles.cache.filter(role => !role.managed);
-        return res.send({ ...guild, textChannels, voiceChannels, categoryChannels, roles, memberCount });
+        return { ...guild, textChannels, voiceChannels, categoryChannels, roles, memberCount };
     })
 
-    server.patch('/discord/guilds/:guild', async (req, res) => {
-        const token = req.headers.authorization;
-        if (!token) return res.status(401).send({ error: 'Unauthorized' });
+    elysia.patch('/discord/guilds/:id', async ({ headers, set, params: { id }, body }) => {
+        const token = headers.authorization;
+        if (!token) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         const user = await commandHandler.prisma.user.findUnique({ where: { token } });
-        if (!user) return res.status(401).send({ error: 'Unauthorized' });
+        if (!user) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         await updateGuilds(user.id);
         const guild = await commandHandler.prisma.guild.findFirst(
             {
-                where: { id: req.params.guild, admins: { some: { id: user.id }, } },
+                where: { id, admins: { some: { id: user.id }, } },
             }
         );
-        if (!guild) return res.status(401).send({ error: 'Unauthorized' });
+        if (!guild) {
+            set.status = 401;
+            return {
+                error: 'Unauthorized'
+            }
+        }
         const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-        if (!isBotInGuild) return res.status(401).send({ error: 'notInGuild' });
-        const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, oldChannel, oldMessage, shouldUpdateTickets } = req.body;
+        if (!isBotInGuild) {
+            set.status = 400;
+            return { error: 'notInGuild' }
+        }
+        const { welcomeChannel, welcomeEmbedTitle, welcomeEmbedDescription, loggingChannel, prefix, oldChannel, oldMessage, shouldUpdateTickets } = body as any;
         let mes = 'Updated';
         if (prefix) {
             await commandHandler.prisma.guild.update({
@@ -75,9 +122,15 @@ export default (server: Express) => {
         }
         if (loggingChannel != undefined) {
             const g = commandHandler.client.guilds.cache.get(guild.id)
-            if (!g) return res.status(400).send({ error: 'Invalid guild' });
+            if (!g) {
+                set.status = 400;
+                return { error: 'Invalid guild' };
+            }//return res.status(400).send({ error: 'Invalid guild' });
             const channel = g.channels.cache.get(loggingChannel);
-            if (!channel) return res.status(400).send({ error: 'Invalid channel' });
+            if (!channel) {
+                set.status = 400;
+                return { error: 'Invalid channel' };
+            }
             await commandHandler.prisma.guild.update({
                 where: {
                     id: guild.id,
@@ -90,7 +143,10 @@ export default (server: Express) => {
         }
         if (welcomeChannel && welcomeEmbedDescription && welcomeEmbedTitle) {
             const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(welcomeChannel);
-            if (!channel) return res.status(400).send({ error: 'Invalid channel' });
+            if (!channel) {
+                set.status = 400;
+                return { error: 'Invalid channel' };
+            }
             await commandHandler.prisma.welcomeSettings.upsert({
                 where: {
                     guildId: guild.id,
@@ -135,12 +191,12 @@ export default (server: Express) => {
             }
         }
         if (mes.split(" ").length < 2) mes += " Nothing";
-        return res.send({ success: true, message: mes });
+        return { success: true, message: mes };
     })
 
-    server.get('/discord/callback', async (req, res) => {
-        const { code, refresh_token } = req.query as any;
-        if (!code && !refresh_token) return res.redirect('https://discord.com/api/oauth2/authorize?' + queryString.stringify({
+    elysia.get('/discord/callback', async ({ query, redirect, set }) => {
+        const { code, refresh_token } = query as any;
+        if (!code && !refresh_token) return redirect('https://discord.com/api/oauth2/authorize?' + queryString.stringify({
             client_id: discordClientId,
             response_type: 'code',
             redirect_uri: getRedirectURL('discord'),
@@ -167,10 +223,11 @@ export default (server: Express) => {
         });
         const tokenResponse = await tokenResponseData.data as any;
         if (tokenResponse.error == "invalid_grant") {
-            return res.status(403).send({
+            set.status = 401;
+            return {
                 success: false,
                 message: "Invalid code"
-            })
+            }
         }
         const userRes = await axios.get('https://discord.com/api/users/@me', {
             headers: {
@@ -179,11 +236,12 @@ export default (server: Express) => {
         });
         const resUser = await userRes.data as any;
         if (resUser.error_description) {
-            return res.send(resUser);
+            return resUser;
         }
         const guildsRes = await updateGuilds(resUser.id)
         if (guildsRes && (guildsRes.code == 401 || guildsRes.code == 400)) {
-            return res.status(401).send(guildsRes)
+            set.status = 401;
+            return guildsRes
         }
         const user = await commandHandler.prisma.user.upsert({
             where: {
@@ -229,11 +287,11 @@ export default (server: Express) => {
                 name: resUser.username,
             }
         })
-        return res.redirect(getFrontEndURL() + '/?token=' + user.token);
+        return redirect(getFrontEndURL() + '/?token=' + user.token);
     })
 
 
-    server.get("/discord/invite", (req, res) => {
-        return res.redirect("https://discord.com/api/oauth2/authorize?client_id=" + import.meta.env.DISCORD_CLIENT_ID!)
+    elysia.get("/discord/invite", ({ redirect }) => {
+        return redirect("https://discord.com/api/oauth2/authorize?client_id=" + import.meta.env.DISCORD_CLIENT_ID!)
     })
 }

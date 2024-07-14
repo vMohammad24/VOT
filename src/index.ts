@@ -95,7 +95,7 @@ client.on("ready", async (c) => {
         return Promise.reject(error);
     });
     app.listen(process.env.PORT || 8080, () => {
-        commandHandler.logger.info(`API listening on port ${process.env.PORT || 8080}`)
+        commandHandler.logger.info(`API listening on port ${app.server?.port}`)
     })
 })
 
