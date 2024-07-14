@@ -11,6 +11,7 @@ export default {
         type: ApplicationCommandOptionType.String,
         required: false,
     }],
+    type: "all",
     execute: async ({ args }) => {
         const lang = args.get("language") as string || "en";
         const reqUrl = `https://evilinsult.com/generate_insult.php?lang=${lang}&type=json`;
