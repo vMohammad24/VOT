@@ -5,7 +5,6 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
     "@types/node-schedule": "^2.1.6",
     "pino-pretty": "latest"
   },
@@ -23,11 +22,9 @@
     "@prisma/client": "^5.10.2",
     "@types/ioredis": "^5.0.0",
     "axios": "latest",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
     "dayjs": "^1.11.11",
     "discord.js": "^14.15.3",
-    "express": "^4.19.2",
+    "elysia": "^1.0.27",
     "ioredis": "^5.4.1",
     "kazagumo": "^3.0.5",
     "kazagumo-spotify": "^2.1.0",
