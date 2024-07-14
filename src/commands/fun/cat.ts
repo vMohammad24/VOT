@@ -1,6 +1,7 @@
 import axios from "axios";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, Attachment, AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { uploadFile } from "../../util/nest";
 
 export default {
     description: "Get a random cat image/gif",
@@ -31,25 +32,34 @@ export default {
         })
     },
     type: "all",
-    execute: async ({ args }) => {
+    execute: async ({ args, interaction }) => {
         const tag = args.get("tag") as string || undefined;
-        const reqUrl = `https://cataas.com/cat?json=true${tag ? '&tag=' + tag : ''}`;
-        const res = (await axios.get(reqUrl));
-        const url = 'https://cataas.com/cat/' + res.data._id;
+        const reqUrl = `https://cataas.com/cat${tag ? '/' + tag : ''}?html=true`;
+        const res = (await axios.get(reqUrl, {
+            responseType: "json"
+        }));
+        const { data } = res;
+        const url = 'https://cataas.com/cat/' + data._id;
         if (res.status !== 200) {
             return {
                 content: "An error has occured",
                 ephemeral: true
             }
         }
+        if (data.message) {
+            return {
+                content: data.message,
+                ephemeral: true
+            }
+        }
+        const yes = data.mimetype.split("/")[1];
         return {
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Cat")
-                    .setImage(url)
-                    .setColor("Random")
-                    .setTimestamp()
-                    .setFooter({ text: "Powered by cataas.com" })
+                    .setImage(url + `.${yes}`)
+                    .setColor('Random')
+                    .setFooter({ text: `Powered by catass.com` })
             ]
         }
     }
