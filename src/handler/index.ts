@@ -9,6 +9,7 @@ import ListenerHandler from "./ListenerHandler";
 import { Glob } from "bun";
 import path from 'path';
 import PinoLogger from "pino";
+import { ArgumentMap } from "./validations/args";
 interface RequiredShits {
     commandsDir: string;
     listenersDir: string;
@@ -87,7 +88,7 @@ export default class CommandHandler {
                 guild: interaction.guild!,
                 handler: this,
                 member: interaction.member! as GuildMember,
-                args: [],
+                args: new ArgumentMap(),
                 message: null,
                 player: await getPlayer(interaction.member as GuildMember) || undefined
             }
@@ -100,7 +101,7 @@ export default class CommandHandler {
                 guild: message.guild!,
                 handler: this,
                 member: message.member!,
-                args: message.content.split(" ").slice(1),
+                args: new ArgumentMap(),
                 message,
                 player: await getPlayer(message.member as GuildMember) || undefined
             }
@@ -122,7 +123,7 @@ export default class CommandHandler {
                     create: {
                         commandId: command.name!,
                         commandInfo: {
-                            args: commandContext.args || null,
+                            args: commandContext.args as any || null,
                             guild: commandContext?.guild && commandContext.guild.id || null,
                             channel: commandContext?.channel?.id || null,
                             message: commandContext?.message?.id || null,
@@ -139,7 +140,7 @@ export default class CommandHandler {
                     create: {
                         commandId: command.name!,
                         commandInfo: {
-                            args: commandContext.args || null,
+                            args: commandContext.args as any || null,
                             guild: commandContext?.guild?.id || null,
                             channel: commandContext?.channel?.id || null,
                             message: commandContext?.message?.id || null,

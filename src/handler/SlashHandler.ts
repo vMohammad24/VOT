@@ -106,8 +106,12 @@ export default class SlashCommandHandler {
                 if (interaction.deferred) {
                     await interaction.editReply(result);
                 }
-                if (!interaction.replied && !interaction.deferred) {
-                    await interaction.reply(result);
+                try {
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply(result);
+                    }
+                } catch (error) {
+                    await interaction.editReply(result);
                 }
             }
         })
