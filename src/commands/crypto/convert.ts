@@ -53,9 +53,9 @@ export default {
     },
     aliases: ["convert"],
     execute: async ({ args }) => {
-        const a = args.get("amount").value;
-        let from = args.get("from").value;
-        let to = args.get("to").value;
+        const a = args.get("amount");
+        let from = args.get("from");
+        let to = args.get("to");
 
         if (!a || !from || !to) return {
             content: "Invalid input",
