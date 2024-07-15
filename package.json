@@ -16,8 +16,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@devraelfreeze/discordjs-pagination": "^2.7.6",
     "@discordjs/voice": "^0.17.0",
-    "@discordx/pagination": "^3.5.4",
     "@napi-rs/canvas": "^0.1.53",
     "@prisma/client": "^5.10.2",
     "@types/ioredis": "^5.0.0",

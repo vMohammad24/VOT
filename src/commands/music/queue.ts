@@ -1,11 +1,11 @@
-import { EmbedBuilder, GuildMember } from "discord.js";
+import { EmbedBuilder, GuildMember, MembershipScreeningFieldType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { Pagination, PaginationType } from "@discordx/pagination";
+import { pagination } from "@devraelfreeze/discordjs-pagination";
 
 export default {
     description: "Shows the queue",
     needsPlayer: true,
-    execute: async ({ player, interaction, message }) => {
+    execute: async ({ player, interaction, message, member }) => {
         if (!player) return {
             content: "No player found",
             ephemeral: true
@@ -18,23 +18,19 @@ export default {
         const queueWithCurrent = [queue.current, ...queue]
         const embeds = queueWithCurrent.map((track, i) => {
             const requester = track.requester as GuildMember;
-            return {
-                embeds: [
-                    new EmbedBuilder()
-                        .setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
-                        .setDescription(`[${track.title}](${track.uri})`)
-                        .setColor("Green")
-                        .setThumbnail(track.thumbnail!)
-                        .setFooter({ text: `Requested by ${(requester.displayName)}`, iconURL: requester.displayAvatarURL() })
-                ],
-
-            }
+            return new EmbedBuilder()
+                .setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
+                .setDescription(`[${track.title}](${track.uri})`)
+                .setColor("Green")
+                .setThumbnail(track.thumbnail!)
+                .setFooter({ text: `Requested by ${(requester.displayName)}`, iconURL: requester.displayAvatarURL() })
         })
-        new Pagination(message ? message : interaction!, embeds, {
-            type: PaginationType.SelectMenu,
-            pageText: queueWithCurrent.map((q, i) => `${q.title} - ${i + 1}/${queueWithCurrent.length}`),
-            ephemeral: true
-        }).send();
+        await pagination({
+            author: member.user,
+            interaction: interaction || undefined,
+            message: message || undefined,
+            embeds: embeds as any,
 
+        })
     }
 } as ICommand
