@@ -35,7 +35,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
             case ApplicationCommandOptionType.User:
                 let member: GuildMember | User | null = null;
                 if (interaction) {
-                    member = interaction.options.getUser(option.name, option.required);
+                    member = (interaction.options.getMember(option.name) || interaction.options.getUser(option.name, option.required)) as GuildMember | User | null;
                 } else if (message) {
                     member = message.mentions.members?.first() || null;
                 }

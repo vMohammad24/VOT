@@ -102,9 +102,11 @@ services:
     ports:
       - "2333:2333"
   redis_dev:
-    image: redis
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     container_name: redis
     restart: unless-stopped
+    ulimits:
+      memlock: -1
     profiles:
       - dev
     ports:
