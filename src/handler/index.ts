@@ -28,7 +28,7 @@ export default class CommandHandler {
     public commands: ICommandHandler['commands'] | undefined;
     public prodMode: ICommandHandler['prodMode'];
     private glob = new Glob("**/*.{ts,js}");
-    public logger = PinoLogger({ name: "vCommands", })
+    public logger = PinoLogger({ name: import.meta.dirname.split("/")[import.meta.dirname.split("/").length - 3], })
     constructor(mHandler: IMCommandHandler) {
         const handler = mHandler as ICommandHandler;
         const { commandsDir, listenersDir } = handler;
