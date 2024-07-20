@@ -24,7 +24,7 @@
     "axios": "latest",
     "dayjs": "^1.11.11",
     "discord.js": "^14.15.3",
-    "elysia": "^1.0.27",
+    "elysia": "latest",
     "ioredis": "^5.4.1",
     "kazagumo": "^3.0.5",
     "kazagumo-spotify": "^2.1.0",
@@ -33,8 +33,9 @@
     "pino": "^9.2.0",
     "prisma": "^5.16.1",
     "prisma-redis-middleware": "^4.8.0",
-    "puppeteer": "^22.12.1",
+    "puppeteer": "latest",
     "query-string": "latest",
+    "sharp": "latest",
     "shoukaku": "latest"
   }
 }

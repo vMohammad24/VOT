@@ -27,7 +27,6 @@ export default async function (command: ICommand, ctx: CommandContext) {
     const optionCount = options.length;
     if (optionCount === 0) return true;
     const messageArgs = message?.content?.split(" ").slice(1) || [];
-    const a = new ArgumentMap();
     for (let i = 0; i < optionCount; i++) {
         const option = options[i];
         let argument: Argument<any> = new Argument(null);
@@ -126,8 +125,8 @@ export default async function (command: ICommand, ctx: CommandContext) {
                 break;
         }
 
-        a.set(option.name, argument);
+        args.set(option.name, argument);
     }
-    ctx.args = a;
+    ctx.args = args;
     return true;
 }

@@ -29,7 +29,7 @@ export default {
                     name: "Boosts",
                     value: (guild.premiumSubscriptionCount || 0).toString(),
                     inline: true
-                },
+                }
             ).setTimestamp()
             .setColor('Random')
 
