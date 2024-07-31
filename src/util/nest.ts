@@ -5,7 +5,7 @@ export async function uploadFile(file: any) {
     formData.set("files", file)
     const res = await axios.post(`https://nest.rip/api/files/upload`, formData, {
         headers: {
-            "Authorization": process.env.NEST_API_KEY,
+            "Authorization": import.meta.env.NEST_API_KEY,
         }
     })
     return res.data
@@ -17,12 +17,12 @@ export async function shortenUrl(url: string, password?: string) {
         password,
         urlType: "Normal",
         length: 5,
-        domain: process.env.NEST_SHORTS_DOMAIN,
+        domain: import.meta.env.NEST_SHORTS_DOMAIN,
         subDomain: "",
         EmbedType: "Target"
     }, {
         headers: {
-            "Authorization": process.env.NEST_API_KEY!
+            "Authorization": import.meta.env.NEST_API_KEY!
         },
     }).then(value => value.data.url));
 }

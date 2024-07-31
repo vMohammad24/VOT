@@ -60,6 +60,7 @@ const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
 });
 
 prisma.$use(cacheMiddleware);
+
 const commandHandler = new CommandHandler({
     client,
     prisma,
@@ -71,7 +72,9 @@ const commandHandler = new CommandHandler({
     globalPrefix: ";",
     listenersDir: `${import.meta.dir}/listeners`,
 })
+
 commandHandler.logger.info(`Starting in ${isProduction ? "production" : "development"} mode`)
+
 client.on("ready", async (c) => {
     const giveaways = await prisma.giveaway.findMany();
     for (const giveaway of giveaways) {
