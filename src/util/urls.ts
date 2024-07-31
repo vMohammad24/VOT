@@ -1,4 +1,4 @@
-import commandHandler from "..";
+import commandHandler from ".."
 
 export function getRedirectURL(platform: 'discord' | 'spotify') {
     const { prodMode } = commandHandler;

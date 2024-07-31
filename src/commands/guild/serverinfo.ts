@@ -1,5 +1,6 @@
-import { EmbedBuilder } from "discord.js";
+import axios from "axios";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 export default {
     description: "Displays information about the server",
     type: "guildOnly",

@@ -1,5 +1,6 @@
+import type { GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { getPanel } from "../../util/music";
+import { getPanel, sendPanel } from "../../util/music";
 
 export default {
     description: "Shows the current song",

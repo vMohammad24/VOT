@@ -1,6 +1,6 @@
-import axios from "axios";
-import { PermissionFlagsBits, type APIGuild, type APIUser } from "discord.js";
+import { PermissionFlagsBits, type APIGuild, type APIUser, type GuildMember } from "discord.js";
 import commandHandler from "..";
+import axios from "axios";
 
 
 export const discordClientId = process.env.DISCORD_CLIENT_ID!;

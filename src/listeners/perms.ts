@@ -1,3 +1,4 @@
+import { updateGuilds } from "../api/apiUtils";
 import type { IListener } from "../handler/ListenerHandler";
 
 export default {

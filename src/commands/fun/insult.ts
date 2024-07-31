@@ -1,6 +1,6 @@
 import axios from "axios";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 
 export default {
     description: "Insults you",

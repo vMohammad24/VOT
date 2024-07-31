@@ -1,7 +1,7 @@
 import { type Client } from "discord.js";
+import type ICommand from "./interfaces/ICommand";
 import type { Kazagumo } from "kazagumo";
 import CommandHandler from ".";
-import type ICommand from "./interfaces/ICommand";
 import type LegacyHandler from "./interfaces/ILegacyHandler";
 
 export default class LegacyCommandHandler {

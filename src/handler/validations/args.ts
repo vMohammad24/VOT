@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, GuildMember, Role, User, type CacheType, type CommandInteractionOption, type GuildBasedChannel } from "discord.js";
+import { ApplicationCommandOptionType, GuildChannel, GuildMember, Role, User, type CacheType, type Channel, type CommandInteractionOption, type GuildBasedChannel } from "discord.js";
 import type ICommand from "../interfaces/ICommand";
 import type { CommandContext } from "../interfaces/ICommand";
 

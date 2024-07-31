@@ -1,9 +1,11 @@
-import axios from "axios";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CategoryChannel, ChannelType, EmbedBuilder, GuildMember, PermissionFlagsBits, type GuildTextBasedChannel } from "discord.js";
-import commandHandler from "..";
-import { uploadFile } from "./nest";
-import { getFrontEndURL } from "./urls";
+import type { PrismaClient } from "@prisma/client";
+import { EmbedBuilder, ChannelType, PermissionFlagsBits, CategoryChannel, ActionRowBuilder, ButtonBuilder, ButtonStyle, Guild, GuildMember, type GuildTextBasedChannel, ButtonInteraction } from "discord.js";
 import { getLogChannel } from "./util";
+import Confirm from "./confirm";
+import { uploadFile } from "./nest";
+import axios from "axios";
+import commandHandler from "..";
+import { getFrontEndURL } from "./urls";
 
 export async function createTicket(member: GuildMember, reason: string) {
     const { guild } = member;

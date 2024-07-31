@@ -1,11 +1,14 @@
-import { Glob } from "bun";
-import { ChatInputCommandInteraction, GuildMember, type Interaction, type Message } from "discord.js";
-import path from 'path';
-import PinoLogger from "pino";
+import type SlashHandler from "./interfaces/ISlashHandler"
+import type LegacyHandler from "./interfaces/ILegacyHandler";
+import SlashCommandHandler from "./SlashHandler";
 import type ICommand from "./interfaces/ICommand";
 import type { CommandContext } from "./interfaces/ICommand";
-import type LegacyHandler from "./interfaces/ILegacyHandler";
-import type SlashHandler from "./interfaces/ISlashHandler";
+import { GuildMember, type Message, ChatInputCommandInteraction, type Interaction } from "discord.js";
+import LegacyCommandHandler from "./LegacyHandler";
+import ListenerHandler from "./ListenerHandler";
+import { Glob } from "bun";
+import path from 'path';
+import PinoLogger from "pino";
 import { ArgumentMap } from "./validations/args";
 interface RequiredShits {
     commandsDir: string;
@@ -51,8 +54,11 @@ export default class CommandHandler {
             }
             const Ilegacy = handler as LegacyHandler;
             const Islash = handler as SlashHandler;
+            const slash = new SlashCommandHandler(Islash, this);
+            const legacy = new LegacyCommandHandler(Ilegacy, this);
             this.commands = handler.commands;
             // listener
+            const listener = new ListenerHandler(this, listenersDir, this.glob);
         })
     }
 

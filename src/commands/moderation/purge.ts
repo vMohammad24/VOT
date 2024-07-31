@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, type GuildTextBasedChannel } from "discord.js";
+import { ApplicationCommandOptionType, DiscordAPIError, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {

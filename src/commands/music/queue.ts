@@ -1,6 +1,6 @@
-import { pagination } from "@devraelfreeze/discordjs-pagination";
-import { EmbedBuilder, GuildMember } from "discord.js";
+import { EmbedBuilder, GuildMember, MembershipScreeningFieldType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { pagination } from "@devraelfreeze/discordjs-pagination";
 
 export default {
     description: "Shows the queue",
