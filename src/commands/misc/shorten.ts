@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { shortenUrl, uploadFile } from "../../util/nest";
 import { UserTier } from "../../handler/interfaces/ICommand";
-import { shortenUrl } from "../../util/nest";
 
 export default {
     name: "shorten",

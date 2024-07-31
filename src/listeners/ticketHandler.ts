@@ -1,6 +1,6 @@
-import { ActionRowBuilder, EmbedBuilder, Events, GuildMember, type GuildTextBasedChannel, type ModalActionRowComponentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { Events, GuildMember, EmbedBuilder, type GuildTextBasedChannel, ModalBuilder, ActionRowBuilder, type ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import type { IListener } from "../handler/ListenerHandler";
-import { closeTicket, createTicket } from "../util/tickets";
+import { createTicket, closeTicket } from "../util/tickets";
 
 export default {
     name: "Tickets Handler",

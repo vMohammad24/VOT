@@ -1,7 +1,8 @@
-import type { Playlist, PrismaClient, Track } from "@prisma/client";
-import { ApplicationCommandOptionType, GuildMember } from "discord.js";
-import { Kazagumo, KazagumoTrack } from "kazagumo";
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Guild, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { Kazagumo, KazagumoTrack } from "kazagumo";
+import type { Track as ShokTrack, Shoukaku } from "shoukaku";
+import type { Playlist, Track, PrismaClient } from "@prisma/client";
 
 const transferTracksTDB = (tracks: KazagumoTrack[], prisma: PrismaClient): Promise<Track[]> => {
     return Promise.all(tracks.map(async (track) => {

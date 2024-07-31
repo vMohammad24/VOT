@@ -1,3 +1,4 @@
+import { ApplicationCommandOptionType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {

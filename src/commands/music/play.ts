@@ -1,5 +1,6 @@
-import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { getPanel, getRows, sendPanel } from "../../util/music";
 
 export default {
     description: "Adds a song to the queue",

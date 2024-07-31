@@ -1,6 +1,7 @@
 import axios from "axios";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { ApplicationCommandOptionType, Attachment, AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { uploadFile } from "../../util/nest";
 
 export default {
     description: "Get a random cat image/gif",

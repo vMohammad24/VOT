@@ -1,8 +1,8 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-import Elysia from 'elysia';
 import commandHandler from '..';
 import discord from './discord';
 import spotify from './spotify';
+import Elysia from 'elysia';
 
 const upSince = Date.now();
 const elysia = new Elysia();
