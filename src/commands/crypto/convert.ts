@@ -1,6 +1,6 @@
 import axios from "axios";
+import { ApplicationCommandOptionType } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 
 
 const exchangeRates: { key: string, name: string, value: number, unit: string }[] = [];

@@ -2,14 +2,11 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ButtonStyle,
-    CommandInteraction,
-    Message,
-    MessagePayload,
+    ButtonStyle, Message,
+    type Interaction,
     type InteractionReplyOptions,
     type MessageReplyOptions,
-    type Interaction,
-    type RepliableInteraction,
+    type RepliableInteraction
 } from "discord.js";
 
 interface ConfirmOptions {

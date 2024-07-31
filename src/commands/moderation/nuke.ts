@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder, type BaseGuildTextChannel, type GuildTextBasedChannel } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, type BaseGuildTextChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {

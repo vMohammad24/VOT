@@ -1,6 +1,6 @@
+import { pagination } from "@devraelfreeze/discordjs-pagination";
 import { Embed, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { pagination } from "@devraelfreeze/discordjs-pagination";
 
 export default {
     description: "Displays all commands",

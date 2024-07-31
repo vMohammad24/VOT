@@ -1,8 +1,6 @@
-import axios from "axios";
-import type ICommand from "../../handler/interfaces/ICommand";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
-import { fromBuffer } from "pdf2pic";
+import { ApplicationCommandOptionType } from "discord.js";
 import puppeteer from "puppeteer";
+import type ICommand from "../../handler/interfaces/ICommand";
 export default {
     description: "Dispalys information about a specefic crypto transaction",
     aliases: ["txid"],

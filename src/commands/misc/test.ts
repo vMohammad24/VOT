@@ -1,11 +1,7 @@
-import { createCanvas } from "@napi-rs/canvas";
-import type ICommand from "../../handler/interfaces/ICommand";
-import path from 'path';
-import { ApplicationCommandOptionType } from "discord.js";
-import dayjs from 'dayjs'
-import duration from 'dayjs/plugin/duration' // import plugin
-import { parseTime } from "../../util/util";
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration'; // import plugin
 import puppeteer from "puppeteer";
+import type ICommand from "../../handler/interfaces/ICommand";
 dayjs.extend(duration) // use plugin
 
 export default {

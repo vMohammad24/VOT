@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, EmbedBuilder, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, type GuildTextBasedChannel } from "discord.js";
+import { ActionRowBuilder, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, type GuildTextBasedChannel } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { createGiveaway } from "../../util/giveaways";
 import { parseTime } from "../../util/util";

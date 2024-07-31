@@ -1,9 +1,6 @@
-import { ApplicationCommandOptionType, Embed, EmbedBuilder, GuildMember } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { createCanvas, Image, loadImage } from "@napi-rs/canvas";
 import { expNeededForLevel } from "../../listeners/leveling";
-import axios from "axios";
-import { getTwoMostUsedColors } from "../../util/util";
 
 
 

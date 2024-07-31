@@ -5,7 +5,7 @@ import { closeTicket } from "../../util/tickets";
 export default {
     name: "close",
     description: "Close a ticket",
-    execute: async ({ handler, member, channel }) => {
+    execute: async ({ member, channel }) => {
         const ticket = await closeTicket(channel as GuildTextBasedChannel, member);
         if (!ticket) return;
         if (ticket.error) {

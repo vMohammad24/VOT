@@ -1,9 +1,7 @@
-import axios from "axios";
+import { pagination } from "@devraelfreeze/discordjs-pagination";
+import { EmbedBuilder } from "@discordjs/builders";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { searchSaver } from "../../util/beatsaver";
-import { EmbedBuilder } from "@discordjs/builders";
-import { ComponentType, ButtonStyle } from "discord.js";
-import { pagination } from "@devraelfreeze/discordjs-pagination";
 
 export default {
     name: "bsaber",

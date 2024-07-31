@@ -1,4 +1,3 @@
-import type { GuildMember } from "discord.js";
 import type ICommand from "../interfaces/ICommand";
 import type { CommandContext } from "../interfaces/ICommand";
 

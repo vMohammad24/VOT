@@ -1,8 +1,6 @@
+import axios from "axios";
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { uploadFile } from "../../util/nest";
-import { UserTier } from "../../handler/interfaces/ICommand";
-import axios from "axios";
 export default {
     name: "virustotal",
     description: "Check a url for viruses",

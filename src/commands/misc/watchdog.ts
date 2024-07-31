@@ -1,6 +1,6 @@
+import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import axios from "axios";
 
 export default {
     name: "watchdog",

@@ -1,7 +1,7 @@
-import type { ApplicationCommandOption, ApplicationCommandType, ChatInputCommandInteraction, Client, CommandInteraction, Guild, GuildMember, InteractionReplyOptions, Message, MessagePayload, PermissionFlags, PermissionResolvable, TextBasedChannel, TextChannel, User } from "discord.js";
-import type CommandHandler from "..";
+import type { ApplicationCommandOption, ChatInputCommandInteraction, Guild, GuildMember, InteractionReplyOptions, Message, MessagePayload, PermissionResolvable, TextBasedChannel, User } from "discord.js";
 import type { KazagumoPlayer } from "kazagumo";
-import type { Argument, ArgumentMap } from "../validations/args";
+import type CommandHandler from "..";
+import type { ArgumentMap } from "../validations/args";
 
 
 export enum UserTier {

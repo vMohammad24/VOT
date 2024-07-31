@@ -1,10 +1,10 @@
 import axios from "axios";
-import { ChannelType, type GuildTextBasedChannel, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel } from "discord.js";
+import type Elysia from "elysia";
 import queryString from "query-string";
 import commandHandler from "..";
-import { getRedirectURL, getFrontEndURL } from "../util/urls";
+import { getFrontEndURL, getRedirectURL } from "../util/urls";
 import { discordClientId, discordClientSecret, updateGuilds } from "./apiUtils";
-import type Elysia from "elysia";
 export default (elysia: Elysia) => {
     elysia.get('/discord/guilds', async ({ headers, set }) => {
         const token = headers.authorization;
