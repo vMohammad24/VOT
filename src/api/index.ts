@@ -1,17 +1,20 @@
 import { ApplicationCommandOptionType } from 'discord.js';
+import Elysia from 'elysia';
 import commandHandler from '..';
 import discord from './discord';
 import spotify from './spotify';
-import Elysia from 'elysia';
 
 const upSince = Date.now();
 const elysia = new Elysia();
 
+let lastPing: number | "N/A" = -1;
 elysia.get('/', function () {
-    const ping = commandHandler.client.ws.ping;
+    const actualPing = commandHandler.client.ws.ping;
+    const ping = (actualPing == -1 ? lastPing : actualPing) == -1 ? "N/A" : lastPing;
     const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const totalGuilds = commandHandler.client.guilds.cache.size;
     const totalCommands = commandHandler.commands!.length;
+    lastPing = ping;
     return { ping, upSince, totalMembers, totalGuilds, totalCommands }
 })
 

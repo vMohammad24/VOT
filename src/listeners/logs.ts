@@ -1,7 +1,6 @@
-import type { PrismaClient } from "@prisma/client/extension";
-import type { IListener } from "../handler/ListenerHandler";
-import { AuditLogEvent, ChannelType, EmbedBuilder, Guild, type GuildTextBasedChannel, type TextBasedChannel } from "discord.js";
+import { ChannelType, EmbedBuilder, Guild, type GuildTextBasedChannel } from "discord.js";
 import commandHandler from "..";
+import type { IListener } from "../handler/ListenerHandler";
 
 const getLogChannel = async (guild: Guild) => {
     const g = await commandHandler.prisma.guild.upsert({

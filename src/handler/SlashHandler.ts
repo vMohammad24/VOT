@@ -1,8 +1,8 @@
-import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand, ApplicationCommandOptionType, type Interaction, type InteractionReplyOptions } from "discord.js";
-import type ICommand from "./interfaces/ICommand";
-import type SlashHandler from "./interfaces/ISlashHandler";
+import { ApplicationCommandOptionType, type Client, PermissionsBitField, Routes } from "discord.js";
 import CommandHandler from ".";
 import commandHandler from "..";
+import type ICommand from "./interfaces/ICommand";
+import type SlashHandler from "./interfaces/ISlashHandler";
 export default class SlashCommandHandler {
 
     public commands: ICommand[] = [];
@@ -72,15 +72,12 @@ export default class SlashCommandHandler {
         // client.application?.commands.set(commands);
         try {
             commandHandler.logger.info('Started refreshing application (/) commands.');
-
             await client.rest.put(Routes.applicationCommands(client.user!.id), {
                 body: JSON.parse(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))
             });
-
             commandHandler.logger.info('Successfully reloaded application (/) commands.');
-            // commandHandler.logger.info(`Commands: ${(JSON.stringify(commands, (_, v) => typeof v === 'bigint' ? v.toString() : v))}`)
         } catch (error) {
-            commandHandler.logger.error(error);
+            commandHandler.logger.error("Error refreshing application (/) commands: " + error);
         }
     }
 
