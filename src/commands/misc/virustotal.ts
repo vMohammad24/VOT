@@ -1,8 +1,6 @@
+import axios from "axios";
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
-import { uploadFile } from "../../util/nest";
-import { UserTier } from "../../handler/interfaces/ICommand";
-import axios from "axios";
 export default {
     name: "virustotal",
     description: "Check a url for viruses",
@@ -27,7 +25,7 @@ export default {
             ephemeral: true
         }
         const res = await axios.get(
-            `https://www.virustotal.com/vtapi/v2/url/report?apikey=${process.env.VIRUSTOTAL_API_KEY}&resource=${url}`
+            `https://www.virustotal.com/vtapi/v2/url/report?apikey=${import.meta.env.VIRUSTOTAL_API_KEY}&resource=${url}`
         );
         const embed = new EmbedBuilder()
             .setTitle("Virustotal")

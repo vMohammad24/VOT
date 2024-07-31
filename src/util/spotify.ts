@@ -66,7 +66,7 @@ export async function refreshToken(spotify: Spotify) {
 
     const res = await axios.post('https://accounts.spotify.com/api/token', params, {
         headers: {
-            'Authorization': `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+            'Authorization': `Basic ${Buffer.from(`${import.meta.env.SPOTIFY_CLIENT_ID}:${import.meta.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
             'Content-Type': 'application/x-www-form-urlencoded'
         },
     })

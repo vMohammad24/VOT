@@ -1,12 +1,12 @@
-import { PermissionFlagsBits, type APIGuild, type APIUser, type GuildMember } from "discord.js";
-import commandHandler from "..";
 import axios from "axios";
+import { PermissionFlagsBits, type APIGuild, type APIUser } from "discord.js";
+import commandHandler from "..";
 
 
-export const discordClientId = process.env.DISCORD_CLIENT_ID!;
-export const discordClientSecret = process.env.DISCORD_CLIENT_SECRET!;
-export const spotifyClientId = process.env.SPOTIFY_CLIENT_ID!;
-export const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
+export const discordClientId = import.meta.env.DISCORD_CLIENT_ID!;
+export const discordClientSecret = import.meta.env.DISCORD_CLIENT_SECRET!;
+export const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID!;
+export const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET!;
 
 const lastUpdateForUser = new Map<string, Date>();
 export const updateGuilds = async (userId: string): Promise<any> => {
