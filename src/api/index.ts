@@ -4,18 +4,17 @@ import commandHandler from '..';
 import discord from './discord';
 import spotify from './spotify';
 
-const upSince = Date.now();
 const elysia = new Elysia();
 
+let totalCommands = -1;
+const upSince = Date.now();
 let lastPing: number | "N/A" = -1;
 elysia.get('/', function () {
+    if (totalCommands == -1) totalCommands = commandHandler.commands!.length
     const actualPing = commandHandler.client.ws.ping;
     const ping = (actualPing == -1 ? lastPing : actualPing) == -1 ? "N/A" : lastPing;
-    const totalMembers = commandHandler.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
-    const totalGuilds = commandHandler.client.guilds.cache.size;
-    const totalCommands = commandHandler.commands!.length;
     lastPing = ping;
-    return { ping, upSince, totalMembers, totalGuilds, totalCommands }
+    return { ping, upSince, totalCommands }
 })
 
 elysia.get('/commands', () => {
