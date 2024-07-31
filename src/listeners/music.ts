@@ -1,4 +1,4 @@
-import type { APIApplicationCommandInteraction, CommandInteraction, GuildTextBasedChannel } from "discord.js";
+import type { GuildTextBasedChannel } from "discord.js";
 import type { IListener } from "../handler/ListenerHandler";
 import { getRows, sendPanel } from "../util/music";
 
@@ -98,7 +98,7 @@ export default {
                     break;
                 case "volume":
                     const volume = player.volume;
-                    inter.reply({ content: `Current volume is ${volume}. Please enter a new volume level from 1-100`, ephemeral: true });
+                    inter.update({ content: `${inter.member}, Current volume is ${volume}. Please enter a new volume level from 1-100\n-# Volume request will expire in 15 seconds` });
                     const collector = (inter.channel as GuildTextBasedChannel).createMessageCollector({ time: 15000, filter: m => m.author.id === inter.user.id });
                     collector.on('collect', async m => {
                         await m.delete();

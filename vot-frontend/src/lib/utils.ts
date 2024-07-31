@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getApiUrl() {
-  const isProd = import.meta.env.NODE_ENV === "production";
-  return isProd ? import.meta.env.API_URL : import.meta.env.API_URL_DEV;
+  const isProd = process.env.NODE_ENV === "production";
+  return isProd ? process.env.API_URL : process.env.API_URL_DEV;
 }
 
 export const apiUrl = getApiUrl()!;

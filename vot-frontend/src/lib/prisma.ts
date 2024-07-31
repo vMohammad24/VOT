@@ -10,9 +10,9 @@ const prisma =
 
 const redis = new Redis({
     // host: 'localhost'
-    host: import.meta.env.NODE_ENV == 'production' ? 'redis' : 'localhost',
+    host: process.env.NODE_ENV == 'production' ? 'redis' : 'localhost',
 })
-if (import.meta.env.NODE_ENV != 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV != 'production') globalForPrisma.prisma = prisma
 
 
 const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
