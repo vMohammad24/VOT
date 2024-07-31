@@ -1,9 +1,9 @@
 import axios from "axios";
+import type Elysia from "elysia";
 import queryString from "query-string";
 import commandHandler from "..";
 import { getRedirectURL } from "../util/urls";
 import { spotifyClientId, spotifyClientSecret } from "./apiUtils";
-import type Elysia from "elysia";
 export default (server: Elysia) => {
     server.get('/spotify/callback', async ({ query, headers, redirect, set }) => {
         const { code } = query as any;

@@ -1,8 +1,8 @@
-import { type Client, type ApplicationCommandDataResolvable, PermissionsBitField, ApplicationCommandType, REST, Routes, ApplicationCommand, ApplicationCommandOptionType, type Interaction, type InteractionReplyOptions } from "discord.js";
-import type ICommand from "./interfaces/ICommand";
-import type SlashHandler from "./interfaces/ISlashHandler";
+import { ApplicationCommandOptionType, type Client, PermissionsBitField, Routes } from "discord.js";
 import CommandHandler from ".";
 import commandHandler from "..";
+import type ICommand from "./interfaces/ICommand";
+import type SlashHandler from "./interfaces/ISlashHandler";
 export default class SlashCommandHandler {
 
     public commands: ICommand[] = [];

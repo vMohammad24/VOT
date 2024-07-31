@@ -1,6 +1,6 @@
 import axios from "axios";
-import type ICommand from "../../handler/interfaces/ICommand";
 import { EmbedBuilder } from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
     description: "Get a random raccoon image",

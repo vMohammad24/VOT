@@ -13,7 +13,7 @@ export default {
             required: false
         }
     ],
-    execute: async ({ handler, interaction, args, channel }) => {
+    execute: async ({ handler, args, channel }) => {
         const messageId = args.get("message_id") as string || undefined;
         const giveaway = messageId ? await handler.prisma.giveaway.findFirst({ where: { messageId } }) : await handler.prisma.giveaway.findFirst({ where: { channelId: channel.id }, orderBy: { createdAt: "desc" } });;
         if (!giveaway) return { content: "Couldn't find giveaway.", ephemeral: true };

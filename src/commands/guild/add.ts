@@ -1,7 +1,7 @@
-import { ApplicationCommandOptionType, Attachment, EmbedBuilder, GuildEmoji, Sticker } from "discord.js";
-import type ICommand from "../../handler/interfaces/ICommand";
 import axios from "axios";
+import { ApplicationCommandOptionType, Attachment, EmbedBuilder } from "discord.js";
 import sharp from "sharp";
+import type ICommand from "../../handler/interfaces/ICommand";
 import { uploadFile } from "../../util/nest";
 async function compressImage(inputBuffer: Buffer, maxSizeBytes = 512 * 1024): Promise<Buffer> {
     if (inputBuffer.length <= maxSizeBytes) return inputBuffer
