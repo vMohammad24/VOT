@@ -109,6 +109,7 @@ model Command {
   User        User     @relation(fields: [userId], references: [id])
   userId      String
   createdAt   DateTime @default(now())
+  errors      Error[]
 }
 
 model Guild {
@@ -173,6 +174,18 @@ model MusicSettings {
   panelType PanelType @default(EMBED)
   User      User      @relation(fields: [userId], references: [id])
   userId    String    @unique
+}
+
+model Error {
+  id        String   @id @default(uuid())
+  channelId String?
+  guildId   String?
+  message   String?
+  command   Command? @relation(fields: [commandId], references: [id])
+  fullJson  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  commandId String?
 }
 
 enum PanelType {
