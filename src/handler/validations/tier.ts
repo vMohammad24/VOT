@@ -1,10 +1,10 @@
-import type ICommand from "../interfaces/ICommand";
-import { UserTier, type CommandContext } from "../interfaces/ICommand";
+import type ICommand from '../interfaces/ICommand';
+import { type CommandContext } from '../interfaces/ICommand';
 
 export default async function (command: ICommand, ctx: CommandContext) {
-    // TODO: make a way for ppl to parchase tiers
-    return true;
-    /*
+	// TODO: make a way for ppl to parchase tiers
+	return true;
+	/*
     if (!command.userTier) return true;
     const { userTier: uTierRequired, guildTier: gTierRequired } = command;
     const { member, handler } = ctx;
