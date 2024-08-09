@@ -1,10 +1,11 @@
+import { cors } from '@elysiajs/cors';
 import { ApplicationCommandOptionType } from 'discord.js';
 import Elysia from 'elysia';
 import commandHandler from '..';
 import discord from './discord';
 import spotify from './spotify';
 
-const elysia = new Elysia();
+const elysia = new Elysia().use(cors());
 
 let totalCommands = -1;
 const upSince = Date.now();

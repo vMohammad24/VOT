@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type ICommand from '../../handler/interfaces/ICommand';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Get a random cat image/gif',
@@ -63,7 +63,7 @@ export default {
 					.setTitle('Cat')
 					.setImage(url + `.${yes}`)
 					.setColor('Random')
-					.setFooter({ text: `Powered by catass.com` }),
+					.setFooter({ text: `Powered by cataas.com` }),
 			],
 		};
 	},
