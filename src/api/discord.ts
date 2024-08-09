@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel } from 'discord.js';
-import type Elysia from 'elysia';
+import { Elysia, t } from 'elysia';
 import queryString from 'query-string';
 import commandHandler from '..';
 import { getFrontEndURL, getRedirectURL } from '../util/urls';
@@ -29,6 +29,10 @@ export default (elysia: Elysia) => {
 			return { error: (guilds as any).error };
 		}
 		return { success: true };
+	}, {
+		headers: t.Object({
+			authorization: t.String()
+		})
 	});
 
 	elysia.get('/discord/guilds/:id', async ({ headers, set, params: { id } }) => {
@@ -81,6 +85,10 @@ export default (elysia: Elysia) => {
 			roles,
 			memberCount,
 		};
+	}, {
+		headers: t.Object({
+			authorization: t.String()
+		})
 	});
 
 	elysia.patch('/discord/guilds/:id', async ({ headers, set, params: { id }, body }) => {
@@ -221,6 +229,10 @@ export default (elysia: Elysia) => {
 		}
 		if (mes.split(' ').length < 2) mes += ' Nothing';
 		return { success: true, message: mes };
+	}, {
+		headers: t.Object({
+			authorization: t.String()
+		})
 	});
 
 	elysia.get('/discord/callback', async ({ query, redirect, set }) => {
@@ -228,31 +240,31 @@ export default (elysia: Elysia) => {
 		if (!code && !refresh_token)
 			return redirect(
 				'https://discord.com/api/oauth2/authorize?' +
-					queryString.stringify({
-						client_id: discordClientId,
-						response_type: 'code',
-						redirect_uri: getRedirectURL('discord'),
-						scope: 'identify guilds email',
-					}),
+				queryString.stringify({
+					client_id: discordClientId,
+					response_type: 'code',
+					redirect_uri: getRedirectURL('discord'),
+					scope: 'identify guilds email',
+				}),
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
 			'https://discord.com/api/oauth2/token',
 			isRefresh
 				? {
-						client_id: discordClientId,
-						client_secret: discordClientSecret,
-						refresh_token,
-						grant_type: 'refresh_token',
-				  }
+					client_id: discordClientId,
+					client_secret: discordClientSecret,
+					refresh_token,
+					grant_type: 'refresh_token',
+				}
 				: {
-						client_id: discordClientId,
-						client_secret: discordClientSecret,
-						code,
-						grant_type: 'authorization_code',
-						redirect_uri: getRedirectURL('discord'),
-						scope: 'identif,+guilds,email',
-				  },
+					client_id: discordClientId,
+					client_secret: discordClientSecret,
+					code,
+					grant_type: 'authorization_code',
+					redirect_uri: getRedirectURL('discord'),
+					scope: 'identif,+guilds,email',
+				},
 			{
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
@@ -327,6 +339,10 @@ export default (elysia: Elysia) => {
 			},
 		});
 		return redirect(getFrontEndURL() + '/?token=' + user.token);
+	}, {
+		headers: t.Object({
+			authorization: t.String()
+		})
 	});
 
 	elysia.get('/discord/invite', ({ redirect }) => {
