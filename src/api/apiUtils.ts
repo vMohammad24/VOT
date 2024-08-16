@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { PermissionFlagsBits, type APIGuild, type APIUser } from 'discord.js';
 import commandHandler from '..';
+import { getUserByID } from '../util/database';
 
 export const discordClientId = import.meta.env.DISCORD_CLIENT_ID!;
 export const discordClientSecret = import.meta.env.DISCORD_CLIENT_SECRET!;
@@ -16,10 +17,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 	if (!userId) {
 		return { error: 'Invalid user id' };
 	}
-	const user = await prisma.user.findFirst({
-		where: { id: userId },
-		include: { discord: true },
-	});
+	const user = await getUserByID(userId, { discord: true }) as any;
 	if (!user) {
 		return { error: 'Invalid user' };
 	}
@@ -217,9 +215,10 @@ export const refreshToken = async (refreshToken: string) => {
 		};
 	}
 	if (resUser.id) {
+		const userP = await getUserByID(resUser.id);
 		await commandHandler.prisma.user.update({
 			where: {
-				id: resUser.id,
+				id: userP.id,
 			},
 			data: {
 				discord: {

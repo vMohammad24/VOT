@@ -1,5 +1,6 @@
 import { EmbedBuilder, Message, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
+import { getUser } from '../util/database';
 
 export const expNeededForLevel = (needed: number) => {
 	return 5 * Math.pow(needed, 2) + 50 * needed + 100;
@@ -36,20 +37,7 @@ export default {
 		});
 		client.on('messageCreate', async (message) => {
 			if (!shouldGetExp(message)) return;
-			const user = await prisma.user.upsert({
-				where: {
-					id: message.author.id,
-				},
-				update: {
-					name: message.author.username,
-					avatar: message.author.displayAvatarURL({ extension: 'png' }),
-				},
-				create: {
-					id: message.author.id,
-					name: message.author.username,
-					avatar: message.author.displayAvatarURL({ extension: 'png' }),
-				},
-			});
+			const user = await getUser(message.member!)
 			const member = await prisma.member.upsert({
 				where: {
 					userId_guildId: {
