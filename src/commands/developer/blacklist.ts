@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { getUserByID } from '../../util/database';
 
 export default {
 	name: 'blacklist',
@@ -22,7 +23,7 @@ export default {
 				ephemeral: true,
 			};
 		const { prisma } = handler;
-		const user = await prisma.user.findFirst({ where: { id: userId } });
+		const user = await getUserByID(userId);
 		if (!user) {
 			return {
 				content: 'User not found',
