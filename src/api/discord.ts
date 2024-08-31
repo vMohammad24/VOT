@@ -339,10 +339,6 @@ export default (elysia: Elysia) => {
 			},
 		});
 		return redirect(getFrontEndURL() + '/?token=' + user.token);
-	}, {
-		headers: t.Object({
-			authorization: t.String()
-		})
 	});
 
 	elysia.get('/discord/invite', ({ redirect }) => {

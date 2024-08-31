@@ -33,10 +33,10 @@ export default {
 		// Capture a screenshot
 		const screenshot = await page.screenshot({ optimizeForSpeed: true });
 		await page.close();
-		if (interaction) interaction?.editReply({ files: [screenshot] });
-		else
-			return {
-				files: [screenshot],
-			};
+		// if (interaction) interaction?.editReply({ files: [screenshot] });
+		// else
+		return {
+			files: [screenshot],
+		};
 	},
 } as ICommand;

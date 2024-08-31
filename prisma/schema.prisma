@@ -30,7 +30,7 @@ model User {
   name             String?        @unique
   email            String?        @unique
   token            String         @unique @default(cuid())
-  tier             Int            @default(0)
+  tier             UserTier       @default(Normal)
   banned           Boolean        @default(false)
   avatar           String?
   playlists        Playlist[]
@@ -117,7 +117,6 @@ model Guild {
   name            String
   prefix          String           @default(";")
   icon            String?
-  tier            Int              @default(0)
   playlists       Playlist[]
   admins          User[]
   tickets         Ticket[]
@@ -171,7 +170,7 @@ model WelcomeSettings {
 
 model MusicSettings {
   id        String    @id @default(uuid())
-  panelType PanelType @default(EMBED)
+  panelType PanelType @default(Embed)
   User      User      @relation(fields: [userId], references: [id])
   userId    String    @unique
 }
@@ -189,6 +188,12 @@ model Error {
 }
 
 enum PanelType {
-  EMBED
-  IMAGE
+  Embed
+  Image
+}
+
+enum UserTier {
+  Normal
+  Premium
+  Beta
 }
