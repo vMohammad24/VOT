@@ -64,9 +64,9 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
 				userId: member.id,
 			},
 		});
-		const panelType: 'EMBED' | 'IMAGE' = musicSettings?.panelType || 'EMBED';
+		const panelType: 'Embed' | 'Image' = musicSettings?.panelType || 'Image';
 		let msg;
-		if (panelType === 'IMAGE') {
+		if (panelType === 'Image') {
 			const progress =
 				new Date(player.queue.current?.position!).getTime() / new Date(player.queue.current?.length!).getTime();
 			const panel = await ClassicPro({

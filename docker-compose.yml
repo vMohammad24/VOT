@@ -18,13 +18,13 @@ services:
       - lavalink
       - redis
   frontend:
-    build: ./vot-frontend
+    build: ../VOT-frontend
     container_name: vot-frontend
     restart: always
     profiles:
       - prod
     env_file:
-      - ./vot-frontend/.env.prod
+      - ../VOT-frontend/.env
     networks:
       - vot
     expose:
@@ -85,7 +85,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=vot
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - ./db/data:/var/lib/postgresql/data
   lavalink_dev:
@@ -100,9 +100,9 @@ services:
       - ./application.yml:/opt/Lavalink/application.yml
       - ./plugins/:/opt/Lavalink/plugins/
     ports:
-      - "2333:2333"
+      - '2333:2333'
   redis_dev:
-    image: "redis"
+    image: 'redis'
     container_name: redis
     restart: unless-stopped
     ulimits:
@@ -110,7 +110,7 @@ services:
     profiles:
       - dev
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - ./db/cache:/data
 networks:

@@ -6,265 +6,277 @@ import commandHandler from '..';
 import { getFrontEndURL, getRedirectURL } from '../util/urls';
 import { discordClientId, discordClientSecret, updateGuilds } from './apiUtils';
 export default (elysia: Elysia) => {
-	elysia.get('/discord/guilds', async ({ headers, set }) => {
-		const token = headers.authorization;
-		if (!token) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const user = await commandHandler.prisma.user.findUnique({
-			where: { token },
-		});
-		if (!user) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const guilds = await updateGuilds(user.id);
-		if (guilds && (guilds as any).error) {
-			set.status = 400;
-			return { error: (guilds as any).error };
-		}
-		return { success: true };
-	}, {
-		headers: t.Object({
-			authorization: t.String()
-		})
-	});
-
-	elysia.get('/discord/guilds/:id', async ({ headers, set, params: { id } }) => {
-		const token = headers.authorization;
-		if (!token) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const user = await commandHandler.prisma.user.findUnique({
-			where: { token },
-		});
-		if (!user) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		await updateGuilds(user.id);
-		const guild = await commandHandler.prisma.guild.findFirst({
-			where: { id: id, admins: { some: { id: user.id } } },
-			include: {
-				TicketSettings: true,
-			},
-		});
-		if (!guild) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-		if (!isBotInGuild) {
-			set.status = 400;
-			return { error: 'notInGuild' };
-		}
-		const g = await commandHandler.client.guilds.cache.get(guild.id)!;
-		const channels = await g.channels.cache;
-		const textChannels = channels.filter((channel) => channel.type === ChannelType.GuildText);
-		const voiceChannels = channels.filter((channel) => channel.type === ChannelType.GuildVoice);
-		const categoryChannels = channels.filter((channel) => channel.type === ChannelType.GuildCategory);
-		const memberCount = g.memberCount;
-		const roles = g.roles.cache.filter((role) => !role.managed);
-		return {
-			...guild,
-			textChannels,
-			voiceChannels,
-			categoryChannels,
-			roles,
-			memberCount,
-		};
-	}, {
-		headers: t.Object({
-			authorization: t.String()
-		})
-	});
-
-	elysia.patch('/discord/guilds/:id', async ({ headers, set, params: { id }, body }) => {
-		const token = headers.authorization;
-		if (!token) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const user = await commandHandler.prisma.user.findUnique({
-			where: { token },
-		});
-		if (!user) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		await updateGuilds(user.id);
-		const guild = await commandHandler.prisma.guild.findFirst({
-			where: { id, admins: { some: { id: user.id } } },
-		});
-		if (!guild) {
-			set.status = 401;
-			return {
-				error: 'Unauthorized',
-			};
-		}
-		const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
-		if (!isBotInGuild) {
-			set.status = 400;
-			return { error: 'notInGuild' };
-		}
-		const {
-			welcomeChannel,
-			welcomeEmbedTitle,
-			welcomeEmbedDescription,
-			loggingChannel,
-			prefix,
-			oldChannel,
-			oldMessage,
-			shouldUpdateTickets,
-		} = body as any;
-		let mes = 'Updated';
-		if (prefix) {
-			await commandHandler.prisma.guild.update({
-				where: {
-					id: guild.id,
-				},
-				data: {
-					prefix: prefix,
-				},
-			});
-			mes += ' prefix';
-		}
-		if (loggingChannel != undefined) {
-			const g = commandHandler.client.guilds.cache.get(guild.id);
-			if (!g) {
-				set.status = 400;
-				return { error: 'Invalid guild' };
-			} //return res.status(400).send({ error: 'Invalid guild' });
-			const channel = g.channels.cache.get(loggingChannel);
-			if (!channel) {
-				set.status = 400;
-				return { error: 'Invalid channel' };
+	elysia.get(
+		'/discord/guilds',
+		async ({ headers, set }) => {
+			const token = headers.authorization;
+			if (!token) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
 			}
-			await commandHandler.prisma.guild.update({
-				where: {
-					id: guild.id,
-				},
-				data: {
-					loggingChannel: loggingChannel,
-				},
+			const user = await commandHandler.prisma.user.findUnique({
+				where: { token },
 			});
-			mes += ' logging channel';
-		}
-		if (welcomeChannel && welcomeEmbedDescription && welcomeEmbedTitle) {
-			const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(welcomeChannel);
-			if (!channel) {
-				set.status = 400;
-				return { error: 'Invalid channel' };
+			if (!user) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
 			}
-			await commandHandler.prisma.welcomeSettings.upsert({
-				where: {
-					guildId: guild.id,
-				},
-				update: {
-					channelId: welcomeChannel,
-					embedTitle: welcomeEmbedTitle,
-					embedDesc: welcomeEmbedDescription,
-				},
-				create: {
-					channelId: welcomeChannel,
-					embedTitle: welcomeEmbedTitle,
-					embedDesc: welcomeEmbedDescription,
-					guildId: guild.id,
+			const guilds = await updateGuilds(user.id);
+			if (guilds && (guilds as any).error) {
+				set.status = 400;
+				return { error: (guilds as any).error };
+			}
+			return { success: true };
+		},
+		{
+			headers: t.Object({
+				authorization: t.String(),
+			}),
+		},
+	);
+
+	elysia.get(
+		'/discord/guilds/:id',
+		async ({ headers, set, params: { id } }) => {
+			const token = headers.authorization;
+			if (!token) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			const user = await commandHandler.prisma.user.findUnique({
+				where: { token },
+			});
+			if (!user) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			await updateGuilds(user.id);
+			const guild = await commandHandler.prisma.guild.findFirst({
+				where: { id: id, admins: { some: { id: user.id } } },
+				include: {
+					TicketSettings: true,
 				},
 			});
-			mes += ' welcome channel';
-		}
-		if (shouldUpdateTickets) {
-			const ticketSettings = await commandHandler.prisma.ticketSettings.findFirst({
-				where: { guildId: guild.id },
+			if (!guild) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
+			if (!isBotInGuild) {
+				set.status = 400;
+				return { error: 'notInGuild' };
+			}
+			const g = await commandHandler.client.guilds.cache.get(guild.id)!;
+			const channels = await g.channels.cache;
+			const textChannels = channels.filter((channel) => channel.type === ChannelType.GuildText);
+			const voiceChannels = channels.filter((channel) => channel.type === ChannelType.GuildVoice);
+			const categoryChannels = channels.filter((channel) => channel.type === ChannelType.GuildCategory);
+			const memberCount = g.memberCount;
+			const roles = g.roles.cache.filter((role) => !role.managed);
+			return {
+				...guild,
+				textChannels,
+				voiceChannels,
+				categoryChannels,
+				roles,
+				memberCount,
+			};
+		},
+		{
+			headers: t.Object({
+				authorization: t.String(),
+			}),
+		},
+	);
+
+	elysia.patch(
+		'/discord/guilds/:id',
+		async ({ headers, set, params: { id }, body }) => {
+			const token = headers.authorization;
+			if (!token) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			const user = await commandHandler.prisma.user.findUnique({
+				where: { token },
 			});
-			if (!ticketSettings || !ticketSettings.embedTitle || !ticketSettings.embedDesc) return;
-			mes += ' ticket embed';
-			if (ticketSettings.channelId) {
-				const channel = commandHandler.client.guilds.cache
-					.get(guild.id)
-					?.channels.cache.get(ticketSettings.channelId) as GuildTextBasedChannel;
-				const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-					new ButtonBuilder()
-						.setCustomId('create_ticket')
-						.setLabel('Create Ticket')
-						.setEmoji('🎫')
-						.setStyle(ButtonStyle.Primary),
-				);
-				const message = await channel.send({
-					embeds: [
-						{
-							title: ticketSettings.embedTitle,
-							description: ticketSettings.embedDesc,
-							color: 0x00ff00,
-						},
-					],
-					components: [row],
-				});
-				await commandHandler.prisma.ticketSettings.update({
+			if (!user) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			await updateGuilds(user.id);
+			const guild = await commandHandler.prisma.guild.findFirst({
+				where: { id, admins: { some: { id: user.id } } },
+			});
+			if (!guild) {
+				set.status = 401;
+				return {
+					error: 'Unauthorized',
+				};
+			}
+			const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
+			if (!isBotInGuild) {
+				set.status = 400;
+				return { error: 'notInGuild' };
+			}
+			const {
+				welcomeChannel,
+				welcomeEmbedTitle,
+				welcomeEmbedDescription,
+				loggingChannel,
+				prefix,
+				oldChannel,
+				oldMessage,
+				shouldUpdateTickets,
+			} = body as any;
+			let mes = 'Updated';
+			if (prefix) {
+				await commandHandler.prisma.guild.update({
 					where: {
-						id: ticketSettings.id,
+						id: guild.id,
 					},
 					data: {
-						messageId: message.id,
+						prefix: prefix,
 					},
 				});
+				mes += ' prefix';
 			}
-		}
-		if (mes.split(' ').length < 2) mes += ' Nothing';
-		return { success: true, message: mes };
-	}, {
-		headers: t.Object({
-			authorization: t.String()
-		})
-	});
+			if (loggingChannel != undefined) {
+				const g = commandHandler.client.guilds.cache.get(guild.id);
+				if (!g) {
+					set.status = 400;
+					return { error: 'Invalid guild' };
+				} //return res.status(400).send({ error: 'Invalid guild' });
+				const channel = g.channels.cache.get(loggingChannel);
+				if (!channel) {
+					set.status = 400;
+					return { error: 'Invalid channel' };
+				}
+				await commandHandler.prisma.guild.update({
+					where: {
+						id: guild.id,
+					},
+					data: {
+						loggingChannel: loggingChannel,
+					},
+				});
+				mes += ' logging channel';
+			}
+			if (welcomeChannel && welcomeEmbedDescription && welcomeEmbedTitle) {
+				const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(welcomeChannel);
+				if (!channel) {
+					set.status = 400;
+					return { error: 'Invalid channel' };
+				}
+				await commandHandler.prisma.welcomeSettings.upsert({
+					where: {
+						guildId: guild.id,
+					},
+					update: {
+						channelId: welcomeChannel,
+						embedTitle: welcomeEmbedTitle,
+						embedDesc: welcomeEmbedDescription,
+					},
+					create: {
+						channelId: welcomeChannel,
+						embedTitle: welcomeEmbedTitle,
+						embedDesc: welcomeEmbedDescription,
+						guildId: guild.id,
+					},
+				});
+				mes += ' welcome channel';
+			}
+			if (shouldUpdateTickets) {
+				const ticketSettings = await commandHandler.prisma.ticketSettings.findFirst({
+					where: { guildId: guild.id },
+				});
+				if (!ticketSettings || !ticketSettings.embedTitle || !ticketSettings.embedDesc) return;
+				mes += ' ticket embed';
+				if (ticketSettings.channelId) {
+					const channel = commandHandler.client.guilds.cache
+						.get(guild.id)
+						?.channels.cache.get(ticketSettings.channelId) as GuildTextBasedChannel;
+					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+						new ButtonBuilder()
+							.setCustomId('create_ticket')
+							.setLabel('Create Ticket')
+							.setEmoji('🎫')
+							.setStyle(ButtonStyle.Primary),
+					);
+					const message = await channel.send({
+						embeds: [
+							{
+								title: ticketSettings.embedTitle,
+								description: ticketSettings.embedDesc,
+								color: 0x00ff00,
+							},
+						],
+						components: [row],
+					});
+					await commandHandler.prisma.ticketSettings.update({
+						where: {
+							id: ticketSettings.id,
+						},
+						data: {
+							messageId: message.id,
+						},
+					});
+				}
+			}
+			if (mes.split(' ').length < 2) mes += ' Nothing';
+			return { success: true, message: mes };
+		},
+		{
+			headers: t.Object({
+				authorization: t.String(),
+			}),
+		},
+	);
 
 	elysia.get('/discord/callback', async ({ query, redirect, set }) => {
 		const { code, refresh_token } = query as any;
 		if (!code && !refresh_token)
 			return redirect(
 				'https://discord.com/api/oauth2/authorize?' +
-				queryString.stringify({
-					client_id: discordClientId,
-					response_type: 'code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: 'identify guilds email',
-				}),
+					queryString.stringify({
+						client_id: discordClientId,
+						response_type: 'code',
+						redirect_uri: getRedirectURL('discord'),
+						scope: 'identify guilds email',
+					}),
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
 			'https://discord.com/api/oauth2/token',
 			isRefresh
 				? {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					refresh_token,
-					grant_type: 'refresh_token',
-				}
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						refresh_token,
+						grant_type: 'refresh_token',
+					}
 				: {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					code,
-					grant_type: 'authorization_code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: 'identif,+guilds,email',
-				},
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						code,
+						grant_type: 'authorization_code',
+						redirect_uri: getRedirectURL('discord'),
+						scope: 'identif,+guilds,email',
+					},
 			{
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',

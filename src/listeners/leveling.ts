@@ -22,22 +22,25 @@ export default {
 	description: 'Leveling related events',
 	execute: async ({ prisma, client }) => {
 		client.on('ready', async () => {
-			setInterval(async () => {
-				prisma.member.updateMany({
-					data: {
-						messagesToday: 0,
-					},
-					where: {
-						messagesToday: {
-							gt: 0,
+			setInterval(
+				async () => {
+					prisma.member.updateMany({
+						data: {
+							messagesToday: 0,
 						},
-					},
-				});
-			}, 1000 * 60 * 60 * 24);
+						where: {
+							messagesToday: {
+								gt: 0,
+							},
+						},
+					});
+				},
+				1000 * 60 * 60 * 24,
+			);
 		});
 		client.on('messageCreate', async (message) => {
 			if (!shouldGetExp(message)) return;
-			const user = await getUser(message.member!)
+			const user = await getUser(message.member!);
 			const member = await prisma.member.upsert({
 				where: {
 					userId_guildId: {

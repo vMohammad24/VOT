@@ -17,7 +17,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 	if (!userId) {
 		return { error: 'Invalid user id' };
 	}
-	const user = await getUserByID(userId, { discord: true, id: true }) as any;
+	const user = (await getUserByID(userId, { discord: true, id: true })) as any;
 	if (!user) {
 		return { error: 'Invalid user' };
 	}

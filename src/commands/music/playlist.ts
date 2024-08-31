@@ -92,7 +92,7 @@ export default {
 									name: track.title,
 									value: track.uri,
 								};
-						  })
+							})
 						: [];
 				if (choices.length === 0 || action === 'add') {
 					const kazTracks = (

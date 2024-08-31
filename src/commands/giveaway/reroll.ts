@@ -20,7 +20,7 @@ export default {
 			: await handler.prisma.giveaway.findFirst({
 					where: { channelId: channel.id },
 					orderBy: { createdAt: 'desc' },
-			  });
+				});
 		if (!giveaway) return { content: "Couldn't find giveaway.", ephemeral: true };
 		if (giveaway.end > new Date()) return { content: 'The giveaway has not ended yet', ephemeral: true };
 		await rerollGiveaway(giveaway.id)
