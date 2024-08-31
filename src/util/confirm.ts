@@ -39,12 +39,12 @@ export default class Confirm {
 				? await this.context.reply({
 						...(payload as MessageReplyOptions),
 						components: components,
-				  })
+					})
 				: ((await (this.context as RepliableInteraction).reply({
 						...(payload as InteractionReplyOptions),
 						components: components,
 						fetchReply: true,
-				  })) as Message);
+					})) as Message);
 		this.createCollector(msg);
 	}
 	private createCollector(msg: Message) {

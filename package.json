@@ -3,10 +3,10 @@
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
-    "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.8.0",
+    "@eslint/eslintrc": "latest",
+    "@eslint/js": "latest",
     "@types/bun": "latest",
-    "@types/node-schedule": "^2.1.6",
+    "@types/node-schedule": "latest",
     "prettier": "latest",
     "pino-pretty": "latest"
   },
@@ -18,14 +18,14 @@
     "start": "bunx prisma db push && NODE_ENV=production  bun --bun src/index.ts | pino-pretty"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "latest"
   },
   "dependencies": {
     "@devraelfreeze/discordjs-pagination": "^2.7.6",
     "@discordjs/voice": "latest",
-    "@elysiajs/cors": "^1.1.0",
+    "@elysiajs/cors": "latest",
     "@napi-rs/canvas": "latest",
-    "@prisma/client": "^5.19",
+    "@prisma/client": "latest",
     "@types/ioredis": "^5.0.0",
     "@types/pngjs": "latest",
     "axios": "latest",
@@ -34,16 +34,15 @@
     "discord.js": "^14.15.3",
     "elysia": "latest",
     "gifuct-js": "latest",
-    "indomitable": "^4.1.0",
     "ioredis": "^5.4.1",
-    "kazagumo": "^3.0.5",
+    "kazagumo": "^3.1.2",
     "kazagumo-spotify": "^2.1.0",
     "musicard": "latest",
     "node-schedule": "^2.1.1",
     "pino": "latest",
     "pngjs": "latest",
-    "prisma": "^5.19",
-    "prisma-redis-middleware": "^4.8.0",
+    "prisma": "latest",
+    "prisma-redis-middleware": "latest",
     "puppeteer": "latest",
     "query-string": "latest",
     "sharp": "latest",

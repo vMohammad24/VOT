@@ -50,11 +50,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-						{
-							id: ticketSettings.roleId!,
-							allow: [PermissionFlagsBits.ViewChannel],
-						},
-				  ]
+					{
+						id: ticketSettings.roleId!,
+						allow: [PermissionFlagsBits.ViewChannel],
+					},
+				]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -177,7 +177,7 @@ export async function transcriptTicket(channel: GuildTextBasedChannel) {
 			avatar: message.author.displayAvatarURL({ size: 4096 }),
 			content: message.content,
 			username: message.author.username,
-			roleColor: message.member?.displayColor,
+			roleColor: message.member?.displayHexColor,
 			attachments: message.attachments.map(async (attachment) => {
 				const file = new File(
 					[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],

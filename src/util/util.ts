@@ -120,6 +120,6 @@ export function parseTime(timestr: string): number {
 			}
 			time += num;
 		}
-	} catch (ignored) { }
+	} catch (ignored) {}
 	return time;
 }
