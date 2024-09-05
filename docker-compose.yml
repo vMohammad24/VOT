@@ -24,7 +24,7 @@ services:
     profiles:
       - prod
     env_file:
-      - ../VOT-frontend/.env
+      - ../VOT-frontend/.env.prod
     networks:
       - vot
     expose:
