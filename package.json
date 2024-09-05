@@ -15,7 +15,7 @@
     "check": "tsc --noEmit",
     "bundle": "bun build ./src/index.ts --target bun --outfile vot.js",
     "dev": "bun --bun --watch src/index.ts | pino-pretty",
-    "start": "bunx prisma db push && NODE_ENV=production  bun --bun src/index.ts | pino-pretty"
+    "start": "bunx prisma db push --accept-data-loss && NODE_ENV=production  bun --bun src/index.ts | pino-pretty"
   },
   "peerDependencies": {
     "typescript": "latest"
