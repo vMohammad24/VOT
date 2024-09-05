@@ -28,7 +28,6 @@ model Giveaway {
 model User {
   id               String         @id @default(uuid())
   name             String?        @unique
-  email            String?        @unique
   token            String         @unique @default(cuid())
   tier             UserTier       @default(Normal)
   banned           Boolean        @default(false)
