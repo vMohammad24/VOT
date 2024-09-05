@@ -40,7 +40,7 @@ export default {
 		});
 		client.on('messageCreate', async (message) => {
 			if (!shouldGetExp(message)) return;
-			const user = await getUser(message.member!);
+			const user = await getUser(message.author);
 			const member = await prisma.member.upsert({
 				where: {
 					userId_guildId: {

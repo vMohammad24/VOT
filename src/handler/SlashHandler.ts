@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, type Client, PermissionsBitField, Routes } from 'discord.js';
+import { ApplicationCommandOptionType, type Client, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
@@ -112,7 +112,7 @@ export default class SlashCommandHandler {
 			}
 			if (result) {
 				if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
-					(result as any).ephemeral = interaction.options.get('silent', false)?.value as boolean;
+					(result as InteractionReplyOptions).ephemeral = true;
 				}
 				if (interaction.replied) {
 					await interaction.followUp(result);

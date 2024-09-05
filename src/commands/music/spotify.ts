@@ -12,9 +12,13 @@ export default {
 		if (res.error) {
 			return {
 				content: res.error,
+				ephemeral: true
 			};
 		}
-		if (!player) return;
+		if (!player) return {
+			content: "No player found",
+			ephemeral: true,
+		};
 		const trackURI = res.item.external_urls.spotify;
 		if (!trackURI)
 			return {
@@ -42,9 +46,9 @@ export default {
 		const embed = new EmbedBuilder()
 			.setTitle('Added to queue')
 			.setColor('Green')
-			.setDescription(`Added ${track.title || 'Error getting title'} to the queue`)
+			.setDescription(`Added [${track.title || 'Error getting title'}](${track.uri}) to the queue`)
 			.setThumbnail(track.thumbnail || null)
-			.setFooter({ text: a.error || null });
+			.setFooter({ text: a ? a.error : "Paused spotify." });
 		if (player.queue.current?.realUri == track.realUri && res.progress_ms) {
 			await player.seek(parseInt(res.progress_ms));
 			// minute:second

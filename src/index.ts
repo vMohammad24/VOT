@@ -109,6 +109,7 @@ client.on('ready', async (c) => {
 			return Promise.reject(error);
 		},
 	);
+	axios.defaults.validateStatus = () => true;
 	app.listen(process.env.PORT || 8080, () => {
 		commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});

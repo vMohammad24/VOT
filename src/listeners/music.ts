@@ -13,7 +13,7 @@ export default {
 			logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`),
 		);
 		kazagumo.shoukaku.on('debug', (name, info) => logger.debug(`Lavalink ${name}: Debug,`, info));
-		kazagumo.shoukaku.on('disconnect', (name, players) => {});
+		kazagumo.shoukaku.on('disconnect', (name, players) => { });
 		kazagumo.on('playerMoved', (player, status, channelData) => {
 			switch (status) {
 				case 'LEFT':
@@ -65,14 +65,14 @@ export default {
 					player.pause(true);
 					inter.update({
 						components: getRows(player),
-						content: `Paused by ${inter.user.username}`,
+						content: `Paused by ${inter.user}`,
 					});
 					break;
 				case 'resume':
 					player.pause(false);
 					inter.update({
 						components: getRows(player),
-						content: `Resumed by ${inter.user.username}`,
+						content: `Resumed by ${inter.user}`,
 					});
 					break;
 				case 'skip':
@@ -95,7 +95,7 @@ export default {
 				case 'shuffle':
 					player.queue.shuffle();
 					inter.update({
-						content: 'Queue shuffled by ' + inter.user.username,
+						content: `Queue shuffled by ${inter.user}`,
 					});
 					break;
 				case 'volume':
@@ -117,11 +117,11 @@ export default {
 							});
 							return;
 						}
-						await player.setVolume(newVolume);
-						await inter.update({
-							content: `Volume set to ${newVolume} by ${inter.user.username}`,
-						});
 						collector.stop();
+						await player.setVolume(newVolume);
+						await inter.editReply({
+							content: `Volume set to ${newVolume} by ${inter.user}`,
+						});
 					});
 					break;
 				default:

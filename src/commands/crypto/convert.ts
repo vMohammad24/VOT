@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type ICommand from '../../handler/interfaces/ICommand';
 import { ApplicationCommandOptionType } from 'discord.js';
+import type ICommand from '../../handler/interfaces/ICommand';
 
 const exchangeRates: {
 	key: string;
@@ -8,8 +8,12 @@ const exchangeRates: {
 	value: number;
 	unit: string;
 }[] = [];
-
+let lastUpdate: Date = new Date(0);
+const updateInterval = 15 * 60 * 1000; // 15 minutes
 const loadExchangeRates = async () => {
+	if (new Date().getTime() - lastUpdate.getTime() < updateInterval) {
+		return exchangeRates;
+	}
 	const res = await axios.get(`https://api.coingecko.com/api/v3/exchange_rates`);
 	const rates = res.data.rates;
 	exchangeRates.length = 0;
@@ -20,6 +24,7 @@ const loadExchangeRates = async () => {
 			...v,
 		});
 	}
+	return exchangeRates;
 };
 
 export default {
@@ -72,29 +77,29 @@ export default {
 				content: 'Invalid input',
 				ephemeral: true,
 			};
-		if (exchangeRates.length == 0) await loadExchangeRates();
+		const eR = await loadExchangeRates();
 		const amount = parseFloat(a);
 		if (isNaN(amount))
 			return {
 				content: 'Invalid amount',
 				ephemeral: true,
 			};
-		for (const x of exchangeRates) {
+		for (const x of eR) {
 			if (x.name.toLowerCase() == from.toLowerCase()) from = x.key;
 			if (x.name.toLowerCase() == to.toLowerCase()) to = x.key;
 		}
-		if (!exchangeRates.find((x) => x.key == from))
+		if (!eR.find((x) => x.key == from))
 			return {
 				content: 'Invalid from currency',
 				ephemeral: true,
 			};
-		if (!exchangeRates.find((x) => x.key == to))
+		if (!eR.find((x) => x.key == to))
 			return {
 				content: 'Invalid to currency',
 				ephemeral: true,
 			};
-		const fromValue = exchangeRates.find((x) => x.key == from)!;
-		const toValue = exchangeRates.find((x) => x.key == to)!;
+		const fromValue = eR.find((x) => x.key == from)!;
+		const toValue = eR.find((x) => x.key == to)!;
 		const res = amount * (toValue.value / fromValue.value);
 		return {
 			content: `${amount}${fromValue.unit} is ${res}${toValue.unit}`,

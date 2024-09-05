@@ -27,7 +27,8 @@ export default {
 			.setDescription(
 				`**Level**: ${prismaUser.level}\n**EXP**: ${prismaUser.exp}/${expNeededForLevel(prismaUser.level + 1)}`,
 			)
-			.setTimestamp();
+			.setTimestamp()
+			.setColor("Green")
 		return {
 			embeds: [embed],
 		};

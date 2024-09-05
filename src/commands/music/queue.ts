@@ -1,6 +1,6 @@
+import { pagination } from '@devraelfreeze/discordjs-pagination';
 import { EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { pagination } from '@devraelfreeze/discordjs-pagination';
 
 export default {
 	description: 'Shows the queue',
@@ -35,6 +35,7 @@ export default {
 			interaction: interaction || undefined,
 			message: message || undefined,
 			embeds: embeds as any,
+			ephemeral: true
 		});
 	},
 } as ICommand;

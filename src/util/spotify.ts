@@ -18,49 +18,42 @@ export async function getCurrentlyPlaying(userId: string) {
 			headers: {
 				Authorization: `Bearer ${spotify.token}`,
 			},
-		})
-		.catch(async (e) => {
-			if (e.response.status == 401) {
-				await refreshToken(spotify);
-				await setTimeout(() => {}, 500);
-				return await getCurrentlyPlaying(userId);
-			}
-		})
-		.then((res) => res.data)) as any;
-	if (res && res.error && res.error.status && res.error.status == 401) {
+		}))
+	const { error } = res.data;
+	if (res.status == 401 || error) {
 		await refreshToken(spotify);
-		await setTimeout(() => {}, 500);
+		await setTimeout(() => { }, 500);
 		return await getCurrentlyPlaying(userId);
 	}
-	return res;
+	return res.data;
 }
 
 export async function pausePlayer(userId: string) {
 	const { prisma } = commandHandler;
-
 	const spotify = await prisma.spotify.findUnique({
 		where: {
 			userId,
 		},
 	});
-	if (!spotify || !spotify.expiresAt) return;
+	if (!spotify || !spotify.expiresAt) return { error: 'Spotify account not linked.' };
 	if (spotify.expiresAt < new Date('UTC')) {
 		await refreshToken(spotify);
 		return await pausePlayer(userId);
 	}
-	try {
-		const res = await axios.put('https://api.spotify.com/v1/me/player/pause', {
+	const res = (await axios
+		.put('https://api.spotify.com/v1/me/player/pause', {
+
+		}, {
 			headers: {
 				Authorization: `Bearer ${spotify.token}`,
 			},
-		});
-		return res.data;
-	} catch (e) {
-		return { error: 'Spotify Premium required to pause your player' };
-	}
+		}))
+	const { error } = res.data;
+	if (error) return { error }
 }
 
 export async function refreshToken(spotify: Spotify) {
+	console.log(`Refreshing token for ${spotify.userId}`);
 	const { prisma } = commandHandler;
 	const params = new URLSearchParams();
 	params.append('grant_type', 'refresh_token');
