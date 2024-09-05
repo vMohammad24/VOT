@@ -1,7 +1,7 @@
+import { UserTier } from '@prisma/client';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { UserTier } from '../../handler/interfaces/ICommand';
 import type { FilterOptions } from 'shoukaku';
+import type ICommand from '../../handler/interfaces/ICommand';
 export default {
 	description: 'Change filters on the player',
 	cooldown: 10000,

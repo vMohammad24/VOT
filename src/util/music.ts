@@ -64,7 +64,7 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
 				userId: member.id,
 			},
 		});
-		const panelType: 'Embed' | 'Image' = musicSettings?.panelType || 'Image';
+		const panelType: 'Embed' | 'Image' = musicSettings?.panelType || 'Embed';
 		let msg;
 		if (panelType === 'Image') {
 			const progress =

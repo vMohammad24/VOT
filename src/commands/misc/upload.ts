@@ -1,8 +1,8 @@
+import { UserTier } from '@prisma/client';
+import axios from 'axios';
 import { ApplicationCommandOptionType, Attachment } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { uploadFile } from '../../util/nest';
-import { UserTier } from '../../handler/interfaces/ICommand';
-import axios from 'axios';
 export default {
 	name: 'upload',
 	description: 'Upload a file to nest.rip',

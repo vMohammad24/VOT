@@ -1,3 +1,4 @@
+import { UserTier } from '@prisma/client';
 import type {
 	ApplicationCommandOption,
 	ChatInputCommandInteraction,
@@ -10,20 +11,10 @@ import type {
 	TextBasedChannel,
 	User,
 } from 'discord.js';
-import type CommandHandler from '..';
 import type { KazagumoPlayer } from 'kazagumo';
+import type CommandHandler from '..';
 import type { ArgumentMap } from '../validations/args';
 
-export enum UserTier {
-	Free = 0,
-	Premium = 1,
-	Beta = 2,
-}
-
-export enum GuildTier {
-	Free = 0,
-	Premium = 1,
-}
 export default interface ICommand {
 	name?: string;
 	description: string | 'No description provided';
@@ -31,8 +22,7 @@ export default interface ICommand {
 	perms?: PermissionResolvable[] | 'dev' | null;
 	cooldown?: number;
 	category?: string;
-	userTier?: number;
-	guildTier?: GuildTier;
+	userTier?: UserTier;
 	disabled?: boolean;
 	slashOnly?: boolean;
 	needsPlayer?: boolean;

@@ -46,6 +46,7 @@
     "puppeteer": "latest",
     "query-string": "latest",
     "sharp": "latest",
-    "shoukaku": "latest"
+    "shoukaku": "latest",
+    "undici": "^6.19.8"
   }
 }

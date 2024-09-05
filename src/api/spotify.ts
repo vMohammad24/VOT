@@ -1,25 +1,25 @@
 import axios from 'axios';
+import type Elysia from 'elysia';
 import queryString from 'query-string';
 import commandHandler from '..';
 import { getRedirectURL } from '../util/urls';
 import { spotifyClientId, spotifyClientSecret } from './apiUtils';
-import type Elysia from 'elysia';
 export default (server: Elysia) => {
 	server.get('/spotify/callback', async ({ query, headers, redirect, set }) => {
 		const { code } = query as any;
 		const token = headers.authorization;
-		const scopes = 'user-read-playback-state user-read-currently-playing';
+		const scopes = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
 		const state = crypto.randomUUID();
 		if (!code)
 			return redirect(
 				'https://accounts.spotify.com/authorize?' +
-					queryString.stringify({
-						response_type: 'code',
-						client_id: spotifyClientId,
-						scope: scopes,
-						redirect_uri: getRedirectURL('spotify'),
-						state,
-					}),
+				queryString.stringify({
+					response_type: 'code',
+					client_id: spotifyClientId,
+					scope: scopes,
+					redirect_uri: getRedirectURL('spotify'),
+					state,
+				}),
 			);
 		if (!token) return redirect('/discord/callback');
 		const user = await commandHandler.prisma.user.findUnique({

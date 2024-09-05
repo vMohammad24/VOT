@@ -1,7 +1,7 @@
+import { UserTier } from '@prisma/client';
 import { ApplicationCommandOptionType } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { shortenUrl } from '../../util/nest';
-import { UserTier } from '../../handler/interfaces/ICommand';
 
 export default {
 	name: 'shorten',
