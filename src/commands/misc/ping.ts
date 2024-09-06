@@ -7,6 +7,10 @@ export default {
 	execute: async ({ interaction, message, handler }) => {
 		const apiLatency = handler.client.ws.ping;
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
+		const pStart = Date.now();
+		await handler.prisma.$queryRaw`SELECT 1`;
+		const pEnd = Date.now();
+		await handler.prisma.$disconnect();
 		return {
 			embeds: [
 				new EmbedBuilder()
@@ -21,6 +25,10 @@ export default {
 							name: 'Message Latency',
 							value: '```' + `${messageLatency}ms` + '```',
 						},
+						{
+							name: "Database Latency",
+							value: '```' + `${pEnd - pStart}ms` + '```'
+						}
 					)
 					.setTimestamp(),
 			],

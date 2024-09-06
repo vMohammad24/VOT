@@ -23,8 +23,9 @@ services:
     restart: always
     profiles:
       - prod
-    env_file:
-      - ../VOT-frontend/.env.prod
+    environment:
+      - API_URL=https://api.vot.wtf
+      - DATABASE_URL=postgres://bot:ecNkXsfsu66NGSxIGyivymbUgGl@postgres:5432/vot
     networks:
       - vot
     expose:

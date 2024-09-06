@@ -31,11 +31,11 @@
     "axios": "latest",
     "crc": "latest",
     "dayjs": "latest",
-    "discord.js": "^14.15.3",
+    "discord.js": "^14.16.1",
     "elysia": "latest",
     "gifuct-js": "latest",
     "ioredis": "^5.4.1",
-    "kazagumo": "^3.1.2",
+    "kazagumo": "^3.2.1",
     "kazagumo-spotify": "^2.1.0",
     "musicard": "latest",
     "node-schedule": "^2.1.1",
@@ -46,7 +46,6 @@
     "puppeteer": "latest",
     "query-string": "latest",
     "sharp": "latest",
-    "shoukaku": "latest",
-    "undici": "^6.19.8"
+    "shoukaku": "latest"
   }
 }
