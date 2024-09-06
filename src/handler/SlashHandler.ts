@@ -111,15 +111,14 @@ export default class SlashCommandHandler {
 				};
 			}
 			if (result) {
+				let r = result;
 				if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
-					(result as InteractionReplyOptions).ephemeral = true;
+					r = { ...(result as InteractionReplyOptions), ephemeral: true };
 				}
-				if (interaction.replied) {
-					await interaction.followUp(result);
-				} else if (interaction.deferred) {
-					await interaction.editReply(result);
+				if (interaction.replied || interaction.deferred) {
+					await interaction.followUp(r);
 				} else {
-					await interaction.reply(result);
+					await interaction.reply(r);
 				}
 			}
 		});
