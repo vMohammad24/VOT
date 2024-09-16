@@ -11,7 +11,7 @@ import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 export class Argument<T> {
-	constructor(public value: T) {}
+	constructor(public value: T) { }
 }
 
 export class ArgumentMap<T> {

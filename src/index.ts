@@ -5,11 +5,12 @@ import { Client, EmbedBuilder, IntentsBitField, WebhookClient } from 'discord.js
 import Redis from 'ioredis';
 import { Kazagumo, Plugins } from 'kazagumo';
 import Spotify from 'kazagumo-spotify';
-import { scheduleJob, scheduledJobs } from 'node-schedule';
+import { gracefulShutdown, scheduleJob, scheduledJobs } from 'node-schedule';
 import { createPrismaRedisCache } from 'prisma-redis-middleware';
 import { Connectors, type NodeOption } from 'shoukaku';
 import app from './api';
 import CommandHandler from './handler/index';
+import { initEmojis } from './util/emojis';
 import { endGiveaway } from './util/giveaways';
 const isProduction = process.env.NODE_ENV === 'production';
 const nodes: NodeOption[] = [
@@ -99,7 +100,10 @@ client.on('ready', async (c) => {
 		}
 	}
 	commandHandler.logger.info(`Logged in as ${c.user.displayName}`);
+	await initEmojis();
 	axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
+
+
 	axios.interceptors.response.use(
 		function (response) {
 			return response;
@@ -109,7 +113,10 @@ client.on('ready', async (c) => {
 			return Promise.reject(error);
 		},
 	);
+
 	axios.defaults.validateStatus = () => true;
+
+
 	app.listen(process.env.PORT || 8080, () => {
 		commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
@@ -198,8 +205,7 @@ process.on('warning', (warn) => {
 });
 
 client.on('error', (err) => {
-	console.log(err);
-
+	commandHandler.logger.error('Discord Client Error: ', err);
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle('Discord API Error')
@@ -209,6 +215,18 @@ client.on('error', (err) => {
 
 	return errorsWebhook.send({ embeds: [embed] });
 });
+
+process.on('SIGINT', async () => {
+	commandHandler.logger.info('Shutting down prisma.');
+	await prisma.$disconnect();
+	commandHandler.logger.info('Shutting down redis.');
+	await redis.quit();
+	commandHandler.logger.info('Shutting down discord.js.');
+	await client.destroy();
+	commandHandler.logger.info('Shutting down scheduled jobs.');
+	await gracefulShutdown();
+	process.exit(0);
+})
 
 export default commandHandler;
 client.login(process.env.TOKEN);

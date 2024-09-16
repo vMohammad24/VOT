@@ -53,8 +53,8 @@ export async function pausePlayer(userId: string) {
 }
 
 export async function refreshToken(spotify: Spotify) {
-	console.log(`Refreshing token for ${spotify.userId}`);
-	const { prisma } = commandHandler;
+	const { prisma, logger } = commandHandler;
+	logger.info(`Refreshing spotify token for ${spotify.userId}`);
 	const params = new URLSearchParams();
 	params.append('grant_type', 'refresh_token');
 	params.append('refresh_token', spotify.refreshToken!);

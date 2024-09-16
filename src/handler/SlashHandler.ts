@@ -92,7 +92,19 @@ export default class SlashCommandHandler {
 		client.on('interactionCreate', async (interaction) => {
 			if (!interaction.isCommand()) return;
 			const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
-			if (!command) return;
+			if (!command) {
+				const error = await this.handler.prisma.error.create({
+					data: {
+						channelId: interaction.channelId!,
+						guildId: interaction.guildId || null,
+						fullJson: interaction,
+					}
+				})
+				return await interaction.reply({
+					content: `This command does not exist.\nFor further information please report this to the developers.\n-# ${error?.id}`,
+					ephemeral: true,
+				});
+			};
 			let result = {};
 			try {
 				result = await this.handler.executeCommand(command, interaction);

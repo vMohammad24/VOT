@@ -184,7 +184,7 @@ export default {
 	execute: async ({ handler, player, interaction }) => {
 		if (!interaction) return;
 		const filter = interaction.options.getSubcommand();
-		if (!player) return 'No player found';
+		if (!player) return 'Notihg is currently being played';
 		if (!filter) return 'Invalid filter';
 		const args = interaction.options.data;
 		const filterOptions: FilterOptions = player?.filters!;

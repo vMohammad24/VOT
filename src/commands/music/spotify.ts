@@ -16,7 +16,7 @@ export default {
 			};
 		}
 		if (!player) return {
-			content: "No player found",
+			content: "Notihg is currently being played",
 			ephemeral: true,
 		};
 		const trackURI = res.item.external_urls.spotify;

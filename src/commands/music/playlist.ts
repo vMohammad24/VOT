@@ -1,7 +1,7 @@
+import type { Playlist, PrismaClient, Track } from '@prisma/client';
 import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
 import { Kazagumo, KazagumoTrack } from 'kazagumo';
-import type { Playlist, Track, PrismaClient } from '@prisma/client';
+import type ICommand from '../../handler/interfaces/ICommand';
 
 const transferTracksTDB = (tracks: KazagumoTrack[], prisma: PrismaClient): Promise<Track[]> => {
 	return Promise.all(
@@ -88,11 +88,11 @@ export default {
 				let choices =
 					action === 'remove'
 						? tracks.map((track) => {
-								return {
-									name: track.title,
-									value: track.uri,
-								};
-							})
+							return {
+								name: track.title,
+								value: track.uri,
+							};
+						})
 						: [];
 				if (choices.length === 0 || action === 'add') {
 					const kazTracks = (
@@ -226,7 +226,7 @@ export default {
 			case 'play': {
 				if (!player) {
 					return {
-						content: 'No player found',
+						content: 'Notihg is currently being played',
 						ephemeral: true,
 					};
 				}

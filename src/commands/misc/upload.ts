@@ -17,7 +17,6 @@ export default {
 	userTier: UserTier.Beta,
 	execute: async ({ interaction, args }) => {
 		interaction?.deferReply({ ephemeral: true });
-		console.log(args);
 		const file = (args.get('file') as Attachment) || null;
 		if (!file) return { ephemeral: true, content: 'Please provide a file to upload' };
 		const content = (await axios.get(file.url, { responseType: 'arraybuffer' })).data;
