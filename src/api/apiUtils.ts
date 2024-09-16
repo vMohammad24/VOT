@@ -31,7 +31,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 		if (lastUpdate && Date.now() - lastUpdate.getTime() < 60 * 1000) {
 			return { error: 'maybe later' };
 		}
-		console.log('updating guilds for ' + userId);
+		commandHandler.logger.info(`Updating guilds for ${userId}`);
 		const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
 			headers: {
 				Authorization: `Bearer ${discord.token}`,

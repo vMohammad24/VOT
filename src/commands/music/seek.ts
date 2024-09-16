@@ -14,7 +14,7 @@ export default {
 	needsPlayer: true,
 	execute: async ({ args, member, player }) => {
 		if (!player) {
-			return { content: 'No player found', ephemeral: true };
+			return { content: 'Notihg is currently being played', ephemeral: true };
 		}
 		const to = args.get('position');
 		if (!to) {

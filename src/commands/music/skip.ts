@@ -16,7 +16,7 @@ export default {
 	execute: async ({ player, member, args }) => {
 		if (!player)
 			return {
-				content: 'No player found',
+				content: 'Notihg is currently being played',
 				ephemeral: true,
 			};
 		const amount = args.get('amount') || 1;
