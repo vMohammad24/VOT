@@ -1,0 +1,14 @@
+name: Run Update Script on Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-update-script:
+    runs-on: self-hosted
+
+    steps:
+      - name: Run /root/update.sh
+        run: /root/update.sh
