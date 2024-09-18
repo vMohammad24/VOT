@@ -1,10 +1,10 @@
-import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder, Events, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Adds a song to the queue',
 	init: async ({ client, kazagumo }) => {
-		client.on('interactionCreate', async (inter) => {
+		client.on(Events.InteractionCreate, async (inter) => {
 			if (inter.isAutocomplete()) {
 				if (inter.commandName !== 'play') return;
 				const query = inter.options.getString('query');

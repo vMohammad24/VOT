@@ -1,11 +1,12 @@
 import { EmbedBuilder } from '@discordjs/builders';
+import { Events } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 
 export default {
 	name: 'Welcome messages',
 	description: 'Listens for permission changes for the dashboard',
 	execute: ({ client, prisma }) => {
-		client.on('guildMemberAdd', async (user) => {
+		client.on(Events.GuildMemberAdd, async (user) => {
 			const guild = await prisma.guild.findFirst({
 				where: {
 					id: user.guild.id,

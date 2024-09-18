@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder, Events } from "discord.js";
 import { Client } from "genius-lyrics";
 import ICommand from "../../handler/interfaces/ICommand";
 import { pagination } from "../../util/pagination";
@@ -16,7 +16,7 @@ export default {
         autocomplete: true
     }],
     init: async ({ client }) => {
-        client.on('interactionCreate', async (interaction) => {
+        client.on(Events.InteractionCreate, async (interaction) => {
             if (!interaction.isAutocomplete()) return;
             if (interaction.commandName !== 'lyrics') return;
             const query = interaction.options.getFocused();

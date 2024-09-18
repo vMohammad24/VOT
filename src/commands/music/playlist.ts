@@ -1,5 +1,5 @@
 import type { Playlist, PrismaClient, Track } from '@prisma/client';
-import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, Events, GuildMember } from 'discord.js';
 import { Kazagumo, KazagumoTrack } from 'kazagumo';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -48,7 +48,7 @@ export default {
 	description: 'Playlist manager',
 	slashOnly: true,
 	init: async ({ client, prisma, kazagumo }) => {
-		client.on('interactionCreate', async (interaction) => {
+		client.on(Events.InteractionCreate, async (interaction) => {
 			if (!interaction.isAutocomplete()) return;
 			if (interaction.commandName !== 'playlist') return;
 			if (interaction.options.getSubcommand() == 'play') {

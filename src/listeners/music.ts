@@ -1,4 +1,4 @@
-import type { GuildTextBasedChannel } from 'discord.js';
+import { Events, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getRows, sendPanel } from '../util/music';
 
@@ -51,7 +51,7 @@ export default {
 			}
 		});
 
-		client.on('interactionCreate', async (inter) => {
+		client.on(Events.InteractionCreate, async (inter) => {
 			const ids = ['pause', 'resume', 'skip', 'queue', 'stop', 'loop', 'shuffle', 'volume'];
 			if (!inter.isButton()) return;
 			if (!ids.includes(inter.customId)) return;

@@ -4,13 +4,14 @@ import {
 	ButtonBuilder,
 	ButtonStyle,
 	EmbedBuilder,
+	Events,
 	GuildMember,
 	type GuildTextBasedChannel,
 } from 'discord.js';
 import schedule from 'node-schedule';
-import { getFrontEndURL } from './urls';
-import type CommandHandler from '../handler';
 import commandHandler from '..';
+import type CommandHandler from '../handler';
+import { getFrontEndURL } from './urls';
 export async function createGiveaway(
 	handler: CommandHandler,
 	hoster: GuildMember,
@@ -75,7 +76,7 @@ export async function createGiveaway(
 	);
 	editedComp.push(comp as any);
 	await message.edit({ embeds: [embed], components: editedComp });
-	client.on('interactionCreate', async (interaction) => {
+	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
 		if (interaction.customId === 'enter_giveaway') {
 			const member = interaction.member as GuildMember;

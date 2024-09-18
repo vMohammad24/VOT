@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, Events } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 const exchangeRates: {
@@ -53,7 +53,7 @@ export default {
 		},
 	],
 	init: async (handler) => {
-		handler.client.on('interactionCreate', async (interaction) => {
+		handler.client.on(Events.InteractionCreate, async (interaction) => {
 			if (!interaction.isAutocomplete()) return;
 			if (interaction.commandName != 'convert') return;
 			if (exchangeRates.length == 0) await loadExchangeRates();

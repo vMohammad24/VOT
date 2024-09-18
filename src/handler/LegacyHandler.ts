@@ -1,7 +1,7 @@
-import { type Client } from 'discord.js';
-import type ICommand from './interfaces/ICommand';
+import { Events, type Client } from 'discord.js';
 import type { Kazagumo } from 'kazagumo';
 import CommandHandler from '.';
+import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
 export default class LegacyCommandHandler {
@@ -14,7 +14,7 @@ export default class LegacyCommandHandler {
 	}
 
 	public initListener(client: Client, kazagumo: Kazagumo, gPrefix: string) {
-		client.on('messageCreate', async (message) => {
+		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 			let prefix = gPrefix;
 			if (message.guild) {
