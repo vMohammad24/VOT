@@ -8,17 +8,16 @@ on:
 jobs:
   run-update-script:
     runs-on: self-hosted
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-
       - name: Set HOME environment variable
         run: echo "Setting HOME variable"
         env:
           HOME: /root
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Set up Git for further authentication
         run: |
