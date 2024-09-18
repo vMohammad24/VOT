@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-export async function uploadFile(file: any) {
+export async function uploadFile(file: any): Promise<{
+	fileName: string;
+	cdnFileName: string;
+	deletionURL: string;
+	fileURL: string;
+	accessibleURL: string;
+
+}> {
 	const formData = new FormData();
 	formData.set('files', file);
 	const res = await axios.post(`https://nest.rip/api/files/upload`, formData, {
