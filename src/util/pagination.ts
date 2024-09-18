@@ -72,32 +72,27 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                         .setEmoji(arrowRight.id)
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(page === embeds.length - 1)
-
                 )
                 messages.set(page, { embeds: [e], components: [row], files: attachments, content: name || '' });
                 oldPage = page;
             }
             await interaction?.reply(messages.get(0) as InteractionReplyOptions);
-            const sentMessage = await message?.reply(messages.get(0) as MessagePayload);
+            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
             const userId = interaction?.user.id || message?.author.id;
-            client.on('interactionCreate', async (i) => {
-                if (!i.isButton()) return;
-                if (i.customId.startsWith(id)) {
-                    if (i.user.id != userId) {
-                        return i.reply({ content: 'This is not meant for you!', ephemeral: true });
-                    }
-                    const [_, action] = i.customId.split('_');
-                    const page = parseInt(action);
-                    const msg = messages.get(page);
-                    if (!msg) return;
-                    await i.update({});
-                    if (interaction) {
-                        await interaction.editReply(msg as InteractionReplyOptions);
-                    } else {
-                        await sentMessage!.edit(msg as MessagePayload);
-                    }
+            const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId, time: 60000 });
+
+            collector?.on('collect', async (i) => {
+                const [_, action] = i.customId.split('_');
+                const page = parseInt(action);
+                const msg = messages.get(page);
+                if (!msg) return;
+                await i.update({});
+                if (interaction) {
+                    await interaction.editReply(msg as InteractionReplyOptions);
+                } else {
+                    await sentMessage!.edit(msg as MessagePayload);
                 }
-            })
+            });
 
             break;
         }
@@ -126,27 +121,19 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 }
                 messages.set(page, { embeds: [e], components: [row], files: attachments, content: name || '' });
                 oldPage = page;
-            }
-            await interaction?.reply(messages.get(0) as InteractionReplyOptions);
-            const sentMessage = await message?.reply(messages.get(0) as MessagePayload);
+            };
+            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
             const userId = interaction?.user.id || message?.author.id;
-            client.on('interactionCreate', async (i) => {
+            const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isStringSelectMenu() && i.customId == id && i.user.id == userId, time: 60000 });
+
+            collector?.on('collect', async (i) => {
                 if (!i.isStringSelectMenu()) return;
-                if (i.customId == id) {
-                    if (i.user.id != userId) {
-                        return i.reply({ content: 'This is not meant for you!', ephemeral: true });
-                    }
-                    const page = parseInt(i.values[0]);
-                    const msg = messages.get(page);
-                    if (!msg) return;
-                    await i.update({});
-                    if (interaction) {
-                        await interaction.editReply(msg as InteractionReplyOptions);
-                    } else {
-                        await sentMessage!.edit(msg as MessagePayload);
-                    }
-                }
-            })
+                const page = parseInt(i.values[0]);
+                const msg = messages.get(page);
+                if (!msg) return;
+                await i.update({});
+                sentMessage?.edit(msg as MessagePayload);
+            });
             break;
         }
         default: {
