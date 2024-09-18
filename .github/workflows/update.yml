@@ -10,5 +10,16 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Run /root/update.sh
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Set up Git for further authentication
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/<username>/<repo>.git
+
+      - name: Run update script
         run: /root/update.sh
