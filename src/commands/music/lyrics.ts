@@ -23,8 +23,8 @@ export default {
             if (!query) return;
             const songs = await genius.songs.search(query, { sanitizeQuery: false })
             interaction.respond(songs.map(song => ({
-                name: song.title.slice(0, 100),
-                value: song.fullTitle,
+                name: song.title.substring(0, 99),
+                value: song.fullTitle.substring(0, 99),
             })).slice(0, 20))
         })
     },
