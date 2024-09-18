@@ -15,6 +15,11 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
 
+      - name: Set HOME environment variable
+        run: echo "Setting HOME variable"
+        env:
+          HOME: /root
+
       - name: Set up Git for further authentication
         run: |
           git config --global user.email "62218284+vMohammad24@users.noreply.github.com"
