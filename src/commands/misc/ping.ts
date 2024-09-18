@@ -3,7 +3,6 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Pong!',
-	cooldown: 5000,
 	execute: async ({ interaction, message, handler }) => {
 		const apiLatency = handler.client.ws.ping;
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
