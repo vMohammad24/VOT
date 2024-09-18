@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder, Events } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
@@ -15,7 +15,7 @@ export default {
 		},
 	],
 	init: async ({ client }) => {
-		client.on('interactionCreate', async (inter) => {
+		client.on(Events.InteractionCreate, async (inter) => {
 			if (!inter.isAutocomplete()) return;
 			if (inter.commandName !== 'cat') return;
 			const res = await axios.get('https://cataas.com/api/tags', {

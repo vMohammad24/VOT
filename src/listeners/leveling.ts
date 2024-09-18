@@ -1,4 +1,4 @@
-import { EmbedBuilder, Message, type GuildTextBasedChannel } from 'discord.js';
+import { EmbedBuilder, Events, Message, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getUser } from '../util/database';
 
@@ -21,7 +21,7 @@ export default {
 	name: 'Leveling System',
 	description: 'Leveling related events',
 	execute: async ({ prisma, client }) => {
-		client.on('ready', async () => {
+		client.on(Events.ClientReady, async () => {
 			setInterval(
 				async () => {
 					prisma.member.updateMany({
@@ -38,7 +38,7 @@ export default {
 				1000 * 60 * 60 * 24,
 			);
 		});
-		client.on('messageCreate', async (message) => {
+		client.on(Events.MessageCreate, async (message) => {
 			if (!shouldGetExp(message)) return;
 			const user = await getUser(message.author);
 			const member = await prisma.member.upsert({

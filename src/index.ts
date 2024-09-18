@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { inspect } from 'bun';
-import { Client, EmbedBuilder, IntentsBitField, WebhookClient } from 'discord.js';
+import { Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
 import Redis from 'ioredis';
 import { Kazagumo, Plugins } from 'kazagumo';
 import Spotify from 'kazagumo-spotify';
@@ -85,7 +85,7 @@ const commandHandler = new CommandHandler({
 
 commandHandler.logger.info(`Starting in ${isProduction ? 'production' : 'development'} mode`);
 
-client.on('ready', async (c) => {
+client.on(Events.ClientReady, async (c) => {
 	const giveaways = await prisma.giveaway.findMany();
 	for (const giveaway of giveaways) {
 		if (!giveaway.ended) {
@@ -204,7 +204,7 @@ process.on('warning', (warn) => {
 	return errorsWebhook.send({ embeds: [embed] });
 });
 
-client.on('error', (err) => {
+client.on(Events.Error, (err) => {
 	commandHandler.logger.error('Discord Client Error: ', err);
 	const embed = new EmbedBuilder();
 	embed

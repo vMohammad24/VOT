@@ -1,5 +1,6 @@
 import {
 	ActionRowBuilder,
+	Events,
 	GuildMember,
 	ModalBuilder,
 	TextInputBuilder,
@@ -16,7 +17,7 @@ export default {
 	slashOnly: true,
 	perms: ['Administrator'],
 	init: async (handler) => {
-		handler.client.on('interactionCreate', async (interaction) => {
+		handler.client.on(Events.InteractionCreate, async (interaction) => {
 			if (!interaction.isModalSubmit()) return;
 			if (interaction.customId !== 'gcreate') return;
 			const title = interaction.fields.getTextInputValue('gcreate-title');

@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, type Client, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
+import { ApplicationCommandOptionType, type Client, Events, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
@@ -89,7 +89,7 @@ export default class SlashCommandHandler {
 	}
 
 	public initListener(client: Client) {
-		client.on('interactionCreate', async (interaction) => {
+		client.on(Events.InteractionCreate, async (interaction) => {
 			if (!interaction.isCommand()) return;
 			const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
 			if (!command) {

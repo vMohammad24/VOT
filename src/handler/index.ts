@@ -1,14 +1,14 @@
-import type SlashHandler from './interfaces/ISlashHandler';
-import type LegacyHandler from './interfaces/ILegacyHandler';
-import SlashCommandHandler from './SlashHandler';
-import type ICommand from './interfaces/ICommand';
-import type { CommandContext } from './interfaces/ICommand';
-import { GuildMember, type Message, ChatInputCommandInteraction, type Interaction } from 'discord.js';
-import LegacyCommandHandler from './LegacyHandler';
-import ListenerHandler from './ListenerHandler';
 import { Glob } from 'bun';
+import { ChatInputCommandInteraction, Events, GuildMember, type Interaction, type Message } from 'discord.js';
 import path from 'path';
 import PinoLogger from 'pino';
+import type ICommand from './interfaces/ICommand';
+import type { CommandContext } from './interfaces/ICommand';
+import type LegacyHandler from './interfaces/ILegacyHandler';
+import type SlashHandler from './interfaces/ISlashHandler';
+import LegacyCommandHandler from './LegacyHandler';
+import ListenerHandler from './ListenerHandler';
+import SlashCommandHandler from './SlashHandler';
 import { ArgumentMap } from './validations/args';
 interface RequiredShits {
 	commandsDir: string;
@@ -17,7 +17,7 @@ interface RequiredShits {
 
 type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
-interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> {}
+interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
 export default class CommandHandler {
 	public prisma: ICommandHandler['prisma'];
@@ -39,7 +39,7 @@ export default class CommandHandler {
 		this.developers = handler.developers;
 		this.prodMode = handler.prodMode;
 		handler.commands = [];
-		handler.client.on('ready', async () => {
+		handler.client.on(Events.ClientReady, async () => {
 			for await (const file of this.glob.scan({
 				absolute: false,
 				cwd: commandsDir,
