@@ -116,6 +116,7 @@ model Guild {
   name            String
   prefix          String           @default(";")
   icon            String?
+  banner          String?
   playlists       Playlist[]
   admins          User[]
   tickets         Ticket[]
@@ -124,6 +125,8 @@ model Guild {
   TicketSettings  TicketSettings?
   WelcomeSettings WelcomeSettings?
   members         Member[]
+  memberCount     Int              @default(0)
+  onlineCount     Int              @default(0)
 }
 
 model Ticket {
