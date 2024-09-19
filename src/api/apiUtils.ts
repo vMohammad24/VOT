@@ -32,7 +32,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 			return { error: 'maybe later' };
 		}
 		commandHandler.logger.info(`Updating guilds for ${userId}`);
-		const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
+		const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds?with_counts=true', {
 			headers: {
 				Authorization: `Bearer ${discord.token}`,
 				'Accept-Encoding': 'identity',
@@ -50,7 +50,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 		if (why.error_description) {
 			return { error: why.error_description };
 		}
-		const guilds = resGuilds.filter((g) => {
+		const guilds = resGuilds.filter((g: APIGuild) => {
 			const isOwner = g.owner;
 			if (isOwner) return true;
 			if (!g.permissions) return false;
@@ -74,6 +74,9 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 				update: {
 					name: guild.name,
 					icon: guild.icon,
+					memberCount: guild.approximate_member_count,
+					onlineCount: guild.approximate_presence_count,
+					banner: guild.banner,
 					admins: {
 						connect: {
 							id: user.id,
@@ -84,6 +87,9 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 					id: guild.id,
 					name: guild.name,
 					icon: guild.icon,
+					banner: guild.banner,
+					memberCount: guild.approximate_member_count,
+					onlineCount: guild.approximate_presence_count,
 					admins: {
 						connect: {
 							id: user.id,

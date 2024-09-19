@@ -53,7 +53,7 @@ export default {
 				const rating = map.stats?.score?.toString() ?? 'N/A';
 				const coverURL = latestVersion.coverURL ?? '';
 				const downloadURL = latestVersion.downloadURL ?? '';
-				const oneClickURL = `${getFrontEndURL()}/beatsaber/${map.id}`;
+				const oneClickURL = `${getFrontEndURL()}/beatsaber?id=${map.id}`;
 				const previewURL = latestVersion.previewURL ?? '';
 				const avatarURL = map.uploader?.avatar ?? '';
 				const preview = await axios.get(previewURL, { responseType: 'arraybuffer' });
