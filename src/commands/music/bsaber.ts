@@ -24,20 +24,6 @@ export default {
 		try {
 			const res = await searchSaver(songTitle, 'Relevance');
 			if (typeof res === 'string') return { content: res, ephemeral: true };
-
-			res.sort((a, b) => b.stats.score - a.stats.score);
-			// sort by relevance
-			res.sort((a, b) => {
-				const aName = a.name.toLowerCase();
-				const bName = b.name.toLowerCase();
-				const songName = songTitle.toLowerCase();
-				const aIndex = aName.indexOf(songName);
-				const bIndex = bName.indexOf(songName);
-				if (aIndex === -1 && bIndex === -1) return 0;
-				if (aIndex === -1) return 1;
-				if (bIndex === -1) return -1;
-				return aIndex - bIndex;
-			});
 			if (res.length === 0) return { content: 'No maps were found for this song', ephemeral: true };
 			const items = await res.map(async map => {
 				// Log the map object to inspect its structure
@@ -46,10 +32,11 @@ export default {
 
 				// Check for undefined values and provide default values or skip
 				const mapName = map.name ?? 'Unknown';
-				const description = map.description ?? 'No description available.';
+				const description = map.description.substring(0, 200);
 				const uploaderName = map.uploader?.name ?? 'Unknown uploader';
 				const plays = map.stats?.plays?.toString() ?? '0';
-				const downloads = map.stats?.downloads?.toString() ?? '0';
+				const upvotes = map.stats?.upvotes?.toString() ?? '0';
+				const downvotes = map.stats?.downvotes?.toString() ?? '0';
 				const rating = map.stats?.score?.toString() ?? 'N/A';
 				const coverURL = latestVersion.coverURL ?? '';
 				const downloadURL = latestVersion.downloadURL ?? '';
@@ -60,15 +47,15 @@ export default {
 				return {
 					embed: new EmbedBuilder()
 						.setTitle(mapName)
-						.setDescription(description.slice(0, 200) + (description.length > 200 ? '...' : ''))
+						.setDescription(description == '' ? null : description)
 						.setFields([
-							{ name: 'Plays', value: plays, inline: true },
-							{ name: 'Downloads', value: downloads, inline: true },
+							{ name: 'Upvotes', value: upvotes, inline: false },
 							{
 								name: 'One click',
 								value: `[Click here](${oneClickURL})`,
 								inline: true,
 							},
+							{ name: 'Downvotes', value: downvotes, inline: false },
 						])
 						.setThumbnail(coverURL)
 						.setFooter({
@@ -81,16 +68,6 @@ export default {
 					attachments: [new AttachmentBuilder(Buffer.from(preview.data), { name: "preview.mp3" })],
 				}
 			});
-			const mapNames = res.map((map) => map.name);
-			// await new Pagination(message ? message : interaction!, items, {
-			//     type: PaginationType.SelectMenu,
-			//     pageText: mapNames,
-			//     showStartEnd: false,
-			// }).send();
-			// await pagination({
-			// 	author: member.user,
-			// 	embeds: items as any,
-			// });
 			await pagination({
 				interaction: interaction,
 				message: message,

@@ -76,7 +76,6 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 messages.set(page, { embeds: [e], components: [row], files: attachments, content: name || '' });
                 oldPage = page;
             }
-            await interaction?.reply(messages.get(0) as InteractionReplyOptions);
             const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
             const userId = interaction?.user.id || message?.author.id;
             const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId, time: 60000 });
