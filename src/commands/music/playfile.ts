@@ -1,5 +1,4 @@
 import axios from "axios";
-import { inspect } from "bun";
 import { ApplicationCommandOptionType, Attachment } from "discord.js";
 import { KazagumoTrack } from "kazagumo";
 import { parseBuffer } from "music-metadata";
@@ -25,7 +24,6 @@ export default {
             content: 'No file provided',
             ephemeral: true
         };
-        console.log(file.url)
         if (!file.contentType?.startsWith('audio')) return {
             content: 'Invalid file type',
             ephemeral: true
@@ -36,13 +34,11 @@ export default {
             mimeType: file.contentType
         });
         const { common: songInfo } = metadata;
-        console.log(inspect(songInfo.comment))
         let imageUrl = undefined;
         if (songInfo.picture) {
             const image = songInfo.picture![0].data
             const file = new File([image], `${songInfo.title || 'unknown'} -- ${songInfo.copyright}.png`)
             const a = await uploadFile(file)
-            console.log(a)
             if (a.cdnFileName) imageUrl = `https://cdn.nest.rip/uploads/${a.cdnFileName}`
         }
         const tracks = new KazagumoTrack({

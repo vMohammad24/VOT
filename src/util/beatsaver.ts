@@ -77,5 +77,6 @@ export async function searchSaver(query: string, sorting: 'Rating' | 'Latest' | 
 		`https://beatsaver.com/api/search/text/0?sortOrder=${sorting}&q=${encodeURIComponent(query)}`,
 	);
 	if (res.status !== 200) return `Error fetching data from beatsaver: ${res.statusText}`;
-	return res.data.docs as Beatmap[];
+	const data = res.data.docs as Beatmap[];
+	return data;
 }
