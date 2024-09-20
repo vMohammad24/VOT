@@ -10,15 +10,15 @@ export default {
     description: 'Play a file',
     options: [
         {
-            name: 'file',
-            description: 'The file to play',
-            type: ApplicationCommandOptionType.Attachment,
-            required: false
-        },
-        {
             name: 'url',
             description: 'The url of the file to play',
             type: ApplicationCommandOptionType.String,
+            required: false
+        },
+        {
+            name: 'file',
+            description: 'The file to play',
+            type: ApplicationCommandOptionType.Attachment,
             required: false
         }
     ],
@@ -52,8 +52,9 @@ export default {
             const a = await uploadFile(file)
             if (a.cdnFileName) imageUrl = `https://cdn.nest.rip/uploads/${a.cdnFileName}`
         }
+        console.log(songInfo)
         const track = new KazagumoTrack({
-            encoded: encoded.data, pluginInfo: {}, info: {
+            encoded: Buffer.from(encoded.data).toString('base64'), pluginInfo: {}, info: {
                 title: songInfo.title || (file?.name || "Unknown"),
                 author: songInfo.artist || 'Unknown',
                 identifier: songInfo.acoustid_fingerprint || (file?.name || "Unknown"),
@@ -62,7 +63,7 @@ export default {
                 isSeekable: true,
                 isStream: false,
                 position: 0,
-                sourceName: 'attachment',
+                sourceName: 'custom',
                 isrc: songInfo.isrc ? songInfo.isrc[0] : undefined,
                 artworkUrl: imageUrl
             }
