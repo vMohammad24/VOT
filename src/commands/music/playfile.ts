@@ -61,7 +61,7 @@ export default {
             ephemeral: true
         }
         const embed = new EmbedBuilder().setTitle('Added to queue').setColor('Green');
-        embed.setDescription(`Added ${track.title || 'Error getting title'}${track.uri ? `(${track.uri})` : ''} to the queue\n\nGo to <#${member.voice.channelId}> to manage the queue`);
+        embed.setDescription(`Added [${track.title || 'Error getting title'}]${track.uri ? `(${track.uri})` : ''} to the queue\n\nGo to <#${member.voice.channelId}> to manage the queue`);
         player.queue.add(track);
         if (!player.playing) player.play();
         return {

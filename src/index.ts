@@ -253,6 +253,8 @@ client.on(Events.Error, (err) => {
 });
 
 process.on('SIGINT', async () => {
+	commandHandler.logger.info('Shutting down API.');
+	await app.stop();
 	commandHandler.logger.info('Shutting down prisma.');
 	await prisma.$disconnect();
 	commandHandler.logger.info('Shutting down redis.');
@@ -261,6 +263,7 @@ process.on('SIGINT', async () => {
 	await client.destroy();
 	commandHandler.logger.info('Shutting down scheduled jobs.');
 	await gracefulShutdown();
+	commandHandler.logger.info('Shut down.');
 	process.exit(0);
 })
 
