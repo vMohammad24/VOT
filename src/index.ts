@@ -120,6 +120,42 @@ client.on(Events.ClientReady, async (c) => {
 	app.listen(process.env.PORT || 8080, () => {
 		commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
+
+	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
+	if (clwb && ghToken) {
+		const webhook = new WebhookClient({
+			url: clwb
+		});
+		const headers = {
+			Authorization: `Bearer ${ghToken}`,
+			Accept: 'application/vnd.github+json',
+			"X-GitHub-Api-Version": "2022-11-28",
+		};
+		const { data } = await axios.get('https://api.github.com/repos/vMohammad24/VOT/commits', {
+			headers
+		})
+		const latestVOTCommit = data[0].commit;
+		const VOTcommitMessage = latestVOTCommit.message;
+		const VOTcommitAuthor = latestVOTCommit.author.name;
+		const embed = new EmbedBuilder()
+			.setTitle(`Changelog - VOT`)
+			.setDescription(VOTcommitMessage)
+			.setFooter({ text: `Committed by ${VOTcommitAuthor}` })
+			.setTimestamp();
+
+		const { data: data2 } = await axios.get('https://api.github.com/repos/vMohammad24/VOT-Frontend/commits', {
+			headers
+		})
+		const latestVOTFrontendCommit = data2[0].commit;
+		const VOTFrontendcommitMessage = latestVOTFrontendCommit.message;
+		const VOTFrontendcommitAuthor = latestVOTFrontendCommit.author.name;
+		const embed2 = new EmbedBuilder()
+			.setTitle(`Changelog - VOT's frontend`)
+			.setDescription(VOTFrontendcommitMessage)
+			.setFooter({ text: `Committed by ${VOTFrontendcommitAuthor}` })
+			.setTimestamp();
+		await webhook.send({ embeds: [embed, embed2], content: 'New update!' });
+	}
 });
 
 process.on('unhandledRejection', (reason, p) => {
