@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ApplicationCommandOptionType, Attachment } from "discord.js";
+import { ApplicationCommandOptionType, Attachment, EmbedBuilder } from "discord.js";
 import { KazagumoTrack } from "kazagumo";
 import { parseBuffer } from "music-metadata";
 import ICommand from "../../handler/interfaces/ICommand";
@@ -41,7 +41,7 @@ export default {
             const a = await uploadFile(file)
             if (a.cdnFileName) imageUrl = `https://cdn.nest.rip/uploads/${a.cdnFileName}`
         }
-        const tracks = new KazagumoTrack({
+        const track = new KazagumoTrack({
             encoded: encoded.data, pluginInfo: {}, info: {
                 title: songInfo.title || file.name,
                 author: songInfo.artist || 'Unknown',
@@ -60,10 +60,12 @@ export default {
             content: 'No player found',
             ephemeral: true
         }
-        player.queue.add(tracks);
+        const embed = new EmbedBuilder().setTitle('Added to queue').setColor('Green');
+        embed.setDescription(`Added ${track.title || 'Error getting title'}${track.uri ? `(${track.uri})` : ''} to the queue\n\nGo to <#${member.voice.channelId}> to manage the queue`);
+        player.queue.add(track);
         if (!player.playing) player.play();
         return {
-            content: `Added ${tracks.title} to the queue`
+            content: `Added ${track.title} to the queue`
         }
     }
 } as ICommand
