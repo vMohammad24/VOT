@@ -1,6 +1,6 @@
-import { EmbedBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from '@discordjs/builders';
 import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
+import { ApplicationCommandOptionType, AttachmentBuilder, ButtonStyle } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { searchSaver } from '../../util/beatsaver';
@@ -33,13 +33,11 @@ export default {
 				// Check for undefined values and provide default values or skip
 				const mapName = map.name ?? 'Unknown';
 				const description = map.description.substring(0, 200);
-				const uploaderName = map.uploader?.name ?? 'Unknown uploader';
-				const plays = map.stats?.plays?.toString() ?? '0';
+				const uploaderName = map.uploader?.name ?? 'Unknown uploader';;
 				const upvotes = map.stats?.upvotes?.toString() ?? '0';
 				const downvotes = map.stats?.downvotes?.toString() ?? '0';
 				const rating = map.stats?.score?.toString() ?? 'N/A';
 				const coverURL = latestVersion.coverURL ?? '';
-				const downloadURL = latestVersion.downloadURL ?? '';
 				const oneClickURL = `${getFrontEndURL()}/beatsaber?id=${map.id}`;
 				const previewURL = latestVersion.previewURL ?? '';
 				const avatarURL = map.uploader?.avatar ?? '';
@@ -49,13 +47,8 @@ export default {
 						.setTitle(mapName)
 						.setDescription(description == '' ? null : description)
 						.setFields([
-							{ name: 'Upvotes', value: upvotes, inline: false },
-							{
-								name: 'One click',
-								value: `[Click here](${oneClickURL})`,
-								inline: true,
-							},
-							{ name: 'Downvotes', value: downvotes, inline: false },
+							{ name: 'Upvotes', value: upvotes, inline: true },
+							{ name: 'Downvotes', value: downvotes, inline: true },
 						])
 						.setThumbnail(coverURL)
 						.setFooter({
@@ -66,6 +59,7 @@ export default {
 						.setColor([0, 255, 0]),
 					name: mapName,
 					attachments: [new AttachmentBuilder(Buffer.from(preview.data), { name: "preview.mp3" })],
+					rows: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setURL(oneClickURL).setLabel('Download').setStyle(ButtonStyle.Link))]
 				}
 			});
 			await pagination({

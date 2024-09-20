@@ -79,11 +79,17 @@ export default async function (command: ICommand, ctx: CommandContext) {
 				if (interaction) {
 					st = interaction.options.getString(option.name, option.required) || null;
 				} else if (message) {
-					if (!options[i + 1]) {
+					// if it has spaces and " or ' then it will be considered as a single argument
+					if (messageArgs[i].includes('"') || messageArgs[i].includes("'")) {
 						st = messageArgs.slice(i).join(' ') || null;
 					} else {
 						st = messageArgs[i] || null;
 					}
+					// if (!options[i + 1]) {
+					// 	st = messageArgs.slice(i).join(' ') || null;
+					// } else {
+					// 	st = messageArgs[i] || null;
+					// }
 				}
 				argument = new Argument(st);
 				break;
