@@ -8,7 +8,7 @@ export default {
     execute: async ({ handler }) => {
         const { client } = handler;
         const { memoryUsage } = process;
-        const { heapUsed, external } = memoryUsage();
+        const { rss, external } = memoryUsage();
         const { users, guilds, channels, application } = client;
         const { size } = guilds.cache;
         const { size: usersSize } = users.cache;
@@ -18,7 +18,7 @@ export default {
             .setTitle("Bot Stats")
             .addFields({
                 name: "Memory Usage",
-                value: `${((heapUsed) / 1024 / 1024).toFixed(2)} MB`,
+                value: `${((rss) / 1024 / 1024).toFixed(2)} MB`,
             }, {
                 name: "Guilds",
                 value: `${size}`,

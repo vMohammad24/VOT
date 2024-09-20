@@ -30,7 +30,7 @@ lavalink:
       twitch: true
       vimeo: true
       nico: true
-      http: false # Warning: Enabling HTTP without a proxy exposes server IP
+      http: true # Warning: Enabling HTTP without a proxy exposes server IP
       local: true
     filters: # Enabled by default
       volume: true
