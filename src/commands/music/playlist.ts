@@ -248,7 +248,7 @@ export default {
 						ephemeral: true,
 					};
 				}
-				if (playlist.userId && playlist.userId !== interaction.user.id) {
+				if (playlist.userId && !playlist.guildId && playlist.userId !== interaction.user.id) {
 					return {
 						content: "You don't have permission to play this playlist as it is private",
 						ephemeral: true,
