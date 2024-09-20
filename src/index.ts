@@ -53,6 +53,9 @@ const kazagumo = new Kazagumo(
 	},
 	new Connectors.DiscordJS(client),
 	nodes,
+	{
+		resume: true,
+	}
 );
 
 const prisma = new PrismaClient();
@@ -77,7 +80,7 @@ const commandHandler = new CommandHandler({
 	kazagumo,
 	prodMode: isProduction,
 	testServers: ['925779955500060762'],
-	developers: ['921098159348924457', '981269274616295564'],
+	developers: import.meta.env.DEVELOEPRS?.split(',') || ['921098159348924457', '981269274616295564'],
 	commandsDir: `${import.meta.dir}/commands`,
 	globalPrefix: ';',
 	listenersDir: `${import.meta.dir}/listeners`,
