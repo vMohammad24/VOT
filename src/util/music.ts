@@ -10,26 +10,27 @@ import {
 import type { Kazagumo, KazagumoPlayer } from 'kazagumo';
 import { ClassicPro } from 'musicard';
 import commandHandler from '..';
+import { getEmoji } from './emojis';
 
 export function getRows(player: KazagumoPlayer) {
 	const status = player.paused ? 'Resume' : 'Pause';
 	const looping = player.loop != 'none';
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		status === 'Pause'
-			? new ButtonBuilder().setCustomId('pause').setLabel('Pause').setStyle(ButtonStyle.Danger).setEmoji('⏸️')
-			: new ButtonBuilder().setCustomId('resume').setLabel('Resume').setStyle(ButtonStyle.Success).setEmoji('▶️'),
-		new ButtonBuilder().setCustomId('skip').setLabel('Skip').setStyle(ButtonStyle.Primary).setEmoji('⏭️'),
-		new ButtonBuilder().setCustomId('queue').setLabel('Queue').setStyle(ButtonStyle.Success).setEmoji('📜'),
-		new ButtonBuilder().setCustomId('stop').setLabel('Stop').setStyle(ButtonStyle.Secondary).setEmoji('⏹️'),
+			? new ButtonBuilder().setCustomId('pause').setLabel('Pause').setStyle(ButtonStyle.Danger).setEmoji(getEmoji('pause')!.id)
+			: new ButtonBuilder().setCustomId('resume').setLabel('Resume').setStyle(ButtonStyle.Success).setEmoji(getEmoji('play')!.id),
+		new ButtonBuilder().setCustomId('skip').setLabel('Skip').setStyle(ButtonStyle.Primary).setEmoji(getEmoji('skip')!.id),
+		new ButtonBuilder().setCustomId('queue').setLabel('Queue').setStyle(ButtonStyle.Success).setEmoji(getEmoji('queue')!.id),
+		new ButtonBuilder().setCustomId('stop').setLabel('Stop').setStyle(ButtonStyle.Secondary).setEmoji(getEmoji('stop')!.id),
 	);
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
 			.setCustomId('loop')
 			.setLabel(looping ? 'Looping' : 'Loop')
 			.setStyle(ButtonStyle.Primary)
-			.setEmoji('🔁'),
-		new ButtonBuilder().setCustomId('shuffle').setLabel('Shuffle').setStyle(ButtonStyle.Primary).setEmoji('🔀'),
-		new ButtonBuilder().setCustomId('volume').setLabel('Volume').setStyle(ButtonStyle.Primary).setEmoji('🔊'),
+			.setEmoji(getEmoji('loop')!.id),
+		new ButtonBuilder().setCustomId('shuffle').setLabel('Shuffle').setStyle(ButtonStyle.Primary).setEmoji(getEmoji('shuffle')!.id),
+		new ButtonBuilder().setCustomId('volume').setLabel('Volume').setStyle(ButtonStyle.Primary).setEmoji(getEmoji('volume')!.id),
 	);
 	return [row, row2];
 }

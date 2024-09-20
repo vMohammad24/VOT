@@ -16,7 +16,7 @@ import {
     StringSelectMenuBuilder,
 } from "discord.js";
 import commandHandler from "..";
-import { emojis } from "./emojis";
+import { getEmoji } from "./emojis";
 
 interface PaginationOptions {
     embeds: {
@@ -46,8 +46,8 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
     const id = Buffer.from(`${interaction ? interaction.id : message!.id}_${Date.now()}`).toString('base64');
     switch (type) {
         case 'buttons': {
-            const arrowLeft = emojis.get('arrow_left')!;
-            const arrowRight = emojis.get('arrow_right')!;
+            const arrowLeft = getEmoji('arrow_left')!;
+            const arrowRight = getEmoji('arrow_right')!;
             if (!arrowLeft || !arrowRight) throw new Error('Arrow emojis not found');
             const messages = new Map<number, InteractionReplyOptions | MessagePayload>(); // page, message
             let oldPage = 0;
