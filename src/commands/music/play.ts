@@ -52,7 +52,7 @@ export default {
 				case 'TRACK':
 					const track = res.tracks[0];
 					player!.queue.add(track);
-					embed.setDescription(`Added [${track.title || 'Error getting title'}${track.uri ? `(${track.uri})` : ''} to the queue`);
+					embed.setDescription(`Added [${track.title || 'Error getting title'}]${track.uri ? `(${track.uri})` : ''} to the queue`);
 					break;
 				case 'SEARCH':
 					if (res.tracks[0]) {
