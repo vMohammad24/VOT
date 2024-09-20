@@ -93,6 +93,11 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 }
             });
 
+            collector?.on('end', async (_, reason) => {
+                if (reason == 'time')
+                    sentMessage?.edit({ components: [] });
+            })
+
             break;
         }
         case 'select': {
