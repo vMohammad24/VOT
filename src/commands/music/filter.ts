@@ -7,7 +7,7 @@ export default {
 	cooldown: 10000,
 	needsPlayer: true,
 	userTier: UserTier.Premium,
-	disabled: false,
+	disabled: true,
 	options: [
 		{
 			type: ApplicationCommandOptionType.Subcommand,

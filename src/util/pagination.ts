@@ -44,6 +44,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
         throw new Error('Both interaction and message provided for pagination');
     }
     const id = Buffer.from(`${interaction ? interaction.id : message!.id}_${Date.now()}`).toString('base64');
+    if (embeds.length > 25 && type == 'select') type = 'buttons';
     switch (type) {
         case 'buttons': {
             const arrowLeft = getEmoji('arrow_left')!;
