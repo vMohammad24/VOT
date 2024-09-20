@@ -13,26 +13,37 @@ export default {
             name: 'file',
             description: 'The file to play',
             type: ApplicationCommandOptionType.Attachment,
-            required: true
+            required: false
+        },
+        {
+            name: 'url',
+            description: 'The url of the file to play',
+            type: ApplicationCommandOptionType.String,
+            required: false
         }
     ],
+    aliases: ['pfile', 'pf'],
     cooldown: 1000 * 60 * 5,
     needsPlayer: true,
     execute: async ({ args, player, member }) => {
         const file = args.get('file') as Attachment | undefined;
-        if (!file) return {
-            content: 'No file provided',
+        const urlA = args.get('url') as string | undefined;
+        let url = urlA;
+        if (!file && !urlA) return {
+            content: 'No file or url provided',
             ephemeral: true
         };
-        if (!file.contentType?.startsWith('audio')) return {
+        if (file) url = file.url;
+        if (file && file?.contentType?.startsWith('audio')) return {
             content: 'Invalid file type',
             ephemeral: true
         };
-        const url = file.url;
+        if (!url) return {
+            content: 'No file or url provided (2)',
+            ephemeral: true
+        }
         const encoded = await axios.get(url, { responseType: 'arraybuffer' });
-        const metadata = await parseBuffer(encoded.data, {
-            mimeType: file.contentType
-        });
+        const metadata = await parseBuffer(encoded.data);
         const { common: songInfo } = metadata;
         let imageUrl = undefined;
         if (songInfo.picture) {
@@ -43,9 +54,9 @@ export default {
         }
         const track = new KazagumoTrack({
             encoded: encoded.data, pluginInfo: {}, info: {
-                title: songInfo.title || file.name,
+                title: songInfo.title || (file?.name || "Unknown"),
                 author: songInfo.artist || 'Unknown',
-                identifier: songInfo.acoustid_fingerprint || file.name,
+                identifier: songInfo.acoustid_fingerprint || (file?.name || "Unknown"),
                 length: 0,
                 uri: songInfo.comment ? songInfo.comment[0].text : (songInfo.asin || getFrontEndURL() + "/404"),
                 isSeekable: true,
@@ -65,7 +76,7 @@ export default {
         player.queue.add(track);
         if (!player.playing) player.play();
         return {
-            content: `Added ${track.title} to the queue`
+            embeds: [embed]
         }
     }
 } as ICommand

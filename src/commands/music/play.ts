@@ -55,8 +55,12 @@ export default {
 					embed.setDescription(`Added [${track.title || 'Error getting title'}${track.uri ? `(${track.uri})` : ''} to the queue`);
 					break;
 				case 'SEARCH':
-					player!.queue.add(res.tracks[0]);
-					embed.setDescription(`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`);
+					if (res.tracks[0]) {
+						player!.queue.add(res.tracks[0]);
+						embed.setDescription(`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`);
+					} else {
+						embed.setDescription('No results found');
+					}
 					break;
 				case 'PLAYLIST':
 					player!.queue.add(res.tracks);
@@ -73,6 +77,7 @@ export default {
 					);
 					break;
 				default:
+
 					break;
 			}
 		});
