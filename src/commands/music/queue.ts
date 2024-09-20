@@ -19,7 +19,7 @@ export default {
 			};
 		const queueWithCurrent = [queue.current, ...queue];
 		const embeds = queueWithCurrent.map((track, i) => {
-			const requester = track.requester as GuildMember;
+			const requester = track.requester as GuildMember | undefined;
 			return {
 				embed: new EmbedBuilder()
 					.setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
@@ -28,7 +28,7 @@ export default {
 					.setThumbnail(track.thumbnail!)
 					.setFooter({
 						text: `Requested by ${(requester ? requester.displayName : 'Unknown')}`,
-						iconURL: requester.displayAvatarURL(),
+						iconURL: (requester || member).displayAvatarURL(),
 					}),
 				name: track.title,
 			}
