@@ -3,7 +3,7 @@ WORKDIR /home/vot
 
 RUN apt-get update && apt-get install -y \
     curl \
-    libgobject-2.0-0 \
+    libglib2.0-0 \
     libnss3 \
     libx11-xcb1 \
     libxcb-dri3-0 \
