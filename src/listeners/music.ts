@@ -57,7 +57,7 @@ export default {
 			if (!ids.includes(inter.customId)) return;
 			const player = kazagumo.getPlayer(inter.guildId!);
 			if (!player) {
-				inter.reply({ content: 'Notihg is currently being played', ephemeral: true });
+				inter.reply({ content: 'Nothing is currently being played', ephemeral: true });
 				return;
 			}
 			switch (inter.customId) {
