@@ -21,7 +21,7 @@ const transferTracksTDB = (tracks: KazagumoTrack[], prisma: PrismaClient): Promi
 		}),
 	);
 };
-const transferTracksFDB = (tracks: Track[], requester: GuildMember, kazagumo: Kazagumo): Promise<KazagumoTrack[]> => {
+const transferTracksFDB = (tracks: Track[], requester: any, kazagumo: Kazagumo): Promise<KazagumoTrack[]> => {
 	return Promise.all(
 		tracks.map(async (track) => {
 			return (await kazagumo.search(track.uri, { requester })).tracks[0];
@@ -260,7 +260,7 @@ export default {
 						ephemeral: true,
 					};
 				}
-				const tracks = await transferTracksFDB(playlist.tracks, interaction.member as GuildMember, handler.kazagumo);
+				const tracks = await transferTracksFDB(playlist.tracks, interaction.member, handler.kazagumo);
 				player.queue.add(tracks);
 				if (!player.playing) {
 					player.play();

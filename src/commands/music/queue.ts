@@ -27,7 +27,7 @@ export default {
 					.setColor('Green')
 					.setThumbnail(track.thumbnail!)
 					.setFooter({
-						text: `Requested by ${requester.displayName}`,
+						text: `Requested by ${(requester ? requester.displayName : 'Unknown')}`,
 						iconURL: requester.displayAvatarURL(),
 					}),
 				name: track.title,
