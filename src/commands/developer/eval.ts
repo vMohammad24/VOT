@@ -18,11 +18,11 @@ export default {
 	execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
 		let code = args.get('code');
 		const embed = new EmbedBuilder().setTitle('Eval').setColor(Colors.NotQuiteBlack);
-		// const excludeCodeWith = /token|secret|password|pass|client\.token|client\.secret|client\.password|client\.pass/gi;
-		// if (excludeCodeWith.test(code)) {
-		// 	embed.setDescription('``nuh uh``');
-		// 	return { embeds: [embed] };
-		// }
+		const excludeCodeWith = /token|process|env|meta|secret|password|pass|client\.token|client\.secret|client\.password|client\.pass/gi;
+		if (excludeCodeWith.test(code)) {
+			embed.setDescription('``nuh uh``');
+			return { embeds: [embed] };
+		}
 		const startTime = new Date();
 		try {
 			if (code.startsWith('```')) {
