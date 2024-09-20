@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { APIApplication, EmbedBuilder } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 
 export default {
@@ -8,41 +8,43 @@ export default {
     execute: async ({ handler }) => {
         const { client } = handler;
         const { memoryUsage } = process;
-        const { rss, external } = memoryUsage();
-        const { users, guilds, channels, application } = client;
+        const { heapUsed, external } = memoryUsage();
+        const { users, guilds, channels } = client;
         const { size } = guilds.cache;
         const { size: usersSize } = users.cache;
         const { size: channelsSize } = channels.cache;
-        const { approximateGuildCount: guildCount, approximateUserInstallCount: userCount } = application!;
+        const res = await client.rest.get('/applications/@me') as APIApplication;
+        const { approximate_guild_count, approximate_user_install_count } = res;
         const embed = new EmbedBuilder()
             .setTitle("Bot Stats")
             .addFields({
                 name: "Memory Usage",
-                value: `${((rss) / 1024 / 1024).toFixed(2)} MB`,
+                value: `${((heapUsed) / 1024 / 1024).toFixed(2)} MB`,
+                inline: true
             }, {
                 name: "Guilds",
                 value: `${size}`,
+                inline: true
             }, {
                 name: "Users",
                 value: `${usersSize}`,
+                inline: true
             }, {
                 name: "Channels",
                 value: `${channelsSize}`,
-            })
-            .setTimestamp();
-
-        if (userCount) {
-            embed.addFields({
-                name: "Installed by",
-                value: `${userCount} users`,
-            })
-        }
-        if (guildCount) {
-            embed.addFields({
+                inline: true
+            },
+                {
+                    name: "Installed by",
+                    value: `${approximate_user_install_count} users`,
+                    inline: true
+                }, {
                 name: "Installed in",
-                value: `${guildCount} servers`,
-            })
-        }
+                value: `${approximate_guild_count} servers`,
+                inline: true
+            }
+            )
+            .setTimestamp();
         return { embeds: [embed] };
     }
 } as ICommand;

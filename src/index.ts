@@ -244,7 +244,7 @@ process.on('warning', (warn) => {
 });
 
 client.on(Events.Error, (err) => {
-	commandHandler.logger.error('Discord Client Error: ', err);
+	commandHandler.logger.error('Discord Client Error: ' + inspect(err));
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle('Discord API Error')
@@ -256,16 +256,11 @@ client.on(Events.Error, (err) => {
 });
 
 process.on('SIGINT', async () => {
-	commandHandler.logger.info('Shutting down API.');
-	await app.stop();
-	commandHandler.logger.info('Shutting down prisma.');
-	await prisma.$disconnect();
-	commandHandler.logger.info('Shutting down redis.');
-	await redis.quit();
-	commandHandler.logger.info('Shutting down discord.js.');
 	await client.destroy();
-	commandHandler.logger.info('Shutting down scheduled jobs.');
+	await prisma.$disconnect();
+	await redis.quit();
 	await gracefulShutdown();
+	await app.stop(true);
 	commandHandler.logger.info('Shut down.');
 	process.exit(0);
 })
