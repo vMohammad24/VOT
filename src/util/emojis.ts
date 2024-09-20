@@ -25,12 +25,15 @@ export async function initEmojis() {
             logger.info(`Emoji ${emojiName} already exists with id ${existingEmoji.id}`);
             emojis.set(emojiName, existingEmoji);
         } else {
-            const f = await file(emojiPath);;
+            const f = await file(emojiPath);
+            const dims = 128;
             let emojiData = Buffer.from(await f.arrayBuffer());
             logger.info(`Creating emoji ${emojiName}`);
             if (f.type == 'image/svg+xml') {
                 logger.info(`Converting SVG to PNG`);
-                emojiData = await sharp(emojiData).png().resize(512, 512).toBuffer();
+                // change the color of the svg to white
+                const svg = (await f.text()).replace('width="16" height="16" fill="currentColor"', `width="${dims}" height="${dims}" fill="white"`);
+                emojiData = await sharp(Buffer.from(svg)).png().resize(dims, dims).toBuffer();
             }
             const emoji = await client.application?.emojis.create({
                 attachment: emojiData,
