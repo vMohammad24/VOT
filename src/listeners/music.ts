@@ -123,6 +123,12 @@ export default {
 							content: `Volume set to ${newVolume} by ${inter.user}`,
 						});
 					});
+					collector.on('end', (_, reason) => {
+						if (reason == 'time')
+							inter.editReply({
+								content: '',
+							});
+					})
 					break;
 				default:
 					inter.reply({ content: 'Invalid command', ephemeral: true });
