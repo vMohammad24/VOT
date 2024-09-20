@@ -181,8 +181,9 @@ export default {
 			],
 		},
 	],
-	execute: async ({ interaction, player, handler }) => {
-		if (!interaction) return;
+	needsPlayer: true,
+	execute: async ({ interaction, player, handler, }) => {
+		if (!interaction || !player) return;
 		const subCommand = interaction.options.getSubcommand();
 		const name = interaction.options.getString('name', true);
 		switch (subCommand) {
@@ -224,12 +225,6 @@ export default {
 				};
 			}
 			case 'play': {
-				if (!player) {
-					return {
-						content: 'Notihg is currently being played',
-						ephemeral: true,
-					};
-				}
 				const playlist = await handler.prisma.playlist.findFirst({
 					where: {
 						OR: [

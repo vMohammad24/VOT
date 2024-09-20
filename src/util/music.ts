@@ -93,8 +93,10 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
 		return msg;
 	}
 }
+const map = new Map<string, Date>(); // guildId, lastUpdated
 
 export async function getPanel(kazagumo: Kazagumo, guild: Guild) {
+	if (map.has(guild.id) && map.get(guild.id)! > new Date(Date.now() - 5000)) return;
 	const player = kazagumo.getPlayer(guild.id);
 	if (!player) return;
 	const messageId = player?.data.get('messageId');
@@ -106,6 +108,7 @@ export async function getPanel(kazagumo: Kazagumo, guild: Guild) {
 	} else {
 		msg = ((await guild.channels.cache.get(player!.voiceId!)) as GuildTextBasedChannel).messages.cache.get(messageId);
 	}
+	const lastUpdated = map.get(guild.id);
 	if (!msg) return;
 	return msg;
 }
