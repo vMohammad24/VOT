@@ -59,7 +59,7 @@ export default {
 						player!.queue.add(res.tracks[0]);
 						embed.setDescription(`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`);
 					} else {
-						embed.setDescription('No results found');
+						embed.setDescription('No tracks found');
 					}
 					break;
 				case 'PLAYLIST':
