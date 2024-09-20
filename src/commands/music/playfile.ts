@@ -42,8 +42,8 @@ export default {
             content: 'No file or url provided (2)',
             ephemeral: true
         }
-        const encoded = await axios.get(url, { responseType: 'arraybuffer' });
-        const metadata = await parseBuffer(encoded.data);
+        const res = await axios.get(url, { responseType: 'arraybuffer' });
+        const metadata = await parseBuffer(res.data);
         const { common: songInfo } = metadata;
         let imageUrl = undefined;
         if (songInfo.picture) {
@@ -52,12 +52,12 @@ export default {
             const a = await uploadFile(file)
             if (a.cdnFileName) imageUrl = `https://cdn.nest.rip/uploads/${a.cdnFileName}`
         }
-        console.log(songInfo)
+        const encoded = Buffer.from(res.data).toString('base64');
         const track = new KazagumoTrack({
-            encoded: Buffer.from(encoded.data).toString('base64'), pluginInfo: {}, info: {
+            encoded, pluginInfo: {}, info: {
                 title: songInfo.title || (file?.name || "Unknown"),
                 author: songInfo.artist || 'Unknown',
-                identifier: songInfo.acoustid_fingerprint || (file?.name || "Unknown"),
+                identifier: encoded || (file?.name || "Unknown"),
                 length: 0,
                 uri: songInfo.comment ? songInfo.comment[0].text : (songInfo.asin || getFrontEndURL() + "/404"),
                 isSeekable: true,
