@@ -73,7 +73,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(page === embeds.length - 1)
                 )
-                messages.set(page, { embeds: [e], components: [row, ...(rows as any)], files: attachments, content: name || '' });
+                messages.set(page, { embeds: [e], components: rows ? [row, ...(rows as any)] : [row], files: attachments, content: name || '' });
                 oldPage = page;
             }
             const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
@@ -115,6 +115,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
             )
             for (const embed of embeds) {
                 const { embed: e, name, attachments, rows } = embed;
+
                 let { page } = embed;
                 if (!page) {
                     if (messages.has(0)) {
@@ -123,7 +124,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                         page = 0;
                     }
                 }
-                messages.set(page, { embeds: [e], components: [row, ...(rows as any)], files: attachments, content: name || '' });
+                messages.set(page, { embeds: [e], components: rows ? [row, ...(rows as any)] : [row], files: attachments, content: name || '' });
                 oldPage = page;
             };
             const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
