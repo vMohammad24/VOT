@@ -12,8 +12,8 @@ plugins:
     allowDirectPlaylistIds: true # Allow direct playlist IDs; if false, only full URLs are accepted
     clients: # List of clients to query for track loading, in order of preference
       - MUSIC
-      - ANDROID_TESTSUITE
       - WEB
+      - ANDROID_TESTSUITE
       - TVHTML5EMBEDDED
 
 lavalink:

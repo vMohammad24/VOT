@@ -1,16 +1,16 @@
 import {
+	ActionRowBuilder,
+	EmbedBuilder,
 	Events,
 	GuildMember,
-	EmbedBuilder,
 	type GuildTextBasedChannel,
-	ModalBuilder,
-	ActionRowBuilder,
 	type ModalActionRowComponentBuilder,
+	ModalBuilder,
 	TextInputBuilder,
 	TextInputStyle,
 } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
-import { createTicket, closeTicket } from '../util/tickets';
+import { closeTicket, createTicket } from '../util/tickets';
 
 export default {
 	name: 'Tickets Handler',
@@ -53,14 +53,14 @@ export default {
 					if (!ticket) return;
 					if (ticket.error) {
 						const embed = new EmbedBuilder().setTitle('Error').setDescription(ticket.error).setColor('Red');
-						interaction.reply({ embeds: [embed], ephemeral: true });
+						await interaction.reply({ embeds: [embed], ephemeral: true });
 						return;
 					}
 					if (ticket.embeds) {
-						interaction.reply({ embeds: ticket.embeds, ephemeral: true });
+						await interaction.reply({ embeds: ticket.embeds, ephemeral: true });
 						return;
 					}
-					interaction.reply({ content: `Ticket closed`, ephemeral: true });
+					await interaction.reply({ content: `Ticket closed`, ephemeral: true });
 					break;
 			}
 		});

@@ -7,7 +7,7 @@ export default {
 	needsPlayer: true,
 	aliases: ['sp'],
 	execute: async ({ member, handler, player, interaction, guild }) => {
-		interaction?.deferReply({ ephemeral: true });
+		await interaction?.deferReply({ ephemeral: true });
 		const res = await getCurrentlyPlaying(member.id);
 		if (res.error) {
 			return {

@@ -86,21 +86,21 @@ export async function createGiveaway(
 				include: { entrants: true },
 			});
 			if (!giveaway) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'ok now something probably went wrong when the hoster craeted the giveaway',
 					ephemeral: true,
 				});
 				return;
 			}
 			if (giveaway.end < new Date()) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'This giveaway has ended',
 					ephemeral: true,
 				});
 				return;
 			}
 			if (giveaway.entrants.find((e) => e.id === member.id)) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'You have already entered this giveaway',
 					ephemeral: true,
 				});

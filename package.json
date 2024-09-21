@@ -33,6 +33,7 @@
     "genius-lyrics": "latest",
     "ioredis": "^5.4.1",
     "kazagumo": "latest",
+    "kazagumo-apple": "^2.0.2",
     "kazagumo-spotify": "latest",
     "musicard": "latest",
     "node-schedule": "latest",

@@ -3,10 +3,9 @@ import type ICommand from '../../handler/interfaces/ICommand';
 export default {
 	description: 'test command for devs',
 	perms: 'dev',
-	disabled: true,
-	execute: async ({ member, interaction, handler, args, message }) => {
-		const urlS = message?.attachments.first()?.url!;
-		const Rurl = new URL(urlS);
-		const url = urlS.replace(Rurl.search, '');
+	type: 'dmOnly',
+	// disabled: true,
+	execute: async ({ user, interaction, handler, args, message }) => {
+		return await handler.prisma.discord.delete({ where: { userId: user.id } })
 	},
 } as ICommand;
