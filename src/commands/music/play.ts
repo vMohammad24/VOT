@@ -11,7 +11,7 @@ export default {
 				if (!query) return inter.respond([{ name: 'Provide a query to continue', value: '' }]);
 				const results = await kazagumo.search(query, {
 					requester: inter.member as GuildMember,
-					engine: 'apple'
+					engine: 'spotify'
 				});
 				const options = results.tracks.map((track, index) => ({
 					name: track.title,
@@ -49,7 +49,7 @@ export default {
 			};
 		}
 		const embed = new EmbedBuilder().setTitle('Added to queue').setColor('Green');
-		await kazagumo.search(query, { requester: member as GuildMember, engine: 'apple' }).then(async (res) => {
+		await kazagumo.search(query, { requester: member as GuildMember, engine: 'spotify' }).then(async (res) => {
 			switch (res.type) {
 				case 'TRACK':
 					const track = res.tracks[0];
