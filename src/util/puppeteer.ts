@@ -11,6 +11,6 @@ export async function launchPuppeteer() {
                 deviceScaleFactor: 1,
                 isLandscape: true,
             },
-            args: ['--no-sandbox']
+            args: ['--no-sandbox', '--enable-features=WebContentsForceDark']
         })
 }

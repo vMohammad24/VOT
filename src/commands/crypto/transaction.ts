@@ -1,6 +1,8 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-import puppeteer from 'puppeteer';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { launchPuppeteer } from '../../util/puppeteer';
+
+const browser = await launchPuppeteer();
 export default {
 	description: 'Dispalys information about a specefic crypto transaction',
 	aliases: ['txid'],
@@ -14,7 +16,7 @@ export default {
 	],
 	type: 'all',
 	cooldown: 60 * 1000,
-	disabled: true,
+	disabled: false,
 	execute: async ({ args, interaction }) => {
 		const txid = args.get('txid') as string;
 		if (!txid)
@@ -22,22 +24,19 @@ export default {
 				content: 'Invalid txid',
 				ephemeral: true,
 			};
-		interaction?.deferReply();
+		await interaction?.deferReply();
 		const url = `https://blockchair.com/litecoin/transaction/${txid}`;
-		const browser = await puppeteer.launch({ headless: true });
-		// Create a new page
 		const page = await browser.newPage();
-		// Navigate to the URL
 		await page.goto(url);
 		await page.setViewport({ width: 2560, height: 1440 });
 		await page.locator('span').scroll();
-		// Capture a screenshot
 		const screenshot = await page.screenshot({ optimizeForSpeed: true });
 		await page.close();
-		// if (interaction) interaction?.editReply({ files: [screenshot] });
-		// else
 		return {
-			files: [screenshot],
+			files: [{
+				attachment: Buffer.from(screenshot),
+				name: 'screenshot.png',
+			}],
 		};
 	},
 } as ICommand;

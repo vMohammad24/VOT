@@ -26,14 +26,15 @@ export default {
 				content: 'Invalid volume',
 				ephemeral: true,
 			};
-		interaction?.deferReply();
-		await player.setVolume(volume);
-		try {
+		if (volume < 0 || volume > 100) {
 			return {
-				content: `Volume set to ${volume}`,
+				content: 'Volume must be between 0 and 100',
+				ephemeral: true,
 			};
-		} catch {
-			interaction?.editReply('Volume set to ' + volume);
 		}
+		await player.setVolume(volume);
+		return {
+			content: `Volume set to ${volume}`,
+		};
 	},
 } as ICommand;

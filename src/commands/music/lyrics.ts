@@ -19,10 +19,10 @@ export default {
         client.on(Events.InteractionCreate, async (interaction) => {
             if (!interaction.isAutocomplete()) return;
             if (interaction.commandName !== 'lyrics') return;
-            const query = interaction.options.getFocused();
-            if (!query) return;
+            const query = await interaction.options.getFocused();
+            if (!query) return await interaction.respond([{ name: 'Provide a query to continue', value: '' }]);
             const songs = await genius.songs.search(query, { sanitizeQuery: false })
-            interaction.respond(songs.map(song => ({
+            await interaction.respond(songs.map(song => ({
                 name: song.title.substring(0, 99),
                 value: song.fullTitle.substring(0, 99),
             })).slice(0, 20))

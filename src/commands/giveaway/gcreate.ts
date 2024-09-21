@@ -27,7 +27,7 @@ export default {
 			const channel = interaction.channel;
 			if (!channel) return;
 			if (!title || !description || !duration || !winners) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'Please fill out all the fields',
 					ephemeral: true,
 				});
@@ -35,7 +35,7 @@ export default {
 			}
 			const durationValue = parseTime(duration);
 			if (durationValue > 262_980_1) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'Duration must be at most a month',
 					ephemeral: true,
 				});
@@ -43,11 +43,11 @@ export default {
 			}
 			const winnersValue = parseInt(winners);
 			if (isNaN(winnersValue)) {
-				interaction.reply({ content: 'Invalid winners', ephemeral: true });
+				await interaction.reply({ content: 'Invalid winners', ephemeral: true });
 				return;
 			}
 			if (winnersValue < 1) {
-				interaction.reply({
+				await interaction.reply({
 					content: 'There must be at least 1 winner',
 					ephemeral: true,
 				});
@@ -62,7 +62,7 @@ export default {
 				winnersValue,
 				channel as GuildTextBasedChannel,
 			);
-			interaction.reply({
+			await interaction.reply({
 				content: `Created giveaway in <#${ga.channelId}>`,
 				ephemeral: true,
 			});

@@ -4,6 +4,7 @@ import { inspect } from 'bun';
 import { Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
 import Redis from 'ioredis';
 import { Kazagumo, Plugins } from 'kazagumo';
+import Apple from 'kazagumo-apple';
 import Spotify from 'kazagumo-spotify';
 import { gracefulShutdown, scheduleJob, scheduledJobs } from 'node-schedule';
 import { createPrismaRedisCache } from 'prisma-redis-middleware';
@@ -44,6 +45,11 @@ const kazagumo = new Kazagumo(
 			if (guild) guild.shard.send(payload);
 		},
 		plugins: [
+			new Apple({
+				countryCode: "us",
+				imageWidth: 640,
+				imageHeight: 640,
+			}),
 			new Plugins.PlayerMoved(client),
 			new Spotify({
 				clientId: process.env.SPOTIFY_CLIENT_ID!,
@@ -52,14 +58,11 @@ const kazagumo = new Kazagumo(
 		],
 	},
 	new Connectors.DiscordJS(client),
-	nodes,
-	{
-		resume: true,
-	}
+	nodes
 );
 
 const prisma = new PrismaClient();
-const redis = new Redis({
+export const redis = new Redis({
 	host: process.env.NODE_ENV === 'production' ? 'redis' : 'localhost',
 });
 const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
@@ -162,11 +165,10 @@ client.on(Events.ClientReady, async (c) => {
 });
 
 process.on('unhandledRejection', (reason, p) => {
-	commandHandler.logger.error('Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+	commandHandler.logger.error(`Unhandled Rejection at: Promise ${inspect(p)} reason: ${inspect(reason)}`);
 	const embed = new EmbedBuilder();
 	embed
-		.setTitle('Unhandled Rejection/Catch')
-		.setURL('https://nodejs.org/api/process.html#event-unhandledrejection')
+		.setTitle('Rejection Promise')
 		.addFields(
 			{
 				name: 'Reason',
@@ -260,7 +262,6 @@ process.on('SIGINT', async () => {
 	await prisma.$disconnect();
 	await redis.quit();
 	await gracefulShutdown();
-	await app.stop(true);
 	commandHandler.logger.info('Shut down.');
 	process.exit(0);
 })
