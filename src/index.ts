@@ -251,7 +251,7 @@ client.on(Events.Error, (err) => {
 	embed
 		.setTitle('Discord API Error')
 		.setURL('https://discordjs.guide/popular-topics/errors.html#api-errors')
-		.setDescription(`\`\`\`${inspect(err, { depth: 0 }).slice(0, 1000)}\`\`\``)
+		.setDescription(`\`\`\`${inspect(err).split("\n").filter(c => !c.includes("node_modules")).join().slice(0, 1000)}\`\`\``)
 		.setTimestamp();
 
 	return errorsWebhook.send({ embeds: [embed] });

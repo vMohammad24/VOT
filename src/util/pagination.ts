@@ -34,7 +34,7 @@ interface PaginationOptions {
     id?: string,
 }
 
-export async function pagination({ interaction, embeds, type, message }: PaginationOptions): Promise<void> {
+export async function pagination({ interaction, embeds, type, message }: PaginationOptions): Promise<Message> {
     const { client } = commandHandler;
     if (!interaction && !message) {
         throw new Error('No interaction or message provided for pagination');
@@ -77,7 +77,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 messages.set(page, { embeds: [e], components: rows ? [row, ...(rows as any)] : [row], files: attachments, content: name || '' });
                 oldPage = page;
             }
-            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
+            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : (interaction?.deferred ? await interaction?.editReply(messages.get(0) as InteractionReplyOptions) : await interaction?.reply(messages.get(0) as InteractionReplyOptions));
             const userId = interaction?.user.id || message?.author.id;
             const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId, time: 60000 });
 
@@ -87,11 +87,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 const msg = messages.get(page);
                 if (!msg) return;
                 await i.update({});
-                if (interaction) {
-                    await interaction.editReply(msg as InteractionReplyOptions);
-                } else {
-                    await sentMessage!.edit(msg as MessagePayload);
-                }
+                await sentMessage!.edit(msg as MessagePayload);
             });
 
             collector?.on('end', async (_, reason) => {
@@ -99,6 +95,10 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                     sentMessage?.edit({ components: [] });
             })
 
+            if (!sentMessage) {
+                throw new Error('Failed to send the message');
+            }
+            return sentMessage as Message;
             break;
         }
         case 'select': {
@@ -129,7 +129,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 oldPage = page;
             };
             const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
-            const userId = interaction?.user.id || message?.author.id;
+            const userId = message ? message.author.id : interaction?.user.id;
             const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isStringSelectMenu() && i.customId == id && i.user.id == userId, time: 60000 });
 
             collector?.on('collect', async (i) => {
@@ -145,6 +145,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 if (reason == 'time')
                     sentMessage?.edit({ components: [] });
             })
+            return sentMessage as Message;
             break;
         }
         default: {
