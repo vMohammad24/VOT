@@ -33,7 +33,7 @@
     "genius-lyrics": "latest",
     "ioredis": "^5.4.1",
     "kazagumo": "latest",
-    "kazagumo-apple": "^2.0.2",
+    "kazagumo-apple": "latest",
     "kazagumo-spotify": "latest",
     "musicard": "latest",
     "node-schedule": "latest",
@@ -41,11 +41,11 @@
     "prisma": "latest",
     "prisma-redis-middleware": "latest",
     "puppeteer": "latest",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "puppeteer-extra": "latest",
+    "puppeteer-extra-plugin-stealth": "latest",
     "query-string": "latest",
     "sharp": "latest",
     "shoukaku": "latest",
-    "turndown": "^7.2.0"
+    "turndown": "latest"
   }
 }

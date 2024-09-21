@@ -31,6 +31,7 @@ export default {
     execute: async ({ player, args, interaction, message }) => {
         const query = args.get('song') || (player ? player.queue.current?.title : null);
         if (!query) return { content: "Couldn't retrive song", ephemeral: true };
+        interaction?.deferReply();
         const songs = await genius.songs.search(query, { sanitizeQuery: true })
         const song = songs[0];
         const lyrics = await song.lyrics();
