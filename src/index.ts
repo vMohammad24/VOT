@@ -168,7 +168,7 @@ client.on(Events.ClientReady, async (c) => {
 			embeds.pop();
 		}
 		if (embeds.length === 0) return;
-		await webhook.send({ embeds: [embed, embed2], username: 'VOT Changelog', content: 'New Update!' });
+		await webhook.send({ embeds, username: 'VOT Changelog', content: 'New Update!' });
 	}
 });
 
