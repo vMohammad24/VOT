@@ -1,3 +1,4 @@
+import { inspect } from 'bun';
 import { ApplicationCommandOptionType, type Client, Events, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
 import CommandHandler from '.';
 import commandHandler from '..';
@@ -114,7 +115,7 @@ export default class SlashCommandHandler {
 					data: {
 						channelId: interaction.channelId!,
 						guildId: interaction.guildId || null,
-						fullJson: error as undefined,
+						fullJson: inspect(error) as any,
 					},
 				});
 				result = {

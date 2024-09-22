@@ -17,22 +17,29 @@ export default class LegacyCommandHandler {
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 			let prefix = gPrefix;
-			if (message.guild) {
-				const guild = await this.handler.prisma.guild.findFirst({
-					where: { id: message.guild.id },
-				});
-				if (guild) {
-					prefix = guild.prefix;
-				} else {
-					await this.handler.prisma.guild.create({
-						data: {
-							id: message.guild.id,
-							prefix: gPrefix,
-							name: message.guild.name,
-						},
+			const pUser = await this.handler.prisma.user.findUnique({ where: { id: message.author.id } });
+			if (pUser && pUser.prefix) {
+				prefix = pUser.prefix;
+			} else {
+				if (message.guild) {
+					const guild = await this.handler.prisma.guild.findFirst({
+						where: { id: message.guild.id },
 					});
+					if (guild) {
+						prefix = guild.prefix;
+					} else {
+						await this.handler.prisma.guild.create({
+							data: {
+								id: message.guild.id,
+								prefix: gPrefix,
+								name: message.guild.name,
+							},
+						});
+					}
 				}
 			}
+
+
 			if (!message.content.startsWith(prefix)) return;
 			const commandName = message.content.slice(prefix.length).split(' ')[0];
 			if (!commandName) return;

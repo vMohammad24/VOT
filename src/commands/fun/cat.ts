@@ -38,7 +38,7 @@ export default {
 	type: 'all',
 	execute: async ({ args, interaction }) => {
 		const tag = (args.get('tag') as string) || undefined;
-		const reqUrl = `https://cataas.com/cat${tag ? '/' + tag : ''}?html=true`;
+		const reqUrl = `https://cataas.com/cat${tag ? '/' + encodeURI(tag.split(' ')[0]) : ''}?html=true`;
 		const res = await axios.get(reqUrl, {
 			responseType: 'json',
 		});
@@ -57,13 +57,18 @@ export default {
 			};
 		}
 		const yes = data.mimetype.split('/')[1];
+		const embed =
+			new EmbedBuilder()
+				.setTitle('Cat')
+				.setImage(url + `.${yes}`)
+				.setColor('Random')
+				.setFooter({ text: `Powered by cataas.com` });
+		if (tag && tag.split(' ').length > 1) {
+			embed.setDescription(`Showing cats a with tag of "${tag.split(' ')[0]}"`);
+		}
 		return {
 			embeds: [
-				new EmbedBuilder()
-					.setTitle('Cat')
-					.setImage(url + `.${yes}`)
-					.setColor('Random')
-					.setFooter({ text: `Powered by cataas.com` }),
+				embed,
 			],
 		};
 	},
