@@ -27,6 +27,8 @@ services:
       - vot
     expose:
       - 3000
+    depends_on:
+      - vot
   postgres:
     image: postgres
     container_name: postgres
