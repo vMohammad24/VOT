@@ -160,7 +160,15 @@ client.on(Events.ClientReady, async (c) => {
 			.setDescription(VOTFrontendcommitMessage)
 			.setFooter({ text: `Committed by ${VOTFrontendcommitAuthor}` })
 			.setTimestamp();
-		await webhook.send({ embeds: [embed, embed2], content: 'New update!' });
+		const embeds = [embed, embed2];
+		if (VOTcommitMessage.startsWith('[silent]')) {
+			embeds.shift();
+		}
+		if (VOTFrontendcommitMessage.startsWith('[silent]')) {
+			embeds.pop();
+		}
+		if (embeds.length === 0) return;
+		await webhook.send({ embeds: [embed, embed2], username: 'VOT Changelog', content: 'New Update!' });
 	}
 });
 
