@@ -7,6 +7,7 @@ import {
     ButtonStyle,
     ChatInputCommandInteraction,
     EmbedBuilder,
+    InteractionEditReplyOptions,
     InteractionReplyOptions,
     JSONEncodable,
     Message,
@@ -87,7 +88,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 const msg = messages.get(page);
                 if (!msg) return;
                 await i.update({});
-                await sentMessage!.edit(msg as MessagePayload);
+                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as MessagePayload);
             });
 
             collector?.on('end', async (_, reason) => {
@@ -138,7 +139,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 const msg = messages.get(page);
                 if (!msg) return;
                 await i.update({});
-                sentMessage?.edit(msg as MessagePayload);
+                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as MessagePayload);
             });
 
             collector?.on('end', async (_, reason) => {
