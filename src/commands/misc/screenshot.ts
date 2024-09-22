@@ -29,6 +29,7 @@ export default {
             content: 'Please provide a valid URL',
             ephemeral: true
         }
+        interaction?.deferReply();
         const page = await browser.newPage();
         await page.goto(url);
         const b = await page.$('body');
