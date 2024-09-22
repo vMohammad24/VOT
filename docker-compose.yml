@@ -24,7 +24,7 @@ services:
     profiles:
       - prod
     env_file:
-      - ../VOT-frontend/.env.prod
+      - .env.prod.frontend
     networks:
       - vot
     expose:
@@ -63,7 +63,7 @@ services:
     expose:
       - 2333
   redis:
-    image: redis
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     container_name: redis
     restart: always
     profiles:

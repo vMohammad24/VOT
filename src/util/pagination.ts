@@ -93,7 +93,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
 
             collector?.on('end', async (_, reason) => {
                 if (reason == 'time')
-                    sentMessage?.edit({ components: [] });
+                    interaction ? interaction.editReply({ components: [] }) : sentMessage?.edit({ components: [] });
             })
 
             if (!sentMessage) {
@@ -144,7 +144,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
 
             collector?.on('end', async (_, reason) => {
                 if (reason == 'time')
-                    sentMessage?.edit({ components: [] });
+                    interaction ? interaction.editReply({ components: [] }) : sentMessage?.edit({ components: [] });
             })
             return sentMessage as Message;
             break;
