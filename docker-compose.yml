@@ -62,6 +62,8 @@ services:
     image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     container_name: redis
     restart: always
+    ulimits:
+      memlock: -1
     profiles:
       - prod
     networks:
