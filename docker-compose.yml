@@ -103,6 +103,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/sites-available:/etc/nginx/conf.d
       - ./nginx/certs:/etc/letsencrypt:ro
+      - ./nginx/nginxconfig.io:/etc/nginx/nginxconfig.io
     depends_on:
       - frontend
     networks:
