@@ -79,15 +79,20 @@ export default async function (command: ICommand, ctx: CommandContext) {
 				if (interaction) {
 					st = interaction.options.getString(option.name, option.required) || null;
 				} else if (message) {
-					// if there's only 1 argument and its a string use every arg after it
-					if (options.length === 1) {
+					if (options.length == 1 || (options.length == 2 && options[1].name == 'silent')) {
 						st = messageArgs.join(' ') || null;
-					} else {
+						console.log(`joining: ${st}`);
+					} else if (options.length > 1) {
 						if (messageArgs[i].includes('"') || messageArgs[i].includes("'")) {
-							st = messageArgs.slice(i).join(' ') || null;
+							st = messageArgs.slice(i).join(' ').replace(/['"]+/g, '') || null;
+							console.log(`replacing: ${st}`);
 						} else {
 							st = messageArgs[i] || null;
+							console.log(`not replacing: ${st}`);
 						}
+					} else {
+						st = messageArgs[i] || null;
+						console.log(`else: ${st}`);
 					}
 					// if (!options[i + 1]) {
 					// 	st = messageArgs.slice(i).join(' ') || null;

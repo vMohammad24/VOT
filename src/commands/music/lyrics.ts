@@ -37,7 +37,7 @@ export default {
         const lyrics = await song.lyrics();
         const splitText = lyrics.match(/[\s\S]{1,2048}/g)!;
         const embeds = splitText.map((text, i) => ({
-            embed: new EmbedBuilder()
+            page: new EmbedBuilder()
                 .setTitle(song.title)
                 .setURL(song.url)
                 .setThumbnail(song.thumbnail)
@@ -47,7 +47,7 @@ export default {
         const pag = await pagination({
             interaction,
             message,
-            embeds: await Promise.all(embeds),
+            pages: await Promise.all(embeds),
             type: 'buttons'
         })
     }

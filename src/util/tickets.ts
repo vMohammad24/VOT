@@ -120,7 +120,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 		},
 		data: {
 			open: false,
-			transcriptId: cdnId,
+			transcriptId: cdnId
 		},
 	});
 	const logChannel = await getLogChannel(prisma, channel.guild);
@@ -156,7 +156,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	return { content: 'Ticked closed. ' };
 }
 
-export async function transcriptTicket(channel: GuildTextBasedChannel) {
+export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<string | undefined> {
 	const { prisma } = commandHandler;
 	const ticketData = await prisma.ticket.findFirst({
 		where: {
@@ -165,7 +165,7 @@ export async function transcriptTicket(channel: GuildTextBasedChannel) {
 	});
 	if (!ticketData) {
 		const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('Red');
-		return { embeds: [embed] };
+		return undefined;
 	}
 	const messages = await channel.messages.fetch();
 	const json = [];

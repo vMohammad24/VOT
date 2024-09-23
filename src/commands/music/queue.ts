@@ -18,10 +18,10 @@ export default {
 				ephemeral: true,
 			};
 		const queueWithCurrent = [queue.current, ...queue];
-		const embeds = queueWithCurrent.map((track, i) => {
+		const pages = queueWithCurrent.map((track, i) => {
 			if (!track) {
 				return {
-					embed: new EmbedBuilder()
+					page: new EmbedBuilder()
 						.setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
 						.setDescription('No track found')
 						.setColor('Red')
@@ -34,7 +34,7 @@ export default {
 			}
 
 			return {
-				embed: new EmbedBuilder()
+				page: new EmbedBuilder()
 					.setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
 					.setDescription(`[${track.title}](${track.uri})`)
 					.setColor('Green')
@@ -47,7 +47,7 @@ export default {
 			}
 		});
 		await pagination({
-			embeds,
+			pages,
 			type: 'select',
 			interaction,
 			message

@@ -1,42 +1,30 @@
 import {
     ActionRowBuilder,
-    ActionRowData,
-    APIActionRowComponent,
-    APIMessageActionRowComponent,
     ButtonBuilder,
     ButtonStyle,
     ChatInputCommandInteraction,
     EmbedBuilder,
     InteractionEditReplyOptions,
     InteractionReplyOptions,
-    JSONEncodable,
     Message,
-    MessageActionRowComponentBuilder,
-    MessageActionRowComponentData,
-    MessagePayload,
+    MessageReplyOptions,
     StringSelectMenuBuilder,
 } from "discord.js";
-import commandHandler from "..";
 import { getEmoji } from "./emojis";
 
-interface PaginationOptions {
-    embeds: {
-        embed: EmbedBuilder
-        attachments?: Buffer[];
-        rows?: | JSONEncodable<APIActionRowComponent<APIMessageActionRowComponent>>
-        | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder>
-        | APIActionRowComponent<APIMessageActionRowComponent>;
+export interface PaginationOptions {
+    pages: {
+        page: InteractionReplyOptions | MessageReplyOptions | EmbedBuilder
         name?: string
-        page?: number;
+        pageNumber?: number;
     }[],
-    type: 'buttons' | 'select',
+    type?: 'buttons' | 'select',
     interaction?: ChatInputCommandInteraction | null,
     message?: Message<boolean> | null,
     id?: string,
 }
 
-export async function pagination({ interaction, embeds, type, message }: PaginationOptions): Promise<Message> {
-    const { client } = commandHandler;
+export async function pagination({ interaction, pages, type, message }: PaginationOptions): Promise<Message> {
     if (!interaction && !message) {
         throw new Error('No interaction or message provided for pagination');
     }
@@ -45,17 +33,17 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
         throw new Error('Both interaction and message provided for pagination');
     }
     const id = Buffer.from(`${interaction ? interaction.id : message!.id}_${Date.now()}`).toString('base64');
-    if (embeds.length > 25 && type == 'select') type = 'buttons';
+    if ((pages.length > 25 && type == 'select') || !type) type = 'buttons';
     switch (type) {
         case 'buttons': {
             const arrowLeft = getEmoji('arrow_left')!;
             const arrowRight = getEmoji('arrow_right')!;
             if (!arrowLeft || !arrowRight) throw new Error('Arrow emojis not found');
-            const messages = new Map<number, InteractionReplyOptions | MessagePayload>(); // page, message
+            const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>(); // page, message
             let oldPage = 0;
-            for (const embed of embeds) {
-                const { embed: e, name, attachments, rows } = embed;
-                let { page } = embed;
+            for (const embed of pages) {
+                const { page: e, name } = embed;
+                let { pageNumber: page } = embed;
                 if (!page) {
                     if (messages.has(0)) {
                         page = oldPage + 1;
@@ -73,12 +61,17 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                         .setCustomId(`${id}_${page + 1}`)
                         .setEmoji(arrowRight.id)
                         .setStyle(ButtonStyle.Secondary)
-                        .setDisabled(page === embeds.length - 1)
+                        .setDisabled(page === pages.length - 1)
                 )
-                messages.set(page, { embeds: [e], components: rows ? [row, ...(rows as any)] : [row], files: attachments, content: name || '' });
+                if (e instanceof EmbedBuilder) {
+                    messages.set(page, { embeds: [(e as EmbedBuilder)], components: [row] });
+                } else {
+                    e.components ? e.components = [row, ...e.components] : e.components = [row];
+                    messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+                }
                 oldPage = page;
             }
-            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : (interaction?.deferred ? await interaction?.editReply(messages.get(0) as InteractionReplyOptions) : await interaction?.reply(messages.get(0) as InteractionReplyOptions));
+            const sentMessage = message ? await message?.reply(messages.get(0) as MessageReplyOptions) : (interaction?.deferred ? await interaction?.editReply(messages.get(0) as InteractionReplyOptions) : await interaction?.reply(messages.get(0) as InteractionReplyOptions));
             const userId = interaction?.user.id || message?.author.id;
             const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId, time: 60000 });
 
@@ -88,7 +81,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 const msg = messages.get(page);
                 if (!msg) return;
                 await i.update({});
-                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as MessagePayload);
+                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as any);
             });
 
             collector?.on('end', async (_, reason) => {
@@ -103,22 +96,22 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
             break;
         }
         case 'select': {
-            const messages = new Map<number, InteractionReplyOptions | MessagePayload>(); // page, message
+            const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>(); // page, message
             let oldPage = 0;
             const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId(id)
                     .setPlaceholder('Select a page')
-                    .addOptions(embeds.map((e, i) => ({
+                    .addOptions(pages.map((e, i) => ({
                         label: e.name || `Page ${i + 1}`,
                         value: i.toString(),
                     }))
                     )
             )
-            for (const embed of embeds) {
-                const { embed: e, name, attachments, rows } = embed;
+            for (const embed of pages) {
+                const { page: e, name } = embed;
 
-                let { page } = embed;
+                let { pageNumber: page } = embed;
                 if (!page) {
                     if (messages.has(0)) {
                         page = oldPage + 1;
@@ -126,10 +119,16 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                         page = 0;
                     }
                 }
-                messages.set(page, { embeds: [e], components: rows ? [row, ...(rows as any)] : [row], files: attachments, content: name || '' });
+                if (e instanceof EmbedBuilder) {
+                    messages.set(page, { embeds: [(e as EmbedBuilder)], components: [row] });
+                } else {
+                    const combinedRows = [row, ...(e.components || [])];
+                    e.components = combinedRows;
+                    messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+                }
                 oldPage = page;
             };
-            const sentMessage = message ? await message?.reply(messages.get(0) as MessagePayload) : await interaction?.reply(messages.get(0) as InteractionReplyOptions);
+            const sentMessage = message ? await message?.reply(messages.get(0) as MessageReplyOptions) : (interaction?.deferred ? await interaction?.editReply(messages.get(0) as InteractionReplyOptions) : await interaction?.reply(messages.get(0) as InteractionReplyOptions));
             const userId = message ? message.author.id : interaction?.user.id;
             const collector = sentMessage?.createMessageComponentCollector({ filter: (i) => i.isStringSelectMenu() && i.customId == id && i.user.id == userId, time: 60000 });
 
@@ -139,7 +138,7 @@ export async function pagination({ interaction, embeds, type, message }: Paginat
                 const msg = messages.get(page);
                 if (!msg) return;
                 await i.update({});
-                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as MessagePayload);
+                interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as any);
             });
 
             collector?.on('end', async (_, reason) => {

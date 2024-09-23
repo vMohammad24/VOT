@@ -1,25 +1,26 @@
+import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import { type CommandContext } from '../interfaces/ICommand';
 
 export default async function (command: ICommand, ctx: CommandContext) {
-	// TODO: make a way for ppl to parchase tiers
-	return true;
-	/*
+    // TODO: make a way for ppl to parchase tiers
+
     if (!command.userTier) return true;
-    const { userTier: uTierRequired, guildTier: gTierRequired } = command;
-    const { member, handler } = ctx;
-    const { prisma } = handler;
-    if (uTierRequired != 0) {
-        const user = await prisma.user.findFirst({
-            where: {
-                id: member.id
-            }
-        });
-        if (!user) return "You are not in the database";
-        if (user.tier < uTierRequired) return {
-            content: "You do not have the required tier to use this command",
-            ephemeral: true
-        };
+    const { userTier } = command;
+    const { user } = ctx;
+    if (userTier != 'Normal') {
+        const u = await getUserByID(user.id, { tier: true });
+        if (!u) return "You are not in the database";
+        switch (userTier) {
+            case 'Beta':
+                if (u.tier != 'Beta') return "You need to be a beta tester to use this command";
+                break;
+            case 'Premium':
+                if (u.tier != 'Premium' && u.tier != 'Beta') return "You need to be a premium user to use this command";
+                break;
+            default:
+                return "Invalid tier";
+        }
     }
-    return true;*/
+    return true;
 }
