@@ -1,5 +1,5 @@
 import { inspect } from 'bun';
-import { ApplicationCommandOptionType, type Client, Events, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
+import { ApplicationCommandOptionType, ApplicationCommandType, type Client, ContextMenuCommandBuilder, Events, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
@@ -80,6 +80,11 @@ export default class SlashCommandHandler {
 		// client.application?.commands.set(commands);
 		try {
 			commandHandler.logger.info('Started refreshing application (/) commands.');
+			commands.push(new ContextMenuCommandBuilder()
+				.setType(ApplicationCommandType.Message)
+				.setName('Quote')
+				.setContexts(0, 1, 2)
+				.setIntegrationTypes(0, 1));
 			await client.rest.put(Routes.applicationCommands(client.user!.id), {
 				body: JSON.parse(JSON.stringify(commands, (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
 			});
