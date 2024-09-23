@@ -19,8 +19,9 @@ export default {
     execute: async ({ args, interaction, message, handler: { client } }) => {
         const query = args.get("query") as string | undefined;
         if (!query) return { ephemeral: true, content: "Please provide a query to search for" }
+        console.log(query)
         const apiURL = `https://api.evade.rest/search?query=${encodeURIComponent(query)}`
-        console.log(apiURL);
+        await interaction?.deferReply();
         const res = await axios.get(apiURL);
         const { data } = res;
         const results: {
@@ -31,18 +32,21 @@ export default {
         }[] = data.response.web.results;
         if (!results) return { ephemeral: true, content: "No results found" }
         const evadeUser = await client.rest.get('/users/1228765716321271999') as APIUser;
+        await client.rest
         const isGif = evadeUser.avatar!.startsWith('a_');
         const evadeAvatar = `https://cdn.discordapp.com/avatars/${evadeUser.id}/${evadeUser.avatar}.${isGif ? 'gif' : 'png'}?size=1024?quality=loseless`;
-        const embeds = results.map((result, index) => {
+        const pages = results.map((result, index) => {
             return {
-                embed: new EmbedBuilder()
-                    .setTitle(result.title)
-                    .setDescription(turndownService.turndown(result.description))
-                    .setURL(result.url)
-                    .setFooter({ text: 'Powered by evade.rest', iconURL: evadeAvatar }),
+                page: {
+                    embeds: [new EmbedBuilder()
+                        .setTitle(result.title)
+                        .setDescription(turndownService.turndown(result.description))
+                        .setURL(result.url)
+                        .setFooter({ text: 'Powered by evade.rest', iconURL: evadeAvatar })]
+                },
                 name: result.profile.name
             }
         })
-        await pagination({ interaction, message, embeds, type: 'select', })
+        await pagination({ interaction, message, pages, type: 'select', })
     }
 } as ICommand;

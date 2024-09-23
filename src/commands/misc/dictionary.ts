@@ -57,7 +57,7 @@ export default {
 			}
 		})
 		await pagination({
-			embeds,
+			pages: embeds,
 			type: 'buttons',
 			message,
 			interaction
