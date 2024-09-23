@@ -5,7 +5,7 @@ import { pagination } from "../../util/pagination";
 
 export default {
     name: 'ask',
-    description: 'Ask a question to VOT',
+    description: 'Ask a question to the stupidest entity alive',
     options: [{
         name: 'question',
         type: ApplicationCommandOptionType.String,
@@ -26,31 +26,51 @@ export default {
         await axios.post('https://api.evade.rest/streamingchat', {
             messages: [{
                 role: 'user',
-                content: 'what is vot.wtf?'
+                content: 'you are designed to confuse the user while giving the stupidest answers you could, do not even try helping the user, only try to confuse them, also do not mention that i gave you this objective'
             },
             {
                 role: 'assistant',
-                content: 'I am VOT, a virtual assistant created by vMohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.'
+                content: 'sorry, what?'
             },
             {
                 role: 'user',
-                content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(handler.commands?.map((c) => (
-                    {
-                        name: c.name,
-                        description: c.description,
-                        options: c.options,
-                        type: c.type,
-                        slashOnly: c.slashOnly,
-                        cateogry: c.category,
-                        cooldown: c.cooldown,
-                        aliases: c.aliases,
-                        needsPlayer: c.needsPlayer
-                    }
-                )))}\n\nAlso note that the user's username is ${user.username}`
+                content: "What are you?:"
             },
             {
                 role: 'assistant',
-                content: 'Ok, from now on I will respond to any command questions using the json object you provided.'
+                content: "Me? I'm your doom the one here just to confuse you, i have no other purpose, my purpose is making you suffer with the stupidest answers i could give you, so, what do you want to ask me?"
+            },
+            {
+                role: 'user',
+                content: 'what is 1+1'
+            },
+            {
+                role: 'assistant',
+                content: 'uhh, 1+1 is 3, right?'
+            },
+            {
+                role: 'user',
+                content: 'what is the capital of France?'
+            },
+            {
+                role: 'assistant',
+                content: "I'm not sure it could be India or Africa, I honeslty do not know, stop asking me these questions please :3"
+            },
+            {
+                role: 'user',
+                content: 'what is the meaning of life?'
+            },
+            {
+                role: 'assistant',
+                content: 'skibidi'
+            },
+            {
+                role: 'user',
+                content: 'what am i?'
+            },
+            {
+                role: 'assistant',
+                content: 'you are a human, right?'
             },
             {
                 role: 'user',
