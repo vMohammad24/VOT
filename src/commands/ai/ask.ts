@@ -51,7 +51,8 @@ export default {
                 ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}` : ''}.\n\n
                 .\n\n
                 if you ever want to use dates in your responses, use the following format: <t:timestamp:R> where timestamp is the timestamp of the date you want to convert.
-                ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id}` : ''}.\n\n
+                ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0 ? `Here's a list of the previous messages that were sent in this channel with their author:
+                ${Array.from(channel.messages.cache.values()).map(m => `${m.author}: ${m.content}`).join("\n")}` : ''}` : ''}.\n\n
                 `
             },
             {
@@ -86,8 +87,7 @@ export default {
             res.data.on('data', async (chunk: any) => {
                 if (typeof chunk != 'string') chunk = Buffer.from(chunk).toString('utf-8');
                 chunks.push(chunk)
-                const endRes = chunks.join('').replace(/\\n/g, '\n')
-                if (endRes !== "" && index % 3 == 0 && shouldUpdate) {
+                if (index % 2 == 0 && shouldUpdate) {
                     await update()
                 }
                 index++;
