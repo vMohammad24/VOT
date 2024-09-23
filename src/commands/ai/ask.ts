@@ -14,7 +14,7 @@ export default {
     }],
     type: 'all',
     slashOnly: true,
-    async execute({ args, interaction, message, handler, user }) {
+    async execute({ args, interaction, message, handler, user, guild, channel }) {
         const question = args.get('question')
         const apiKey = process.env.EVADE_API_KEY
         if (!apiKey) return {
@@ -30,7 +30,7 @@ export default {
             },
             {
                 role: 'assistant',
-                content: 'I am VOT, a virtual assistant created by vMohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.'
+                content: 'I am VOT, a discord bot created by vMohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.'
             },
             {
                 role: 'user',
@@ -46,7 +46,13 @@ export default {
                         aliases: c.aliases,
                         needsPlayer: c.needsPlayer
                     }
-                )))}\n\nAlso note that the user's username is ${user.username}`
+                )))}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`} the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
+                ${guild ? `whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+                ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}` : ''}.\n\n
+                .\n\n
+                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> where timestamp is the timestamp of the date you want to convert.
+                ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id}` : ''}.\n\n
+                `
             },
             {
                 role: 'assistant',
