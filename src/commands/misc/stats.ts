@@ -1,6 +1,26 @@
 import { APIApplication, EmbedBuilder } from "discord.js";
+import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
 
+
+let globalLines = 0;
+async function getLines() {
+    const glob = new Bun.Glob("**/*.{ts,js,mjs,json}");
+    const files = await glob.scanSync({
+        absolute: true,
+        cwd: join(import.meta.dir, '..', '..')
+    });
+    let lines = 0;
+    for (const path of files) {
+        if (!path) continue;
+        try {
+            const file = Bun.file(path);
+            const content = await file.text();
+            lines += content.split('\n').length;
+        } catch (e) { }
+    }
+    return lines;
+}
 export default {
     name: "stats",
     description: "Shows the bot stats",
@@ -8,13 +28,13 @@ export default {
     execute: async ({ handler }) => {
         const { client } = handler;
         const { memoryUsage } = process;
-        const { heapUsed, external } = memoryUsage();
-        const { users, guilds, channels } = client;
+        const { heapUsed } = memoryUsage();
+        const { users, guilds } = client;
         const { size } = guilds.cache;
         const { size: usersSize } = users.cache;
-        const { size: channelsSize } = channels.cache;
         const res = await client.rest.get('/applications/@me') as APIApplication;
         const { approximate_guild_count, approximate_user_install_count } = res;
+        if (globalLines === 0) globalLines = await getLines();
         const embed = new EmbedBuilder()
             .setTitle("Bot Stats")
             .addFields({
@@ -30,8 +50,8 @@ export default {
                 value: `${usersSize}`,
                 inline: true
             }, {
-                name: "Channels",
-                value: `${channelsSize}`,
+                name: "Lines",
+                value: `${globalLines}`,
                 inline: true
             },
                 {
