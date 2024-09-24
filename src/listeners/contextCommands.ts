@@ -23,7 +23,7 @@ export default {
             ctx.fillStyle = 'black';
             ctx.fillRect(width / 2, 0, width / 2, height);
             ctx.shadowBlur = 20;  // Increase or decrease to control the amount of glow
-            ctx.shadowColor = 'white';  // The color of the glow
+            ctx.shadowColor = message.author.hexAccentColor || 'white';  // The color of the glow
             ctx.drawImage(loadedAvatar, 0, 0, width / 2, height);
             ctx.shadowBlur = 0;  // Increase or decrease to control the amount of glow
             ctx.shadowColor = 'transparent';  // The color of the glow
