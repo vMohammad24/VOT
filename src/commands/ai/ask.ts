@@ -24,6 +24,8 @@ export default {
         if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
         const channelMessages = channel ? Array.from(channel.messages.cache.values()).map(m => `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map(e => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`).join("\n")
             : '';
+        const pinnedMessages = channel ? Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values()).map(m => `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map(e => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`).join("\n")
+            : '';
         const messages = [{
             role: 'user',
             content: 'what is vot.wtf?'
@@ -52,7 +54,7 @@ export default {
                 .\n\n
                 if you ever want to use dates in your responses, use the following format: <t:timestamp:R> where timestamp is the timestamp of the date you want to convert.
                 ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0 ? `Here's a list of the previous messages that were sent in this channel with their author:
-                ${channelMessages}` : ''}` : ''}.\n\n
+                ${channelMessages}` : ''}\n\nSome of the pinned messages include: ${pinnedMessages}` : ''}.\n\n
                 note that you can respond to anything not related to vot.\n\n
                 also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.
                 `
