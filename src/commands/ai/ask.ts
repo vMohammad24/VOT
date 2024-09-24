@@ -21,15 +21,15 @@ export default {
             ephemeral: true
         }
         await interaction?.deferReply();
-        if (message && guild && channel) await (channel as GuildTextBasedChannel).sendTyping();
-        // const chunks: string[] = [];
+        if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
+        const channelMessages = Array.from(channel.messages.cache.values()).map(m => `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map(e => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`).join("\n")
         const messages = [{
             role: 'user',
             content: 'what is vot.wtf?'
         },
         {
             role: 'assistant',
-            content: 'I am VOT, a discord bot created by vMohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.'
+            content: 'I am VOT, a discord bot created by vmohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.'
         },
         {
             role: 'user',
@@ -51,7 +51,9 @@ export default {
                 .\n\n
                 if you ever want to use dates in your responses, use the following format: <t:timestamp:R> where timestamp is the timestamp of the date you want to convert.
                 ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0 ? `Here's a list of the previous messages that were sent in this channel with their author:
-                ${Array.from(channel.messages.cache.values()).map(m => `${m.author}: ${m.content}`).join("\n")}` : ''}` : ''}.\n\n
+                ${channelMessages}` : ''}` : ''}.\n\n
+                note that you can respond to anything not related to vot.\n\n
+                also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.
                 `
         },
         {
