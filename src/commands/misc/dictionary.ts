@@ -44,16 +44,18 @@ export default {
 			}[];
 		}) => {
 			return {
-				embed: new EmbedBuilder()
-					.setTitle(data[0].word + ' - ' + meaning.partOfSpeech)
-					.setDescription(
-						meaning.definitions.map((def: { definition: string; example: string }) => {
-							return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}}` : ''}`;
-						}).join('\n\n')
-					)
-					.setColor('Random')
-					.setTimestamp()
-					.setFooter({ text: 'Powered by dictionaryapi' }),
+				page: {
+					embeds: [new EmbedBuilder()
+						.setTitle(data[0].word + ' - ' + meaning.partOfSpeech)
+						.setDescription(
+							meaning.definitions.map((def: { definition: string; example: string }) => {
+								return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}}` : ''}`;
+							}).join('\n\n')
+						)
+						.setColor('Random')
+						.setTimestamp()
+						.setFooter({ text: 'Powered by dictionaryapi' })]
+				},
 			}
 		})
 		await pagination({
