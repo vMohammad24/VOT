@@ -22,7 +22,8 @@ export default {
         }
         await interaction?.deferReply();
         if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
-        const channelMessages = Array.from(channel.messages.cache.values()).map(m => `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map(e => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`).join("\n")
+        const channelMessages = channel ? Array.from(channel.messages.cache.values()).map(m => `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map(e => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`).join("\n")
+            : '';
         const messages = [{
             role: 'user',
             content: 'what is vot.wtf?'
