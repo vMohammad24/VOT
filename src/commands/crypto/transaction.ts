@@ -33,10 +33,12 @@ export default {
 		const screenshot = await page.screenshot({ optimizeForSpeed: true });
 		await page.close();
 		return {
-			files: [{
-				attachment: Buffer.from(screenshot),
-				name: 'screenshot.png',
-			}],
+			files: [
+				{
+					attachment: Buffer.from(screenshot),
+					name: 'screenshot.png',
+				},
+			],
 		};
 	},
 } as ICommand;

@@ -1,5 +1,14 @@
 import { inspect } from 'bun';
-import { ApplicationCommandOptionType, ApplicationCommandType, type Client, ContextMenuCommandBuilder, Events, InteractionReplyOptions, PermissionsBitField, Routes } from 'discord.js';
+import {
+	ApplicationCommandOptionType,
+	ApplicationCommandType,
+	type Client,
+	ContextMenuCommandBuilder,
+	Events,
+	InteractionReplyOptions,
+	PermissionsBitField,
+	Routes,
+} from 'discord.js';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
@@ -80,11 +89,13 @@ export default class SlashCommandHandler {
 		// client.application?.commands.set(commands);
 		try {
 			commandHandler.logger.info('Started refreshing application (/) commands.');
-			commands.push(new ContextMenuCommandBuilder()
-				.setType(ApplicationCommandType.Message)
-				.setName('Quote')
-				.setContexts(0, 1, 2)
-				.setIntegrationTypes(0, 1));
+			commands.push(
+				new ContextMenuCommandBuilder()
+					.setType(ApplicationCommandType.Message)
+					.setName('Quote')
+					.setContexts(0, 1, 2)
+					.setIntegrationTypes(0, 1),
+			);
 			await client.rest.put(Routes.applicationCommands(client.user!.id), {
 				body: JSON.parse(JSON.stringify(commands, (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
 			});
@@ -104,13 +115,13 @@ export default class SlashCommandHandler {
 						channelId: interaction.channelId!,
 						guildId: interaction.guildId || null,
 						fullJson: interaction,
-					}
-				})
+					},
+				});
 				return await interaction.reply({
 					content: `This command does not exist.\nFor further information please report this to the developers.\n-# ${error?.id}`,
 					ephemeral: true,
 				});
-			};
+			}
 			let result = {};
 			try {
 				result = await this.handler.executeCommand(command, interaction);

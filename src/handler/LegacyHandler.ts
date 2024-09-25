@@ -39,7 +39,6 @@ export default class LegacyCommandHandler {
 				}
 			}
 
-
 			if (!message.content.startsWith(prefix)) return;
 			const commandName = message.content.slice(prefix.length).split(' ')[0];
 			if (!commandName) return;

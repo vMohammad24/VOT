@@ -46,7 +46,7 @@ const kazagumo = new Kazagumo(
 		},
 		plugins: [
 			new Apple({
-				countryCode: "us",
+				countryCode: 'us',
 				imageWidth: 640,
 				imageHeight: 640,
 			}),
@@ -58,7 +58,7 @@ const kazagumo = new Kazagumo(
 		],
 	},
 	new Connectors.DiscordJS(client),
-	nodes
+	nodes,
 );
 
 const prisma = new PrismaClient();
@@ -109,7 +109,6 @@ client.on(Events.ClientReady, async (c) => {
 	await initEmojis();
 	axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
 
-
 	axios.interceptors.response.use(
 		function (response) {
 			return response;
@@ -122,7 +121,6 @@ client.on(Events.ClientReady, async (c) => {
 
 	axios.defaults.validateStatus = () => true;
 
-
 	app.listen(process.env.PORT || 8080, () => {
 		commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
@@ -130,16 +128,16 @@ client.on(Events.ClientReady, async (c) => {
 	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
 	if (clwb && ghToken) {
 		const webhook = new WebhookClient({
-			url: clwb
+			url: clwb,
 		});
 		const headers = {
 			Authorization: `Bearer ${ghToken}`,
 			Accept: 'application/vnd.github+json',
-			"X-GitHub-Api-Version": "2022-11-28",
+			'X-GitHub-Api-Version': '2022-11-28',
 		};
 		const { data } = await axios.get('https://api.github.com/repos/vMohammad24/VOT/commits', {
-			headers
-		})
+			headers,
+		});
 		const latestVOTCommit = data[0].commit;
 		const VOTcommitMessage = latestVOTCommit.message;
 		const VOTcommitAuthor = latestVOTCommit.author.name;
@@ -150,8 +148,8 @@ client.on(Events.ClientReady, async (c) => {
 			.setTimestamp();
 
 		const { data: data2 } = await axios.get('https://api.github.com/repos/vMohammad24/VOT-Frontend/commits', {
-			headers
-		})
+			headers,
+		});
 		const latestVOTFrontendCommit = data2[0].commit;
 		const VOTFrontendcommitMessage = latestVOTFrontendCommit.message;
 		const VOTFrontendcommitAuthor = latestVOTFrontendCommit.author.name;
@@ -259,7 +257,13 @@ client.on(Events.Error, (err) => {
 	embed
 		.setTitle('Discord API Error')
 		.setURL('https://discordjs.guide/popular-topics/errors.html#api-errors')
-		.setDescription(`\`\`\`${inspect(err).split("\n").filter(c => !c.includes("node_modules")).join().slice(0, 1000)}\`\`\``)
+		.setDescription(
+			`\`\`\`${inspect(err)
+				.split('\n')
+				.filter((c) => !c.includes('node_modules'))
+				.join()
+				.slice(0, 1000)}\`\`\``,
+		)
 		.setTimestamp();
 
 	return errorsWebhook.send({ embeds: [embed] });
@@ -272,7 +276,7 @@ process.on('SIGINT', async () => {
 	await gracefulShutdown();
 	commandHandler.logger.info('Shut down.');
 	process.exit(0);
-})
+});
 
 export default commandHandler;
 client.login(process.env.TOKEN);

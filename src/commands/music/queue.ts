@@ -30,7 +30,7 @@ export default {
 							iconURL: member.displayAvatarURL(),
 						}),
 					name: 'No track found',
-				}
+				};
 			}
 
 			return {
@@ -40,17 +40,17 @@ export default {
 					.setColor('Green')
 					.setThumbnail(track.thumbnail!)
 					.setFooter({
-						text: `Requested by ${(track.requester ? (track.requester as any).displayName : 'Unknown')}`,
+						text: `Requested by ${track.requester ? (track.requester as any).displayName : 'Unknown'}`,
 						iconURL: ((track.requester as any) || member).displayAvatarURL(),
 					}),
 				name: track.title,
-			}
+			};
 		});
 		await pagination({
 			pages,
 			type: 'select',
 			interaction,
-			message
+			message,
 		});
 	},
 } as ICommand;

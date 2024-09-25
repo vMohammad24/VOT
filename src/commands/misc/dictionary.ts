@@ -36,33 +36,39 @@ export default {
 		// 	.setColor('Random')
 		// 	.setTimestamp()
 		// 	.setFooter({ text: 'Powered by dictionaryapi' });
-		const embeds = data[0].meanings.map((meaning: {
-			partOfSpeech: string;
-			definitions: {
-				definition: string;
-				example: string;
-			}[];
-		}) => {
-			return {
-				page: {
-					embeds: [new EmbedBuilder()
-						.setTitle(data[0].word + ' - ' + meaning.partOfSpeech)
-						.setDescription(
-							meaning.definitions.map((def: { definition: string; example: string }) => {
-								return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}}` : ''}`;
-							}).join('\n\n')
-						)
-						.setColor('Random')
-						.setTimestamp()
-						.setFooter({ text: 'Powered by dictionaryapi' })]
-				},
-			}
-		})
+		const embeds = data[0].meanings.map(
+			(meaning: {
+				partOfSpeech: string;
+				definitions: {
+					definition: string;
+					example: string;
+				}[];
+			}) => {
+				return {
+					page: {
+						embeds: [
+							new EmbedBuilder()
+								.setTitle(data[0].word + ' - ' + meaning.partOfSpeech)
+								.setDescription(
+									meaning.definitions
+										.map((def: { definition: string; example: string }) => {
+											return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}}` : ''}`;
+										})
+										.join('\n\n'),
+								)
+								.setColor('Random')
+								.setTimestamp()
+								.setFooter({ text: 'Powered by dictionaryapi' }),
+						],
+					},
+				};
+			},
+		);
 		await pagination({
 			pages: embeds,
 			type: 'buttons',
 			message,
-			interaction
-		})
+			interaction,
+		});
 	},
 } as ICommand;

@@ -13,7 +13,8 @@ export default {
 			logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`),
 		);
 		kazagumo.shoukaku.on('debug', (name, info) => logger.debug(`Lavalink ${name}: Debug,`, info));
-		kazagumo.shoukaku.on('disconnect', (name, players) => { });
+		kazagumo.shoukaku.on('disconnect', (name, players) => {
+		});
 		kazagumo.on('playerMoved', (player, status, channelData) => {
 			switch (status) {
 				case 'LEFT':
@@ -50,6 +51,12 @@ export default {
 				}
 			}
 		});
+
+		kazagumo.on('playerEmpty', async (player) => {
+			await player.destroy();
+		});
+
+
 
 		client.on(Events.InteractionCreate, async (inter) => {
 			const ids = ['pause', 'resume', 'skip', 'queue', 'stop', 'loop', 'shuffle', 'volume'];
@@ -128,7 +135,7 @@ export default {
 							inter.editReply({
 								content: '',
 							});
-					})
+					});
 					break;
 				default:
 					inter.reply({ content: 'Invalid command', ephemeral: true });

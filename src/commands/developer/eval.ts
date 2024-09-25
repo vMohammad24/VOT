@@ -31,7 +31,7 @@ export default {
 				{
 					name: 'Redis',
 					value: 'redis',
-				}
+				},
 			],
 		},
 		{
@@ -45,7 +45,8 @@ export default {
 		let code = args.get('code') as string | undefined;
 		if (!code) return { content: 'No code provided', ephemeral: true };
 		const embed = new EmbedBuilder().setTitle('Eval').setColor(Colors.NotQuiteBlack);
-		const excludeCodeWith = /token|process|env|meta|secret|password|pass|client\.token|client\.secret|client\.password|client\.pass/gi;
+		const excludeCodeWith =
+			/token|process|env|meta|secret|password|pass|client\.token|client\.secret|client\.password|client\.pass/gi;
 		if (excludeCodeWith.test(code)) {
 			embed.setDescription('``nuh uh``');
 			return { embeds: [embed] };
@@ -58,14 +59,14 @@ export default {
 			let evaluatedResult = '';
 			switch (args.get('type')) {
 				case 'sql':
-					evaluatedResult = inspect(JSON.stringify((await handler.prisma.$queryRawUnsafe(code))));
+					evaluatedResult = inspect(JSON.stringify(await handler.prisma.$queryRawUnsafe(code)));
 					break;
 				case 'redis':
-					evaluatedResult = (await redis.eval(code, 0) as string);
+					evaluatedResult = (await redis.eval(code, 0)) as string;
 					break;
 				case 'js':
 					evaluatedResult = eval(code);
-					break
+					break;
 				default:
 					evaluatedResult = Function(`"use strict";return ${code}`)();
 					break;
