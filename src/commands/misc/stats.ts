@@ -10,10 +10,10 @@ async function getLines() {
 		absolute: true,
 		cwd: join(import.meta.dir, '..', '..'),
 	});
-	const node_modules = await glob.scanSync({
-		absolute: true,
-		cwd: join(import.meta.dir, '..', '..', '..', 'node_modules'),
-	});
+	// const node_modules = await glob.scanSync({
+	// 	absolute: true,
+	// 	cwd: join(import.meta.dir, '..', '..', '..', 'node_modules'),
+	// });
 	let lines = 0;
 	for (const path of files) {
 		if (!path) continue;
@@ -21,16 +21,16 @@ async function getLines() {
 			const file = Bun.file(path);
 			const content = await file.text();
 			lines += content.split('\n').length;
-		} catch (e) {}
+		} catch (e) { }
 	}
-	for (const path of node_modules) {
-		if (!path) continue;
-		try {
-			const file = Bun.file(path);
-			const content = await file.text();
-			lines += content.split('\n').length;
-		} catch (e) {}
-	}
+	// for (const path of node_modules) {
+	// 	if (!path) continue;
+	// 	try {
+	// 		const file = Bun.file(path);
+	// 		const content = await file.text();
+	// 		lines += content.split('\n').length;
+	// 	} catch (e) {}
+	// }
 	return lines;
 }
 export default {
