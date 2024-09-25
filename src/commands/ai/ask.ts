@@ -52,7 +52,7 @@ export default {
                 ${guild ? `whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
                 ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}` : ''}.\n\n
                 .\n\n
-                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> where timestamp is the timestamp of the date you want to convert.
+                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
                 ${channel ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0 ? `Here's a list of the previous messages that were sent in this channel with their author:
                 ${channelMessages}` : ''}\n\nSome of the pinned messages include: ${pinnedMessages}` : ''}.\n\n
                 note that you can respond to anything not related to vot.\n\n
