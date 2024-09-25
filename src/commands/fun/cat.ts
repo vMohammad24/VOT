@@ -57,19 +57,16 @@ export default {
 			};
 		}
 		const yes = data.mimetype.split('/')[1];
-		const embed =
-			new EmbedBuilder()
-				.setTitle('Cat')
-				.setImage(url + `.${yes}`)
-				.setColor('Random')
-				.setFooter({ text: `Powered by cataas.com` });
+		const embed = new EmbedBuilder()
+			.setTitle('Cat')
+			.setImage(url + `.${yes}`)
+			.setColor('Random')
+			.setFooter({ text: `Powered by cataas.com` });
 		if (tag && tag.split(' ').length > 1) {
 			embed.setDescription(`Showing cats a with tag of "${tag.split(' ')[0]}"`);
 		}
 		return {
-			embeds: [
-				embed,
-			],
+			embeds: [embed],
 		};
 	},
 } as ICommand;

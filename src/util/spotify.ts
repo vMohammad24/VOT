@@ -13,16 +13,15 @@ export async function getCurrentlyPlaying(userId: string) {
 		await refreshToken(spotify);
 		return await getCurrentlyPlaying(userId);
 	}
-	const res = (await axios
-		.get('https://api.spotify.com/v1/me/player/currently-playing', {
-			headers: {
-				Authorization: `Bearer ${spotify.token}`,
-			},
-		}))
+	const res = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
+		headers: {
+			Authorization: `Bearer ${spotify.token}`,
+		},
+	});
 	const { error } = res.data;
 	if (res.status == 401 || error) {
 		await refreshToken(spotify);
-		await setTimeout(() => { }, 500);
+		await setTimeout(() => {}, 500);
 		return await getCurrentlyPlaying(userId);
 	}
 	return res.data;
@@ -40,16 +39,17 @@ export async function pausePlayer(userId: string) {
 		await refreshToken(spotify);
 		return await pausePlayer(userId);
 	}
-	const res = (await axios
-		.put('https://api.spotify.com/v1/me/player/pause', {
-
-		}, {
+	const res = await axios.put(
+		'https://api.spotify.com/v1/me/player/pause',
+		{},
+		{
 			headers: {
 				Authorization: `Bearer ${spotify.token}`,
 			},
-		}))
+		},
+	);
 	const { error } = res.data;
-	if (error) return { error }
+	if (error) return { error };
 }
 
 export async function refreshToken(spotify: Spotify) {

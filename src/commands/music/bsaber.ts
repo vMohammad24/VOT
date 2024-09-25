@@ -11,12 +11,14 @@ export default {
 	name: 'bsaber',
 	description: 'Get a beat saber map for the currently playing song',
 	aliases: ['bs', 'beatsaver', 'beatsaber'],
-	options: [{
-		name: "song",
-		required: false,
-		description: "The song you want to search for",
-		type: ApplicationCommandOptionType.String
-	}],
+	options: [
+		{
+			name: 'song',
+			required: false,
+			description: 'The song you want to search for',
+			type: ApplicationCommandOptionType.String,
+		},
+	],
 	type: 'all',
 	userTier: 'Beta',
 	execute: async ({ interaction, player, message, member, args }) => {
@@ -26,7 +28,7 @@ export default {
 			const res = await searchSaver(songTitle, 'Relevance');
 			if (typeof res === 'string') return { content: res, ephemeral: true };
 			if (res.length === 0) return { content: 'No maps were found for this song', ephemeral: true };
-			const items = res.map(async map => {
+			const items = res.map(async (map) => {
 				// Log the map object to inspect its structure
 
 				const latestVersion = map.versions[map.versions.length - 1];
@@ -34,7 +36,7 @@ export default {
 				// Check for undefined values and provide default values or skip
 				const mapName = map.name ?? 'Unknown';
 				const description = map.description.substring(0, 200);
-				const uploaderName = map.uploader?.name ?? 'Unknown uploader';;
+				const uploaderName = map.uploader?.name ?? 'Unknown uploader';
 				const upvotes = map.stats?.upvotes?.toString() ?? '0';
 				const downvotes = map.stats?.downvotes?.toString() ?? '0';
 				const rating = map.stats?.score?.toString() ?? 'N/A';
@@ -45,32 +47,38 @@ export default {
 				const preview = await axios.get(previewURL, { responseType: 'arraybuffer' });
 				return {
 					page: {
-						embeds: [new EmbedBuilder()
-							.setTitle(mapName)
-							.setDescription(description == '' ? null : description)
-							.setFields([
-								{ name: 'Upvotes', value: upvotes, inline: true },
-								{ name: 'Downvotes', value: downvotes, inline: true },
-							])
-							.setThumbnail(coverURL)
-							.setFooter({
-								text: `Mapped by ${uploaderName} • ${rating} rating`,
-								iconURL: avatarURL,
-							})
-							.setTimestamp(new Date(map.updatedAt))
-							.setColor([0, 255, 0])],
-						attachments: [new AttachmentBuilder(Buffer.from(preview.data), { name: "preview.mp3" })],
-						components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setURL(oneClickURL).setLabel('Download').setStyle(ButtonStyle.Link))]
+						embeds: [
+							new EmbedBuilder()
+								.setTitle(mapName)
+								.setDescription(description == '' ? null : description)
+								.setFields([
+									{ name: 'Upvotes', value: upvotes, inline: true },
+									{ name: 'Downvotes', value: downvotes, inline: true },
+								])
+								.setThumbnail(coverURL)
+								.setFooter({
+									text: `Mapped by ${uploaderName} • ${rating} rating`,
+									iconURL: avatarURL,
+								})
+								.setTimestamp(new Date(map.updatedAt))
+								.setColor([0, 255, 0]),
+						],
+						attachments: [new AttachmentBuilder(Buffer.from(preview.data), { name: 'preview.mp3' })],
+						components: [
+							new ActionRowBuilder<ButtonBuilder>().addComponents(
+								new ButtonBuilder().setURL(oneClickURL).setLabel('Download').setStyle(ButtonStyle.Link),
+							),
+						],
 					},
 					name: mapName,
-				}
+				};
 			});
 			await pagination({
 				interaction: interaction,
 				message: message,
-				pages: await Promise.all(items) as PaginationOptions['pages'],
-				type: 'select'
-			})
+				pages: (await Promise.all(items)) as PaginationOptions['pages'],
+				type: 'select',
+			});
 		} catch (error) {
 			commandHandler.logger.error(error);
 			return {

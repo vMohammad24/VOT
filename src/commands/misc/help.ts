@@ -5,12 +5,14 @@ import { pagination } from '../../util/pagination';
 export default {
 	description: 'Displays all commands',
 	cooldown: 5000,
-	options: [{
-		name: 'command',
-		description: 'the name of the command to search for',
-		type: ApplicationCommandOptionType.String,
-		required: false,
-	}],
+	options: [
+		{
+			name: 'command',
+			description: 'the name of the command to search for',
+			type: ApplicationCommandOptionType.String,
+			required: false,
+		},
+	],
 	execute: async ({ message, interaction, handler, args, member }) => {
 		const categories = handler
 			.commands!.map((cmd) => cmd.category)
@@ -33,27 +35,24 @@ export default {
 								.join('\n'),
 						)
 						.setColor('Green')
-						.setTimestamp()
-				}
+						.setTimestamp(),
+				};
 			});
 			await pagination({
 				interaction: interaction || undefined,
 				message: message || undefined,
 				type: 'select',
-				pages: embeds
+				pages: embeds,
 			});
 		} else {
 			const cmd = handler.commands!.find((cmd) => cmd.name === command);
 			if (!cmd) return { content: 'Command not found', ephemeral: true };
 			return {
-				embeds: [new EmbedBuilder()
-					.setTitle(cmd.name!)
-					.setDescription(cmd.description)
-					.setColor('Random')
-					.setTimestamp()
+				embeds: [
+					new EmbedBuilder().setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp(),
 				],
-				ephemeral: true
-			}
+				ephemeral: true,
+			};
 		}
 	},
 } as ICommand;

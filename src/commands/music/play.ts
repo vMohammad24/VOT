@@ -11,15 +11,14 @@ export default {
 				if (!query) return inter.respond([{ name: 'Provide a query to continue', value: '' }]);
 				const results = await kazagumo.search(query, {
 					requester: inter.member as GuildMember,
-					engine: 'spotify'
+					engine: 'spotify',
 				});
 				const options = results.tracks.map((track, index) => ({
 					name: track.title,
 					value: track.uri!,
 				}));
 				try {
-					if (!inter.responded)
-						inter.respond(options);
+					if (!inter.responded) inter.respond(options);
 				} catch (error) {
 					inter.respond([{ name: 'An error has occured', value: '' }]);
 				}
@@ -54,12 +53,16 @@ export default {
 				case 'TRACK':
 					const track = res.tracks[0];
 					player!.queue.add(track);
-					embed.setDescription(`Added [${track.title || 'Error getting title'}]${track.uri ? `(${track.uri})` : ''} to the queue`);
+					embed.setDescription(
+						`Added [${track.title || 'Error getting title'}]${track.uri ? `(${track.uri})` : ''} to the queue`,
+					);
 					break;
 				case 'SEARCH':
 					if (res.tracks.length > 0) {
 						player!.queue.add(res.tracks);
-						embed.setDescription(`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`);
+						embed.setDescription(
+							`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`,
+						);
 					}
 					break;
 				case 'PLAYLIST':
@@ -77,13 +80,16 @@ export default {
 					);
 					break;
 				default:
-
 					break;
 			}
 		});
 		embed.setTitle(embed.data.description ? 'Added to queue' : 'Error');
-		{ !embed.data.description ? embed.setColor('Red') : '' }
-		embed.setDescription(`${embed.data.description ? embed.data.description : "No Tracks found."}\n\nGo to <#${member.voice.channelId}> to manage the queue`);
+		{
+			!embed.data.description ? embed.setColor('Red') : '';
+		}
+		embed.setDescription(
+			`${embed.data.description ? embed.data.description : 'No Tracks found.'}\n\nGo to <#${member.voice.channelId}> to manage the queue`,
+		);
 		if (!player.playing) player.play();
 		return {
 			embeds: [embed],

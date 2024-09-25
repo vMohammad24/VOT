@@ -47,8 +47,6 @@ function findChunk(buffer: Buffer, type: string): Buffer {
 	throw new Error(`Chunk "${type}" not found`);
 }
 
-
-
 export default {
 	name: 'add',
 	description: 'Add a sticker/emoji to the guild',
@@ -116,7 +114,7 @@ export default {
 			return {
 				ephemeral: true,
 				content: 'Gif support is not implemented yet',
-			}
+			};
 			// const apng = await compressGif(oFile);
 			// if (typeof apng === 'string')
 			// 	return {

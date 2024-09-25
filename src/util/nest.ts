@@ -6,7 +6,6 @@ export async function uploadFile(file: any): Promise<{
 	deletionURL: string;
 	fileURL: string;
 	accessibleURL: string;
-
 }> {
 	const formData = new FormData();
 	formData.set('files', file);

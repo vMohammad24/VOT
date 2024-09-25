@@ -73,8 +73,8 @@ function kMeans(colors: RGB[], k: number, maxIterations = 100): RGB[] {
 }
 
 export const rgbToHex = ([r, g, b]: RGB) => {
-	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
+	return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+};
 
 export async function getTwoMostUsedColors(img: Image | Canvas): Promise<RGB[]> {
 	const canvas = createCanvas(img.width, img.height);
@@ -124,6 +124,6 @@ export function parseTime(timestr: string): number {
 			}
 			time += num;
 		}
-	} catch (ignored) { }
+	} catch (ignored) {}
 	return time;
 }

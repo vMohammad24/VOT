@@ -50,11 +50,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-					{
-						id: ticketSettings.roleId!,
-						allow: [PermissionFlagsBits.ViewChannel],
-					},
-				]
+						{
+							id: ticketSettings.roleId!,
+							allow: [PermissionFlagsBits.ViewChannel],
+						},
+					]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -120,7 +120,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 		},
 		data: {
 			open: false,
-			transcriptId: cdnId
+			transcriptId: cdnId,
 		},
 	});
 	const logChannel = await getLogChannel(prisma, channel.guild);

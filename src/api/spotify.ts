@@ -13,13 +13,13 @@ export default (server: Elysia) => {
 		if (!code)
 			return redirect(
 				'https://accounts.spotify.com/authorize?' +
-				queryString.stringify({
-					response_type: 'code',
-					client_id: spotifyClientId,
-					scope: scopes,
-					redirect_uri: getRedirectURL('spotify'),
-					state,
-				}),
+					queryString.stringify({
+						response_type: 'code',
+						client_id: spotifyClientId,
+						scope: scopes,
+						redirect_uri: getRedirectURL('spotify'),
+						state,
+					}),
 			);
 		if (!token) return redirect('/discord/callback');
 		const user = await commandHandler.prisma.user.findUnique({

@@ -25,9 +25,9 @@ export default {
 							value: '```' + `${messageLatency}ms` + '```',
 						},
 						{
-							name: "Database Latency",
-							value: '```' + `${pEnd - pStart}ms` + '```'
-						}
+							name: 'Database Latency',
+							value: '```' + `${pEnd - pStart}ms` + '```',
+						},
 					)
 					.setTimestamp(),
 			],

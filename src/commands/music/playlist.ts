@@ -88,11 +88,11 @@ export default {
 				let choices =
 					action === 'remove'
 						? tracks.map((track) => {
-							return {
-								name: track.title,
-								value: track.uri,
-							};
-						})
+								return {
+									name: track.title,
+									value: track.uri,
+								};
+							})
 						: [];
 				if (choices.length === 0 || action === 'add') {
 					const kazTracks = (
@@ -182,7 +182,7 @@ export default {
 		},
 	],
 	needsPlayer: true,
-	execute: async ({ interaction, player, handler, }) => {
+	execute: async ({ interaction, player, handler }) => {
 		if (!interaction || !player) return;
 		const subCommand = interaction.options.getSubcommand();
 		const name = interaction.options.getString('name', true);

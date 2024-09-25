@@ -3,24 +3,24 @@ import type ICommand from '../interfaces/ICommand';
 import { type CommandContext } from '../interfaces/ICommand';
 
 export default async function (command: ICommand, ctx: CommandContext) {
-    // TODO: make a way for ppl to parchase tiers
+	// TODO: make a way for ppl to parchase tiers
 
-    if (!command.userTier) return true;
-    const { userTier } = command;
-    const { user } = ctx;
-    if (userTier != 'Normal') {
-        const u = await getUserByID(user.id, { tier: true });
-        if (!u) return "You are not in the database";
-        switch (userTier) {
-            case 'Beta':
-                if (u.tier != 'Beta') return "You need to be a beta tester to use this command";
-                break;
-            case 'Premium':
-                if (u.tier != 'Premium' && u.tier != 'Beta') return "You need to be a premium user to use this command";
-                break;
-            default:
-                return "Invalid tier";
-        }
-    }
-    return true;
+	if (!command.userTier) return true;
+	const { userTier } = command;
+	const { user } = ctx;
+	if (userTier != 'Normal') {
+		const u = await getUserByID(user.id, { tier: true });
+		if (!u) return 'You are not in the database';
+		switch (userTier) {
+			case 'Beta':
+				if (u.tier != 'Beta') return 'You need to be a beta tester to use this command';
+				break;
+			case 'Premium':
+				if (u.tier != 'Premium' && u.tier != 'Beta') return 'You need to be a premium user to use this command';
+				break;
+			default:
+				return 'Invalid tier';
+		}
+	}
+	return true;
 }

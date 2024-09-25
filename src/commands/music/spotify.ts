@@ -12,13 +12,14 @@ export default {
 		if (res.error) {
 			return {
 				content: res.error,
-				ephemeral: true
+				ephemeral: true,
 			};
 		}
-		if (!player) return {
-			content: "Notihg is currently being played",
-			ephemeral: true,
-		};
+		if (!player)
+			return {
+				content: 'Notihg is currently being played',
+				ephemeral: true,
+			};
 		const trackURI = res.item.external_urls.spotify;
 		if (!trackURI)
 			return {
@@ -48,7 +49,7 @@ export default {
 			.setColor('Green')
 			.setDescription(`Added [${track.title || 'Error getting title'}](${track.uri}) to the queue`)
 			.setThumbnail(track.thumbnail || null)
-			.setFooter({ text: a ? a.error : "Paused spotify." });
+			.setFooter({ text: a ? a.error : 'Paused spotify.' });
 		if (player.queue.current?.realUri == track.realUri && res.progress_ms) {
 			await player.seek(parseInt(res.progress_ms));
 			// minute:second
