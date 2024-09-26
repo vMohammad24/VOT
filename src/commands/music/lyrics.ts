@@ -40,7 +40,9 @@ export default {
 		await interaction?.deferReply();
 		const songs = await genius.songs.search(query, { sanitizeQuery: true });
 		const song = songs[0];
+		if (!song) return { content: 'Song not found! Sorry.', ephemeral: true };
 		const lyrics = await song.lyrics();
+		if (!lyrics) return { content: 'Lyrics not found! Sorry.', ephemeral: true };
 		const splitText = lyrics.match(/[\s\S]{1,2048}/g)!;
 		const embeds = splitText.map((text, i) => ({
 			page: new EmbedBuilder().setTitle(song.title).setURL(song.url).setThumbnail(song.thumbnail).setDescription(text),

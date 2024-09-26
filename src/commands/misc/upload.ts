@@ -15,6 +15,7 @@ export default {
 		},
 	],
 	userTier: UserTier.Beta,
+	type: 'all',
 	execute: async ({ interaction, args }) => {
 		await interaction?.deferReply({ ephemeral: true });
 		const file = (args.get('file') as Attachment) || null;

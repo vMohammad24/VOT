@@ -31,6 +31,6 @@ export default {
 				ephemeral: true,
 			};
 		const res = await shortenUrl(url, password);
-		return { content: res, ephemeral: true };
+		return { content: res, ephemeral: password ? true : false };
 	},
 } as ICommand;

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType, Events } from 'discord.js';
+import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 const exchangeRates: {
@@ -61,12 +62,12 @@ export default {
 			interaction.respond(
 				exchangeRates
 					.map((x) => ({ name: x.name, value: x.key }))
-					.filter((x) => x.name.includes(from))
+					.filter((x) => x.name.toLowerCase().includes(from.toLowerCase()))
 					.slice(0, 25),
 			);
 		});
 	},
-	aliases: ['convert'],
+	aliases: ['con', 'conv', 'currency'],
 	execute: async ({ args }) => {
 		const a = args.get('amount');
 		let from = args.get('from');
@@ -102,7 +103,7 @@ export default {
 		const toValue = eR.find((x) => x.key == to)!;
 		const res = amount * (toValue.value / fromValue.value);
 		return {
-			content: `${amount}${fromValue.unit} is ${res}${toValue.unit}`,
+			content: `${numeral(amount).format('0,0')}${fromValue.unit} is ${numeral(res).format('0,0')}${toValue.unit}`,
 		};
 	},
 } as ICommand;
