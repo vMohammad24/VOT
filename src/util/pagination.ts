@@ -78,8 +78,7 @@ export async function pagination({ interaction, pages, type, message }: Paginati
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
-				filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId,
-				time: 60000,
+				filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId
 			});
 
 			collector?.on('collect', async (i) => {
@@ -144,7 +143,6 @@ export async function pagination({ interaction, pages, type, message }: Paginati
 			const userId = message ? message.author.id : interaction?.user.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) => i.isStringSelectMenu() && i.customId == id && i.user.id == userId,
-				time: 60000,
 			});
 
 			collector?.on('collect', async (i) => {

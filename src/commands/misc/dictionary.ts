@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { pagination } from '../../util/pagination';
+import { pagination, PaginationOptions } from '../../util/pagination';
 
 export default {
 	description: 'Get a defention of a word',
@@ -36,7 +36,7 @@ export default {
 		// 	.setColor('Random')
 		// 	.setTimestamp()
 		// 	.setFooter({ text: 'Powered by dictionaryapi' });
-		const embeds = data[0].meanings.map(
+		const embeds: PaginationOptions['pages'] = data[0].meanings.map(
 			(meaning: {
 				partOfSpeech: string;
 				definitions: {
@@ -52,7 +52,7 @@ export default {
 								.setDescription(
 									meaning.definitions
 										.map((def: { definition: string; example: string }) => {
-											return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}}` : ''}`;
+											return `**Definition:** ${def.definition}\n${def.example ? `**Example:** ${def.example}` : ''}`;
 										})
 										.join('\n\n'),
 								)
@@ -61,12 +61,13 @@ export default {
 								.setFooter({ text: 'Powered by dictionaryapi' }),
 						],
 					},
+					name: meaning.partOfSpeech,
 				};
 			},
 		);
 		await pagination({
 			pages: embeds,
-			type: 'buttons',
+			type: 'select',
 			message,
 			interaction,
 		});

@@ -2,7 +2,6 @@ import { inspect } from 'bun';
 import { ApplicationCommandOptionType, Colors, EmbedBuilder } from 'discord.js';
 import { redis } from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
-
 export default {
 	name: 'eval',
 	description: 'Allows the developer to evaluate code',

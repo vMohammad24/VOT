@@ -75,8 +75,7 @@ export default {
 					type: 'buttons',
 				});
 				const collector = await reply.createMessageComponentCollector({
-					filter: (i) => i.customId == `enrichment_${id}` && i.user.id == user.id,
-					time: 60000,
+					filter: (i) => i.customId == `enrichment_${id}`,
 				});
 				collector.on('collect', async (i) => {
 					i.reply({
