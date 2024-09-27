@@ -43,7 +43,7 @@ export default {
 				)
 				.join('\n')
 			: '';
-
+		const users = guild ? await guild.members.cache.map(user => `DISPLAYNAME: ${user.displayName} (ID: ${user.id}) - ROLE: ${user.roles.highest.name}`).join('\n') : undefined;
 		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
 		const { data: webData } = webRes;
 		const webResults: {
@@ -71,7 +71,6 @@ export default {
 			where: {
 				userId: user.id
 			},
-			take: 10,
 			orderBy: {
 				createdAt: 'desc'
 			}
@@ -125,6 +124,7 @@ export default {
 				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows:\n\n
 				${webMessage}\n\n
 				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
+				${users ? `Here are the users in the server:\n${users}` : ''}
                 `,
 			},
 			{
