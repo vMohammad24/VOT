@@ -17,6 +17,7 @@ export default {
 		},
 	],
 	type: 'all',
+	disabled: true,
 	async execute({ args, interaction, message, handler, user, guild, channel }) {
 		const question = args.get('question');
 		const apiKey = process.env.EVADE_API_KEY;
