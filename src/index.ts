@@ -13,6 +13,7 @@ import app from './api';
 import CommandHandler from './handler/index';
 import { initEmojis } from './util/emojis';
 import { endGiveaway } from './util/giveaways';
+import { launchPuppeteer } from './util/puppeteer';
 const isProduction = process.env.NODE_ENV === 'production';
 const nodes: NodeOption[] = [
 	{
@@ -268,14 +269,27 @@ client.on(Events.Error, (err) => {
 
 	return errorsWebhook.send({ embeds: [embed] });
 });
-
-process.on('SIGINT', async () => {
+const shutdown = async () => {
+	commandHandler.logger.info('Shutting down...');
 	await client.destroy();
 	await prisma.$disconnect();
 	await redis.quit();
 	await gracefulShutdown();
+	await (await launchPuppeteer()).close();
 	commandHandler.logger.info('Shut down.');
 	process.exit(0);
+}
+process.on('SIGINT', async () => {
+	await shutdown();
+});
+process.on('SIGTERM', async () => {
+	await shutdown();
+});
+process.on('exit', async () => {
+	await shutdown();
+});
+process.on('beforeExit', async () => {
+	await shutdown();
 });
 
 export default commandHandler;
