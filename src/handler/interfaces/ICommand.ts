@@ -17,7 +17,6 @@ import type { ArgumentMap } from '../validations/args';
 
 export default interface ICommand {
 	name?: string;
-	id?: string;
 	description: string | 'No description provided';
 	aliases?: string[];
 	perms?: PermissionResolvable[] | 'dev' | null;

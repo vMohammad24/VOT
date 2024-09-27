@@ -4,8 +4,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 export default {
 	description: 'test command for devs',
 	perms: 'dev',
-	type: 'all',
-	disabled: true,
+	type: 'dmOnly',
 	options: [
 		{
 			name: 'test',
@@ -14,7 +13,7 @@ export default {
 		},
 	],
 	execute: async ({ user, interaction, handler, args, message }) => {
-		return { tts: true, content: 'test' };
+		return JSON.stringify(args.get('test'));
 		// return await handler.prisma.discord.delete({ where: { userId: user.id } })
 	},
 } as ICommand;
