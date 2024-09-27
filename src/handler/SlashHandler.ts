@@ -87,22 +87,18 @@ export default class SlashCommandHandler {
 			return command;
 		});
 		// client.application?.commands.set(commands);
-		commands.push(
-			new ContextMenuCommandBuilder()
-				.setType(ApplicationCommandType.Message)
-				.setName('Quote')
-				.setContexts(0, 1, 2)
-				.setIntegrationTypes(0, 1),
-		);
 		try {
 			commandHandler.logger.info('Started refreshing application (/) commands.');
-			const res = await client.rest.put(Routes.applicationCommands(client.user!.id), {
+			commands.push(
+				new ContextMenuCommandBuilder()
+					.setType(ApplicationCommandType.Message)
+					.setName('Quote')
+					.setContexts(0, 1, 2)
+					.setIntegrationTypes(0, 1),
+			);
+			await client.rest.put(Routes.applicationCommands(client.user!.id), {
 				body: JSON.parse(JSON.stringify(commands, (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
 			});
-			for (const command of (res as { id: string, name: string }[])) {
-				const cmd = this.commands.find((c) => c.name?.toLowerCase() === command.name.toLowerCase());
-				if (cmd) cmd.id = command.id;
-			}
 			commandHandler.logger.info('Successfully reloaded application (/) commands.');
 		} catch (error) {
 			commandHandler.logger.error('Error refreshing application (/) commands: ' + error);
