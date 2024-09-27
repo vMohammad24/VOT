@@ -1,10 +1,18 @@
-import { EmbedBuilder } from 'discord.js';
+import { Client, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+
+
+const restPing = async (client: Client) => {
+	const start = Date.now();
+	await client.rest.get('/gateway/bot')
+	return Date.now() - start;
+}
 
 export default {
 	description: 'Pong!',
 	execute: async ({ interaction, message, handler }) => {
-		const apiLatency = handler.client.ws.ping;
+		const wsLatency = handler.client.ws.ping;
+		const restLatency = await restPing(handler.client);
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
 		const pStart = Date.now();
 		await handler.prisma.$queryRaw`SELECT 1`;
@@ -18,7 +26,11 @@ export default {
 					.addFields(
 						{
 							name: 'API Latency',
-							value: '```' + `${apiLatency == -1 ? 'N/A' : `${apiLatency}ms`}` + '```',
+							value: '```' + `${restLatency}ms` + '```',
+						},
+						{
+							name: 'Webscoket Latency',
+							value: '```' + `${wsLatency == -1 ? 'N/A' : `${wsLatency}ms`}` + '```',
 						},
 						{
 							name: 'Message Latency',
