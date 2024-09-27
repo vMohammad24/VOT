@@ -128,7 +128,7 @@ export default {
 					}.\n\n
                 note that you can respond to anything not related to vot.\n\n
                 also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
-				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows:\n\n
+				note that you have the ability to search the web, and it has been searched for \`${question}\` and the results are as follows:\n\n
 				${webMessage}\n\n
 				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
 				when you want to mention a message you can use this format: https://discord.com/channels/{guildId} or @me for dms/{channelId}/{messageId}\n\n
@@ -141,8 +141,6 @@ export default {
 				Make sure to always follow the discord's community guidelines.\n\n
 				Never do @everyone or @here in a response.\n\n
 				Here's a tutorial on how to use markdown in discord: ${discordmarkDownTutorial}\n\n
-				${users ? `Some of the users in this guild include: ${users}` : ''}\n\n
-				some of the training data provided to you from the user (${user.id}) include: ${trainingData.map((data) => `Question: ${data.question} | Response: ${data.response} | Context: ${data.context}`).join('\n')}\n\n
                 `,
 			},
 			{
