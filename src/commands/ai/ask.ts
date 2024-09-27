@@ -97,58 +97,6 @@ export default {
 			},
 			{
 				role: 'user',
-				content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
-					handler.commands?.map((c) => ({
-						name: c.name,
-						description: c.description,
-						options: c.options,
-						type: c.type,
-						slashOnly: c.slashOnly,
-						cateogry: c.category,
-						cooldown: c.cooldown,
-						aliases: c.aliases,
-						needsPlayer: c.needsPlayer,
-						id: c.id
-					})),
-				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`} the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
-                ${guild
-						? `whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
-                ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
-						: ''
-					}.\n\n
-                .\n\n
-                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
-                ${channel
-						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
-							? `Here's a list of the previous messages that were sent in this channel with their author:
-                ${channelMessages}`
-							: ''
-						}\n\nSome of the pinned messages include: ${pinnedMessages}`
-						: ''
-					}.\n\n
-                note that you can respond to anything not related to vot.\n\n
-                also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
-				note that you have the ability to search the web, and it has been searched for \`${question}\` and the results are as follows:\n\n
-				${webMessage}\n\n
-				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
-				when you want to mention a message you can use this format: https://discord.com/channels/{guildId} or @me for dms/{channelId}/{messageId}\n\n
-				when mentioning a command you can use the following format: </commandName:commandId> \n\n
-				you can also mention a user using the following format: <@userId> for a mention\n\n
-				you can also mention a role using the following format: <@&roleId> for a mention\n\n
-				you can also mention a channel using the following format: <#channelId> for a mention\n\n
-				Make sure that all you replies follow both the discord's TOS and discord's privacy policy.\n\n
-				Never share any personal information with the user.\n\n
-				Make sure to always follow the discord's community guidelines.\n\n
-				Never do @everyone or @here in a response.\n\n
-				Here's a tutorial on how to use markdown in discord: ${discordmarkDownTutorial}\n\n
-                `,
-			},
-			{
-				role: 'assistant',
-				content: 'Ok, from now on I will respond to any command questions using the json object you provided.',
-			},
-			{
-				role: 'user',
 				content: question,
 			}
 		];
