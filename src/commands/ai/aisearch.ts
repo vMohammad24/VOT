@@ -18,7 +18,6 @@ export default {
 	slashOnly: true,
 	execute: async ({ args, interaction, message, handler: { logger }, user }) => {
 		const question = args.get('question');
-		console.log(question);
 		if (!question) return { ephemeral: true, content: 'Please provide a question to ask' };
 		const encoded = encodeURIComponent(question);
 		const apiURL = `https://api.evade.rest/search/llm?query=${encoded}`;
@@ -92,6 +91,5 @@ export default {
 				});
 			});
 		});
-		console.log('done');
 	},
 } as ICommand;

@@ -11,7 +11,7 @@ import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 export class Argument<T> {
-	constructor(public value: T) {}
+	constructor(public value: T) { }
 }
 
 export class ArgumentMap<T> {
@@ -81,18 +81,14 @@ export default async function (command: ICommand, ctx: CommandContext) {
 				} else if (message) {
 					if (options.length == 1 || (options.length == 2 && options[1].name == 'silent')) {
 						st = messageArgs.join(' ') || null;
-						console.log(`joining: ${st}`);
 					} else if (options.length > 1) {
 						if (messageArgs[i].includes('"') || messageArgs[i].includes("'")) {
 							st = messageArgs.slice(i).join(' ').replace(/['"]+/g, '') || null;
-							console.log(`replacing: ${st}`);
 						} else {
 							st = messageArgs[i] || null;
-							console.log(`not replacing: ${st}`);
 						}
 					} else {
 						st = messageArgs[i] || null;
-						console.log(`else: ${st}`);
 					}
 					// if (!options[i + 1]) {
 					// 	st = messageArgs.slice(i).join(' ') || null;

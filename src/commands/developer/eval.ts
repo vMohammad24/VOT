@@ -1,13 +1,13 @@
 import { inspect } from 'bun';
 import { ApplicationCommandOptionType, Colors, EmbedBuilder } from 'discord.js';
-import { redis } from '../..';
+import commandHandler, { redis } from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 export default {
 	name: 'eval',
 	description: 'Allows the developer to evaluate code',
 	aliases: ['e'],
 	perms: 'dev',
-	type: 'dmOnly',
+	type: commandHandler.prodMode ? 'dmOnly' : 'all',
 	options: [
 		{
 			name: 'type',
@@ -40,7 +40,8 @@ export default {
 			required: true,
 		},
 	],
-	execute: async ({ handler, args, channel, guild, interaction, member, message, player }) => {
+	execute: async (ctx) => {
+		const { handler, args, channel, guild, interaction, member, message, player } = ctx;
 		let code = args.get('code') as string | undefined;
 		if (!code) return { content: 'No code provided', ephemeral: true };
 		const embed = new EmbedBuilder().setTitle('Eval').setColor(Colors.NotQuiteBlack);

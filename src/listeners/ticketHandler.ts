@@ -30,9 +30,7 @@ export default {
 						.setCustomId('create_ticket_modal')
 						.setComponents(actionRowBuilder.addComponents(textInput));
 					await interaction.showModal(modal);
-					const modalSubmit = await interaction.awaitModalSubmit({
-						time: 30000,
-					});
+					const modalSubmit = await interaction.awaitModalSubmit({ time: 60000 });
 					const reason = modalSubmit.fields.getTextInputValue('reason');
 					const tick = await createTicket(interaction.member as GuildMember, reason);
 					if (tick.error) {
