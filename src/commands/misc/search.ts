@@ -33,7 +33,6 @@ export default {
 		}[] = data.response.web.results;
 		if (!results) return { ephemeral: true, content: 'No results found' };
 		const evadeUser = (await client.rest.get('/users/1228765716321271999')) as APIUser;
-		await client.rest;
 		const isGif = evadeUser.avatar!.startsWith('a_');
 		const evadeAvatar = `https://cdn.discordapp.com/avatars/${evadeUser.id}/${evadeUser.avatar}.${isGif ? 'gif' : 'png'}?size=1024?quality=loseless`;
 		const pages = results.map((result, index) => {
