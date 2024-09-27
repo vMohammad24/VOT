@@ -178,8 +178,9 @@ export default {
 					},
 				},
 			);
-		if (res.status !== 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
+		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
 		const response = res.data || '';
+		console.log(response);
 		await pagination({
 			interaction,
 			message,
