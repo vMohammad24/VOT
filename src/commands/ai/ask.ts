@@ -141,31 +141,19 @@ export default {
 				Make sure to always follow the discord's community guidelines.\n\n
 				Never do @everyone or @here in a response.\n\n
 				Here's a tutorial on how to use markdown in discord: ${discordmarkDownTutorial}\n\n
-				${users ? `Some of the users in this guild include: ${users}` : ''}
+				${users ? `Some of the users in this guild include: ${users}` : ''}\n\n
+				some of the training data provided to you from the user (${user.id}) include: ${trainingData.map((data) => `Question: ${data.question} | Response: ${data.response} | Context: ${data.context}`).join('\n')}\n\n
                 `,
 			},
 			{
 				role: 'assistant',
 				content: 'Ok, from now on I will respond to any command questions using the json object you provided.',
 			},
-		];
-		trainingData.forEach((data) => {
-			messages.push(
-				{
-					role: 'user',
-					content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
-				},
-				{
-					role: 'assistant',
-					content: data.response || "no response."
-				}
-			)
-		})
-		messages.push(
 			{
 				role: 'user',
 				content: question,
-			})
+			}
+		];
 		const res = await axios
 			.post(
 				'https://api.evade.rest/streamingchat',
@@ -180,7 +168,12 @@ export default {
 			);
 		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
 		const response = res.data || '';
-		console.log(response);
+		if (!response) {
+			return {
+				content: 'API returned an empty response',
+				ephemeral: true
+			}
+		}
 		await pagination({
 			interaction,
 			message,
