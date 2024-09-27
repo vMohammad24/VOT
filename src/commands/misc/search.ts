@@ -21,7 +21,6 @@ export default {
 	execute: async ({ args, interaction, message, handler: { client } }) => {
 		const query = args.get('query') as string | undefined;
 		if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
-		console.log(query);
 		const apiURL = `https://api.evade.rest/search?query=${encodeURIComponent(query)}`;
 		await interaction?.deferReply();
 		const res = await axios.get(apiURL);

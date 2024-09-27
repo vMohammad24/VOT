@@ -45,6 +45,7 @@ model User {
   ticketsOwned     Ticket[]
   musicSettings    MusicSettings?
   lastUpdated      DateTime       @default(now()) @updatedAt
+  TrainingData     TrainingData[]
 }
 
 model Member {
@@ -188,6 +189,16 @@ model Error {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   commandId String?
+}
+
+model TrainingData {
+  id        String   @id @default(uuid())
+  question  String
+  response  String
+  context   String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 }
 
 enum PanelType {
