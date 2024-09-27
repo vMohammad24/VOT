@@ -178,6 +178,5 @@ export default {
 				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessages ? `Channel Messages:\n${channelMessages}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
 			},
 		})
-		browser.close();
 	},
 } as ICommand;

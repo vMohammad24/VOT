@@ -5,6 +5,7 @@ export default {
 	description: 'test command for devs',
 	perms: 'dev',
 	type: 'dmOnly',
+	disabled: true,
 	options: [
 		{
 			name: 'test',
