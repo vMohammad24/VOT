@@ -78,6 +78,10 @@ export default {
 		})
 		const messages = [
 			{
+				role: 'system',
+				content: `You are VOT.`
+			},
+			{
 				role: 'user',
 				content: 'what is vot.wtf?',
 			},
@@ -148,7 +152,7 @@ export default {
 		)
 		const res = await axios
 			.post(
-				'https://api.evade.rest/streamingchat',
+				'https://api.evade.rest/llama',
 				{
 					messages,
 				},
@@ -156,10 +160,12 @@ export default {
 					headers: {
 						Authorization: apiKey,
 					},
+
 				},
 			);
 		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
-		const response = res.data || '';
+		console.log(res.data)
+		const response = res.data.message.content || '';
 		await pagination({
 			interaction,
 			message,
