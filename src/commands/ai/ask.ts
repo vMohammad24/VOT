@@ -4,6 +4,7 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer } from '../../util/puppeteer';
 
+const browser = await launchPuppeteer();
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
@@ -53,13 +54,16 @@ export default {
 			page_age: string;
 			content: string;
 		}[] = webData.response.web.results;
-		const browser = await launchPuppeteer();
+		const page = await browser.newPage();
 		Promise.all(webResults.map(async (result) => {
-			const page = await browser.newPage();
-			await page.goto(result.url);
-			result.content = await page.content();
-			await page.close();
+			try {
+				await page.goto(result.url, { timeout: 3000 });
+				result.content = await page.content();
+			} catch (e) {
+				result.content = 'no content found.';
+			}
 		}))
+		await page.close();
 		const webMessage = webResults ? webResults.map((result) =>
 			`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age}) with the content: *CONTENT START* ${result.content} *CONTENT END*`
 		).join('\n') : 'No web results found';
@@ -150,10 +154,12 @@ export default {
 				},
 			);
 		if (res.status !== 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
+		const response = res.data || '';
+		console.log(res)
 		await pagination({
 			interaction,
 			message,
-			pages: res.data.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text + `\n\n-# Found ${webResults.length} results on the web`,
 				},
@@ -164,7 +170,7 @@ export default {
 			data: {
 				question,
 				userId: user.id,
-				response: res.data,
+				response,
 				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessages ? `Channel Messages:\n${channelMessages}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
 			},
 		})
