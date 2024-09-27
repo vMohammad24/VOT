@@ -1,10 +1,20 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel } from 'discord.js';
+import { Page } from 'puppeteer';
+import TurndownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer } from '../../util/puppeteer';
 
 const browser = await launchPuppeteer();
+const turndownService = new TurndownService();
+
+const discordmarkDownTutorialFn = async (page: Page) => {
+	await page.goto('https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline')
+	const content = await page.content();
+	return content;
+}
+let discordmarkDownTutorial: string | undefined = undefined;
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
@@ -44,6 +54,8 @@ export default {
 				.join('\n')
 			: '';
 
+		const users = guild ? await guild.members.cache.map(user => `username: ${user.displayName}, id: ${user.id}, role: ${user.roles.highest.name}`).join('\n') : undefined;
+
 		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
 		const { data: webData } = webRes;
 		const webResults: {
@@ -53,7 +65,7 @@ export default {
 			url: string;
 			page_age: string;
 			content: string;
-		}[] = webData.response.web.results;
+		}[] = webData.response.web.results || [];
 		const page = await browser.newPage();
 		Promise.all(webResults.map(async (result) => {
 			try {
@@ -63,9 +75,10 @@ export default {
 				result.content = 'no content found.';
 			}
 		}))
+		if (!discordmarkDownTutorial) discordmarkDownTutorial = await discordmarkDownTutorialFn(page);
 		await page.close();
 		const webMessage = webResults ? webResults.map((result) =>
-			`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age}) with the content: *CONTENT START* ${result.content} *CONTENT END*`
+			`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age}) with the content: *CONTENT START* ${turndownService.turndown(result.content ?? '')} *CONTENT END*`
 		).join('\n') : 'No web results found';
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
@@ -95,6 +108,7 @@ export default {
 						cooldown: c.cooldown,
 						aliases: c.aliases,
 						needsPlayer: c.needsPlayer,
+						id: c.id
 					})),
 				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`} the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
                 ${guild
@@ -117,6 +131,17 @@ export default {
 				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows:\n\n
 				${webMessage}\n\n
 				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
+				when you want to mention a message you can use this format: https://discord.com/channels/{guildId} or @me for dms/{channelId}/{messageId}\n\n
+				when mentioning a command you can use the following format: </commandName:commandId> \n\n
+				you can also mention a user using the following format: <@userId> for a mention\n\n
+				you can also mention a role using the following format: <@&roleId> for a mention\n\n
+				you can also mention a channel using the following format: <#channelId> for a mention\n\n
+				Make sure that all you replies follow both the discord's TOS and discord's privacy policy.\n\n
+				Never share any personal information with the user.\n\n
+				Make sure to always follow the discord's community guidelines.\n\n
+				Never do @everyone or @here in a response.\n\n
+				Here's a tutorial on how to use markdown in discord: ${discordmarkDownTutorial}\n\n
+				${users ? `Some of the users in this guild include: ${users}` : ''}
                 `,
 			},
 			{
@@ -155,13 +180,13 @@ export default {
 			);
 		if (res.status !== 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
 		const response = res.data || '';
-		console.log(res)
 		await pagination({
 			interaction,
 			message,
 			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text + `\n\n-# Found ${webResults.length} results on the web`,
+					allowedMentions: {}
 				},
 			})),
 			type: 'buttons',
@@ -174,6 +199,5 @@ export default {
 				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessages ? `Channel Messages:\n${channelMessages}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
 			},
 		})
-		browser.close();
 	},
 } as ICommand;
