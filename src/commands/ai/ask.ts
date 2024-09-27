@@ -70,6 +70,10 @@ export default {
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
 				userId: user.id
+			},
+			take: 10,
+			orderBy: {
+				createdAt: 'desc'
 			}
 		})
 		const messages = [
@@ -141,7 +145,7 @@ export default {
 				role: 'user',
 				content: question,
 			}
-		];
+		)
 		const res = await axios
 			.post(
 				'https://api.evade.rest/streamingchat',
@@ -156,7 +160,6 @@ export default {
 			);
 		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
 		const response = res.data || '';
-		console.log(res)
 		await pagination({
 			interaction,
 			message,
