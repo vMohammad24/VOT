@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
+import { launchPuppeteer } from '../../util/puppeteer';
 
 export default {
 	name: 'ask',
@@ -41,6 +42,27 @@ export default {
 				)
 				.join('\n')
 			: '';
+
+		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
+		const { data: webData } = webRes;
+		const webResults: {
+			profile: { name: string };
+			title: string;
+			description: string;
+			url: string;
+			page_age: string;
+			content: string;
+		}[] = webData.response.web.results;
+		const browser = await launchPuppeteer();
+		Promise.all(webResults.map(async (result) => {
+			const page = await browser.newPage();
+			await page.goto(result.url);
+			result.content = await page.content();
+			await page.close();
+		}))
+		const webMessage = webResults ? webResults.map((result) =>
+			`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age}) with the content: *CONTENT START* ${result.content} *CONTENT END*`
+		).join('\n') : 'No web results found';
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
 				userId: user.id
@@ -87,7 +109,10 @@ export default {
 						: ''
 					}.\n\n
                 note that you can respond to anything not related to vot.\n\n
-                also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.
+                also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
+				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows:\n\n
+				${webMessage}\n\n
+				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
                 `,
 			},
 			{
@@ -130,7 +155,7 @@ export default {
 			message,
 			pages: res.data.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
-					content: text,
+					content: text + `\n\n-# Found ${webResults.length} results on the web`,
 				},
 			})),
 			type: 'buttons',
@@ -143,5 +168,6 @@ export default {
 				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessages ? `Channel Messages:\n${channelMessages}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
 			},
 		})
+		browser.close();
 	},
 } as ICommand;
