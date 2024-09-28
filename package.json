@@ -6,6 +6,7 @@
     "@eslint/eslintrc": "latest",
     "@eslint/js": "latest",
     "@types/bun": "latest",
+    "@types/dockerode": "^3.3.31",
     "@types/node-schedule": "latest",
     "@types/turndown": "^5.0.5",
     "pino-pretty": "latest",
@@ -30,8 +31,11 @@
     "@types/numeral": "latest",
     "axios": "latest",
     "discord.js": "^14.16.2",
+    "dockerode": "^4.0.2",
+    "elevenlabs": "^0.16.0",
     "elysia": "latest",
     "genius-lyrics": "latest",
+    "get-audio-duration": "^4.0.1",
     "ioredis": "^5.4.1",
     "kazagumo": "latest",
     "kazagumo-apple": "latest",
@@ -48,6 +52,18 @@
     "query-string": "latest",
     "sharp": "latest",
     "shoukaku": "latest",
+    "tesseract.js": "^5.1.1",
     "turndown": "latest"
-  }
+  },
+  "trustedDependencies": [
+    "@ffprobe-installer/linux-x64",
+    "@prisma/client",
+    "@prisma/engines",
+    "cpu-features",
+    "prisma",
+    "puppeteer",
+    "sharp",
+    "ssh2",
+    "tesseract.js"
+  ]
 }

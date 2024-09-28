@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y \
   && apt-get install -y nodejs
 COPY package.json ./
 COPY bun.lockb ./
+RUN bun install
 COPY src ./src
 COPY prisma ./prisma
 COPY assets ./assets
-RUN bun install
 EXPOSE 8080
 CMD [ "bun", "start" ]
