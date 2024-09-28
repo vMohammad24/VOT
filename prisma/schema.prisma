@@ -126,6 +126,7 @@ model Guild {
   loggingChannel  String?
   TicketSettings  TicketSettings?
   WelcomeSettings WelcomeSettings?
+  leveling        Boolean          @default(false)
   members         Member[]
   memberCount     Int              @default(0)
   onlineCount     Int              @default(0)

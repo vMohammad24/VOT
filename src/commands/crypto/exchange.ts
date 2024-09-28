@@ -56,7 +56,7 @@ export default {
 	init: async (handler) => {
 		handler.client.on(Events.InteractionCreate, async (interaction) => {
 			if (!interaction.isAutocomplete()) return;
-			if (interaction.commandName != 'convert') return;
+			if (interaction.commandName != 'exchange') return;
 			if (exchangeRates.length == 0) await loadExchangeRates();
 			const from = interaction.options.getFocused();
 			interaction.respond(
