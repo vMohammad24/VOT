@@ -1,14 +1,13 @@
 import { cors } from '@elysiajs/cors';
 import { ApplicationCommandOptionType } from 'discord.js';
 import Elysia from 'elysia';
-import commandHandler from '..';
+import commandHandler, { upSince } from '..';
 import discord from './discord';
 import spotify from './spotify';
 
 const elysia = new Elysia().use(cors());
 
 let totalCommands = -1;
-const upSince = Date.now();
 let lastPing: number | 'N/A' = -1;
 elysia.get('/', function () {
 	if (totalCommands == -1) totalCommands = commandHandler.commands!.length;

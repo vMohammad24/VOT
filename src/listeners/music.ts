@@ -52,10 +52,6 @@ export default {
 			}
 		});
 
-		kazagumo.on('playerEmpty', async (player) => {
-			await player.destroy();
-		});
-
 
 
 		client.on(Events.InteractionCreate, async (inter) => {

@@ -15,6 +15,8 @@ import { initEmojis } from './util/emojis';
 import { endGiveaway } from './util/giveaways';
 import { launchPuppeteer } from './util/puppeteer';
 const isProduction = process.env.NODE_ENV === 'production';
+export const upSince = Date.now();
+
 const nodes: NodeOption[] = [
 	{
 		url: `${process.env.LAVALINK_URL}:2333`,

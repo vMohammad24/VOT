@@ -17,7 +17,7 @@ interface RequiredShits {
 
 type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
-interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> {}
+interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
 export default class CommandHandler {
 	public prisma: ICommandHandler['prisma'];
@@ -67,6 +67,7 @@ export default class CommandHandler {
 	}
 
 	public async executeCommand(command: ICommand, ctx: Interaction | Message) {
+		if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
 		let commandContext: CommandContext;
 		const getPlayer = (member: GuildMember) => {
 			if (!member) return;
