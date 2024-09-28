@@ -75,7 +75,24 @@ export default {
 				createdAt: 'desc'
 			}
 		})
+		const trainingMessages: {
+			role: 'user' | 'assistant';
+			content: string;
+		}[] = [];
+		trainingData.forEach((data) => {
+			trainingMessages.push(
+				{
+					role: 'user',
+					content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
+				},
+				{
+					role: 'assistant',
+					content: data.response || "no response."
+				}
+			)
+		})
 		const messages = [
+			...trainingMessages,
 			{
 				role: 'user',
 				content: 'what is vot.wtf?',
@@ -128,18 +145,6 @@ export default {
 				content: 'Ok, from now on I will respond to any command questions using the json object you provided.',
 			},
 		];
-		trainingData.forEach((data) => {
-			messages.push(
-				{
-					role: 'user',
-					content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
-				},
-				{
-					role: 'assistant',
-					content: data.response || "no response."
-				}
-			)
-		})
 		messages.push(
 			{
 				role: 'user',
