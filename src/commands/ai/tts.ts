@@ -29,7 +29,7 @@ export default {
                 attachment: audio,
                 name: 'tts.mp3',
                 waveform: Buffer.from(array).toString("base64"),
-                duration_secs: 4560
+                duration_secs: 4140
             }],
             flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
         }
