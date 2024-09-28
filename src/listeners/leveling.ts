@@ -41,6 +41,15 @@ export default {
 		client.on(Events.MessageCreate, async (message) => {
 			if (!shouldGetExp(message)) return;
 			const user = await getUser(message.author);
+			const guild = await prisma.guild.findUnique({
+				where: {
+					id: message.guild!.id,
+				},
+				select: {
+					leveling: true
+				}
+			})
+			if (!guild || !guild.leveling) return;
 			const member = await prisma.member.upsert({
 				where: {
 					userId_guildId: {

@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, MessageFlags, MessageFlagsBitField } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import elevenlabs from "../../util/elvenlabs";
 
@@ -18,20 +18,20 @@ export default {
         if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };
         await interaction?.deferReply();
         const audio = await elevenlabs.generate({
-            voice: 'Brian',
+            voice: 'Milo - Casual, Chill, Relatable Young Male',
             text,
             model_id: 'eleven_turbo_v2_5'
         })
-        // const array = new Uint8Array(69);
-        // crypto.getRandomValues(array);
+        const array = new Uint8Array(69);
+        crypto.getRandomValues(array);
         return {
             files: [{
                 attachment: audio,
                 name: 'tts.mp3',
-                // waveform: Buffer.from(array).toString("base64"),
-                // duration_secs: 4140
+                waveform: Buffer.from(array).toString("base64"),
+                duration_secs: 4140
             }],
-            // flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
+            flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
         }
 
     }
