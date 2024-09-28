@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, MessageFlags, MessageFlagsBitField } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import elevenlabs from "../../util/elvenlabs";
 
@@ -22,16 +22,16 @@ export default {
             text,
             model_id: 'eleven_turbo_v2_5'
         })
-        const array = new Uint8Array(69);
-        crypto.getRandomValues(array);
+        // const array = new Uint8Array(69);
+        // crypto.getRandomValues(array);
         return {
             files: [{
                 attachment: audio,
                 name: 'tts.mp3',
-                waveform: Buffer.from(array).toString("base64"),
-                duration_secs: 4140
+                // waveform: Buffer.from(array).toString("base64"),
+                // duration_secs: 4140
             }],
-            flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
+            // flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
         }
 
     }
