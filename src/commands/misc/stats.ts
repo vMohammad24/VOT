@@ -1,30 +1,10 @@
 import axios from 'axios';
 import { APIApplication, EmbedBuilder } from 'discord.js';
-import Docker from 'dockerode';
 import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 let globalLines = 0;
-const docker = new Docker();
-
-interface MemoryStats {
-	name: string;
-	memoryUsage: number;
-}
-async function getMemoryStats(): Promise<MemoryStats[]> {
-	const containers = await docker.listContainers();
-	const statsPromises = containers.map(async (container) => {
-		const stats = await docker.getContainer(container.Id).stats({ stream: false });
-		return {
-			name: container.Names[0].substring(1),
-			memoryUsage: Math.pow(1024, -2) * stats.memory_stats.usage,
-		} as MemoryStats;
-	});
-
-	const stats = await Promise.all(statsPromises);
-	return stats;
-}
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
 	const files = await glob.scanSync({
@@ -65,7 +45,7 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 		headers,
 	});
 	const commit = data[0].commit;
-	const message = commit.message;
+	const message = (commit.message as string).replace("[silent]", "").trim();
 	const date = new Date(commit.committer.date);
 	return { message, date };
 }
@@ -85,7 +65,6 @@ export default {
 		const res = (await client.rest.get('/applications/@me')) as APIApplication;
 		const { approximate_guild_count, approximate_user_install_count } = res;
 		if (globalLines === 0) globalLines = await getLines();
-		const dockerStats = await getMemoryStats();
 		const embed = new EmbedBuilder()
 			.setTitle('Bot Stats')
 			.addFields(
@@ -100,10 +79,6 @@ export default {
 					inline: true,
 				},
 				{
-					name: 'Uptime',
-					value: `<t:${Math.round(upSince / 1000)}>`,
-				},
-				{
 					name: 'Guilds',
 					value: `${size}`,
 					inline: true,
@@ -116,6 +91,7 @@ export default {
 				{
 					name: 'Channels',
 					value: `${client.channels.cache.size}`,
+					inline: true,
 				},
 				{
 					name: 'Lines',
@@ -135,16 +111,8 @@ export default {
 			)
 			.setTimestamp(commit.date)
 			.setFooter({ text: commit.message })
+			.setDescription(`Uptime: <t:${Math.round(upSince / 1000)}>`)
 			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
-		embed.addFields(
-			dockerStats.map((stat) => {
-				return {
-					name: stat.name,
-					value: numeral(stat.memoryUsage).format('0.0') + ' MB',
-					inline: true,
-				};
-			}),
-		)
 		return { embeds: [embed] };
 	},
 } as ICommand;

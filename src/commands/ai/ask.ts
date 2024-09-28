@@ -77,10 +77,6 @@ export default {
 		})
 		const messages = [
 			{
-				role: 'system',
-				content: `You are VOT.`
-			},
-			{
 				role: 'user',
 				content: 'what is vot.wtf?',
 			},
@@ -155,6 +151,12 @@ export default {
 				'https://api.evade.rest/llama',
 				{
 					messages,
+					props: {
+						system: "You are VOT.",
+						top_p: 0.9,
+						temperature: 0.8,
+						forceWeb: true
+					}
 				},
 				{
 					headers: {
@@ -165,13 +167,13 @@ export default {
 			);
 		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
 		console.log(res.data)
-		const response = res.data.message.content || '';
+		const response = res.data.short || '';
 		await pagination({
 			interaction,
 			message,
-			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: (response + `\n\n-# Found ${webResults.length} results on the web\n-# Used ${res.data.diagnostics.tokens} tokens`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
-					content: text + `\n\n-# Found ${webResults.length} results on the web`,
+					content: text,
 				},
 			})),
 			type: 'buttons',
