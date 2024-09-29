@@ -21,10 +21,11 @@ export interface PaginationOptions {
 	type?: 'buttons' | 'select';
 	interaction?: ChatInputCommandInteraction | null;
 	message?: Message<boolean> | null;
+	rMsg?: Message<boolean>;
 	id?: string;
 }
 
-export async function pagination({ interaction, pages, type, message }: PaginationOptions): Promise<Message> {
+export async function pagination({ interaction, pages, type, message, rMsg }: PaginationOptions): Promise<Message> {
 	if (!interaction && !message) {
 		throw new Error('No interaction or message provided for pagination');
 	}
@@ -72,7 +73,7 @@ export async function pagination({ interaction, pages, type, message }: Paginati
 				oldPage = page;
 			}
 			const sentMessage = message
-				? await message?.reply(messages.get(0) as MessageReplyOptions)
+				? await (rMsg ? message?.reply(messages.get(0) as MessageReplyOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
@@ -104,20 +105,19 @@ export async function pagination({ interaction, pages, type, message }: Paginati
 		case 'select': {
 			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>(); // page, message
 			let oldPage = 0;
-			const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-				new StringSelectMenuBuilder()
-					.setCustomId(id)
-					.setPlaceholder('Select a page')
-					.addOptions(
-						pages.map((e, i) => ({
-							label: e.name || `Page ${i + 1}`,
-							value: i.toString(),
-						})),
-					),
-			);
 			for (const embed of pages) {
 				const { page: e, name } = embed;
-
+				const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId(id)
+						.setPlaceholder(name || 'Select a page')
+						.addOptions(
+							pages.map((e, i) => ({
+								label: e.name || `Page ${i + 1}`,
+								value: i.toString(),
+							})),
+						),
+				);
 				let { pageNumber: page } = embed;
 				if (!page) {
 					if (messages.has(0)) {
@@ -136,7 +136,7 @@ export async function pagination({ interaction, pages, type, message }: Paginati
 				oldPage = page;
 			}
 			const sentMessage = message
-				? await message?.reply(messages.get(0) as MessageReplyOptions)
+				? await (rMsg ? message?.reply(messages.get(0) as MessageReplyOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);

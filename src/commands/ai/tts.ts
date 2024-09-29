@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, MessageFlags, MessageFlagsBitField } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import elevenlabs from "../../util/elvenlabs";
 
@@ -13,7 +13,7 @@ export default {
     },
     ],
     type: 'all',
-    execute: async ({ args, interaction }) => {
+    execute: async ({ args, interaction, handler }) => {
         const text = args.get('text') as string | undefined;
         if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };
         await interaction?.deferReply();
@@ -22,16 +22,26 @@ export default {
             text,
             model_id: 'eleven_turbo_v2_5'
         })
-        // const array = new Uint8Array(69);
-        // crypto.getRandomValues(array);
-        return {
-            files: [{
-                attachment: audio,
-                name: 'tts.mp3',
-                // waveform: Buffer.from(array).toString("base64"),
-                // duration_secs: 4140
-            }],
-            // flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
+        if (!audio) return { ephemeral: true, content: 'Failed to generate audio' }
+        if (handler.prodMode) {
+            return {
+                files: [{
+                    attachment: audio,
+                    name: 'tts.mp3',
+                }],
+            }
+        } else {
+            const array = new Uint8Array(69);
+            crypto.getRandomValues(array);
+            return {
+                files: [{
+                    attachment: audio,
+                    name: 'tts.mp3',
+                    waveform: Buffer.from(array).toString("base64"),
+                    duration_secs: 4140
+                }],
+                flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
+            }
         }
 
     }

@@ -1,9 +1,7 @@
 import { inspect } from 'bun';
 import {
 	ApplicationCommandOptionType,
-	ApplicationCommandType,
 	type Client,
-	ContextMenuCommandBuilder,
 	Events,
 	InteractionReplyOptions,
 	PermissionsBitField,
@@ -12,9 +10,15 @@ import {
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
+import { IContextCommand } from './interfaces/IContextCommand';
 import type SlashHandler from './interfaces/ISlashHandler';
+
+
+function isICommand(cmd: ICommand | IContextCommand): cmd is ICommand {
+	return (cmd as ICommand).category !== undefined;
+}
 export default class SlashCommandHandler {
-	public commands: ICommand[] = [];
+	public commands: (ICommand | IContextCommand)[] = [];
 	private handler: CommandHandler;
 	constructor({ client, commands }: SlashHandler, handler: CommandHandler) {
 		this.commands = commands;
@@ -34,7 +38,7 @@ export default class SlashCommandHandler {
 	}
 
 	public async initCommands(client: Client) {
-		const commands = this.commands.map((cmd) => {
+		const commands = this.commands.filter(isICommand).filter(a => a.category != null).map((cmd: ICommand) => {
 			let perms: bigint | null = 0n;
 			if (!cmd.options) cmd.options = [];
 			if (cmd.perms && cmd.perms != 'dev') {
@@ -86,13 +90,36 @@ export default class SlashCommandHandler {
 			command.name = cmd.name?.toLowerCase();
 			return command;
 		});
-		commands.push(
-			new ContextMenuCommandBuilder()
-				.setType(ApplicationCommandType.Message)
-				.setName('Quote')
-				.setContexts(0, 1, 2)
-				.setIntegrationTypes(0, 1),
-		);
+		const contextCommands = this.commands!.filter(a => (a as IContextCommand).context != null).map((c) => {
+			const cmd = c as IContextCommand;
+			const uInstall = {
+				contexts: [] as number[],
+				integration_types: [] as number[],
+			};
+
+			if (!cmd.context) cmd.context = 'guildOnly';
+
+			if (cmd.context == 'installable' || cmd.context == 'all') {
+				uInstall.contexts.push(2);
+				uInstall.integration_types.push(1);
+			}
+			if (cmd.context == 'guildOnly' || cmd.context == 'all') {
+				uInstall.contexts.push(0);
+				uInstall.integration_types.push(0);
+			}
+
+			if (cmd.context == 'dmOnly') {
+				uInstall.contexts.push(1);
+				uInstall.integration_types.push(0);
+			}
+			const command = this.filterObject({ ...cmd, ...uInstall }, [
+				'integration_types',
+				'contexts',
+				'name',
+			]);
+			command.name = cmd.name?.toLowerCase();
+			return command;
+		});
 		try {
 			commandHandler.logger.info('Started refreshing application (/) commands.');
 			const res = await client.rest.put(Routes.applicationCommands(client.user!.id), {

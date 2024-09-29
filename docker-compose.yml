@@ -133,7 +133,7 @@ services:
       - _JAVA_OPTIONS=-Xmx6G
     volumes:
       - ./application.yml:/opt/Lavalink/application.yml
-      - ./plugins/:/opt/Lavalink/plugins/
+      - ./plugins/:/opt/Lavalink/plugins/:rw
     ports:
       - '2333:2333'
   redis_dev:
