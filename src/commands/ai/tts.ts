@@ -13,6 +13,7 @@ export default {
     },
     ],
     type: 'all',
+    userTier: 'Premium',
     execute: async ({ args, interaction, handler }) => {
         const text = args.get('text') as string | undefined;
         if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };

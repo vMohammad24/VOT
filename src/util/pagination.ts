@@ -7,6 +7,7 @@ import {
 	InteractionEditReplyOptions,
 	InteractionReplyOptions,
 	Message,
+	MessageEditOptions,
 	MessageReplyOptions,
 	StringSelectMenuBuilder,
 } from 'discord.js';
@@ -73,7 +74,7 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 				oldPage = page;
 			}
 			const sentMessage = message
-				? await (rMsg ? message?.reply(messages.get(0) as MessageReplyOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
@@ -136,7 +137,7 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 				oldPage = page;
 			}
 			const sentMessage = message
-				? await (rMsg ? message?.reply(messages.get(0) as MessageReplyOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
