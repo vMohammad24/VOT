@@ -184,6 +184,7 @@ export default {
 		await pagination({
 			interaction,
 			message,
+			rMsg,
 			pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text,
