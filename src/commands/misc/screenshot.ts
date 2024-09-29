@@ -1,9 +1,18 @@
 import { ApplicationCommandOptionType } from 'discord.js';
+import { join } from 'path';
+import commandHandler from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 import { launchPuppeteer } from '../../util/puppeteer';
-
 const browser = await launchPuppeteer();
-
+const page = await browser.newPage();
+const blacklist = await (async () => {
+	commandHandler.logger.info('Loading domain blacklist');
+	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'domain_blacklist.txt');
+	const text = await Bun.file(path).text();
+	const domainRegex = /(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
+	commandHandler.logger.info('Loaded domain blacklist');
+	return text.split('\n').map((a) => a.match(domainRegex)?.[0]);
+})()
 export default {
 	description: 'Takes a screenshot of a website',
 	aliases: ['ss'],
@@ -17,12 +26,13 @@ export default {
 	],
 	type: 'all',
 	execute: async ({ interaction, args }) => {
-		const url = args.get('url') as string;
+		let url = args.get('url') as string;
 		if (!url)
 			return {
 				content: 'Please provide a URL',
 				ephemeral: true,
 			};
+		if (!url.startsWith('http')) url = `https://${url}`;
 		const urlRegex = /^(https?:\/\/)?([\w\d]+\.)?[\w\d]+\.\w+\/?/;
 		if (!urlRegex.test(url))
 			return {
@@ -30,15 +40,24 @@ export default {
 				ephemeral: true,
 			};
 		await interaction?.deferReply();
-		const page = await browser.newPage();
+		if (blacklist.includes(new URL(url).hostname)) return {
+			ephemeral: true,
+			content: `This site is blacklisted.`
+		}
 		await page.goto(url);
 		const b = await page.$('body');
-		await b?.evaluate((body) => {
-			const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
-			body.innerHTML = body.innerHTML.replace(ipRegex, 'nuh uh');
-		});
+		try {
+			await b?.evaluate((body) => {
+				const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+				body.innerHTML = body.innerHTML.replace(ipRegex, 'nuh uh');
+			});
+		} catch (e) {
+			return {
+				ephemeral: true,
+				content: `This site has screenshotting disabled.`
+			}
+		}
 		const screenshot = await page.screenshot();
-		await page.close();
 		return {
 			files: [
 				{

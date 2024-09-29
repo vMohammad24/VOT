@@ -21,6 +21,14 @@ export default {
 	execute: async ({ args, guild }) => {
 		const user = args.get('user') as GuildMember;
 		if (!user) return 'You must provide a user to disallow pinging';
+		const rules = await guild.autoModerationRules.fetch();
+		const eRule = rules.find((r) => r.name === `${user.user.username}'s ping block`);
+		if (eRule) {
+			await eRule.delete();
+			return {
+				content: `${eRule.name} has been deleted`,
+			}
+		}
 		const rule = await guild.autoModerationRules.create({
 			actions: [
 				{
