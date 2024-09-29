@@ -35,7 +35,7 @@ export default {
 			? channelMessages
 				.map(
 					(m: Message<boolean>) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
+						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
 				)
 				.join('\n')
 			: '';
@@ -44,29 +44,31 @@ export default {
 				.values())
 				.map(
 					(m) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.embeds ? (m.embeds ? m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
+						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""}: ${m.embeds ? (m.embeds ? m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
 				)
 				.join('\n')
 			: '';
-		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name}`).join('\n') : undefined;
+		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - Had nitro since ${user.premiumSinceTimestamp}`).join('\n') : undefined;
 		await editReply('Searching...', rMsg);
 		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
 		const { data: webData } = webRes;
 		let webMessage = 'No web results found';
 		let webLength = 0;
 		if (webData && webData.response) {
-			const webResults: {
-				profile: { name: string };
-				title: string;
-				description: string;
-				url: string;
-				page_age: string;
-				content: string;
-			}[] = webData.response.web.results;
-			webMessage = webResults.map((result) =>
-				`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
-			).join('\n')
-			webLength = webResults.length;
+			try {
+				const webResults: {
+					profile: { name: string };
+					title: string;
+					description: string;
+					url: string;
+					page_age: string;
+					content: string;
+				}[] = webData.response.web.results;
+				webMessage = webResults.map((result) =>
+					`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
+				).join('\n')
+				webLength = webResults.length;
+			} catch (e) { }
 		}
 		await editReply('Generating previous conversations...', rMsg);
 		const trainingData = await handler.prisma.trainingData.findMany({
@@ -197,7 +199,7 @@ export default {
 				question,
 				userId: user.id,
 				response,
-				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
+				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''} | Users: ${users}`,
 			},
 		})
 	},
