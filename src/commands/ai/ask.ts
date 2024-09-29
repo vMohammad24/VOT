@@ -118,9 +118,9 @@ export default {
 						commandId: c.id,
 					})),
 				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
-				 the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
+				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
                 ${guild
-						? `and this user joined this server at ${member ? member.joinedTimestamp : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+						? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
                 ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
 						: ''
 					}.\n\n
