@@ -28,6 +28,19 @@ export default {
 	perms: ['ManageGuild'],
 	execute: async ({ args, guild, member }) => {
 		const role = (args.get('role') as Role) || undefined;
+		// check if it the rule already exists
+		const rules = await guild.autoModerationRules.fetch();
+		const eRule = rules.find((r) => r.name === `VOT's profanity`);
+		const eRule2 = rules.find((r) => r.name === `discord's profanity filter (VOT)`);
+		const eRule3 = rules.find((r) => r.name === `discord's anti mention spam (VOT)`);
+		if (eRule && eRule2 && eRule3) {
+			await eRule.delete();
+			await eRule2.delete();
+			await eRule3.delete();
+			return {
+				content: `${eRule.name}, ${eRule2.name}, ${eRule3.name} have been deleted`,
+			};
+		}
 		const rule = await guild.autoModerationRules.create({
 			actions: [
 				{

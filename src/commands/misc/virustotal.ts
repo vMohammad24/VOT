@@ -4,7 +4,6 @@ import type ICommand from '../../handler/interfaces/ICommand';
 export default {
 	name: 'virustotal',
 	description: 'Check a url for viruses',
-	slashOnly: true,
 	options: [
 		{
 			name: 'url',
@@ -14,7 +13,8 @@ export default {
 		},
 	],
 	type: 'all',
-	execute: async ({ interaction, args }) => {
+	aliases: ['vt'],
+	execute: async ({ args }) => {
 		const url = (args.get('url') as string) || undefined;
 		if (!url)
 			return {
@@ -36,6 +36,10 @@ export default {
 			.setAuthor({ name: 'Scan', url: res.data.permalink })
 			.setColor('Random')
 			.setDescription(`${res.data.positives} positive result(s) out of ${res.data.total}.`);
+		if (!res.data.scans) return {
+			ephemeral: true,
+			content: `Invalid site.`
+		}
 		for (const [name, s] of Object.entries(res.data.scans)) {
 			const scan = s as any;
 			if ((scan as any).detected) {

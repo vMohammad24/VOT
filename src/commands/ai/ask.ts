@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, GuildTextBasedChannel } from 'discord.js';
+import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer } from '../../util/puppeteer';
@@ -27,46 +27,58 @@ export default {
 			};
 		await interaction?.deferReply();
 		if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
-		const channelMessages = channel
-			? Array.from(channel.messages.cache.values())
+		const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
+			.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
+			.values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
+				.values())) : undefined;
+		const channelMessage = channelMessages
+			? channelMessages
 				.map(
-					(m) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map((e) => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`,
+					(m: Message<boolean>) =>
+						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
 				)
 				.join('\n')
 			: '';
 		const pinnedMessages = channel
-			? Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values())
+			? Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
+				.values())
 				.map(
 					(m) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.content == '' ? (m.embeds ? m.embeds.map((e) => `${e.title} - ${e.description}`).join('\n') : '') : m.cleanContent}`,
+						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}): ${m.embeds ? (m.embeds ? m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
 				)
 				.join('\n')
 			: '';
-		const users = guild ? await guild.members.cache.map(user => `DISPLAYNAME: ${user.displayName} (ID: ${user.id}) - ROLE: ${user.roles.highest.name}`).join('\n') : undefined;
+		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name}`).join('\n') : undefined;
 		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
 		const { data: webData } = webRes;
-		const webResults: {
-			profile: { name: string };
-			title: string;
-			description: string;
-			url: string;
-			page_age: string;
-			content: string;
-		}[] = webData.response.web.results;
-		const page = await browser.newPage();
-		Promise.all(webResults.map(async (result) => {
-			try {
-				await page.goto(result.url, { timeout: 3000 });
-				result.content = await page.content();
-			} catch (e) {
-				result.content = 'no content found.';
-			}
-		}))
-		await page.close();
-		const webMessage = webResults ? webResults.map((result) =>
-			`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age}) with the content: *CONTENT START* ${result.content} *CONTENT END*`
-		).join('\n') : 'No web results found';
+		let webMessage = 'No web results found';
+		let webLength = 0;
+		if (webData && webData.response) {
+			const webResults: {
+				profile: { name: string };
+				title: string;
+				description: string;
+				url: string;
+				page_age: string;
+				content: string;
+			}[] = webData.response.web.results;
+			webMessage = webResults.map((result) =>
+				`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
+			).join('\n')
+			webLength = webResults.length;
+		}
+		// const page = await browser.newPage();
+		// await page.setRequestInterception(false);
+		// await Promise.all(webResults.map(async (result) => {
+		// 	try {
+		// 		await page.goto(result.url);
+		// 		result.content = await page.();
+		// 	} catch (e) {
+		// 		console.error(e)
+		// 		result.content = 'no content found.';
+		// 	}
+		// }))
+		// await page.close();
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
 				userId: user.id
@@ -110,11 +122,7 @@ export default {
 						description: c.description,
 						options: c.options,
 						type: c.type,
-						slashOnly: c.slashOnly,
 						cateogry: c.category,
-						cooldown: c.cooldown,
-						aliases: c.aliases,
-						needsPlayer: c.needsPlayer,
 					})),
 				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`} the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
                 ${guild
@@ -127,7 +135,7 @@ export default {
                 ${channel
 						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
 							? `Here's a list of the previous messages that were sent in this channel with their author:
-                ${channelMessages}`
+                ${channelMessage}`
 							: ''
 						}\n\nSome of the pinned messages include: ${pinnedMessages}`
 						: ''
@@ -171,12 +179,12 @@ export default {
 				},
 			);
 		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
-		console.log(res.data)
+
 		const response = res.data.short || '';
 		await pagination({
 			interaction,
 			message,
-			pages: (response + `\n\n-# Found ${webResults.length} results on the web\n-# Used ${res.data.diagnostics.tokens} tokens`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt\n-# Used ${res.data.diagnostics.tokens} tokens`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text,
 				},
@@ -188,7 +196,7 @@ export default {
 				question,
 				userId: user.id,
 				response,
-				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessages ? `Channel Messages:\n${channelMessages}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
+				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''}`,
 			},
 		})
 	},
