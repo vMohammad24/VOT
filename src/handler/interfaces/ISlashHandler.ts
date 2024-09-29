@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 import type { Client } from 'discord.js';
 import type { Kazagumo } from 'kazagumo';
 import type ICommand from './ICommand';
+import { IContextCommand } from './IContextCommand';
 
 export default interface SlashHandler {
 	client: Client;
@@ -10,5 +11,5 @@ export default interface SlashHandler {
 	prodMode: boolean;
 	prisma: PrismaClient;
 	kazagumo: Kazagumo;
-	commands: ICommand[];
+	commands: (ICommand | IContextCommand)[];
 }

@@ -6,33 +6,35 @@ server: # Configuration for the REST and WebSocket server
 
 plugins:
   youtube:
-    enabled: true # Enable or disable the YouTube source
-    allowSearch: true # Allow "ytsearch:" and "ytmsearch:" queries
-    allowDirectVideoIds: true # Allow direct video IDs; if false, only full URLs are accepted
-    allowDirectPlaylistIds: true # Allow direct playlist IDs; if false, only full URLs are accepted
-    clients: # List of clients to query for track loading, in order of preference
+    enabled: true # Whether this source can be used.
+    allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
+    allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
+    allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
+    # The clients to use for track loading. See below for a list of valid clients.
+    # Clients are queried in the order they are given (so the first client is queried first and so on...)
+    clients:
       - MUSIC
-      - WEB
       - ANDROID_TESTSUITE
+      - WEB
       - TVHTML5EMBEDDED
 
 lavalink:
   plugins:
     # Specify the Lavalink plugin version or snapshot
-    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.5.0'
+    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.8.3'
       snapshot: false # Use snapshot version if true
   server:
     password: 'wS2WzhJDpPLuRkBmMqXEyAGx9vC7QHn8dVTNeYKrb435Zt6'
     sources: # Configure available sources
-      youtube: false # Deprecated, use https://github.com/lavalink-devs/youtube-source#plugin
+      youtube: false
       bandcamp: true
       soundcloud: true
       twitch: true
       vimeo: true
       nico: true
-      http: true # Warning: Enabling HTTP without a proxy exposes server IP
+      http: true
       local: true
-    filters: # Enabled by default
+    filters:
       volume: true
       equalizer: true
       karaoke: true

@@ -6,6 +6,7 @@ import type {
 	GuildMember,
 	InteractionReplyOptions,
 	Message,
+	MessageEditOptions,
 	MessagePayload,
 	PermissionResolvable,
 	TextBasedChannel,
@@ -43,4 +44,5 @@ export interface CommandContext {
 	interaction: ChatInputCommandInteraction | null;
 	handler: CommandHandler;
 	player: KazagumoPlayer | undefined;
+	editReply: (content: string | InteractionReplyOptions | MessageEditOptions | MessagePayload, msg?: Message<boolean>) => Promise<void>;
 }

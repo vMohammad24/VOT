@@ -1,9 +1,17 @@
 import { Glob } from 'bun';
-import { ChatInputCommandInteraction, Events, GuildMember, type Interaction, type Message } from 'discord.js';
+import {
+	ChatInputCommandInteraction,
+	Events,
+	GuildMember,
+	MessageEditOptions,
+	type Interaction,
+	type Message,
+} from 'discord.js';
 import path from 'path';
 import PinoLogger from 'pino';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
+import { IContextCommand } from './interfaces/IContextCommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 import type SlashHandler from './interfaces/ISlashHandler';
 import LegacyCommandHandler from './LegacyHandler';
@@ -65,97 +73,108 @@ export default class CommandHandler {
 			const listener = new ListenerHandler(this, listenersDir, this.glob);
 		});
 	}
+	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
+		if ((cmd as ICommand).description) {
+			const command = cmd as ICommand;
+			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+			let commandContext: CommandContext;
+			const getPlayer = (member: GuildMember) => {
+				if (!member) return;
+				if (!member.guild) return;
+				const player = this.kazagumo.getPlayer(member.guild.id);
+				if (!member.voice.channelId) return null;
+				if (player && player.voiceId !== member.voice.channelId) return;
+				if (!player && command.needsPlayer)
+					return this.kazagumo.createPlayer({
+						guildId: member.guild.id,
+						voiceId: member.voice.channelId,
+						textId: member.voice.channelId,
+						deaf: true,
+					});
+				return player;
+			};
+			if (ctx.applicationId) {
+				const interaction = ctx as ChatInputCommandInteraction;
+				commandContext = {
+					interaction,
+					user: interaction.user,
+					channel: interaction.channel!,
+					guild: interaction.guild!,
+					handler: this,
+					member: interaction.member! as GuildMember,
+					args: new ArgumentMap(),
+					message: null,
+					player: (await getPlayer(interaction.member as GuildMember)) || undefined,
+					editReply: async (content) => {
+						await interaction.editReply(content);
+					}
+				};
+			} else {
+				const message = ctx as Message;
+				commandContext = {
+					interaction: null,
+					user: message.author,
+					channel: message.channel,
+					guild: message.guild!,
+					handler: this,
+					member: message.member!,
+					args: new ArgumentMap(),
+					message,
+					player: (await getPlayer(message.member as GuildMember)) || undefined,
+					editReply: async (content, rMsg) => {
+						// get the replied message
+						if (!rMsg) return;
+						await rMsg.edit(content as string | MessageEditOptions);
+					}
+				};
+			}
+			const validationDir = path.join(import.meta.dir, 'validations');
+			for await (const validationFile of this.glob.scan({ cwd: validationDir })) {
+				const validation = await import(path.join(validationDir, validationFile));
+				const result = await validation.default(command, commandContext);
+				if (result != true) return result;
+			}
+			await this.prisma.user.upsert({
+				where: {
+					id: commandContext.user.id,
+				},
+				update: {
+					name: commandContext.user.username,
+					avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+					commands: {
+						create: {
+							commandId: command.name!,
+							commandInfo: {
+								args: (commandContext.args as any) || null,
+								guild: (commandContext?.guild && commandContext.guild.id) || null,
+								channel: commandContext?.channel?.id || null,
+								message: commandContext?.message?.id || null,
+								interaction: commandContext?.interaction?.id || null,
+							},
+						},
+					},
+				},
+				create: {
+					id: commandContext.user.id,
+					name: commandContext.user.username,
+					avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+					commands: {
+						create: {
+							commandId: command.name!,
+							commandInfo: {
+								args: (commandContext.args as any) || null,
+								guild: commandContext?.guild?.id || null,
+								channel: commandContext?.channel?.id || null,
+								message: commandContext?.message?.id || null,
+								interaction: commandContext?.interaction?.id || null,
+							},
+						},
+					},
+				},
+			});
+			const result = await command.execute(commandContext);
+			return result;
+		}
 
-	public async executeCommand(command: ICommand, ctx: Interaction | Message) {
-		if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
-		let commandContext: CommandContext;
-		const getPlayer = (member: GuildMember) => {
-			if (!member) return;
-			if (!member.guild) return;
-			const player = this.kazagumo.getPlayer(member.guild.id);
-			if (!member.voice.channelId) return null;
-			if (player && player.voiceId !== member.voice.channelId) return;
-			if (!player && command.needsPlayer)
-				return this.kazagumo.createPlayer({
-					guildId: member.guild.id,
-					voiceId: member.voice.channelId,
-					textId: member.voice.channelId,
-					deaf: true,
-				});
-			return player;
-		};
-		if (ctx.applicationId) {
-			const interaction = ctx as ChatInputCommandInteraction;
-			commandContext = {
-				interaction,
-				user: interaction.user,
-				channel: interaction.channel!,
-				guild: interaction.guild!,
-				handler: this,
-				member: interaction.member! as GuildMember,
-				args: new ArgumentMap(),
-				message: null,
-				player: (await getPlayer(interaction.member as GuildMember)) || undefined,
-			};
-		} else {
-			const message = ctx as Message;
-			commandContext = {
-				interaction: null,
-				user: message.author,
-				channel: message.channel,
-				guild: message.guild!,
-				handler: this,
-				member: message.member!,
-				args: new ArgumentMap(),
-				message,
-				player: (await getPlayer(message.member as GuildMember)) || undefined,
-			};
-		}
-		const validationDir = path.join(import.meta.dir, 'validations');
-		for await (const validationFile of this.glob.scan({ cwd: validationDir })) {
-			const validation = await import(path.join(validationDir, validationFile));
-			const result = await validation.default(command, commandContext);
-			if (result != true) return result;
-		}
-		await this.prisma.user.upsert({
-			where: {
-				id: commandContext.user.id,
-			},
-			update: {
-				name: commandContext.user.username,
-				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-				commands: {
-					create: {
-						commandId: command.name!,
-						commandInfo: {
-							args: (commandContext.args as any) || null,
-							guild: (commandContext?.guild && commandContext.guild.id) || null,
-							channel: commandContext?.channel?.id || null,
-							message: commandContext?.message?.id || null,
-							interaction: commandContext?.interaction?.id || null,
-						},
-					},
-				},
-			},
-			create: {
-				id: commandContext.user.id,
-				name: commandContext.user.username,
-				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-				commands: {
-					create: {
-						commandId: command.name!,
-						commandInfo: {
-							args: (commandContext.args as any) || null,
-							guild: commandContext?.guild?.id || null,
-							channel: commandContext?.channel?.id || null,
-							message: commandContext?.message?.id || null,
-							interaction: commandContext?.interaction?.id || null,
-						},
-					},
-				},
-			},
-		});
-		const result = await command.execute(commandContext);
-		return result;
 	}
 }

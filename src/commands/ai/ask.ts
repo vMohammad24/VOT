@@ -2,9 +2,6 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
-import { launchPuppeteer } from '../../util/puppeteer';
-
-const browser = await launchPuppeteer();
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
@@ -17,7 +14,7 @@ export default {
 		},
 	],
 	type: 'all',
-	async execute({ args, interaction, message, handler, user, guild, channel }) {
+	async execute({ args, interaction, message, handler, user, guild, channel, member, editReply }) {
 		const question = args.get('question');
 		const apiKey = process.env.EVADE_API_KEY;
 		if (!apiKey)
@@ -26,7 +23,10 @@ export default {
 				ephemeral: true,
 			};
 		await interaction?.deferReply();
+
+		const rMsg = await message?.reply('Thinking...');
 		if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
+		await editReply('Gathering context...', rMsg);
 		const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
 			.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
 			.values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
@@ -49,6 +49,7 @@ export default {
 				.join('\n')
 			: '';
 		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name}`).join('\n') : undefined;
+		await editReply('Searching...', rMsg);
 		const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
 		const { data: webData } = webRes;
 		let webMessage = 'No web results found';
@@ -67,25 +68,15 @@ export default {
 			).join('\n')
 			webLength = webResults.length;
 		}
-		// const page = await browser.newPage();
-		// await page.setRequestInterception(false);
-		// await Promise.all(webResults.map(async (result) => {
-		// 	try {
-		// 		await page.goto(result.url);
-		// 		result.content = await page.();
-		// 	} catch (e) {
-		// 		console.error(e)
-		// 		result.content = 'no content found.';
-		// 	}
-		// }))
-		// await page.close();
+		await editReply('Generating previous conversations...', rMsg);
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
 				userId: user.id
 			},
 			orderBy: {
 				createdAt: 'desc'
-			}
+			},
+			take: 5
 		})
 		const trainingMessages: {
 			role: 'user' | 'assistant';
@@ -103,6 +94,7 @@ export default {
 				}
 			)
 		})
+		await editReply('Generating response...', rMsg);
 		const messages = [
 			...trainingMessages,
 			{
@@ -123,10 +115,12 @@ export default {
 						options: c.options,
 						type: c.type,
 						cateogry: c.category,
+						commandId: c.id,
 					})),
-				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`} the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
+				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
+				 the user's account was created at ${user.createdAt.getTime()} and the user's id is ${user.id}
                 ${guild
-						? `whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+						? `and this user joined this server at ${member ? member.joinedTimestamp : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
                 ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
 						: ''
 					}.\n\n
@@ -134,18 +128,23 @@ export default {
                 if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
                 ${channel
 						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
-							? `Here's a list of the previous messages that were sent in this channel with their author:
-                ${channelMessage}`
+							? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context:
+                			${channelMessage}`
 							: ''
 						}\n\nSome of the pinned messages include: ${pinnedMessages}`
 						: ''
 					}.\n\n
                 note that you can respond to anything not related to vot.\n\n
                 also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
-				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows:\n\n
+				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows although you should never prioritize  them above channel messages or pinned messages:\n\n
 				${webMessage}\n\n
 				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
-				${users ? `Here are the users in the server:\n${users}` : ''}
+				${users ? `Here's a list of every user in this server:\n${users}` : ''}\n\n
+				when mentioning a command always use the following format </commandName:commandId> where commandName is the name of the command and commandId is the id of the command, this will allow the user to click on the command and run it.\n\n
+				when mentioning a channel always use the following format <#channelId> where channelId is the id of the channel, this will allow the user to click on the channel and view it.\n\n
+				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
+				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
+				
                 `,
 			},
 			{
@@ -159,17 +158,18 @@ export default {
 				content: question,
 			}
 		)
+		await editReply('Processing...', rMsg);
 		const res = await axios
 			.post(
-				'https://api.evade.rest/llama',
+				'https://api.evade.rest/streamingchat',
 				{
 					messages,
-					props: {
-						system: "You are VOT.",
-						top_p: 0.9,
-						temperature: 0.8,
-						forceWeb: true
-					}
+					// props: {
+					// 	system: "You are VOT.",
+					// 	top_p: 0.9,
+					// 	temperature: 0.8,
+					// 	forceWeb: true,
+					// }
 				},
 				{
 					headers: {
@@ -178,13 +178,13 @@ export default {
 
 				},
 			);
-		if (res.status != 200) return { content: `Error occured:\n${res.statusText} (${res.status})`, ephemeral: true };
+		if (res.status != 200) return { content: `Error occured: **${res.statusText}** (${res.status})`, ephemeral: true };
 
-		const response = res.data.short || '';
+		const response = res.data || '';//.short || '';
 		await pagination({
 			interaction,
 			message,
-			pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt\n-# Used ${res.data.diagnostics.tokens} tokens`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text,
 				},
