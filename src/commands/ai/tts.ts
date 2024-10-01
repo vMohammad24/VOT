@@ -22,10 +22,10 @@ export default {
     ],
     type: 'all',
     // userTier: 'Premium',
-    // slashOnly: true,
+    slashOnly: true,
     execute: async ({ args, interaction, handler }) => {
         const text = args.get('text') as string | undefined;
-        const voice = (args.get('voice') as string | undefined) || 'en-US-GuyNeura';
+        const voice = (args.get('voice') as string | undefined) || 'en-US-GuyNeural';
         if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };
         await interaction?.deferReply();
         // const audio = await elevenlabs.generate({
