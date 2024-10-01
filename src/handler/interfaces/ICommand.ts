@@ -14,7 +14,7 @@ import type {
 } from 'discord.js';
 import type { KazagumoPlayer } from 'kazagumo';
 import type CommandHandler from '..';
-import type { ArgumentMap } from '../validations/args';
+import type { ArgumentMap } from '../validations/5_args';
 
 export default interface ICommand {
 	name?: string;

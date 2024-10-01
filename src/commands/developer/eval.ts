@@ -52,6 +52,7 @@ export default {
 			return { embeds: [embed] };
 		}
 		const startTime = new Date();
+		// return code;
 		try {
 			if (code.startsWith('```')) {
 				code = code.replace(/```/g, '');

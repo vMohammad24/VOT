@@ -125,7 +125,8 @@ client.on(Events.ClientReady, async (c) => {
 	axios.defaults.validateStatus = () => true;
 
 	app.listen(process.env.PORT || 8080, () => {
-		commandHandler.logger.info(`API listening on port ${app.server?.port}`);
+		if (commandHandler.verbose)
+			commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
 
 	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
