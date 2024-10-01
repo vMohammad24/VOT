@@ -17,10 +17,11 @@ import type SlashHandler from './interfaces/ISlashHandler';
 import LegacyCommandHandler from './LegacyHandler';
 import ListenerHandler from './ListenerHandler';
 import SlashCommandHandler from './SlashHandler';
-import { ArgumentMap } from './validations/args';
+import { ArgumentMap } from './validations/5_args';
 interface RequiredShits {
 	commandsDir: string;
 	listenersDir: string;
+	verbose?: boolean;
 }
 
 type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
@@ -34,7 +35,9 @@ export default class CommandHandler {
 	public developers: ICommandHandler['developers'];
 	public commands: ICommandHandler['commands'] | undefined;
 	public prodMode: ICommandHandler['prodMode'];
+	public verbose: ICommandHandler['verbose'];
 	private glob = new Glob('**/*.{ts,js}');
+	private validations: Function[] = [];
 	public logger = PinoLogger({
 		name: import.meta.dirname.split('/')[import.meta.dirname.split('/').length - 3],
 	});
@@ -48,6 +51,20 @@ export default class CommandHandler {
 		this.prodMode = handler.prodMode;
 		handler.commands = [];
 		handler.client.on(Events.ClientReady, async () => {
+			this.validations = await (async () => {
+				const validationDir = path.join(import.meta.dir, 'validations');
+				const validationFiles = [];
+				const glob = this.glob.scanSync({ cwd: validationDir });
+				for await (const vFile of glob) {
+					validationFiles.push(vFile);
+				}
+				const validations = await Promise.all(validationFiles.map(async (vFile) => {
+					const validation = await import(path.join(validationDir, vFile));
+					return validation.default;
+				}));
+				return validations;
+			})();
+
 			for await (const file of this.glob.scan({
 				absolute: false,
 				cwd: commandsDir,
@@ -62,8 +79,10 @@ export default class CommandHandler {
 				if (modifiedData.disabled) continue;
 				handler.commands.push(modifiedData);
 				if (modifiedData.init) await modifiedData.init(this);
-				this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`);
+				if (mHandler.verbose)
+					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`);
 			}
+
 			const Ilegacy = handler as LegacyHandler;
 			const Islash = handler as SlashHandler;
 			const slash = new SlashCommandHandler(Islash, this);
@@ -73,6 +92,7 @@ export default class CommandHandler {
 			const listener = new ListenerHandler(this, listenersDir, this.glob);
 		});
 	}
+
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
 		if ((cmd as ICommand).description) {
 			const command = cmd as ICommand;
@@ -128,11 +148,13 @@ export default class CommandHandler {
 					}
 				};
 			}
-			const validationDir = path.join(import.meta.dir, 'validations');
-			for await (const validationFile of this.glob.scan({ cwd: validationDir })) {
-				const validation = await import(path.join(validationDir, validationFile));
-				const result = await validation.default(command, commandContext);
-				if (result != true) return result;
+
+			const res = await Promise.all(this.validations.map(async (validation) => {
+				const result = await validation(command, commandContext);
+				return result;
+			}));
+			if (res.some((r) => (r !== true))) {
+				return res.find((r) => r != true);
 			}
 			await this.prisma.user.upsert({
 				where: {

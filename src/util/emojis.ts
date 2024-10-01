@@ -11,8 +11,8 @@ export function getEmoji(name: string) {
 }
 
 export async function initEmojis() {
-	const { client, logger } = commandHandler;
-	logger.info('Initializing emojis');
+	const { client, logger, verbose } = commandHandler;
+	if (verbose) logger.info('Initializing emojis');
 	const emojiFolder = join(import.meta.dirname, '..', '..', 'assets', 'emojis');
 	const glob = new Bun.Glob('*.{png,jpg,jpeg,gif,svg}');
 	const gEmojis = await glob.scanSync({ cwd: emojiFolder, absolute: true });
@@ -21,7 +21,8 @@ export async function initEmojis() {
 		const emojiName = emojiPath.split('/').pop()!.split('.')[0];
 		const existingEmoji = ems?.find((e) => e.name === emojiName);
 		if (existingEmoji) {
-			logger.info(`Emoji ${emojiName} already exists with id ${existingEmoji.id}`);
+			if (verbose)
+				logger.info(`Emoji ${emojiName} already exists with id ${existingEmoji.id}`);
 			emojis.set(emojiName, existingEmoji);
 		} else {
 			const f = await file(emojiPath);
@@ -29,7 +30,8 @@ export async function initEmojis() {
 			let emojiData = Buffer.from(await f.arrayBuffer());
 			logger.info(`Creating emoji ${emojiName}`);
 			if (f.type == 'image/svg+xml') {
-				logger.info(`Converting SVG to PNG`);
+				if (verbose)
+					logger.info(`Converting SVG to PNG`);
 				// change the color of the svg to white
 				const svg = (await f.text()).replace(
 					'width="16" height="16" fill="currentColor"',
@@ -41,7 +43,8 @@ export async function initEmojis() {
 				attachment: emojiData,
 				name: emojiName,
 			});
-			logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
+			if (verbose)
+				logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
 			emojis.set(emojiName, emoji!);
 		}
 	}

@@ -14,6 +14,7 @@ export default {
 		},
 	],
 	type: 'all',
+	cooldown: 30000,
 	async execute({ args, interaction, message, handler, user, guild, channel, member, editReply }) {
 		const question = args.get('question');
 		const apiKey = process.env.EVADE_API_KEY;
@@ -30,21 +31,12 @@ export default {
 		const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
 			.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
 			.values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-				.values())) : undefined;
+				.values())).concat(Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values())) : undefined;
 		const channelMessage = channelMessages
 			? channelMessages
 				.map(
 					(m: Message<boolean>) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
-				)
-				.join('\n')
-			: '';
-		const pinnedMessages = channel
-			? Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-				.values())
-				.map(
-					(m) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""}: ${m.embeds ? (m.embeds ? m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
+						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - refrecning ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
 				)
 				.join('\n')
 			: '';
@@ -54,21 +46,26 @@ export default {
 		const { data: webData } = webRes;
 		let webMessage = 'No web results found';
 		let webLength = 0;
-		if (webData && webData.response) {
-			try {
-				const webResults: {
-					profile: { name: string };
-					title: string;
-					description: string;
-					url: string;
-					page_age: string;
-					content: string;
-				}[] = webData.response.web.results;
-				webMessage = webResults.map((result) =>
-					`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
-				).join('\n')
-				webLength = webResults.length;
-			} catch (e) { }
+		if (webData && webData.response && webData.response.web.results) {
+			const webResults: {
+				profile: { name: string };
+				title: string;
+				description: string;
+				url: string;
+				page_age: string;
+				content: string;
+			}[] = webData.response.web.results as {
+				profile: { name: string };
+				title: string;
+				description: string;
+				url: string;
+				page_age: string;
+				content: string;
+			}[];
+			webMessage = webResults.map((result) =>
+				`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
+			).join('\n')
+			webLength = webResults.length;
 		}
 		await editReply('Generating previous conversations...', rMsg);
 		const trainingData = await handler.prisma.trainingData.findMany({
@@ -76,9 +73,8 @@ export default {
 				userId: user.id
 			},
 			orderBy: {
-				createdAt: 'desc'
+				createdAt: 'asc'
 			},
-			take: 5
 		})
 		const trainingMessages: {
 			role: 'user' | 'assistant';
@@ -130,10 +126,10 @@ export default {
                 if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
                 ${channel
 						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
-							? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context:
+							? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
                 			${channelMessage}`
 							: ''
-						}\n\nSome of the pinned messages include: ${pinnedMessages}`
+						}`
 						: ''
 					}.\n\n
                 note that you can respond to anything not related to vot.\n\n
@@ -146,6 +142,7 @@ export default {
 				when mentioning a channel always use the following format <#channelId> where channelId is the id of the channel, this will allow the user to click on the channel and view it.\n\n
 				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
 				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
+				when mentioning a message always use the following format (url) "https://discord.com/channels/guildId/channelId/messageId" where channelId is the id of the channel and messageId is the id of the message,and guildId is the id of the server you are currently in (${guild.id}), this will allow the user to click on the message and view it.\n\n
 				
                 `,
 			},
@@ -190,6 +187,7 @@ export default {
 			pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text,
+					allowedMentions: {}
 				},
 			})),
 			type: 'buttons',
@@ -199,7 +197,7 @@ export default {
 				question,
 				userId: user.id,
 				response,
-				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n${pinnedMessages ? `Pinned Messages:\n${pinnedMessages}` : ''} | Users: ${users}`,
+				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n\n | Users: ${users}`,
 			},
 		})
 	},

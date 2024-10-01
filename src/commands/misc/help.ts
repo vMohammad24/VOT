@@ -38,7 +38,7 @@ export default {
 						.setTimestamp(),
 				};
 			});
-			await pagination({
+			const msg = await pagination({
 				interaction: interaction || undefined,
 				message: message || undefined,
 				type: 'select',
@@ -46,7 +46,7 @@ export default {
 			});
 		} else {
 			const cmd = handler.commands!.find((cmd) => cmd.name === command);
-			if (!cmd) return { content: 'Command not found', ephemeral: true };
+			if (!cmd) return { content: `Command \`${command}\` not found`, ephemeral: true };
 			return {
 				embeds: [
 					new EmbedBuilder().setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp(),

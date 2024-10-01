@@ -1,6 +1,6 @@
+import type { Glob } from 'bun';
 import { join } from 'path';
 import type CommandHandler from '.';
-import type { Glob } from 'bun';
 
 export default class ListenerHandler {
 	public listeners: IListener[] = [];
@@ -21,7 +21,8 @@ export default class ListenerHandler {
 			const listener = await import(join(listenersDir, file));
 			this.listeners.push(listener.default as IListener);
 			listener.default.execute(this.handler);
-			this.handler.logger.info(`Initialized listener ${listener.default.name}`);
+			if (this.handler.verbose)
+				this.handler.logger.info(`Initialized listener ${listener.default.name}`);
 		}
 	}
 }

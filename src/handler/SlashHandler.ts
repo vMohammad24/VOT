@@ -121,17 +121,20 @@ export default class SlashCommandHandler {
 			return command;
 		});
 		try {
-			commandHandler.logger.info('Started refreshing application (/) commands.');
+			if (commandHandler.verbose)
+				commandHandler.logger.info('Started refreshing application (/) commands.');
+			const startTime = Date.now();
 			const res = await client.rest.put(Routes.applicationCommands(client.user!.id), {
 				body: JSON.parse(JSON.stringify(commands, (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
 			});
+			const endTime = Date.now();
 			for (const command of (res as { id: string, name: string }[])) {
 				const cmd = this.commands.find((c) => c.name?.toLowerCase() === command.name.toLowerCase());
 				if (cmd) cmd.id = command.id;
 			}
-			commandHandler.logger.info('Successfully reloaded application (/) commands.');
+			commandHandler.logger.info(`Successfully reloaded (/) commands.\nTook ${endTime - startTime}ms`);
 		} catch (error) {
-			commandHandler.logger.error('Error refreshing application (/) commands: ' + error);
+			commandHandler.logger.error('Error refreshing (/) commands: ' + error);
 		}
 	}
 

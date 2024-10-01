@@ -6,11 +6,13 @@ import { launchPuppeteer } from '../../util/puppeteer';
 const browser = await launchPuppeteer();
 const page = await browser.newPage();
 const blacklist = await (async () => {
-	commandHandler.logger.info('Loading domain blacklist');
+	if (commandHandler.verbose)
+		commandHandler.logger.info('Loading domain blacklist');
 	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'domain_blacklist.txt');
 	const text = await Bun.file(path).text();
 	const domainRegex = /(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
-	commandHandler.logger.info('Loaded domain blacklist');
+	if (commandHandler.verbose)
+		commandHandler.logger.info('Loaded domain blacklist');
 	return text.split('\n').map((a) => a.match(domainRegex)?.[0]);
 })()
 export default {
