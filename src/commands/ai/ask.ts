@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
+import { getUser } from '../../util/database';
 import { pagination } from '../../util/pagination';
 export default {
 	name: 'ask',
@@ -192,13 +193,18 @@ export default {
 			})),
 			type: 'buttons',
 		});
-		await handler.prisma.trainingData.create({
-			data: {
-				question,
-				userId: user.id,
-				response,
-				context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n\n | Users: ${users}`,
-			},
+		const pUser = await getUser(user, {
+			shouldTrain: true
 		})
+		if (pUser && pUser.shouldTrain) {
+			await handler.prisma.trainingData.create({
+				data: {
+					question,
+					userId: user.id,
+					response,
+					context: `Channel: ${channel?.id} | Guild: ${guild?.id || "DM"}\n ${channelMessage ? `Channel Messages:\n${channelMessage}` : ''}\n\n | Users: ${users}`,
+				},
+			})
+		}
 	},
 } as ICommand;

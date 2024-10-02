@@ -1,6 +1,10 @@
+import axios from "axios";
+import { write } from "bun";
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from "discord.js";
+import { join } from 'path';
+import removeMarkdown from 'remove-markdown';
 import ICommand from "../../handler/interfaces/ICommand";
-
+import { addEmoji } from "../../util/emojis";
 export default {
     name: 'userinfo',
     aliases: ['user', 'whois', 'ui'],
@@ -12,8 +16,26 @@ export default {
         description: 'User to get information about',
         required: false
     }],
-    execute: async ({ args, member }) => {
+    execute: async ({ args, member, interaction }) => {
         const user = args.get('user') as GuildMember || member;
+        await interaction?.deferReply();
+        const res = await axios.get('https://us-atlanta2.evade.rest/users/' + user.id);
+        const { data } = res;
+        const { bio } = data;
+        const badges: {
+            name: string;
+            description: string;
+            emoji: string;
+        }[] = data.badges;
+        const downloadBadges = await (async () => {
+            for (const badge of badges) {
+                const emojiId = badge.emoji.match(/:(\d+)>$/)?.[1];
+                const res = await axios.get(`https://cdn.discordapp.com/emojis/${emojiId}.png?size=512&quality=lossless`, { responseType: 'arraybuffer' });
+                const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
+                await write(path, res.data);
+                badge.emoji = (await addEmoji(path))?.toString()!;
+            }
+        })()
         return {
             embeds: [new EmbedBuilder()
                 .setTitle('User Information')
@@ -21,7 +43,9 @@ export default {
                 .setAuthor({ name: user.user.tag, iconURL: user.user.displayAvatarURL() })
                 .setDescription(`
                     **ID**: ${user.id}
-                    **Roles**: ${user.roles.cache.map(role => role.toString()).join(' ')}
+                    **Badges**: ${badges.map(badge => badge.emoji).join('')}
+                    **Bio**: ${removeMarkdown(bio) || 'None'}
+                    **Roles**: ${user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ')}
                     **Joined**: ${user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown'}
                     **Created**: <t:${Math.round(user.user.createdTimestamp / 1000)}>
                     `)

@@ -14,6 +14,7 @@ export default {
 		},
 	],
 	type: 'all',
+	aliases: ['define', 'def', 'definition', 'urban'],
 	execute: async ({ args, interaction, message }) => {
 		const word = (args.get('word') as string) || undefined;
 		if (!word)
@@ -24,10 +25,53 @@ export default {
 		const reqUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 		const res = await axios.get(reqUrl);
 		if (res.status == 404) {
-			return {
-				content: 'Word not found',
-				ephemeral: true,
-			};
+			await interaction?.deferReply();
+			const urbanRes = await axios.get(`https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(word)}`);
+			const { data: urbanData, status } = urbanRes;
+			if (status == 404) {
+				return {
+					content: 'No results found',
+					ephemeral: true,
+				};
+			} else if (status != 200) {
+				return {
+					content: 'An error occured while fetching data from UrbanDictionary',
+					ephemeral: true,
+				};
+			}
+			if (urbanData.list.length == 0)
+				return {
+					content: 'No results found',
+					ephemeral: true,
+				};
+			const urbanEmbeds: PaginationOptions['pages'] = (urbanData.list as {
+				definition: string;
+				example: string;
+				thumbs_up: number;
+			}[]).sort((a, b) => (b.thumbs_up - a.thumbs_up)).map((urban) => (
+				{
+					page: {
+						embeds: [
+							new EmbedBuilder()
+								.setTitle(word)
+								.setDescription(`
+									**Definition:** ${urban.definition}\n\n
+									${urban.example ? `**Example:** ${urban.example}` : ''}
+									`)
+								.setColor('Random')
+								.setTimestamp()
+								.setFooter({ text: 'Powered by UrbanDictionary' }),
+						]
+					}
+				}
+			))
+			await pagination({
+				pages: urbanEmbeds,
+				type: 'select',
+				message,
+				interaction,
+			})
+			return;
 		}
 		const { data } = res;
 		// const embed = new EmbedBuilder()
