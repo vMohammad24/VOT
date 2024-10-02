@@ -59,12 +59,17 @@ export default {
 				content: `This site has screenshotting disabled.`
 			}
 		}
-		const screenshot = await page.screenshot();
+		const screenshot = await page.screenshot(
+			{
+				optimizeForSpeed: true,
+				type: 'jpeg',
+			}
+		);
 		return {
 			files: [
 				{
 					attachment: Buffer.from(screenshot),
-					name: 'screenshot.png',
+					name: 'screenshot.jpg',
 				},
 			],
 		};
