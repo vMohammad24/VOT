@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { inspect } from 'bun';
 import { Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
@@ -7,7 +7,6 @@ import { Kazagumo, Plugins } from 'kazagumo';
 import Apple from 'kazagumo-apple';
 import Spotify from 'kazagumo-spotify';
 import { gracefulShutdown, scheduleJob, scheduledJobs } from 'node-schedule';
-import { createPrismaRedisCache } from 'prisma-redis-middleware';
 import { Connectors, type NodeOption } from 'shoukaku';
 import app from './api';
 import CommandHandler from './handler/index';
@@ -68,17 +67,7 @@ const prisma = new PrismaClient();
 export const redis = new Redis({
 	host: process.env.NODE_ENV === 'production' ? 'redis' : 'localhost',
 });
-const cacheMiddleware: Prisma.Middleware = createPrismaRedisCache({
-	models: [{ model: 'User', excludeMethods: ['findMany'] }],
-	storage: {
-		type: 'redis',
-		options: { client: redis as any, invalidation: { referencesTTL: 300 } },
-	},
-	cacheTime: 300,
-	excludeModels: ['TicketSettings', 'Ticket', 'Discord', 'Spotify', 'WelcomeSettings'],
-});
 
-prisma.$use(cacheMiddleware);
 
 const commandHandler = new CommandHandler({
 	client,

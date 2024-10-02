@@ -1,6 +1,7 @@
 import { Events, type Client } from 'discord.js';
 import type { Kazagumo } from 'kazagumo';
 import CommandHandler from '.';
+import { getGuild } from '../util/database';
 import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
@@ -22,19 +23,9 @@ export default class LegacyCommandHandler {
 				prefix = pUser.prefix;
 			} else {
 				if (message.guild) {
-					const guild = await this.handler.prisma.guild.findFirst({
-						where: { id: message.guild.id },
-					});
+					const guild = await getGuild(message.guild, { prefix: true });
 					if (guild) {
 						prefix = guild.prefix;
-					} else {
-						await this.handler.prisma.guild.create({
-							data: {
-								id: message.guild.id,
-								prefix: gPrefix,
-								name: message.guild.name,
-							},
-						});
 					}
 				}
 			}

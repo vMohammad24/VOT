@@ -50,11 +50,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-						{
-							id: ticketSettings.roleId!,
-							allow: [PermissionFlagsBits.ViewChannel],
-						},
-					]
+					{
+						id: ticketSettings.roleId!,
+						allow: [PermissionFlagsBits.ViewChannel],
+					},
+				]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -94,7 +94,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 		.setAuthor({ name: member.displayName, iconURL: member.displayAvatarURL() })
 		.setColor('Green')
 		.setTimestamp();
-	const logChannel = await getLogChannel(prisma, guild);
+	const logChannel = await getLogChannel(guild);
 	logChannel?.send({ embeds: [logEmbed] });
 	return { channel, ticket };
 }
@@ -123,7 +123,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 			transcriptId: cdnId,
 		},
 	});
-	const logChannel = await getLogChannel(prisma, channel.guild);
+	const logChannel = await getLogChannel(channel.guild);
 	const logEmbed = new EmbedBuilder()
 		.setTitle('Ticket Closed')
 		.setDescription(`Ticket ${chan.name} has been closed`)

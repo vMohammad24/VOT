@@ -1,6 +1,6 @@
 import { EmbedBuilder, Events, Message, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
-import { getUser } from '../util/database';
+import { getGuild, getUser } from '../util/database';
 
 export const expNeededForLevel = (needed: number) => {
 	return 5 * Math.pow(needed, 2) + 50 * needed + 100;
@@ -39,16 +39,9 @@ export default {
 			);
 		});
 		client.on(Events.MessageCreate, async (message) => {
-			if (!shouldGetExp(message)) return;
+			if (!shouldGetExp(message) || !message.guild) return;
 			const user = await getUser(message.author);
-			const guild = await prisma.guild.findUnique({
-				where: {
-					id: message.guild!.id,
-				},
-				select: {
-					leveling: true
-				}
-			})
+			const guild = await getGuild(message.guild);
 			if (!guild || !guild.leveling) return;
 			const member = await prisma.member.upsert({
 				where: {
