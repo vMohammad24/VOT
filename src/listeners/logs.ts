@@ -1,19 +1,9 @@
 import { ChannelType, EmbedBuilder, Guild, type GuildTextBasedChannel } from 'discord.js';
-import commandHandler from '..';
 import type { IListener } from '../handler/ListenerHandler';
+import { getGuild } from '../util/database';
 
 const getLogChannel = async (guild: Guild) => {
-	const g = await commandHandler.prisma.guild.upsert({
-		where: {
-			id: guild.id,
-		},
-		update: {},
-		create: {
-			id: guild.id,
-			name: guild.name,
-			icon: guild.icon || '',
-		},
-	});
+	const g = await getGuild(guild, { loggingChannel: true });
 	if (!guild || !g || !g.loggingChannel) return null;
 	return (guild.channels.cache.get(g.loggingChannel) as GuildTextBasedChannel) || null;
 };

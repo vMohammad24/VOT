@@ -60,6 +60,7 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 		create: {
 			id: guild.id,
 			name: guild.name,
+			prefix: ';',
 		},
 		update: {
 			name: guild.name,
