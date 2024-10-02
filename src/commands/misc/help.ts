@@ -2,6 +2,11 @@ import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
 
+
+function getOptionName(value: number): string | undefined {
+	return Object.keys(ApplicationCommandOptionType).find(key => (ApplicationCommandOptionType as any)[key] === value);
+}
+
 export default {
 	description: 'Displays all commands',
 	cooldown: 5000,
@@ -47,9 +52,17 @@ export default {
 		} else {
 			const cmd = handler.commands!.find((cmd) => cmd.name === command);
 			if (!cmd) return { content: `Command \`${command}\` not found`, ephemeral: true };
+			const embed = new EmbedBuilder();
+			embed.setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp();
+			for (const option of cmd.options || []) {
+				embed.addFields({
+					name: option.name,
+					value: `**Type**: ${getOptionName(option.type)}\n**Required**: ${'required' in option ? (option.required ? 'Yes' : 'No') : 'Yes'}`,
+				});
+			}
 			return {
 				embeds: [
-					new EmbedBuilder().setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp(),
+					embed
 				],
 				ephemeral: true,
 			};

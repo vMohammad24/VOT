@@ -46,6 +46,8 @@ model User {
   musicSettings    MusicSettings?
   lastUpdated      DateTime       @default(now()) @updatedAt
   TrainingData     TrainingData[]
+  shouldTrain      Boolean        @default(true)
+  ArgumentMode     ArgumentMode   @default(Normal)
 }
 
 model Member {
@@ -211,4 +213,9 @@ enum UserTier {
   Normal
   Premium
   Beta
+}
+
+enum ArgumentMode {
+  Normal
+  Advanced
 }

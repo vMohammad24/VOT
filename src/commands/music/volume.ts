@@ -26,9 +26,9 @@ export default {
 				content: 'Invalid volume',
 				ephemeral: true,
 			};
-		if (volume < 0 || volume > 100) {
+		if (volume < 1 || volume > 100) {
 			return {
-				content: 'Volume must be between 0 and 100',
+				content: 'Volume must be between 1 and 100',
 				ephemeral: true,
 			};
 		}
