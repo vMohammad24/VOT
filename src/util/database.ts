@@ -1,11 +1,17 @@
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { Guild, GuildMember, User } from 'discord.js';
-import commandHandler from '..';
-('..');
+import commandHandler, { redis } from '..';
 
 export async function getUser(member: User, select?: Prisma.UserSelect<DefaultArgs>) {
-	return await commandHandler.prisma.user.upsert({
+	const cacheKey = `user:${member.id}:${JSON.stringify(select)}`;
+	const cachedUser = await redis.get(cacheKey);
+
+	if (cachedUser) {
+		return JSON.parse(cachedUser);
+	}
+
+	const user = await commandHandler.prisma.user.upsert({
 		where: {
 			id: member.id,
 		},
@@ -18,12 +24,22 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 			avatar: member.avatarURL(),
 			name: member.displayName,
 		},
-		select: select,
+		select,
 	});
+
+	await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600); // Expires in 1 hour
+	return user;
 }
 
 export async function getUserByID(id: string, select?: Prisma.UserSelect<DefaultArgs>) {
-	return await commandHandler.prisma.user.upsert({
+	const cacheKey = `user:${id}:${JSON.stringify(select)}`;
+	const cachedUser = await redis.get(cacheKey);
+
+	if (cachedUser) {
+		return JSON.parse(cachedUser);
+	}
+
+	const user = await commandHandler.prisma.user.upsert({
 		where: {
 			id,
 		},
@@ -33,12 +49,23 @@ export async function getUserByID(id: string, select?: Prisma.UserSelect<Default
 		},
 		select,
 	});
+
+	await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600); // Expires in 1 hour
+	return user;
 }
 
 export async function getMember(guildMember: GuildMember, select?: Prisma.MemberSelect<DefaultArgs>) {
+	const cacheKey = `member:${guildMember.user.id}:${guildMember.guild.id}:${JSON.stringify(select)}`;
+	const cachedMember = await redis.get(cacheKey);
+
+	if (cachedMember) {
+		return JSON.parse(cachedMember);
+	}
+
 	const user = await getUser(guildMember.user, { id: true });
 	const guild = await getGuild(guildMember.guild, { id: true });
-	return await commandHandler.prisma.member.upsert({
+
+	const member = await commandHandler.prisma.member.upsert({
 		where: {
 			userId_guildId: {
 				userId: user.id,
@@ -52,10 +79,20 @@ export async function getMember(guildMember: GuildMember, select?: Prisma.Member
 		update: {},
 		select,
 	});
+
+	await redis.set(cacheKey, JSON.stringify(member), 'EX', 3600); // Expires in 1 hour
+	return member;
 }
 
 export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<DefaultArgs>) {
-	return await commandHandler.prisma.guild.upsert({
+	const cacheKey = `guild:${guild.id}:${JSON.stringify(select)}`;
+	const cachedGuild = await redis.get(cacheKey);
+
+	if (cachedGuild) {
+		return JSON.parse(cachedGuild);
+	}
+
+	const guildData = await commandHandler.prisma.guild.upsert({
 		where: { id: guild.id },
 		create: {
 			id: guild.id,
@@ -67,4 +104,7 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 		},
 		select,
 	});
+
+	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 3600); // Expires in 1 hour
+	return guildData;
 }
