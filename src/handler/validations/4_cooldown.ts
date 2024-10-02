@@ -20,7 +20,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1_000);
-			interaction?.reply({
+			return {
 				embeds: [new EmbedBuilder()
 					.setTitle('Cooldown')
 					.setColor('DarkRed')
@@ -29,8 +29,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 					.setTimestamp()
 				],
 				ephemeral: true
-			})
-			return false
+			}
 		}
 	}
 	timestamps.set(user.id, now);

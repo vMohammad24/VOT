@@ -11,13 +11,13 @@ const restPing = async (client: Client) => {
 export default {
 	description: 'Pong!',
 	execute: async ({ interaction, message, handler }) => {
+		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
 		const wsLatency = handler.client.ws.ping;
 		const restLatency = await restPing(handler.client);
-		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
 		const pStart = Date.now();
 		await handler.prisma.$queryRaw`SELECT 1`;
 		const pEnd = Date.now();
-		await handler.prisma.$disconnect();
+		handler.prisma.$disconnect();
 		return {
 			embeds: [
 				new EmbedBuilder()

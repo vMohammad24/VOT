@@ -45,7 +45,6 @@
     "numeral": "latest",
     "pino": "latest",
     "prisma": "latest",
-    "prisma-redis-middleware": "latest",
     "puppeteer": "latest",
     "puppeteer-extra": "latest",
     "puppeteer-extra-plugin-stealth": "latest",

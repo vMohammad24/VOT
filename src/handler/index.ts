@@ -95,14 +95,15 @@ export default class CommandHandler {
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
 		if ((cmd as ICommand).description) {
+			const start = Date.now();
 			const command = cmd as ICommand;
 			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
 			let commandContext: CommandContext;
 			const getPlayer = (member: GuildMember) => {
-				if (!member) return;
-				if (!member.guild) return;
+				const start = Date.now();
+				if (!member || !member.guild) return;
+				if (!member.voice.channelId) return;
 				const player = this.kazagumo.getPlayer(member.guild.id);
-				if (!member.voice.channelId) return null;
 				if (player && player.voiceId !== member.voice.channelId) return;
 				if (!player && command.needsPlayer)
 					return this.kazagumo.createPlayer({
@@ -111,9 +112,11 @@ export default class CommandHandler {
 						textId: member.voice.channelId,
 						deaf: true,
 					});
+				this.logger.info(`Player creation took ${Date.now() - start}ms`);
 				return player;
 			};
 			if (ctx.applicationId) {
+				const start = Date.now();
 				const interaction = ctx as ChatInputCommandInteraction;
 				commandContext = {
 					interaction,
@@ -129,7 +132,9 @@ export default class CommandHandler {
 						await interaction.editReply(content);
 					}
 				};
+				this.logger.info(`Interaction ${interaction.id} created in ${Date.now() - start}ms`);
 			} else {
+				const start = Date.now();
 				const message = ctx as Message;
 				commandContext = {
 					interaction: null,
@@ -147,16 +152,17 @@ export default class CommandHandler {
 						await rMsg.edit(content as string | MessageEditOptions);
 					}
 				};
+				this.logger.info(`Message ${message.id} created in ${Date.now() - start}ms`);
 			}
-
+			const vStart = Date.now();
 			const res = await Promise.all(this.validations.map(async (validation) => {
 				const result = await validation(command, commandContext);
 				return result;
 			}));
-			if (res.some((r) => (r !== true))) {
-				return res.find((r) => r != true);
-			}
-			await this.prisma.user.upsert({
+			const failed = res.find((r) => r != true);
+			if (failed) return failed;
+			this.logger.info(`Validations took ${Date.now() - vStart}ms`);
+			this.prisma.user.upsert({
 				where: {
 					id: commandContext.user.id,
 				},
@@ -194,7 +200,10 @@ export default class CommandHandler {
 					},
 				},
 			});
+			const eStart = Date.now();
 			const result = await command.execute(commandContext);
+			const end = Date.now();
+			this.logger.info(`Total: ${end - start}ms\nExecution: ${end - eStart}ms`);
 			return result;
 		}
 
