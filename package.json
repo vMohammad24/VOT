@@ -6,10 +6,9 @@
     "@eslint/eslintrc": "latest",
     "@eslint/js": "latest",
     "@types/bun": "latest",
-    "@types/dockerode": "^3.3.31",
-    "@types/minimist": "^1.2.5",
+    "@types/minimist": "latest",
     "@types/node-schedule": "latest",
-    "@types/turndown": "^5.0.5",
+    "@types/turndown": "latest",
     "pino-pretty": "latest",
     "prettier": "latest"
   },
@@ -26,22 +25,21 @@
   "dependencies": {
     "@discordjs/voice": "latest",
     "@elysiajs/cors": "latest",
-    "@lobehub/tts": "^1.25.1",
+    "@lobehub/tts": "latest",
     "@napi-rs/canvas": "latest",
     "@prisma/client": "latest",
     "@types/ioredis": "^5.0.0",
     "@types/numeral": "latest",
     "axios": "latest",
+    "bufferutil": "latest",
     "discord.js": "^14.16.2",
-    "dockerode": "latest",
     "elysia": "latest",
     "genius-lyrics": "latest",
-    "get-audio-duration": "^4.0.1",
     "ioredis": "^5.4.1",
     "kazagumo": "latest",
     "kazagumo-apple": "latest",
     "kazagumo-spotify": "latest",
-    "minimist": "^1.2.8",
+    "minimist": "latest",
     "musicard": "latest",
     "node-schedule": "latest",
     "numeral": "latest",
@@ -55,15 +53,21 @@
     "sharp": "latest",
     "shoukaku": "latest",
     "tesseract.js": "latest",
-    "turndown": "latest"
+    "turndown": "latest",
+    "utf-8-validate": "latest",
+    "zlib-sync": "latest"
   },
   "trustedDependencies": [
     "@prisma/client",
     "@prisma/engines",
+    "bufferutil",
+    "cpu-features",
     "prisma",
     "puppeteer",
     "sharp",
     "ssh2",
-    "tesseract.js"
+    "tesseract.js",
+    "utf-8-validate",
+    "zlib-sync"
   ]
 }
