@@ -133,6 +133,8 @@ client.on(Events.ClientReady, async (c) => {
 	if (clwb && ghToken) {
 		const webhook = new WebhookClient({
 			url: clwb,
+		}, {
+			allowedMentions: {},
 		});
 		const headers = {
 			Authorization: `Bearer ${ghToken}`,

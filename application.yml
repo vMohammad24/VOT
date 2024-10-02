@@ -14,9 +14,9 @@ plugins:
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     clients:
       - MUSIC
-      - ANDROID_TESTSUITE
       - WEB
       - TVHTML5EMBEDDED
+      - ANDROID_TESTSUITE
 
 lavalink:
   plugins:
@@ -32,27 +32,27 @@ lavalink:
       twitch: true
       vimeo: true
       nico: true
-      http: true
-      local: true
+      http: false
+      local: false
     filters:
       volume: true
-      equalizer: true
-      karaoke: true
-      timescale: true
-      tremolo: true
-      vibrato: true
-      distortion: true
-      rotation: true
-      channelMix: true
-      lowPass: true
+      equalizer: false
+      karaoke: false
+      timescale: false
+      tremolo: false
+      vibrato: false
+      distortion: false
+      rotation: false
+      channelMix: false
+      lowPass: false
     bufferDurationMs: 400 # Buffer duration (ms); higher values handle GC pauses better
     frameBufferDurationMs: 5000 # Amount of audio to keep buffered (ms)
     opusEncodingQuality: 10 # Opus encoder quality (0-10); higher values are better but more CPU-intensive
     resamplingQuality: HIGH # Resampling quality (LOW, MEDIUM, HIGH); HIGH uses more CPU but provides better audio quality
-    trackStuckThresholdMs: 10000 # Time threshold for track to be considered stuck (ms)
+    trackStuckThresholdMs: 2000 # Time threshold for track to be considered stuck (ms)
     useSeekGhosting: true # Enable seek ghosting to smooth out seeks
     youtubePlaylistLoadLimit: 6 # Number of pages to load per playlist (100 items per page)
     playerUpdateInterval: 5 # Frequency of player updates to clients (seconds)
     youtubeSearchEnabled: true # Enable YouTube search
     soundcloudSearchEnabled: true # Enable SoundCloud search
-    gc-warnings: true # Enable garbage collection warnings
+    gc-warnings: false # Enable garbage collection warnings
