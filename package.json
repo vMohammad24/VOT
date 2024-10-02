@@ -50,6 +50,7 @@
     "puppeteer-extra": "latest",
     "puppeteer-extra-plugin-stealth": "latest",
     "query-string": "latest",
+    "remove-markdown": "^0.5.5",
     "sharp": "latest",
     "shoukaku": "latest",
     "tesseract.js": "latest",
