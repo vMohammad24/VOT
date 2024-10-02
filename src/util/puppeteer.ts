@@ -16,7 +16,6 @@ export async function launchPuppeteer() {
 			},
 			args: ['--window-position=000,000', '--no-sandbox', '--disable-dev-shm-usage', '--disable-web-security', '--disable-features=IsolateOrigins', ' --disable-site-isolation-trials', '--enable-features=WebContentsForceDark'],
 		});
-
 	}
 	return browser;
 }
