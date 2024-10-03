@@ -42,14 +42,45 @@ export default {
                 .setTitle('User Information')
                 .setThumbnail(user.user.displayAvatarURL())
                 .setAuthor({ name: user.user.tag, iconURL: user.user.displayAvatarURL() })
-                .setDescription(`
-                    **ID**: ${user.id}
-                    **Badges**: ${badges.map(badge => badge.emoji).join('')}
-                    **Bio**: ${removeMarkdown(bio) || 'None'}
-                    **Roles**: ${user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ')}
-                    **Joined**: ${user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown'}
-                    **Created**: <t:${Math.round(user.user.createdTimestamp / 1000)}>
-                    `)
+                // .setDescription(`
+                //     **ID**: ${user.id}
+                //     **Badges**: ${badges.map(badge => badge.emoji).join('')}
+                //     **Bio**: ${removeMarkdown(bio) || 'None'}
+                //     **Roles**: ${user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ')}
+                //     **Joined**: ${user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown'}
+                //     **Created**: <t:${Math.round(user.user.createdTimestamp / 1000)}>
+                //     `)
+                .setFields([
+                    {
+                        name: 'ID',
+                        value: user.id,
+                    },
+                    {
+                        name: 'Badges',
+                        value: badges.map(badge => badge.emoji).join(''),
+                        inline: true
+                    },
+                    {
+                        name: 'Bio',
+                        value: removeMarkdown(bio) || 'None',
+                        inline: true
+                    },
+                    {
+                        name: 'Roles',
+                        value: user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' '),
+                        inline: true
+                    },
+                    {
+                        name: 'Joined',
+                        value: user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown',
+                        inline: true
+                    },
+                    {
+                        name: 'Created',
+                        value: `<t:${Math.round(user.user.createdTimestamp / 1000)}>`,
+                        inline: true
+                    }
+                ])
                 .setColor('Random')
                 .setTimestamp()
             ],

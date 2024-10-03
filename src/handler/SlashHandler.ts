@@ -117,8 +117,8 @@ export default class SlashCommandHandler {
 				'integration_types',
 				'contexts',
 				'name',
+				'description',
 			]);
-			command.name = cmd.name?.toLowerCase();
 			return command;
 		});
 		try {
@@ -126,7 +126,7 @@ export default class SlashCommandHandler {
 				commandHandler.logger.info('Started refreshing application (/) commands.');
 			const startTime = Date.now();
 			const res = await client.rest.put(Routes.applicationCommands(client.user!.id), {
-				body: JSON.parse(JSON.stringify(commands, (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
+				body: JSON.parse(JSON.stringify(commands.concat(contextCommands), (_, v) => (typeof v === 'bigint' ? v.toString() : v))),
 			});
 			const endTime = Date.now();
 			for (const command of (res as { id: string, name: string }[])) {
@@ -141,51 +141,94 @@ export default class SlashCommandHandler {
 
 	public initListener(client: Client) {
 		client.on(Events.InteractionCreate, async (interaction) => {
-			if (!interaction.isCommand()) return;
-			const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
-			if (!command) {
-				const error = await this.handler.prisma.error.create({
-					data: {
-						channelId: interaction.channelId!,
-						guildId: interaction.guildId || null,
-						fullJson: interaction,
-					},
-				});
-				return await interaction.reply({
-					content: `This command does not exist.\nFor further information please report this to the developers.\n-# ${error?.id}`,
-					ephemeral: true,
-				});
-			}
-			let result = {};
-			try {
-				result = await this.handler.executeCommand(command, interaction);
-			} catch (error) {
-				this.handler.logger.error(error);
-				const id = Buffer.from(`${interaction.commandGuildId}.${randomId()}.${interaction.id}`).toString('base64');
-				const pError = this.handler.prisma.error.create({
-					data: {
-						id,
-						channelId: interaction.channelId!,
-						guildId: interaction.guildId || null,
-						fullJson: inspect(error) as any,
-					},
-				});
-				result = {
-					content: `There was an error while executing this command\n-# ${id}`,
-					ephemeral: true,
-				};
-			}
-			if (result) {
-				let r = result;
-				if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
-					r = { ...(result as InteractionReplyOptions), ephemeral: true };
+			// if(interaction.isContextMenuCommand()){
+			// 	const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
+			// 	if (!command) {
+			// 		return await interaction.reply({
+			// 			content: `This command does not exist.\nFor further information please report this to the developers.`,
+			// 			ephemeral: true,
+			// 		});
+			// 	}
+			// 	let result = {};
+			// 	try {
+			// 		result = await this.handler.executeCommand(command, interaction);
+			// 	} catch (error) {
+			// 		this.handler.logger.error(error);
+			// 		const id = Buffer.from(`${interaction.commandGuildId}.${randomId()}.${interaction.id}`).toString('base64');
+			// 		this.handler.prisma.error.create({
+			// 			data: {
+			// 				id,
+			// 				channelId: interaction.channelId!,
+			// 				guildId: interaction.guildId || null,
+			// 				fullJson: inspect(error) as any,
+			// 			},
+			// 		});
+			// 		result = {
+			// 			content: `There was an error while executing this command\n-# ${id}`,
+			// 			ephemeral: true,
+			// 		};
+			// 	}
+			// 	if (result) {
+			// 		let r = result;
+			// 		if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
+			// 			r = { ...(result as InteractionReplyOptions), ephemeral: true };
+			// 		}
+			// 		if (interaction.deferred) {
+			// 			await interaction.editReply(r);
+			// 		} else if (interaction.replied) {
+			// 			await interaction.followUp(r);
+			// 		} else {
+			// 			await interaction.reply(r);
+			// 		}
+			// 	}
+			// 	return;
+			// }
+			if (interaction.isCommand() || interaction.isContextMenuCommand()) {
+				const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
+				if (!command) {
+					const error = await this.handler.prisma.error.create({
+						data: {
+							channelId: interaction.channelId!,
+							guildId: interaction.guildId || null,
+							fullJson: interaction,
+						},
+					});
+					return await interaction.reply({
+						content: `This command does not exist.\nFor further information please report this to the developers.\n-# ${error?.id}`,
+						ephemeral: true,
+					});
 				}
-				if (interaction.deferred) {
-					await interaction.editReply(r);
-				} else if (interaction.replied) {
-					await interaction.followUp(r);
-				} else {
-					await interaction.reply(r);
+				let result = {};
+				try {
+					result = await this.handler.executeCommand(command, interaction);
+				} catch (error) {
+					this.handler.logger.error(error);
+					const id = Buffer.from(`${interaction.commandGuildId}.${randomId()}.${interaction.id}`).toString('base64');
+					const pError = this.handler.prisma.error.create({
+						data: {
+							id,
+							channelId: interaction.channelId!,
+							guildId: interaction.guildId || null,
+							fullJson: inspect(error) as any,
+						},
+					});
+					result = {
+						content: `There was an error while executing this command\n-# ${id}`,
+						ephemeral: true,
+					};
+				}
+				if (result) {
+					let r = result;
+					if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
+						r = { ...(result as InteractionReplyOptions), ephemeral: true };
+					}
+					if (interaction.deferred) {
+						await interaction.editReply(r);
+					} else if (interaction.replied) {
+						await interaction.followUp(r);
+					} else {
+						await interaction.reply(r);
+					}
 				}
 			}
 		});
