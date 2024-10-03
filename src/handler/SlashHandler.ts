@@ -132,7 +132,7 @@ export default class SlashCommandHandler {
 				const cmd = this.commands.find((c) => c.name?.toLowerCase() === command.name.toLowerCase());
 				if (cmd) cmd.id = command.id;
 			}
-			commandHandler.logger.info(`Successfully reloaded (/) commands.\nTook ${endTime - startTime}ms`);
+			commandHandler.logger.info(`Successfully reloaded (/) commands. Took ${endTime - startTime}ms`);
 		} catch (error) {
 			commandHandler.logger.error('Error refreshing (/) commands: ' + error);
 		}

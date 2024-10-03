@@ -65,24 +65,34 @@ export default class CommandHandler {
 				return validations;
 			})();
 
+			const start = Date.now();
+			const commandPaths = [];
+			const commandInits: Function[] = [];
 			for await (const file of this.glob.scan({
 				absolute: false,
 				cwd: commandsDir,
 			})) {
+				commandPaths.push(file);
+			}
+			await Promise.all(commandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
 				const categoryName = file.split('/').slice(-2, -1)[0];
 				const command = await import(path.join(commandsDir, file));
-				const modifiedData = Object.assign({}, command.default, {
+				const modifiedData: ICommand = Object.assign({}, command.default, {
 					name: commandName,
 					category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
 				});
-				if (modifiedData.disabled) continue;
+				// if (modifiedData.disabled) continue;
 				handler.commands.push(modifiedData);
-				if (modifiedData.init) await modifiedData.init(this);
+				if (modifiedData.init && !modifiedData.disabled) commandInits.push(modifiedData.init)//await modifiedData.init(this);
 				if (mHandler.verbose)
 					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`);
-			}
-
+			}));
+			Promise.all(commandInits.map((init) => {
+				init(handler);
+			}));
+			const total = Date.now() - start;
+			this.logger.info(`Initialized ${handler.commands.length} commands in ${total}ms`);
 			const Ilegacy = handler as LegacyHandler;
 			const Islash = handler as SlashHandler;
 			const slash = new SlashCommandHandler(Islash, this);
@@ -98,21 +108,24 @@ export default class CommandHandler {
 			const start = Date.now();
 			const command = cmd as ICommand;
 			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+			let playerTime = undefined;
+			let contextTime = undefined;
+			let validationTime = undefined;
 			let commandContext: CommandContext;
-			const getPlayer = (member: GuildMember) => {
+			const getPlayer = async (member: GuildMember) => {
 				const start = Date.now();
 				if (!member || !member.guild) return;
 				if (!member.voice.channelId) return;
-				const player = this.kazagumo.getPlayer(member.guild.id);
+				let player = this.kazagumo.getPlayer(member.guild.id);
 				if (player && player.voiceId !== member.voice.channelId) return;
 				if (!player && command.needsPlayer)
-					return this.kazagumo.createPlayer({
+					player = await this.kazagumo.createPlayer({
 						guildId: member.guild.id,
 						voiceId: member.voice.channelId,
 						textId: member.voice.channelId,
 						deaf: true,
 					});
-				this.logger.info(`Player creation took ${Date.now() - start}ms`);
+				playerTime = Date.now() - start;
 				return player;
 			};
 			if (ctx.applicationId) {
@@ -132,7 +145,7 @@ export default class CommandHandler {
 						await interaction.editReply(content);
 					}
 				};
-				this.logger.info(`Interaction ${interaction.id} created in ${Date.now() - start}ms`);
+				contextTime = Date.now() - start;
 			} else {
 				const start = Date.now();
 				const message = ctx as Message;
@@ -152,7 +165,7 @@ export default class CommandHandler {
 						await rMsg.edit(content as string | MessageEditOptions);
 					}
 				};
-				this.logger.info(`Message ${message.id} created in ${Date.now() - start}ms`);
+				contextTime = Date.now() - start;
 			}
 			const vStart = Date.now();
 			const res = await Promise.all(this.validations.map(async (validation) => {
@@ -161,7 +174,7 @@ export default class CommandHandler {
 			}));
 			const failed = res.find((r) => r != true);
 			if (failed) return failed;
-			this.logger.info(`Validations took ${Date.now() - vStart}ms`);
+			validationTime = Date.now() - vStart;
 			this.prisma.user.upsert({
 				where: {
 					id: commandContext.user.id,
@@ -202,8 +215,11 @@ export default class CommandHandler {
 			});
 			const eStart = Date.now();
 			const result = await command.execute(commandContext);
-			const end = Date.now();
-			this.logger.info(`Total: ${end - start}ms\nExecution: ${end - eStart}ms`);
+			const executionTime = Date.now() - eStart;
+			const total = Date.now() - start;
+			if (this.verbose) {
+				this.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
+			}
 			return result;
 		}
 

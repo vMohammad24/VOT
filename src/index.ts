@@ -79,11 +79,13 @@ const commandHandler = new CommandHandler({
 	commandsDir: `${import.meta.dir}/commands`,
 	globalPrefix: ';',
 	listenersDir: `${import.meta.dir}/listeners`,
+	verbose: !isProduction,
 });
 
 commandHandler.logger.info(`Starting in ${isProduction ? 'production' : 'development'} mode`);
 
 client.on(Events.ClientReady, async (c) => {
+	initEmojis();
 	const giveaways = await prisma.giveaway.findMany();
 	for (const giveaway of giveaways) {
 		if (!giveaway.ended) {
@@ -98,7 +100,6 @@ client.on(Events.ClientReady, async (c) => {
 		}
 	}
 	commandHandler.logger.info(`Logged in as ${c.user.displayName}`);
-	await initEmojis();
 	axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
 
 	axios.interceptors.response.use(
@@ -161,7 +162,7 @@ client.on(Events.ClientReady, async (c) => {
 			embeds.pop();
 		}
 		if (embeds.length === 0) return;
-		await webhook.send({ embeds, username: 'VOT Changelog', content: 'New Update!' });
+		webhook.send({ embeds, username: 'VOT Changelog', content: 'New Update!' });
 	}
 });
 
@@ -265,13 +266,16 @@ client.on(Events.Error, (err) => {
 });
 
 const shutdown = async () => {
+	const start = Date.now();
 	commandHandler.logger.info('Shutting down...');
-	await client.destroy();
-	await prisma.$disconnect();
-	await redis.quit();
-	await gracefulShutdown();
-	await (await launchPuppeteer()).close();
-	commandHandler.logger.info('Shut down.');
+	await Promise.all([
+		client.destroy(),
+		prisma.$disconnect(),
+		redis.quit(),
+		gracefulShutdown(),
+		(await launchPuppeteer()).close(),
+	])
+	commandHandler.logger.info(`Shut down in ${Date.now() - start}ms`);
 	process.exit(0);
 }
 process.on('SIGINT', async () => {
