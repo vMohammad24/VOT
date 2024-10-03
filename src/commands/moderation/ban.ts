@@ -18,7 +18,7 @@ export default {
 			required: false,
 		},
 	],
-	execute: async ({ guild, member: kicker, args }) => {
+	execute: async ({ guild, member: kicker, args, handler }) => {
 		const member = args.get('member') as GuildMember;
 		if (!member)
 			return {
@@ -29,6 +29,13 @@ export default {
 		if (kicker.roles.highest.comparePositionTo(member.roles.highest) <= 0 || guild.ownerId === member.id) {
 			return {
 				content: 'You cannot ban this member as they have a higher role than you',
+				ephemeral: true,
+			};
+		}
+		// check if the bot has the perms to ban the member
+		if (!member.bannable) {
+			return {
+				content: 'I cannot ban this member',
 				ephemeral: true,
 			};
 		}

@@ -20,6 +20,7 @@ import SlashCommandHandler from './SlashHandler';
 import { ArgumentMap } from './validations/5_args';
 interface RequiredShits {
 	commandsDir: string;
+	contextCommandsDir: string;
 	listenersDir: string;
 	verbose?: boolean;
 }
@@ -43,7 +44,7 @@ export default class CommandHandler {
 	});
 	constructor(mHandler: IMCommandHandler) {
 		const handler = mHandler as ICommandHandler;
-		const { commandsDir, listenersDir } = handler;
+		const { commandsDir, listenersDir, contextCommandsDir } = handler;
 		this.prisma = handler.prisma;
 		this.kazagumo = handler.kazagumo;
 		this.client = handler.client;
@@ -67,13 +68,21 @@ export default class CommandHandler {
 
 			const start = Date.now();
 			const commandPaths = [];
+			const contextCommandPaths = [];
 			const commandInits: Function[] = [];
-			for await (const file of this.glob.scan({
+			for (const file of this.glob.scanSync({
 				absolute: false,
 				cwd: commandsDir,
 			})) {
 				commandPaths.push(file);
 			}
+			for (const file of this.glob.scanSync({
+				absolute: false,
+				cwd: contextCommandsDir,
+			})) {
+				contextCommandPaths.push(file);
+			}
+
 			await Promise.all(commandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
 				const categoryName = file.split('/').slice(-2, -1)[0];
@@ -87,6 +96,16 @@ export default class CommandHandler {
 				if (modifiedData.init && !modifiedData.disabled) commandInits.push(modifiedData.init)//await modifiedData.init(this);
 				if (mHandler.verbose)
 					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`);
+			}));
+			await Promise.all(contextCommandPaths.map(async (file) => {
+				const commandName = file.split('/').pop()!.split('.')[0];
+				const command = await import(path.join(contextCommandsDir, file));
+				const modifiedData: IContextCommand = Object.assign({}, command.default, {
+					name: command.name || commandName,
+				});
+				handler.commands.push(modifiedData);
+				if (mHandler.verbose)
+					this.logger.info(`Initialized Context Command ${modifiedData.name}`);
 			}));
 			Promise.all(commandInits.map((init) => {
 				init(handler);
@@ -221,6 +240,17 @@ export default class CommandHandler {
 				this.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
 			}
 			return result;
+		} else {
+			const command = cmd as IContextCommand;
+			const start = Date.now();
+			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+			const startExecution = Date.now();
+			await command.execute(ctx as any);
+			const total = Date.now() - start;
+			const executionTime = Date.now() - startExecution;
+			if (this.verbose) {
+				this.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
+			}
 		}
 
 	}
