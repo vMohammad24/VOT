@@ -1,10 +1,10 @@
-import { Client, EmbedBuilder } from 'discord.js';
+import { Client, EmbedBuilder, Routes } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 
 const restPing = async (client: Client) => {
 	const start = Date.now();
-	await client.rest.get('/gateway/bot')
+	await client.rest.get(Routes.gatewayBot())
 	return Date.now() - start;
 }
 
