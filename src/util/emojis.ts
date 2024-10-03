@@ -1,5 +1,5 @@
 import { file } from 'bun';
-import { ApplicationEmoji } from 'discord.js';
+import { ApplicationEmoji, Collection } from 'discord.js';
 import { join } from 'path';
 import sharp from 'sharp';
 import commandHandler from '..';
@@ -10,11 +10,11 @@ export function getEmoji(name: string) {
 	return emojis.get(name)!;
 }
 
-export async function addEmoji(emojiPath: string) {
+export async function addEmoji(emojiPath: string, ems: Collection<string, ApplicationEmoji> | undefined) {
+	if (!ems) return;
 	const { verbose, logger, client } = commandHandler
 	const emojiName = emojiPath.split('/').pop()!.split('.')[0];
 	if (emojis.has(emojiName)) return emojis.get(emojiName)!;
-	const ems = await client.application?.emojis.fetch();
 	let emoji = ems?.find((e) => e.name === emojiName);
 	if (emoji) {
 		if (verbose)
@@ -52,8 +52,14 @@ export async function initEmojis() {
 	const emojiFolder = join(import.meta.dirname, '..', '..', 'assets', 'emojis');
 	const glob = new Bun.Glob('*.{png,jpg,jpeg,gif,svg}');
 	const gEmojis = await glob.scanSync({ cwd: emojiFolder, absolute: true });
-	for await (const emojiPath of gEmojis) {
-		await addEmoji(emojiPath);
+	const ems = await client.application?.emojis.fetch();
+	const paths = [];
+	for (const emojiPath of gEmojis) {
+		paths.push(emojiPath);
 	}
-	logger.info('Finished initializing emojis');
+	const start = Date.now();
+	await Promise.all(paths.map(async (emojiPath) => {
+		await addEmoji(emojiPath, ems);
+	}));
+	logger.info('Finished initializing emojis, took ' + (Date.now() - start) + 'ms');
 }

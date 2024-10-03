@@ -16,7 +16,7 @@ export default {
         description: 'User to get information about',
         required: false
     }],
-    execute: async ({ args, member, interaction }) => {
+    execute: async ({ args, member, interaction, handler }) => {
         const user = args.get('user') as GuildMember || member;
         await interaction?.deferReply();
         const res = await axios.get('https://us-atlanta2.evade.rest/users/' + user.id);
@@ -27,13 +27,14 @@ export default {
             description: string;
             emoji: string;
         }[] = data.badges;
-        const downloadBadges = await (async () => {
+        await (async () => {
+            const ems = await handler.client.application?.emojis.fetch();
             for (const badge of badges) {
                 const emojiId = badge.emoji.match(/:(\d+)>$/)?.[1];
                 const res = await axios.get(`https://cdn.discordapp.com/emojis/${emojiId}.png?size=512&quality=lossless`, { responseType: 'arraybuffer' });
                 const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
                 await write(path, res.data);
-                badge.emoji = (await addEmoji(path))?.toString()!;
+                badge.emoji = (await addEmoji(path, ems))?.toString()!;
             }
         })()
         return {
