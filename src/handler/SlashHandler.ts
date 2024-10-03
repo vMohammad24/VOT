@@ -7,6 +7,7 @@ import {
 	PermissionsBitField,
 	Routes,
 } from 'discord.js';
+import { randomId } from 'elysia/utils';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
@@ -160,15 +161,17 @@ export default class SlashCommandHandler {
 				result = await this.handler.executeCommand(command, interaction);
 			} catch (error) {
 				this.handler.logger.error(error);
-				const pError = await this.handler.prisma.error.create({
+				const id = Buffer.from(`${interaction.commandGuildId}.${randomId()}.${interaction.id}`).toString('base64');
+				const pError = this.handler.prisma.error.create({
 					data: {
+						id,
 						channelId: interaction.channelId!,
 						guildId: interaction.guildId || null,
 						fullJson: inspect(error) as any,
 					},
 				});
 				result = {
-					content: `There was an error while executing this command\n-# ${pError?.id}`,
+					content: `There was an error while executing this command\n-# ${id}`,
 					ephemeral: true,
 				};
 			}

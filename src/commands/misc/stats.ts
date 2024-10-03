@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { APIApplication, EmbedBuilder } from 'discord.js';
+import { APIApplication, EmbedBuilder, Routes } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
@@ -62,7 +62,7 @@ export default {
 		const { size } = guilds.cache;
 		const { size: usersSize } = users.cache;
 		await interaction?.deferReply();
-		const res = (await client.rest.get('/applications/@me')) as APIApplication;
+		const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
 		const { approximate_guild_count, approximate_user_install_count } = res;
 		if (globalLines === 0) globalLines = await getLines();
 		const embed = new EmbedBuilder()

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { APIUser, ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { APIUser, ApplicationCommandOptionType, EmbedBuilder, Routes } from 'discord.js';
 import TurnDownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
@@ -32,7 +32,7 @@ export default {
 			url: string;
 		}[] = data.response.web.results;
 		if (!results) return { ephemeral: true, content: 'No results found' };
-		const evadeUser = (await client.rest.get('/users/1228765716321271999')) as APIUser;
+		const evadeUser = (await client.rest.get(Routes.user('1228765716321271999'))) as APIUser;
 		const isGif = evadeUser.avatar!.startsWith('a_');
 		const evadeAvatar = `https://cdn.discordapp.com/avatars/${evadeUser.id}/${evadeUser.avatar}.${isGif ? 'gif' : 'png'}?size=1024?quality=loseless`;
 		const pages = results.map((result, index) => {
