@@ -59,7 +59,7 @@ export default {
 					break;
 				case 'SEARCH':
 					if (res.tracks.length > 0) {
-						player!.queue.add(res.tracks);
+						player!.queue.add(res.tracks[0]);
 						embed.setDescription(
 							`Added [${res.tracks[0].title || 'Error getting title'}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ''} to the queue`,
 						);
