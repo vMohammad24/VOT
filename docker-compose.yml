@@ -42,7 +42,7 @@ services:
     networks:
       - vot
     expose:
-      - 2333
+      - 5432
     volumes:
       - ./db/data_prod:/var/lib/postgresql/data
   lavalink:

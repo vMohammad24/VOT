@@ -2,7 +2,7 @@ server: # Configuration for the REST and WebSocket server
   port: 2333
   address: 0.0.0.0
   http2:
-    enabled: false # Enable or disable HTTP/2 support
+    enabled: true # Enable or disable HTTP/2 support
 
 plugins:
   youtube:
@@ -27,11 +27,11 @@ lavalink:
     password: 'wS2WzhJDpPLuRkBmMqXEyAGx9vC7QHn8dVTNeYKrb435Zt6'
     sources: # Configure available sources
       youtube: false
-      bandcamp: true
-      soundcloud: true
-      twitch: true
-      vimeo: true
-      nico: true
+      bandcamp: false
+      soundcloud: false
+      twitch: false
+      vimeo: false
+      nico: false
       http: false
       local: false
     filters:
@@ -54,5 +54,5 @@ lavalink:
     youtubePlaylistLoadLimit: 6 # Number of pages to load per playlist (100 items per page)
     playerUpdateInterval: 5 # Frequency of player updates to clients (seconds)
     youtubeSearchEnabled: true # Enable YouTube search
-    soundcloudSearchEnabled: true # Enable SoundCloud search
+    soundcloudSearchEnabled: false # Enable SoundCloud search
     gc-warnings: false # Enable garbage collection warnings
