@@ -4,7 +4,6 @@ import { inspect } from 'bun';
 import { Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
 import Redis from 'ioredis';
 import { Kazagumo, Plugins } from 'kazagumo';
-import Apple from 'kazagumo-apple';
 import Spotify from 'kazagumo-spotify';
 import { gracefulShutdown, scheduleJob, scheduledJobs } from 'node-schedule';
 import { Connectors, type NodeOption } from 'shoukaku';
@@ -47,11 +46,6 @@ const kazagumo = new Kazagumo(
 			if (guild) guild.shard.send(payload);
 		},
 		plugins: [
-			new Apple({
-				countryCode: 'us',
-				imageWidth: 640,
-				imageHeight: 640,
-			}),
 			new Plugins.PlayerMoved(client),
 			new Spotify({
 				clientId: process.env.SPOTIFY_CLIENT_ID!,
