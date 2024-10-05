@@ -27,7 +27,7 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600); // Expires in 1 hour
+	redis.set(cacheKey, JSON.stringify(user), 'EX', 2); // Expires in 1 hour
 	return user;
 }
 
@@ -50,7 +50,7 @@ export async function getUserByID(id: string, select?: Prisma.UserSelect<Default
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600); // Expires in 1 hour
+	await redis.set(cacheKey, JSON.stringify(user), 'EX', 2); // Expires in 1 hour
 	return user;
 }
 
@@ -80,7 +80,7 @@ export async function getMember(guildMember: GuildMember, select?: Prisma.Member
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(member), 'EX', 3600); // Expires in 1 hour
+	await redis.set(cacheKey, JSON.stringify(member), 'EX', 2); // Expires in 1 hour
 	return member;
 }
 
@@ -105,6 +105,6 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 3600); // Expires in 1 hour
+	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 2); // Expires in 1 hour
 	return guildData;
 }
