@@ -58,6 +58,8 @@ services:
       - ./plugins/:/opt/Lavalink/plugins/:rw
     expose:
       - 2333
+    networks:
+      - vot
   redis:
     image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     container_name: redis
