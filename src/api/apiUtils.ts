@@ -48,7 +48,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 		}
 		const why = resGuilds as any;
 		if (why.error_description) {
-			return { error: why.error_description };
+			return { error: why.error_description, message: 'NOTE: from discord' };
 		}
 		const guilds = resGuilds.filter((g: APIGuild) => {
 			const isOwner = g.owner;

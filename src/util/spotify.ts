@@ -8,7 +8,7 @@ export async function getCurrentlyPlaying(userId: string) {
 			userId,
 		},
 	});
-	if (!spotify || !spotify.expiresAt) return { error: 'Spotify account not linked.' };
+	if (!spotify || !spotify.expiresAt) return { error: 1 };
 	if (spotify.expiresAt < new Date('UTC')) {
 		await refreshToken(spotify);
 		return await getCurrentlyPlaying(userId);
@@ -21,7 +21,7 @@ export async function getCurrentlyPlaying(userId: string) {
 	const { error } = res.data;
 	if (res.status == 401 || error) {
 		await refreshToken(spotify);
-		await setTimeout(() => {}, 500);
+		await setTimeout(() => { }, 500);
 		return await getCurrentlyPlaying(userId);
 	}
 	return res.data;

@@ -7,15 +7,20 @@ export default {
 	description: 'Music related events',
 	execute: async (handler) => {
 		const { client, kazagumo, logger, executeCommand, commands } = handler;
-		kazagumo.shoukaku.on('ready', (name) => logger.info(`Lavalink ${name}: Ready!`));
-		kazagumo.shoukaku.on('error', (name, error) => console.error(`Lavalink ${name}: Error Caught,`, error));
-		kazagumo.shoukaku.on('close', (name, code, reason) =>
-			logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`),
+		kazagumo.shoukaku.on('ready', (name) => { if (handler.verbose) logger.info(`Lavalink ${name}: Ready!`) });
+		kazagumo.shoukaku.on('error', (name, error) => { if (handler.verbose) logger.error(`Lavalink ${name}: Error Caught,`, error) });
+		kazagumo.shoukaku.on('close', (name, code, reason) => {
+			if (handler.verbose)
+				logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`)
+		}
 		);
-		kazagumo.shoukaku.on('debug', (name, info) => logger.debug(`Lavalink ${name}: Debug,`, info));
+		kazagumo.shoukaku.on('debug', (name, info) => { if (handler.verbose) logger.debug(`Lavalink ${name}: Debug,`, info) });
 		kazagumo.shoukaku.on('disconnect', (name, players) => {
+			if (handler.verbose)
+				logger.warn(`Lavalink ${name}: Disconnected, Players: ${players}}`)
 		});
 		kazagumo.on('playerMoved', (player, status, channelData) => {
+			if (handler.verbose) logger.info(`Player ${player.guildId} moved to ${channelData.newChannelId}`);
 			switch (status) {
 				case 'LEFT':
 					player.queue.clear();
@@ -29,6 +34,7 @@ export default {
 		});
 
 		kazagumo.on('playerStart', (player, track) => {
+			if (handler.verbose) logger.info(`Player ${player.guildId} started playing ${track.title}`);
 			const member = player.queue.current?.requester;
 			if (member) {
 				const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
@@ -39,6 +45,7 @@ export default {
 		});
 
 		kazagumo.on('playerEnd', async (player) => {
+			if (handler.verbose) logger.info(`Player ${player.guildId} ended`);
 			const channelId = player.voiceId;
 			const messageId = player.data.get('messageId');
 			const guildId = player.guildId;
