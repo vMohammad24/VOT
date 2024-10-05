@@ -7,3 +7,5 @@ node_modules/
 .DS_Store
 assets/tesseract
 plugins
+caddy/config/
+caddy/data/

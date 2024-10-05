@@ -30,7 +30,7 @@ services:
     depends_on:
       - vot
   postgres:
-    image: postgres
+    image: postgres:16
     container_name: postgres
     restart: always
     profiles:
@@ -83,6 +83,8 @@ services:
     ports:
       - '80:80' # Expose HTTP
       - '443:443' # Expose HTTPS
+    profiles:
+      - prod
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile # Caddyfile configuration
       - ./caddy/data:/data # Caddy data (Let's Encrypt certs)
@@ -90,7 +92,7 @@ services:
       - ./caddy/certs:/etc/caddy/certs # (Optional) Cloudflare Origin Certs
 
   postgres_dev:
-    image: postgres
+    image: postgres:16
     container_name: postgres
     restart: unless-stopped
     profiles:
