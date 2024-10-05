@@ -20,7 +20,7 @@ export default {
 	],
 	execute: async ({ message, interaction, handler, args, member }) => {
 		const categories = handler
-			.commands!.map((cmd) => cmd.category)
+			.commands!.filter(a => a.category).map((cmd) => cmd.category)
 			.filter((value, index, self) => self.indexOf(value) === index)
 			.filter((cat) => cat != 'Developer')
 			.sort() as string[];
