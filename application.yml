@@ -36,15 +36,15 @@ lavalink:
       local: false
     filters:
       volume: true
-      equalizer: false
-      karaoke: false
-      timescale: false
-      tremolo: false
-      vibrato: false
-      distortion: false
-      rotation: false
-      channelMix: false
-      lowPass: false
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
     bufferDurationMs: 400 # Buffer duration (ms); higher values handle GC pauses better
     frameBufferDurationMs: 5000 # Amount of audio to keep buffered (ms)
     opusEncodingQuality: 10 # Opus encoder quality (0-10); higher values are better but more CPU-intensive
