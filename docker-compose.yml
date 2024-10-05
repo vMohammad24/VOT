@@ -46,18 +46,16 @@ services:
     volumes:
       - ./db/data_prod:/var/lib/postgresql/data
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink
+    image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
-    restart: always
+    restart: unless-stopped
     profiles:
       - prod
     environment:
       - _JAVA_OPTIONS=-Xmx6G
     volumes:
-      - ./application.yml:/opt/Lavalink/application.yml
+      - ./application.yml:/opt/Lavalink/application.yml:ro
       - ./plugins/:/opt/Lavalink/plugins/:rw
-    networks:
-      - vot
     expose:
       - 2333
   redis:
@@ -106,7 +104,7 @@ services:
     volumes:
       - ./db/data:/var/lib/postgresql/data
   lavalink_dev:
-    image: ghcr.io/lavalink-devs/lavalink
+    image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
     restart: unless-stopped
     profiles:
