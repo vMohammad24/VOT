@@ -48,7 +48,9 @@ services:
   lavalink:
     image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
-    restart: unless-stopped
+    restart: always
+    networks:
+      - vot
     profiles:
       - prod
     environment:
@@ -58,8 +60,6 @@ services:
       - ./plugins/:/opt/Lavalink/plugins/:rw
     expose:
       - 2333
-    networks:
-      - vot
   redis:
     image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     container_name: redis
