@@ -33,11 +33,15 @@ export default {
 			.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
 			.values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
 				.values())).concat(Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values())) : undefined;
+		async function messageToText(m: Message<boolean>): Promise<string> {
+			return `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - refrecning ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent} ${m.hasThread ?
+				`This message also contains a thread named: ${m.thread?.name} which has the following messages: ${(await m.thread?.awaitMessages())?.map(async tm => await messageToText(tm))}` : ''}`
+		}
 		const channelMessage = channelMessages
 			? channelMessages
 				.map(
-					(m: Message<boolean>) =>
-						`${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - refrecning ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent}`,
+					async (m: Message<boolean>) =>
+						await messageToText(m),
 				)
 				.join('\n')
 			: '';
@@ -68,7 +72,7 @@ export default {
 			).join('\n')
 			webLength = webResults.length;
 		}
-		await editReply('Generating previous conversations...', rMsg);
+		await editReply('Gathering previous conversations...', rMsg);
 		const trainingData = await handler.prisma.trainingData.findMany({
 			where: {
 				userId: user.id
