@@ -126,7 +126,7 @@ export async function createGiveaway(
 }
 
 export async function endGiveaway(giveawayId: string) {
-	const { client, prisma, prodMode } = commandHandler;
+	const { client, prisma } = commandHandler;
 	if (!giveawayId) return;
 	const giveaway = await prisma.giveaway.findUnique({
 		where: { id: giveawayId },
