@@ -1,6 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from '@discordjs/builders';
-import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder, ButtonStyle } from 'discord.js';
+import { ApplicationCommandOptionType, ButtonStyle } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { searchSaver } from '../../util/beatsaver';
@@ -20,7 +19,6 @@ export default {
 		},
 	],
 	type: 'all',
-	userTier: 'Beta',
 	execute: async ({ interaction, player, message, member, args }) => {
 		const songTitle = args.get('song') || (player ? player.queue.current?.title : null);
 		if (!songTitle) return { content: "Couldn't retrive song", ephemeral: true };
@@ -32,8 +30,6 @@ export default {
 				// Log the map object to inspect its structure
 
 				const latestVersion = map.versions[map.versions.length - 1];
-
-				// Check for undefined values and provide default values or skip
 				const mapName = map.name ?? 'Unknown';
 				const description = map.description.substring(0, 200);
 				const uploaderName = map.uploader?.name ?? 'Unknown uploader';
@@ -44,7 +40,7 @@ export default {
 				const oneClickURL = `${getFrontEndURL()}/beatsaber?id=${map.id}`;
 				const previewURL = latestVersion.previewURL ?? '';
 				const avatarURL = map.uploader?.avatar ?? '';
-				const preview = await axios.get(previewURL, { responseType: 'arraybuffer' });
+				// const preview = await axios.get(previewURL, { responseType: 'arraybuffer' });
 				return {
 					page: {
 						embeds: [
@@ -63,7 +59,7 @@ export default {
 								.setTimestamp(new Date(map.updatedAt))
 								.setColor([0, 255, 0]),
 						],
-						attachments: [new AttachmentBuilder(Buffer.from(preview.data), { name: 'preview.mp3' })],
+						// attachments: preview ? [new AttachmentBuilder(Buffer.from(preview.data), { name: 'preview.mp3', description: `${mapName}'s preview` })] : [],
 						components: [
 							new ActionRowBuilder<ButtonBuilder>().addComponents(
 								new ButtonBuilder().setURL(oneClickURL).setLabel('Download').setStyle(ButtonStyle.Link),
