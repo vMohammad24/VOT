@@ -55,25 +55,25 @@ services:
       - _JAVA_OPTIONS=-Xmx6G
     volumes:
       - ./application.yml:/opt/Lavalink/application.yml
-      - ./plugins/:/opt/Lavalink/plugins/
+      - ./plugins/:/opt/Lavalink/plugins/:rw
     networks:
       - vot
     expose:
       - 2333
-  redis:
-    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
-    container_name: redis
-    restart: always
-    ulimits:
-      memlock: -1
-    profiles:
-      - prod
-    networks:
-      - vot
-    expose:
-      - 6379
-    volumes:
-      - ./db/cache_prod:/data
+  # redis:
+  #   image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+  #   container_name: redis
+  #   restart: always
+  #   ulimits:
+  #     memlock: -1
+  #   profiles:
+  #     - prod
+  #   networks:
+  #     - vot
+  #   expose:
+  #     - 6379
+  #   volumes:
+  #     - ./db/cache_prod:/data
   caddy:
     image: caddy:latest
     container_name: caddy
@@ -118,18 +118,18 @@ services:
       - ./plugins/:/opt/Lavalink/plugins/:rw
     ports:
       - '2333:2333'
-  redis_dev:
-    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
-    container_name: redis
-    restart: unless-stopped
-    ulimits:
-      memlock: -1
-    profiles:
-      - dev
-    ports:
-      - '6379:6379'
-    volumes:
-      - ./db/cache:/data
+  # redis_dev:
+  #   image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   ulimits:
+  #     memlock: -1
+  #   profiles:
+  #     - dev
+  #   ports:
+  #     - '6379:6379'
+  #   volumes:
+  #     - ./db/cache:/data
 networks:
   vot:
     name: vot
