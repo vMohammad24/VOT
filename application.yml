@@ -14,6 +14,7 @@ plugins:
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     oauth:
       enabled: true
+      refreshToken: '1//056lcUHKh4BsbCgYIARAAGAUSNwF-L9Irz81fcdUhOMHz3iNEyP7gq8NQAwrleoLPFh7eNTkQVmGFrIRdYMlD1uWVrlm5TiT_P-g'
     clients:
       - MUSIC
       - ANDROID_TESTSUITE
