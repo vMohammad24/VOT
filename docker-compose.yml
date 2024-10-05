@@ -74,22 +74,21 @@ services:
       - 6379
     volumes:
       - ./db/cache_prod:/data
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    profiles:
-      - prod
-    ports:
-      - '80:80'
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/sites-available:/etc/nginx/conf.d
-      - ./nginx/dhparam.pem:/etc/nginx/dhparam.pem
-      - ./nginx/nginxconfig.io:/etc/nginx/nginxconfig.io
-    depends_on:
-      - frontend
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
     networks:
       - vot
+    ports:
+      - '80:80' # Expose HTTP
+      - '443:443' # Expose HTTPS
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile # Caddyfile configuration
+      - ./caddy/data:/data # Caddy data (Let's Encrypt certs)
+      - ./caddy/config:/config # Caddy config storage
+      - ./caddy/certs:/etc/caddy/certs # (Optional) Cloudflare Origin Certs
+
   postgres_dev:
     image: postgres
     container_name: postgres
@@ -132,3 +131,6 @@ services:
 networks:
   vot:
     name: vot
+volumes:
+  caddy_data:
+  caddy_config:
