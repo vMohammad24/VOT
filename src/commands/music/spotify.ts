@@ -1,6 +1,7 @@
-import { EmbedBuilder, GuildMember } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getCurrentlyPlaying, pausePlayer } from '../../util/spotify';
+import { getFrontEndURL } from '../../util/urls';
 
 export default {
 	description: 'Gets your current playing song from spotify and adds it to the queue',
@@ -10,6 +11,19 @@ export default {
 		await interaction?.deferReply({ ephemeral: true });
 		const res = await getCurrentlyPlaying(member.id);
 		if (res.error) {
+			if (res.error == 1) {
+				return {
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Spotify')
+							.setColor('Red')
+							.setDescription('You have not linked your spotify account yet.')
+							.setTimestamp()
+					],
+					components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setLabel('Link Spotify').setStyle(ButtonStyle.Link).setURL(`${getFrontEndURL()}/settings/spotify`))],
+					ephemeral: true,
+				};
+			}
 			return {
 				content: res.error,
 				ephemeral: true,
