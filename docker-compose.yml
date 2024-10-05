@@ -56,7 +56,7 @@ services:
     environment:
       - _JAVA_OPTIONS=-Xmx6G
     volumes:
-      - ./application.yml:/opt/Lavalink/application.yml:ro
+      - ./application.yml:/opt/Lavalink/application.yml:rw
       - ./plugins/:/opt/Lavalink/plugins/:rw
     expose:
       - 2333
