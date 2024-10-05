@@ -81,9 +81,10 @@ services:
       - prod
     volumes:
       - ./nginx/certs:/etc/letsencrypt:rw
-      - ./nginx/certs/:/var/lib/letsencrypt:rw
+      - ./nginx/certs:/var/lib/letsencrypt:rw
+      - ./nginx/www:/var/www/certbot:rw
     entrypoint: >
-      sh -c 'trap exit TERM; 
+      sh -c 'trap exit TERM;
       while :; do certbot certonly --webroot -w /var/www/certbot 
       --email info@vot.wtf
       --agree-tos 
@@ -105,6 +106,7 @@ services:
       - ./nginx/dhparam.pem:/etc/nginx/dhparam.pem
       - ./nginx/certs:/etc/letsencrypt:ro
       - ./nginx/nginxconfig.io:/etc/nginx/nginxconfig.io
+      - ./nginx/www:/var/www/certbot:rw
     depends_on:
       - frontend
     networks:
