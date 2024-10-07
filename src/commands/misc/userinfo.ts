@@ -41,7 +41,7 @@ export default {
             embeds: [new EmbedBuilder()
                 .setTitle('User Information')
                 .setThumbnail(user.user.displayAvatarURL())
-                .setAuthor({ name: user.user.tag, iconURL: user.user.displayAvatarURL() })
+                .setAuthor({ name: user.user.tag, iconURL: user.user.displayAvatarURL(), url: `https://discord.com/users/${user.id}` })
                 // .setDescription(`
                 //     **ID**: ${user.id}
                 //     **Badges**: ${badges.map(badge => badge.emoji).join('')}
@@ -50,6 +50,7 @@ export default {
                 //     **Joined**: ${user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown'}
                 //     **Created**: <t:${Math.round(user.user.createdTimestamp / 1000)}>
                 //     `)
+                .setDescription(bio ? removeMarkdown(bio) : null)
                 .setFields([
                     {
                         name: 'ID',
@@ -58,11 +59,6 @@ export default {
                     {
                         name: 'Badges',
                         value: badges.map(badge => badge.emoji).join(''),
-                        inline: true
-                    },
-                    {
-                        name: 'Bio',
-                        value: removeMarkdown(bio) || 'None',
                         inline: true
                     },
                     {

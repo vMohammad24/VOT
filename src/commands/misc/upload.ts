@@ -25,7 +25,6 @@ export default {
 		const res = await uploadFile(f);
 		return {
 			content: res.accessibleURL,
-			ephemeral: true,
 		};
 	},
 } as ICommand;

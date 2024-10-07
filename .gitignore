@@ -6,6 +6,7 @@ node_modules/
 .idea
 .DS_Store
 assets/tesseract
+assets/brainrot
 plugins
 caddy/config/
 caddy/data/
