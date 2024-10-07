@@ -65,7 +65,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 	const { options } = command;
 	if (!options) return true;
 	if (options.length === 0) return true;
-	const pUser = await getUser(user);
+	const pUser = await getUser(user, {
+		ArgumentMode: true
+	});
 	// Parse the message arguments
 	const messageArgs = message ? parseMessageArgs(message.content).slice(1) : [];
 
@@ -189,19 +191,19 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 					}
 					break;
 
-				case ApplicationCommandOptionType.Subcommand:
-					const subcommand = interaction.options.getSubcommand(false);
-					if (subcommand) {
-						argument = new Argument(subcommand);
-					}
-					break;
+				// case ApplicationCommandOptionType.Subcommand:
+				// 	const subcommand = interaction.options.getSubcommand(false);
+				// 	if (subcommand) {
+				// 		argument = new Argument(subcommand);
+				// 	}
+				// 	break;
 
-				case ApplicationCommandOptionType.SubcommandGroup:
-					const subcommandGroup = interaction.options.getSubcommandGroup(false);
-					if (subcommandGroup) {
-						argument = new Argument(subcommandGroup);
-					}
-					break;
+				// case ApplicationCommandOptionType.SubcommandGroup:
+				// 	const subcommandGroup = interaction.options.getSubcommandGroup(false);
+				// 	if (subcommandGroup) {
+				// 		argument = new Argument(subcommandGroup);
+				// 	}
+				// 	break;
 
 				case ApplicationCommandOptionType.Number:
 					const numberValue = interaction.options.getNumber(option.name, option.required);
@@ -234,7 +236,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 						};
 					}
 					break;
-
+				case ApplicationCommandOptionType.Subcommand:
+				case ApplicationCommandOptionType.SubcommandGroup:
+					break;
 				default:
 					return {
 						embeds: [
@@ -248,13 +252,18 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 			}
 			args.set(option.name, argument);
 		} else if (message) {
-			switch (pUser.ArgumentMode) {
+			let argumentMode: 'Advanced' | 'Normal' = pUser.ArgumentMode;
+			const regexDetection = /--\w+/;
+			if (regexDetection.test(message.content)) {
+				argumentMode = 'Advanced';
+			}
+			switch (argumentMode) {
 				case 'Normal':
 					// Updated argument parsing logic for 'Normal' mode
 					switch (option.type) {
 						case ApplicationCommandOptionType.String:
-						case ApplicationCommandOptionType.Subcommand:
-						case ApplicationCommandOptionType.SubcommandGroup:
+							// case ApplicationCommandOptionType.Subcommand:
+							// case ApplicationCommandOptionType.SubcommandGroup:
 							let st: string | null = null;
 							let remainingOptions = options.slice(i + 1);
 							let hasRequiredOptionsAfter = remainingOptions.some(opt => (opt as any).required);

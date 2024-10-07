@@ -3,59 +3,61 @@ import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 
 export default {
+    name: 'settings',
     description: `VOT settings`,
-    aliases: ['sets', 'set', 'setting'],
     slashOnly: true,
     options: [
         {
-            name: 'name',
-            description: 'The name of the option you want to change',
-            type: ApplicationCommandOptionType.String,
-            required: true,
-            choices: [
+            name: 'prefix',
+            description: 'Set the bot prefix',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
                 {
-                    name: 'Prefix',
-                    value: 'prefix'
-                },
-                {
-                    name: 'Parsing',
-                    value: 'parsing'
-                },
-                {
-                    name: 'Training data',
-                    value: 'training'
+                    name: 'prefix',
+                    description: 'The new prefix',
+                    type: ApplicationCommandOptionType.String,
+                    required: true
                 }
             ]
         },
         {
-            name: 'value',
-            description: 'The value you want to set the option to',
-            type: ApplicationCommandOptionType.String,
-            required: true,
-            // choices: [{
-            //     name: 'Normal',
-            //     value: 'Normal'
-            // }, {
-            //     name: 'Advanced',
-            //     value: 'Advanced'
-            // },
-            // {
-            //     name: 'Disable Training Data',
-            //     value: 'false'
-            // },
-            // {
-            //     name: 'Enable Training Data',
-            //     value: 'true'
-            // }]
+            name: 'parsing',
+            description: 'Set the argument parsing mode',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: 'value',
+                    description: 'The parsing mode (Normal or Advanced)',
+                    type: ApplicationCommandOptionType.String,
+                    required: true,
+                    choices: [
+                        { name: 'Normal', value: 'n' },
+                        { name: 'Advanced', value: 'a' }
+                    ]
+                }
+            ]
+        },
+        {
+            name: 'training',
+            description: 'Enable or disable training data',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: 'value',
+                    description: 'Enable or disable training data (true or false)',
+                    type: ApplicationCommandOptionType.Boolean,
+                    required: true,
+                }
+            ]
         }
     ],
-    type: 'all',
+    type: 'dmOnly',
     execute: async ({ interaction, user, handler }) => {
         if (!interaction) return;
-        const subCommand = interaction.options.getString('name');
-        const value = interaction.options.getString('value', true);
+        const subCommand = interaction.options.getSubcommand();
         switch (subCommand) {
             case 'prefix': {
+                const value = interaction.options.getString('prefix', true)!;
                 if (value.length > 3) return {
                     embeds: [new EmbedBuilder()
                         .setTitle('Invalid value')
@@ -82,20 +84,13 @@ export default {
                 }
             }
             case 'parsing': {
-                if (!['Normal', 'Advanced'].includes(value)) return {
-                    embeds: [new EmbedBuilder()
-                        .setTitle('Invalid value')
-                        .setDescription(`The value must be either \`Normal\` or \`Advanced\``)
-                        .setColor('Red')
-                    ],
-                    ephemeral: true
-                }
+                const value = interaction.options.getString('value', true)!;
                 const pU = await handler.prisma.user.update({
                     where: {
                         id: user.id
                     },
                     data: {
-                        ArgumentMode: value as ArgumentMode
+                        ArgumentMode: value == 'n' ? ArgumentMode.Normal : ArgumentMode.Advanced
                     }
                 })
                 return {
@@ -108,20 +103,13 @@ export default {
                 }
             }
             case 'training': {
-                if (!['true', 'false'].includes(value)) return {
-                    embeds: [new EmbedBuilder()
-                        .setTitle('Invalid value')
-                        .setDescription(`The value must be either \`true\` or \`false\``)
-                        .setColor('Red')
-                    ],
-                    ephemeral: true
-                }
+                const value = interaction.options.getBoolean('value', true)!;
                 const pU = await handler.prisma.user.update({
                     where: {
                         id: user.id
                     },
                     data: {
-                        shouldTrain: value === 'true'
+                        shouldTrain: value
                     }
                 })
                 return {

@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { getMember } from '../../util/database';
 
 export default {
 	name: 'ticket',
@@ -32,14 +33,19 @@ export default {
 			],
 		},
 	],
-	disabled: true,
-	execute: async ({ args, member: executer, channel, guild, handler }) => {
+	slashOnly: true,
+	// disabled: true,
+	execute: async ({ member: executer, channel, guild, handler, interaction }) => {
+		if (!interaction) return;
 		const { prisma } = handler;
 		const ticket = await prisma.ticket.findFirst({
 			where: {
 				guildId: guild?.id!,
 				channelId: channel!.id!,
 			},
+			include: {
+				members: true,
+			}
 		});
 		if (!ticket) {
 			return {
@@ -47,17 +53,88 @@ export default {
 				ephemeral: true,
 			};
 		}
-		const subCommand: 'add' | 'remove' = args.get('add');
+		const subCommand = interaction.options.getSubcommand(true);
 		if (!subCommand)
 			return {
 				content: 'Invalid subcommand',
 				ephemeral: true,
 			};
-		const member = args.get('member') as GuildMember;
+		const member = interaction.options.getMember('member') as GuildMember;
 		if (!member)
 			return {
 				content: 'Invalid user',
 				ephemeral: true,
 			};
+		if (ticket.ownerId !== executer.id) {
+			return {
+				content: 'You are not the owner of this ticket',
+				ephemeral: true,
+			};
+		}
+		const pMember = await getMember(member, {
+			id: true
+		});
+		if (!pMember) {
+			return {
+				content: `Member ${member.user.tag} not found.`,
+				ephemeral: true,
+			}
+		}
+		switch (subCommand) {
+			case 'add': {
+				if (ticket.members.map(a => a.id).includes(pMember?.id!)) {
+					return {
+						content: `${member.user.tag} is already in this ticket`,
+						ephemeral: true,
+					};
+				}
+				await prisma.ticket.update({
+					where: {
+						id: ticket.id,
+					},
+					data: {
+						members: {
+							connect: {
+								id: pMember?.id!,
+							},
+						},
+					},
+				});
+				if (channel.isTextBased() && 'permissionOverwrites' in channel) {
+					await channel.permissionOverwrites.create(member.id, {
+						ViewChannel: true,
+					})
+				}
+				return {
+					content: `${member.user.tag} has been added to the ticket`,
+				};
+			}
+			case 'remove': {
+				if (!ticket.members.map(a => a.id).includes(pMember?.id!)) {
+					return {
+						content: `${member.user.tag} is not in this ticket`,
+						ephemeral: true,
+					};
+				}
+				await prisma.ticket.update({
+					where: {
+						id: ticket.id,
+					},
+					data: {
+						members: {
+							disconnect: {
+								id: pMember?.id!,
+							},
+						},
+					},
+				});
+				if (channel.isTextBased() && 'permissionOverwrites' in channel) {
+					await channel.permissionOverwrites.delete(member.id)
+				}
+				return {
+					content: `${member.user.tag} has been removed from the ticket`,
+				};
+			}
+		}
 	},
 } as ICommand;
