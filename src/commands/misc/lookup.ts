@@ -1,8 +1,10 @@
+import { loadImage } from "@napi-rs/canvas";
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import { filesize } from "filesize";
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { launchPuppeteer } from "../../util/puppeteer";
+import { getTwoMostUsedColors } from "../../util/util";
 const browser = await launchPuppeteer();
 const page = await browser.newPage();
 
@@ -13,7 +15,7 @@ interface User {
     contributor: boolean;
     created_at: string;
     id: string;
-    invited_by: string | null;
+    invited_by: User | null;
     private_profile: boolean;
     rank: string;
     storage_used: number;
@@ -86,9 +88,9 @@ export default {
                             ])
                             .setDescription(user.bio)
                             .setFooter({
-                                text: `Invited by ${user.invited_by ?? 'No one'}`,
+                                text: `Invited by ${user.invited_by ? user.invited_by.username ?? 'No one' : 'No one'}`,
                             })
-                            .setColor('Random')
+                            .setColor((await getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${user.avatar}`)))[0])
                             .setTimestamp(new Date(user.created_at))
                     ]
                 }
