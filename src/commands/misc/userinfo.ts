@@ -117,6 +117,7 @@ export default {
             if (reviews) {
                 // remove the first one
                 reviews.shift();
+                if (reviews.length === 0) return i.reply({ content: 'No reviews found', ephemeral: true });
                 embed.setDescription(reviews.map(review => `- **${review.sender.username}** - ${review.comment}`).join('\n'))
             }
             i.reply({
