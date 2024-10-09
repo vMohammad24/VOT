@@ -25,6 +25,7 @@ export default {
 		const strings: string[] = [];
 		await interaction?.deferReply();
 		const res = await axios.get(apiURL, { responseType: 'stream' }).then((res) => {
+			let i = 0;
 			res.data.on('data', async (chunk: string) => {
 				if (typeof chunk != 'string') chunk = Buffer.from(chunk).toString('utf-8');
 				strings.push(
@@ -34,12 +35,12 @@ export default {
 						.replace(/"(.{1})"/g, '$1'),
 				);
 				const endRes = strings
-					.join(' ')
+					.join('')
 					.replace(/\\n/g, '\n')
 					.replace(/""/g, '\n')
 					.replace(/\\t/g, '\t')
 					.replace('" "', ' ');
-				if (endRes !== '') {
+				if (endRes !== '' && i % 2 === 0) {
 					await pagination({
 						interaction,
 						message,
@@ -51,6 +52,7 @@ export default {
 						type: 'buttons',
 					});
 				}
+				i++;
 			});
 			res.data.on('end', async () => {
 				res = await axios.get(enURL, { responseType: 'json' });

@@ -7,13 +7,12 @@ import {
 	PermissionsBitField,
 	Routes,
 } from 'discord.js';
-import { randomId } from 'elysia/utils';
+import { nanoid } from 'nanoid/non-secure';
 import CommandHandler from '.';
 import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
 import { IContextCommand } from './interfaces/IContextCommand';
 import type SlashHandler from './interfaces/ISlashHandler';
-
 
 function isICommand(cmd: ICommand | IContextCommand): cmd is ICommand {
 	return (cmd as ICommand).category !== undefined;
@@ -199,23 +198,19 @@ export default class SlashCommandHandler {
 					});
 				}
 				let result = {};
+				let err;
+				let errorId;
 				try {
 					result = await this.handler.executeCommand(command, interaction);
 				} catch (error) {
 					this.handler.logger.error(error);
-					const id = Buffer.from(`${interaction.commandGuildId}.${randomId()}.${interaction.id}`).toString('base64');
-					const pError = this.handler.prisma.error.create({
-						data: {
-							id,
-							channelId: interaction.channelId!,
-							guildId: interaction.guildId || null,
-							fullJson: inspect(error) as any,
-						},
-					});
+					const id = nanoid(10);
 					result = {
 						content: `There was an error while executing this command\n-# ${id}`,
 						ephemeral: true,
 					};
+					errorId = id;
+					err = error;
 				}
 				if (result) {
 					let r = result;
@@ -230,6 +225,14 @@ export default class SlashCommandHandler {
 						await interaction.reply(r);
 					}
 				}
+				await this.handler.prisma.error.create({
+					data: {
+						id: errorId,
+						channelId: interaction.channelId!,
+						guildId: interaction.guildId || null,
+						fullJson: inspect(err) as any,
+					},
+				});
 			}
 		});
 	}

@@ -41,6 +41,7 @@
     "kazagumo-spotify": "latest",
     "minimist": "latest",
     "musicard": "latest",
+    "nanoid": "^5.0.7",
     "node-schedule": "latest",
     "numeral": "latest",
     "pino": "latest",
