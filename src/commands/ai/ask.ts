@@ -38,11 +38,11 @@ export default {
 				`This message also contains a thread named: ${m.thread?.name} which has the following messages: ${(await m.thread?.awaitMessages())?.map(async tm => await messageToText(tm))}` : ''}`
 		}
 		const channelMessage = channelMessages
-			? channelMessages
+			? (await Promise.all(channelMessages
 				.map(
 					async (m: Message<boolean>) =>
 						await messageToText(m),
-				)
+				)))
 				.join('\n')
 			: '';
 		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - Had nitro since ${user.premiumSinceTimestamp}`).join('\n') : undefined;

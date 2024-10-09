@@ -6,13 +6,13 @@ const cooldowns = new Collection();
 
 export default async function (command: ICommand, ctx: CommandContext) {
 	const { cooldown } = command;
-	const { handler, user, interaction, message } = ctx;
-	const { prisma, developers } = handler;
+	const { user, handler: { prisma } } = ctx;
 	if (!cooldown) return true;
-
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Collection());
 	}
+	const pUser = await prisma.user.findUnique({ where: { id: user.id } });
+	if (pUser && (pUser.tier == 'Premium' || pUser.tier == 'Beta')) return true;
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name) as Collection<string, number>;
 	if (timestamps.has(user.id)) {

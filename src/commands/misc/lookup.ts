@@ -1,13 +1,10 @@
 import { loadImage } from "@napi-rs/canvas";
+import axios from "axios";
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import { filesize } from "filesize";
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
-import { launchPuppeteer } from "../../util/puppeteer";
 import { getTwoMostUsedColors } from "../../util/util";
-const browser = await launchPuppeteer();
-const page = await browser.newPage();
-
 interface User {
     avatar: string;
     banned: boolean;
@@ -28,6 +25,98 @@ function captitalizeString(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
+interface BioLink {
+    link: string;
+    risk: number;
+}
+
+interface CommerceUserInfo {
+    commerceUser: boolean;
+    downLoadLink: {
+        android: string;
+        ios: string;
+    };
+    category: string;
+    categoryButton: boolean;
+}
+
+interface ProfileTab {
+    showMusicTab: boolean;
+    showQuestionTab: boolean;
+    showPlayListTab: boolean;
+}
+
+interface User {
+    id: string;
+    shortId: string;
+    uniqueId: string;
+    nickname: string;
+    avatarLarger: string;
+    avatarMedium: string;
+    avatarThumb: string;
+    signature: string;
+    createTime: number;
+    verified: boolean;
+    secUid: string;
+    ftc: boolean;
+    relation: number;
+    openFavorite: boolean;
+    bioLink: BioLink;
+    commentSetting: number;
+    commerceUserInfo: CommerceUserInfo;
+    duetSetting: number;
+    stitchSetting: number;
+    privateAccount: boolean;
+    secret: boolean;
+    isADVirtual: boolean;
+    roomId: string;
+    uniqueIdModifyTime: number;
+    ttSeller: boolean;
+    region: string;
+    downloadSetting: number;
+    profileTab: ProfileTab;
+    followingVisibility: number;
+    recommendReason: string;
+    nowInvitationCardUrl: string;
+    nickNameModifyTime: number;
+    isEmbedBanned: boolean;
+    canExpPlaylist: boolean;
+    profileEmbedPermission: number;
+    language: string;
+    eventList: any[];
+    suggestAccountBind: boolean;
+    isOrganization: number;
+}
+
+interface Stats {
+    followerCount: number;
+    followingCount: number;
+    heart: number;
+    heartCount: number;
+    videoCount: number;
+    diggCount: number;
+    friendCount: number;
+}
+
+interface UserInfo {
+    user: User;
+    stats: Stats;
+    itemList: any[];
+}
+
+interface ShareMeta {
+    title: string;
+    desc: string;
+}
+
+interface TikTokResponse {
+    userInfo: UserInfo;
+    shareMeta: ShareMeta;
+    statusCode: number;
+    statusMsg: string;
+    needFix: boolean;
+}
+
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -41,6 +130,10 @@ export default {
                 {
                     name: 'nest.rip',
                     value: 'nest.rip'
+                },
+                {
+                    name: 'tiktok',
+                    value: 'tiktok'
                 }
             ]
         },
@@ -59,39 +152,79 @@ export default {
         if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
         switch (service) {
             case 'nest.rip':
-                await page.goto(`https://nest.rip/${query}`);
-                const script = await page.$('#__NEXT_DATA__');
-                const data = await page.evaluate((el: any) => JSON.parse(el.innerHTML), script);
-                const user: User = data.props.pageProps.user;
-                if (!user || !user.uid) {
+                const response = await axios.get(`https://nest.rip/${query}`);
+                const html = response.data;
+                const regex = /<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
+                const match = html.match(regex);
+                if (!match) {
                     return {
                         ephemeral: true,
                         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
                     }
                 }
-                if (user && user.private_profile) return {
+                const nData = JSON.parse(match[1]);
+                const nUser: User = nData.props.pageProps.user;
+                if (!nUser || !nUser.uid) {
+                    return {
+                        ephemeral: true,
+                        content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                    }
+                }
+                if (nUser && nUser.private_profile) return {
                     ephemeral: true,
                     content: `This user has a private profile.`
                 }
                 return {
                     embeds: [
                         new EmbedBuilder()
-                            .setAuthor({ name: user.username, url: `https://nest.rip/${user.id}`, iconURL: user.avatar ? `https://cdn.nest.rip/avatars/${user.avatar}` : '' })
-                            .setThumbnail(user.avatar ? `https://cdn.nest.rip/avatars/${user.avatar}` : '')
+                            .setAuthor({ name: nUser.username, url: `https://nest.rip/${nUser.id}`, iconURL: nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : undefined })
+                            .setThumbnail(nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : null)
                             .addFields([
-                                { name: 'ID', value: user.uid.toString(), inline: true },
-                                { name: 'Rank', value: captitalizeString(user.rank), inline: true },
-                                { name: 'Contributor', value: user.contributor ? 'Yes' : 'No', inline: true },
-                                { name: 'Banned', value: user.banned ? 'Yes' : 'No', inline: true },
-                                { name: 'Storage Used', value: filesize(user.storage_used), inline: true },
-                                { name: 'Uploads', value: numeral(user.uploads).format('0,0'), inline: true },
+                                { name: 'ID', value: nUser.uid.toString(), inline: true },
+                                { name: 'Rank', value: captitalizeString(nUser.rank), inline: true },
+                                { name: 'Contributor', value: nUser.contributor ? 'Yes' : 'No', inline: true },
+                                { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
+                                { name: 'Storage Used', value: filesize(nUser.storage_used), inline: true },
+                                { name: 'Uploads', value: numeral(nUser.uploads).format('0,0'), inline: true },
                             ])
-                            .setDescription(user.bio)
+                            .setDescription(nUser.bio)
                             .setFooter({
-                                text: `Invited by ${user.invited_by ? user.invited_by.username ?? 'No one' : 'No one'}`,
+                                text: `Invited by ${nUser.invited_by ? nUser.invited_by.username ?? 'No one' : 'No one'}`,
                             })
-                            .setColor((await getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${user.avatar}`)))[0])
-                            .setTimestamp(new Date(user.created_at))
+                            .setColor(nUser.avatar ? ((await getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${nUser.avatar}`)))[0]) : 'Random')
+                            .setTimestamp(new Date(nUser.created_at))
+                    ]
+                }
+            case 'tiktok':
+                const res = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`);
+                const tiktokData = res.data;
+                if (!tiktokData) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const data: TikTokResponse = tiktokData;
+                if (data.statusCode != 0) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\` (1)`
+                }
+                const embed = new EmbedBuilder()
+                    .setAuthor({ name: data.userInfo.user.nickname, url: `https://www.tiktok.com/@${data.userInfo.user.uniqueId}`, iconURL: data.userInfo.user.avatarThumb })
+                    .setThumbnail(data.userInfo.user.avatarLarger)
+                    .addFields([
+                        { name: 'Username', value: data.userInfo.user.uniqueId, inline: true },
+                        { name: 'Followers', value: numeral(data.userInfo.stats.followerCount).format('0,0'), inline: true },
+                        { name: 'Following', value: numeral(data.userInfo.stats.followingCount).format('0,0'), inline: true },
+                        { name: 'Hearts', value: numeral(data.userInfo.stats.heart).format('0,0'), inline: true },
+                        { name: 'Videos', value: numeral(data.userInfo.stats.videoCount).format('0,0'), inline: true },
+                        { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
+                    ])
+                    .setDescription(data.userInfo.user.signature || 'No bio')
+                    .setColor(data.userInfo.user.avatarLarger ? (await getTwoMostUsedColors(await loadImage(data.userInfo.user.avatarLarger)))[0] : 'Random')
+                    .setTimestamp(new Date(data.userInfo.user.createTime * 1000))
+                    .setFooter({ text: 'Account created on' })
+                return {
+                    embeds: [
+                        embed
                     ]
                 }
             default:

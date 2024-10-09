@@ -89,8 +89,17 @@ export async function getTwoMostUsedColors(img: Image | Canvas): Promise<RGB[]> 
 	}
 
 	const centroids = kMeans(colors, 2);
+	const clusters = assignClusters(colors, centroids);
 
-	return centroids.map((centroid) => centroid.map(Math.round) as RGB);
+	const counts = [0, 0];
+	clusters.forEach(cluster => counts[cluster]++);
+
+	const sortedCentroids = centroids
+		.map((centroid, index) => ({ centroid, count: counts[index] }))
+		.sort((a, b) => b.count - a.count)
+		.map(item => item.centroid);
+
+	return sortedCentroids.map((centroid) => centroid.map(Math.round) as RGB);
 }
 export function parseTime(timestr: string): number {
 	timestr = timestr
