@@ -24,7 +24,18 @@ export default {
 	}],
 	disabled: commandHandler.prodMode,
 	execute: async ({ user, interaction, handler, args, message }) => {
-		handler.prisma.guild.update({ where: { id: "1283542021231087728" }, data: { prefix: "!" } })
+		return {
+			embeds: [
+				new EmbedBuilder()
+					.setTitle('Test')
+					.setDescription('# This is a test command')
+					.addFields({
+						name: '# User',
+						value: `# ${user.tag}\n${user.id}`,
+					})
+			]
+		}
+		// handler.prisma.guild.update({ where: { id: "1283542021231087728" }, data: { prefix: "!" } })
 		const query = args.get('query') as string;
 		if (!query) return { content: 'Please provide a query to search for', ephemeral: true };
 		// const regex = /const data = (.*?)(\n|$)/s;

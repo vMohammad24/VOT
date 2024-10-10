@@ -111,7 +111,7 @@ export default {
 			)
 			.setTimestamp(commit.date)
 			.setFooter({ text: commit.message })
-			.setDescription(`Uptime: <t:${Math.round(upSince / 1000)}>`)
+			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
 			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
 		return { embeds: [embed] };
 	},
