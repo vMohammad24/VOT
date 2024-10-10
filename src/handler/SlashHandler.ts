@@ -64,7 +64,8 @@ export default class SlashCommandHandler {
 			if (cmd.type == 'installable' || cmd.type == 'all') {
 				uInstall.contexts.push(2);
 				uInstall.integration_types.push(1);
-				cmd.options?.push({
+				const hasSubCommannds = this.commands.filter(isICommand).filter(a => a.category != null).some(c => c.options?.some(o => o.type == ApplicationCommandOptionType.Subcommand));
+				if (!hasSubCommannds) cmd.options?.push({
 					name: 'silent',
 					description: "ephemeral's the response",
 					type: ApplicationCommandOptionType.Boolean,

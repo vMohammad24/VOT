@@ -135,43 +135,83 @@ export default {
     description: "Reposts a post from instagram using it's url",
     type: 'all',
     cooldown: 60000,
-    options: [{
-        name: 'url',
-        description: 'The url of the post to repost',
-        type: ApplicationCommandOptionType.String, required: true
-    }],
+    options: [
+        // {
+        //     type: ApplicationCommandOptionType.Subcommand,
+        //     name: 'trending',
+        //     description: 'Get a trending post from instagram',
+        // },
+        {
+            name: 'repost',
+            description: 'Repost a post from instagram',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    type: ApplicationCommandOptionType.String,
+                    name: 'url',
+                    description: 'The URL of the instagram post',
+                    required: true,
+                }
+            ]
+        }
+    ],
     aliases: ['ig', 'insta'],
-    execute: async ({ args, interaction }) => {
-        const url = args.get('url') as string;
-        if (!url) return { content: 'Please provide a url to test', ephemeral: true };
-        interaction?.deferReply();
-        const heartEmoji = getEmoji('heart')
-        const likeEmoji = getEmoji('like')
-        const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url);
-        const data = res.data as IJsonResponse;
-        if (!data) return { content: 'No data found', ephemeral: true };
-        const embed = new EmbedBuilder()
-            .setTitle(data.caption?.text.substring(0, 256) || 'No Caption')
-            .setURL(url)
-            .setAuthor({ name: data.user.username, iconURL: data.user.profile_pic_url })
-            .setThumbnail(data.image_versions2.candidates[0].url)
-            // .addFields(
-            //     { name: 'Likes', value: numeral(data.like_count).format('0,0'), inline: true },
-            //     { name: 'Comments', value: numeral(data.comment_count).format('0,0'), inline: true },
-            //     { name: 'Views', value: numeral(data.view_count!).format('0,0') || 'N/A', inline: true },
-            // )
-            .setDescription(
-                `## ${getEmoji('like').toString()} ${numeral(data.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(data.comment_count).format('0,0')}`
-            )
-            .setTimestamp(new Date(data.taken_at * 1000))
-            .setFooter({ text: 'Taken at' });
+    slashOnly: true,
+    execute: async ({ interaction }) => {
+        if (!interaction) return;
+        switch (interaction.options.getSubcommand()) {
+            case 'repost': {
+                const url = interaction.options.getString('url', true);
+                interaction?.deferReply();
+                const heartEmoji = getEmoji('heart')
+                const likeEmoji = getEmoji('like')
+                const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url);
+                const data = res.data as IJsonResponse;
+                if (!data) return { content: 'No data found', ephemeral: true };
+                const embed = new EmbedBuilder()
+                    .setTitle(data.caption?.text.substring(0, 256) || 'No Caption')
+                    .setURL(url)
+                    .setAuthor({ name: data.user.username, iconURL: data.user.profile_pic_url })
+                    .setThumbnail(data.image_versions2.candidates[0].url)
+                    // .addFields(
+                    //     { name: 'Likes', value: numeral(data.like_count).format('0,0'), inline: true },
+                    //     { name: 'Comments', value: numeral(data.comment_count).format('0,0'), inline: true },
+                    //     { name: 'Views', value: numeral(data.view_count!).format('0,0') || 'N/A', inline: true },
+                    // )
+                    .setDescription(
+                        `## ${getEmoji('like').toString()} ${numeral(data.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(data.comment_count).format('0,0')}`
+                    )
+                    .setTimestamp(new Date(data.taken_at * 1000))
+                    .setFooter({ text: 'Taken at' });
 
-        const videoUrl = data.video_versions[0]?.url;
-        if (videoUrl) {
-            const attachment = new AttachmentBuilder(videoUrl, { name: `VOT_Instagram_Repost.mp4` });
-            return { embeds: [embed], files: [attachment] };
-        } else {
-            return { embeds: [embed] };
+                const videoUrl = data.video_versions[0]?.url;
+                if (videoUrl) {
+                    const attachment = new AttachmentBuilder(videoUrl, { name: `VOT_Instagram_Repost.mp4` });
+                    return { embeds: [embed], files: [attachment] };
+                } else {
+                    return { embeds: [embed] };
+                }
+            }
+            case 'trending': {
+                const res = await axios.get('https://www.instagram.com/reels/DAV2HDcPYpU/');
+                if (res.status != 200) return {
+                    content: 'Failed to fetch data',
+                    ephemeral: true,
+                }
+                const data = (res.data as string);
+                const regex = /<script[^>]*>\s*\{.*?"require":\[\[.*?"__bbox":\{.*?\}\]\].*?\}\s*<\/script>/gs;
+                const match = data.match(regex);
+                if (!match) return {
+                    content: 'Failed to find data',
+                    ephemeral: true,
+                }
+                // const json = JSON.parse(match[0].replace(/<script[^>]*>/, '').replace('</script>', ''));
+                console.log(match[0]);
+                return {
+                    ephemeral: true,
+                    content: 'hi'
+                }
+            }
         }
     },
 } as ICommand;

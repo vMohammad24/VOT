@@ -35,15 +35,15 @@ export default {
 				ephemeral: true,
 			};
 		if (!url.startsWith('http')) url = `https://${url}`;
-		const urlRegex = /^(https?:\/\/)?([\w\d]+\.)?[\w\d]+\.\w+\/?/;
-		if (!urlRegex.test(url))
+		const urlObject = new URL(url);
+		if (!urlObject.hostname)
 			return {
 				content: 'Please provide a valid URL',
-				ephemeral: true,
-			};
+				ephemeral: true
+			}
 		await interaction?.deferReply();
 		const time = Date.now();
-		if (blacklist.includes(new URL(url).hostname)) return {
+		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
 		}
