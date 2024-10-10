@@ -206,7 +206,7 @@ export default {
                     ephemeral: true,
                 }
                 // const json = JSON.parse(match[0].replace(/<script[^>]*>/, '').replace('</script>', ''));
-                console.log(match[0]);
+                // console.log(match[0]);
                 return {
                     ephemeral: true,
                     content: 'hi'
