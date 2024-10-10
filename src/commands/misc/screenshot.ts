@@ -42,6 +42,7 @@ export default {
 				ephemeral: true,
 			};
 		await interaction?.deferReply();
+		const time = Date.now();
 		if (blacklist.includes(new URL(url).hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
@@ -62,7 +63,7 @@ export default {
 		const screenshot = await page.screenshot(
 			{
 				optimizeForSpeed: true,
-				type: 'jpeg',
+				type: 'webp',
 			}
 		);
 		return {
@@ -72,6 +73,7 @@ export default {
 					name: 'screenshot.jpg',
 				},
 			],
+			content: `-# Screenshot took ${Date.now() - time}ms`,
 		};
 	},
 } as ICommand;

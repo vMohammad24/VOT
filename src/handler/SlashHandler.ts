@@ -2,6 +2,7 @@ import { inspect } from 'bun';
 import {
 	ApplicationCommandOptionType,
 	type Client,
+	EmbedBuilder,
 	Events,
 	InteractionReplyOptions,
 	PermissionsBitField,
@@ -10,6 +11,7 @@ import {
 import { nanoid } from 'nanoid/non-secure';
 import CommandHandler from '.';
 import commandHandler from '..';
+import { getEmoji } from '../util/emojis';
 import type ICommand from './interfaces/ICommand';
 import { IContextCommand } from './interfaces/IContextCommand';
 import type SlashHandler from './interfaces/ISlashHandler';
@@ -206,7 +208,12 @@ export default class SlashCommandHandler {
 					this.handler.logger.error(error);
 					const id = nanoid(10);
 					result = {
-						content: `There was an error while executing this command\n-# ${id}`,
+						embeds: [new EmbedBuilder()
+							.setTitle(`${getEmoji('warn').toString()} Error`)
+							.setDescription(`There was an error while executing this command, Please submit the id below to the developer\n-# ${id}`)
+							.setColor('Red')
+							.setTimestamp()
+						],
 						ephemeral: true,
 					};
 					errorId = id;
