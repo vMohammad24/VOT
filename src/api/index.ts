@@ -53,4 +53,5 @@ elysia.get('/commands/:name', ({ params: { name }, set }) => {
 
 discord(elysia);
 spotify(elysia);
+// functions(elysia);
 export default elysia;

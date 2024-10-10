@@ -4,6 +4,7 @@ import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import { filesize } from "filesize";
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
+import { getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
 interface User {
     avatar: string;
@@ -164,7 +165,7 @@ export default {
                 }
                 const nData = JSON.parse(match[1]);
                 const nUser: User = nData.props.pageProps.user;
-                if (!nUser || !nUser.uid) {
+                if (!nUser || !nUser.created_at) {
                     return {
                         ephemeral: true,
                         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
@@ -177,13 +178,13 @@ export default {
                 return {
                     embeds: [
                         new EmbedBuilder()
-                            .setAuthor({ name: nUser.username, url: `https://nest.rip/${nUser.id}`, iconURL: nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : undefined })
+                            .setAuthor({ name: `${nUser.username} ${nUser.banned ? '(Banned)' : ''}`, url: `https://nest.rip/${nUser.id}`, iconURL: nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : undefined })
                             .setThumbnail(nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : null)
                             .addFields([
                                 { name: 'ID', value: nUser.uid.toString(), inline: true },
                                 { name: 'Rank', value: captitalizeString(nUser.rank), inline: true },
                                 { name: 'Contributor', value: nUser.contributor ? 'Yes' : 'No', inline: true },
-                                { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
+                                // { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
                                 { name: 'Storage Used', value: filesize(nUser.storage_used), inline: true },
                                 { name: 'Uploads', value: numeral(nUser.uploads).format('0,0'), inline: true },
                             ])
@@ -208,15 +209,18 @@ export default {
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\` (1)`
                 }
                 const embed = new EmbedBuilder()
-                    .setAuthor({ name: data.userInfo.user.nickname, url: `https://www.tiktok.com/@${data.userInfo.user.uniqueId}`, iconURL: data.userInfo.user.avatarThumb })
+                    // .setAuthor({ name: data.userInfo.user.nickname, url: `https://www.tiktok.com/@${data.userInfo.user.uniqueId}`, iconURL: data.userInfo.user.avatarThumb })
+                    .setTitle(`${data.userInfo.user.nickname} ${data.userInfo.user.verified ? getEmoji('verified').toString() : ''}`)
+                    .setURL(`https://www.tiktok.com/@${data.userInfo.user.uniqueId}`)
                     .setThumbnail(data.userInfo.user.avatarLarger)
                     .addFields([
-                        { name: 'Username', value: data.userInfo.user.uniqueId, inline: true },
+                        // { name: 'Username', value: data.userInfo.user.uniqueId, inline: true },
                         { name: 'Followers', value: numeral(data.userInfo.stats.followerCount).format('0,0'), inline: true },
                         { name: 'Following', value: numeral(data.userInfo.stats.followingCount).format('0,0'), inline: true },
+                        { name: 'Friends', value: numeral(data.userInfo.stats.friendCount).format('0,0'), inline: true },
                         { name: 'Hearts', value: numeral(data.userInfo.stats.heart).format('0,0'), inline: true },
                         { name: 'Videos', value: numeral(data.userInfo.stats.videoCount).format('0,0'), inline: true },
-                        { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
+                        // { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
                     ])
                     .setDescription(data.userInfo.user.signature || 'No bio')
                     .setColor(data.userInfo.user.avatarLarger ? (await getTwoMostUsedColors(await loadImage(data.userInfo.user.avatarLarger)))[0] : 'Random')
