@@ -96,9 +96,9 @@ export default {
             .setThumbnail(u.displayAvatarURL())
             .setAuthor({ name: u.tag, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` })
             .setDescription(`
-                ${(badges && badges.length > 0) ? `**Badges**:\n### ${badges.map(badge => badge.emoji).join('')}` : ''}
-                ${(connections && connections.length > 0) ? `**Connections**:
-                ${connections.map(connection => (
+${(badges && badges.length > 0) ? `**Badges**:\n### ${badges.map(badge => badge.emoji).join('')}` : ''}
+${(connections && connections.length > 0) ? `**Connections**:
+${connections.map(connection => (
                 connection.url ? `[${connection.name}](${connection.url})`
                     : `${connection.type.includes('domain') ?
                         `[${connection.name}](https://${connection.name})` :
@@ -106,7 +106,7 @@ export default {
                             '' : `(${connection.type[0]})`}`)).join('\n')}`
                     : ''}
 
-                ${(bio) ? `**Bio**:\n${bio}` : ''}
+${(bio) ? `**Bio**:\n${bio}` : ''}
                 `)
             .setFields([
                 {
