@@ -202,7 +202,7 @@ export default {
 				},
 			);
 		if (res.status != 200) return { content: `Error occured: **${res.statusText}** (${res.status})`, ephemeral: true };
-		console.log(res.data)
+		// console.log(res.data)
 		const response = res.data || '';//.short || '';
 		await pagination({
 			interaction,

@@ -63,8 +63,8 @@ export default {
         required: false
     }],
     type: 'all',
-    execute: async ({ args, user: usr, member, interaction, handler, message }) => {
-        const user = (args.get('user') as GuildMember | User) || member || usr;
+    execute: async ({ args, user: usr, member, interaction, handler, message, guild }) => {
+        const user = (args.get('user') as GuildMember | User) || (guild ? member : usr) || usr;
         await interaction?.deferReply();
         const res = await axios.get('https://us-atlanta2.evade.rest/users/' + user.id);
         const data = res.data as UserInfo;
@@ -89,7 +89,7 @@ export default {
         const buttonId = nanoid();
 
         const u = user instanceof GuildMember ? user.user : user;
-
+        if (!u) return { content: 'User not found', ephemeral: true };
 
         const embed = new EmbedBuilder()
             .setTitle('User Information')
