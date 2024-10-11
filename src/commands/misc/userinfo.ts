@@ -24,6 +24,7 @@ interface Decoration {
 interface Badge {
     name: string;
     description: string;
+    url: string;
     emoji: string;
 }
 
@@ -49,7 +50,40 @@ interface UserInfo {
     bio: string;
     badges: Badge[];
     connections: Connection[];
+    clan: Clan;
 }
+
+interface Clan {
+    identity_guild_id: string;
+    identity_enabled: boolean;
+    tag: string;
+    badge: string;
+    emoji: string;
+}
+
+interface UserStatus {
+    online: string[];
+    idle: string[];
+    dnd: string[];
+    status: string;
+    activities: Activity[];
+}
+
+interface Activity {
+    name: string;
+    type: 'ActivityType.unknown' | 'ActivityType.playing' | 'ActivityType.streaming' | 'ActivityType.listening' | 'ActivityType.watching' | 'ActivityType.custom' | 'ActivityType.competing';
+    details: string | null;
+    state: string | null;
+    emoji: string;
+    album?: string;
+    album_cover_url?: string;
+    artist?: string;
+    track?: string;
+    track_id?: string;
+    duration?: number;
+    start?: string;
+}
+
 
 export default {
     name: 'userinfo',
@@ -66,20 +100,16 @@ export default {
     execute: async ({ args, user: usr, member, interaction, handler, message, guild }) => {
         const user = (args.get('user') as GuildMember | User) || (guild ? member : usr) || usr;
         await interaction?.deferReply();
-        const res = await axios.get('https://us-atlanta2.evade.rest/users/' + user.id);
-        const data = res.data as UserInfo;
-        const { bio, connections } = data;
-        const badges: {
-            name: string;
-            description: string;
-            emoji: string;
-        }[] = data.badges;
+        const res = await axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id);
+        const statusRes = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`);
+        const { data: sData } = statusRes;
+        const { data } = res;
+        const { bio, connections, badges, clan } = data;
+        const ems = await handler.client.application?.emojis.fetch();
         if (badges && badges.length > 0) {
             await (async () => {
-                const ems = await handler.client.application?.emojis.fetch();
                 for (const badge of badges) {
-                    const emojiId = badge.emoji.match(/:(\d+)>$/)?.[1];
-                    const res = await axios.get(`https://cdn.discordapp.com/emojis/${emojiId}.png?size=512&quality=lossless`, { responseType: 'arraybuffer' });
+                    const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
                     const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
                     await write(path, res.data);
                     badge.emoji = (await addEmoji(path, ems))?.toString()!;
@@ -90,12 +120,37 @@ export default {
 
         const u = user instanceof GuildMember ? user.user : user;
         if (!u) return { content: 'User not found', ephemeral: true };
-
+        clan && clan.identity_guild_id && clan.tag && clan.badge && (await (async () => {
+            const res = await axios.get(`https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`, { responseType: 'arraybuffer' });
+            const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${clan.identity_guild_id}_${clan.tag}.png`);
+            await write(path, res.data);
+            clan.emoji = (await addEmoji(path, ems))?.toString()!;
+        })())
+        if (sData.activities.length > 0) {
+            // delete any acitivities if they match sData.status
+            sData.activities = sData.activities.filter(a => a.name !== sData.status)
+            for (const activity of sData.activities) {
+                const type = activity.type.replace('ActivityType.', '');
+                // console.log(type)
+                if (type) activity.emoji = (await addEmoji(`activity_${type}`, ems))?.toString() || '❓';
+            }
+        }
         const embed = new EmbedBuilder()
             .setTitle('User Information')
             .setThumbnail(u.displayAvatarURL())
-            .setAuthor({ name: u.tag, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` })
+            .setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` })
             .setDescription(`
+${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
+${sData.status ? `**Status**: ${sData.status}` : ''}
+${(sData.activities && sData.activities.length > 0) ? `**Activities**:
+ ${sData.activities.map(activity => {
+                if (activity.type === 'ActivityType.listening' && activity.album && activity.artist) {
+                    return `${activity.emoji} **${activity.name}** ${activity.album ? `${activity.album}` : ''} ${activity.artist ? `- ${activity.artist}` : ''}`;
+                } else {
+                    return `${activity.emoji} **${activity.name}** ${activity.details ? `${activity.details}` : ''} ${activity.state ? `- ${activity.state}` : ''}`;
+                }
+            }).join('\n')}
+    ` : ''}
 ${(badges && badges.length > 0) ? `**Badges**:\n### ${badges.map(badge => badge.emoji).join('')}` : ''}
 ${(connections && connections.length > 0) ? `**Connections**:
 ${connections.map(connection => (
@@ -107,33 +162,22 @@ ${connections.map(connection => (
                     : ''}
 
 ${(bio) ? `**Bio**:\n${bio}` : ''}
-                `)
+            `)
             .setFields([
-                {
-                    name: 'ID',
-                    value: u.id,
-                    inline: true,
-                },
                 ...(user instanceof GuildMember ? [
                     {
                         name: 'Roles',
                         value: user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' '),
-                        inline: true
                     },
                     {
                         name: 'Joined',
                         value: user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown',
-                        inline: true
                     }
                 ] : []),
-                {
-                    name: 'Created',
-                    value: `<t:${Math.round(u.createdTimestamp / 1000)}>`,
-                    inline: true
-                }
             ])
             .setColor(u.hexAccentColor || 'Random')
-            .setTimestamp();
+            .setTimestamp(u.createdTimestamp)
+            .setFooter({ text: 'Created at' });
         const sentMessage = message ? await message.reply({
             embeds: [embed],
             allowedMentions: { repliedUser: true },

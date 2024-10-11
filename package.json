@@ -64,6 +64,7 @@
     "bufferutil",
     "cpu-features",
     "prisma",
+    "protobufjs",
     "puppeteer",
     "sharp",
     "ssh2",

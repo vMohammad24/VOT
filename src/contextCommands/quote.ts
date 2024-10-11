@@ -1,6 +1,7 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from "discord.js";
 import { IContextCommand } from "../handler/interfaces/IContextCommand";
+console.log("HIII")
 
 export default {
     name: 'Quote',
