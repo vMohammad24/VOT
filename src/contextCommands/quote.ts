@@ -40,7 +40,7 @@ export default {
         const drawText = (content: string, width: number, height: number) => {
             let fontSize = 28; // Initial font size
             const maxWidth = width * 0.5; // Define the maximum width the text can occupy
-            let ctxFont = `normal 400 ${fontSize}px 'Varela Round', sans-serif`;
+            let ctxFont = `italic 400 ${fontSize}px 'Varela Round', sans-serif`;
             ctx.font = ctxFont;
 
             // Measure the text width
