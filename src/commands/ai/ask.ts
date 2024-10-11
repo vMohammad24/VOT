@@ -204,6 +204,12 @@ export default {
 			);
 		if (res.status != 200) return { content: `Error occured: **${res.statusText}** (${res.status})`, ephemeral: true };
 		// console.log(res.data)
+		if (!res.data) {
+			return {
+				content: `:(`,
+				ephemeral: true
+			}
+		}
 		const response = res.data || '';//.short || '';
 		await pagination({
 			interaction,

@@ -2,6 +2,7 @@ import { inspect } from 'bun';
 import {
 	ApplicationCommandOptionType,
 	type Client,
+	ContextMenuCommandBuilder,
 	EmbedBuilder,
 	Events,
 	InteractionReplyOptions,
@@ -115,13 +116,18 @@ export default class SlashCommandHandler {
 				uInstall.contexts.push(1);
 				uInstall.integration_types.push(0);
 			}
-			const command = this.filterObject({ ...cmd, ...uInstall }, [
-				'integration_types',
-				'contexts',
-				'name',
-				'description',
-			]);
-			return command;
+			// const command = this.filterObject({ ...cmd, ...uInstall }, [
+			// 	'integration_types',
+			// 	'contexts',
+			// 	'name',
+			// 	'description',
+			// ]);
+			return new ContextMenuCommandBuilder()
+				.setName(cmd.name!)
+				.setContexts(uInstall.contexts)
+				.setIntegrationTypes(uInstall.integration_types)
+				.setType(cmd.type)
+				.toJSON()
 		});
 		try {
 			if (commandHandler.verbose)

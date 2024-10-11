@@ -9,6 +9,7 @@ import {
 } from 'discord.js';
 import path from 'path';
 import PinoLogger from 'pino';
+import commandHandler from '..';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
 import { IContextCommand } from './interfaces/IContextCommand';
@@ -85,12 +86,13 @@ export default class CommandHandler {
 
 			await Promise.all(commandPaths.map(async (file) => {
 				const start = Date.now();
-				const commandName = file.split('/').pop()!.split('.')[0];
 				const categoryName = file.split('/').slice(-2, -1)[0];
 				const command = await import(path.join(commandsDir, file));
+				const commandName = command.name || file.split('/').pop()!.split('.')[0];
 				const modifiedData: ICommand = Object.assign({}, command.default, {
 					name: commandName,
 					category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
+					aliases: command.aliases || [],
 				});
 				// if (modifiedData.disabled) continue;
 				handler.commands.push(modifiedData);
@@ -100,8 +102,8 @@ export default class CommandHandler {
 			}));
 			await Promise.all(contextCommandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
-				const command = await import(path.join(contextCommandsDir, file));
-				const modifiedData: IContextCommand = Object.assign({}, command.default, {
+				const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
+				const modifiedData: IContextCommand = Object.assign({}, command, {
 					name: command.name || commandName,
 				});
 				handler.commands.push(modifiedData);
@@ -124,7 +126,7 @@ export default class CommandHandler {
 	}
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
-		if ((cmd as ICommand).description) {
+		if ('aliases' in cmd) {
 			const start = Date.now();
 			const command = cmd as ICommand;
 			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
@@ -237,8 +239,8 @@ export default class CommandHandler {
 			const result = await command.execute(commandContext);
 			const executionTime = Date.now() - eStart;
 			const total = Date.now() - start;
-			if (this.verbose) {
-				this.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
+			if (commandHandler.verbose) {
+				commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
 			}
 			return result;
 		} else {
@@ -246,12 +248,13 @@ export default class CommandHandler {
 			const start = Date.now();
 			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
 			const startExecution = Date.now();
-			await command.execute(ctx as any);
-			const total = Date.now() - start;
+			const result = await command.execute(ctx as any);
 			const executionTime = Date.now() - startExecution;
-			if (this.verbose) {
-				this.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
+			const total = Date.now() - start;
+			if (commandHandler.verbose) {
+				commandHandler.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
 			}
+			return result;
 		}
 
 	}

@@ -1,17 +1,19 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from "discord.js";
 import { IContextCommand } from "../handler/interfaces/IContextCommand";
-console.log("HIII")
+import { getTwoMostUsedColors } from '../util/util';
 
 export default {
     name: 'Quote',
     type: ApplicationCommandType.Message,
-    context: 'installable',
+    context: 'all',
     description: 'Quote a message',
     execute: async (interaction: MessageContextMenuCommandInteraction) => {
         await interaction.deferReply();
         const message = interaction.targetMessage;
-        if (!message) return interaction.editReply({ content: "Couldn't find the message" });
+        if (!message) {
+            return { content: "Couldn't find the message" };
+        }
         const avatar = message.author.displayAvatarURL({ size: 1024 });
         const content = message.content;
         const userName = message.author.username;
@@ -22,8 +24,11 @@ export default {
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = 'black';
         ctx.fillRect(width / 2, 0, width / 2, height);
-        ctx.shadowBlur = 20; // Increase or decrease to control the amount of glow
-        ctx.shadowColor = message.author.hexAccentColor || 'white'; // The color of the glow
+        ctx.shadowBlur = 50;
+        const colors = await getTwoMostUsedColors(loadedAvatar);
+        const colorsS = `rgba(${colors[0].join(', ')}, 1)`;
+        console.log(colorsS)
+        ctx.shadowColor = colorsS;
         ctx.drawImage(loadedAvatar, 0, 0, width / 2, height);
         ctx.shadowBlur = 0; // Increase or decrease to control the amount of glow
         ctx.shadowColor = 'transparent'; // The color of the glow
@@ -54,6 +59,6 @@ export default {
         // Add the author text
         ctx.font = 'bold 16px serif';
         ctx.fillText(`- ${userName}`, (width * 3) / 4, height / 2 + 40);
-        interaction.editReply({ files: [canvas.toBuffer('image/png')] });
+        return { files: [canvas.toBuffer('image/png')] };
     }
 } as IContextCommand
