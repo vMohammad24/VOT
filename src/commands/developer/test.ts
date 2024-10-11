@@ -22,7 +22,6 @@ export default {
 	}],
 	disabled: commandHandler.prodMode,
 	execute: async ({ user, interaction, handler, args, guild }) => {
-		await handler.prisma.user.update({ where: { id: user.id }, data: { prefix: null } })
 		await handler.prisma.guild.update({ where: { id: guild.id }, data: { prefix: "$" } })
 		return {
 			embeds: [
