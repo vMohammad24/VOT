@@ -151,7 +151,9 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 			.setURL(`${getFrontEndURL()}/ticket/${ticketData.id}`),
 	);
 	logChannel?.send({ embeds: [logEmbed], components: [actionRow] });
-	await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
+	try {
+		await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
+	} catch (e) { }
 	await chan.delete();
 	return { content: 'Ticked closed. ' };
 }

@@ -1,8 +1,11 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from "discord.js";
+import { join } from 'path';
 import { IContextCommand } from "../handler/interfaces/IContextCommand";
 import { getTwoMostUsedColors } from '../util/util';
-
+GlobalFonts.registerFromPath(
+    join(import.meta.dir, '..', '..', 'assets', 'fonts', 'VarelaRound-Regular.ttf')
+)
 export default {
     name: 'Quote',
     type: ApplicationCommandType.Message,
@@ -27,7 +30,7 @@ export default {
         ctx.shadowBlur = 50;
         const colors = await getTwoMostUsedColors(loadedAvatar);
         const colorsS = `rgba(${colors[0].join(', ')}, 1)`;
-        console.log(colorsS)
+        // console.log(colorsS)
         ctx.shadowColor = colorsS;
         ctx.drawImage(loadedAvatar, 0, 0, width / 2, height);
         ctx.shadowBlur = 0; // Increase or decrease to control the amount of glow
@@ -37,7 +40,7 @@ export default {
         const drawText = (content: string, width: number, height: number) => {
             let fontSize = 28; // Initial font size
             const maxWidth = width * 0.5; // Define the maximum width the text can occupy
-            let ctxFont = `italic ${fontSize}px serif`;
+            let ctxFont = `normal 400 ${fontSize}px 'Varela Round', sans-serif`;
             ctx.font = ctxFont;
 
             // Measure the text width
@@ -57,7 +60,7 @@ export default {
         drawText(content, width, height);
 
         // Add the author text
-        ctx.font = 'bold 16px serif';
+        ctx.font = "bold 400 16px 'Varela Round', sans-serif";
         ctx.fillText(`- ${userName}`, (width * 3) / 4, height / 2 + 40);
         return { files: [canvas.toBuffer('image/png')] };
     }
