@@ -4,37 +4,43 @@ import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
-let globalLines = 0;
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
-	const files = await glob.scanSync({
+	const results = await glob.scanSync({
 		absolute: true,
 		cwd: join(import.meta.dir, '..', '..'),
 	});
-	// const node_modules = await glob.scanSync({
-	// 	absolute: true,
-	// 	cwd: join(import.meta.dir, '..', '..', '..', 'node_modules'),
-	// });
+	const node_modules = await glob.scanSync({
+		absolute: true,
+		cwd: join(import.meta.dir, '..', '..', '..', 'node_modules'),
+	});
 	let lines = 0;
-	for (const path of files) {
+	const files = [];;
+	for (const path of results) {
 		if (!path) continue;
 		try {
 			const file = Bun.file(path);
-			const content = await file.text();
-			lines += content.split('\n').length;
+			files.push(file)
+			// const content = await file.text();
+			// lines += content.split('\n').length;
 		} catch (e) { }
 	}
-	// for (const path of node_modules) {
-	// 	if (!path) continue;
-	// 	try {
-	// 		const file = Bun.file(path);
-	// 		const content = await file.text();
-	// 		lines += content.split('\n').length;
-	// 	} catch (e) {}
-	// }
+	for (const path of node_modules) {
+		if (!path) continue;
+		try {
+			const file = Bun.file(path);
+			files.push(file)
+			// const content = await file.text();
+			// lines += content.split('\n').length;
+		} catch (e) { }
+	}
+	await Promise.all(files.map(async (file) => {
+		const content = await file.text();
+		lines += content.split('\n').length;
+	}));
 	return lines;
 }
-
+const globalLines = await getLines();
 async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	const headers = {
 		Authorization: `Bearer ${import.meta.env.GITHUB_TOKEN}`,
@@ -64,7 +70,7 @@ export default {
 		await interaction?.deferReply();
 		const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
 		const { approximate_guild_count, approximate_user_install_count } = res;
-		if (globalLines === 0) globalLines = await getLines();
+		// if (globalLines === 0) globalLines = await getLines();
 		const embed = new EmbedBuilder()
 			.setTitle('Bot Stats')
 			.addFields(
@@ -84,7 +90,7 @@ export default {
 					inline: true,
 				},
 				{
-					name: 'Users',
+					name: 'Members',
 					value: `${usersSize}`,
 					inline: true,
 				},

@@ -84,6 +84,7 @@ export default {
 			orderBy: {
 				createdAt: 'asc'
 			},
+			take: 10
 		})
 		const trainingMessages: {
 			role: 'user' | 'assistant';
@@ -110,7 +111,6 @@ export default {
 		}))
 		// console.log(urls, responses)
 		const messages = [
-			...trainingMessages,
 			{
 				role: 'user',
 				content: 'what is vot.wtf?',
@@ -174,6 +174,7 @@ export default {
 			// 	role: 'assistant',
 			// 	content: `These are the responses that i have gotten from the following sites ${responses.join('\n')}`,
 			// }
+			...trainingData
 		];
 		messages.push(
 			{

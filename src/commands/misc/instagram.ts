@@ -192,26 +192,6 @@ export default {
                     return { embeds: [embed] };
                 }
             }
-            case 'trending': {
-                const res = await axios.get('https://www.instagram.com/reels/DAV2HDcPYpU/');
-                if (res.status != 200) return {
-                    content: 'Failed to fetch data',
-                    ephemeral: true,
-                }
-                const data = (res.data as string);
-                const regex = /<script[^>]*>\s*\{.*?"require":\[\[.*?"__bbox":\{.*?\}\]\].*?\}\s*<\/script>/gs;
-                const match = data.match(regex);
-                if (!match) return {
-                    content: 'Failed to find data',
-                    ephemeral: true,
-                }
-                // const json = JSON.parse(match[0].replace(/<script[^>]*>/, '').replace('</script>', ''));
-                // console.log(match[0]);
-                return {
-                    ephemeral: true,
-                    content: 'hi'
-                }
-            }
         }
     },
 } as ICommand;

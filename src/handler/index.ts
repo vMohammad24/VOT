@@ -84,6 +84,7 @@ export default class CommandHandler {
 			}
 
 			await Promise.all(commandPaths.map(async (file) => {
+				const start = Date.now();
 				const commandName = file.split('/').pop()!.split('.')[0];
 				const categoryName = file.split('/').slice(-2, -1)[0];
 				const command = await import(path.join(commandsDir, file));
@@ -95,7 +96,7 @@ export default class CommandHandler {
 				handler.commands.push(modifiedData);
 				if (modifiedData.init && !modifiedData.disabled) commandInits.push(modifiedData.init)//await modifiedData.init(this);
 				if (mHandler.verbose)
-					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category}`);
+					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category} in ${Date.now() - start}ms`);
 			}));
 			await Promise.all(contextCommandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
