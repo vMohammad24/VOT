@@ -87,9 +87,9 @@ export default class CommandHandler {
 			await Promise.all(commandPaths.map(async (file) => {
 				const start = Date.now();
 				const categoryName = file.split('/').slice(-2, -1)[0];
-				const command = await import(path.join(commandsDir, file));
+				const command = (await import(path.join(commandsDir, file))).default;
 				const commandName = command.name || file.split('/').pop()!.split('.')[0];
-				const modifiedData: ICommand = Object.assign({}, command.default, {
+				const modifiedData: ICommand = Object.assign({}, command, {
 					name: commandName,
 					category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
 					aliases: command.aliases || [],
