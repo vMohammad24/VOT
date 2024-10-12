@@ -1,15 +1,19 @@
 import { Glob } from 'bun';
 import {
 	ChatInputCommandInteraction,
+	EmbedBuilder,
 	Events,
 	GuildMember,
 	MessageEditOptions,
 	type Interaction,
 	type Message,
 } from 'discord.js';
+import { nanoid } from 'nanoid/non-secure';
 import path from 'path';
 import PinoLogger from 'pino';
+import { inspect } from 'util';
 import commandHandler from '..';
+import { getEmoji } from '../util/emojis';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
 import { IContextCommand } from './interfaces/IContextCommand';
@@ -126,136 +130,158 @@ export default class CommandHandler {
 	}
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
-		if ('aliases' in cmd) {
-			const start = Date.now();
-			const command = cmd as ICommand;
-			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
-			let playerTime = undefined;
-			let contextTime = undefined;
-			let validationTime = undefined;
-			let commandContext: CommandContext;
-			const getPlayer = async (member: GuildMember) => {
+		try {
+			if ('aliases' in cmd) {
 				const start = Date.now();
-				if (!member || !member.guild) return;
-				if (!member.voice.channelId) return;
-				let player = this.kazagumo.getPlayer(member.guild.id);
-				if (player && player.voiceId !== member.voice.channelId) return;
-				if (!player && command.needsPlayer)
-					player = await this.kazagumo.createPlayer({
-						guildId: member.guild.id,
-						voiceId: member.voice.channelId,
-						textId: member.voice.channelId,
-						deaf: true,
-					});
-				playerTime = Date.now() - start;
-				return player;
-			};
-			if (ctx.applicationId) {
-				const start = Date.now();
-				const interaction = ctx as ChatInputCommandInteraction;
-				commandContext = {
-					interaction,
-					user: interaction.user,
-					channel: interaction.channel!,
-					guild: interaction.guild!,
-					handler: this,
-					member: interaction.member! as GuildMember,
-					args: new ArgumentMap(),
-					message: null,
-					player: (await getPlayer(interaction.member as GuildMember)) || undefined,
-					editReply: async (content) => {
-						await interaction.editReply(content);
-					}
+				const command = cmd as ICommand;
+				if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+				let playerTime = undefined;
+				let contextTime = undefined;
+				let validationTime = undefined;
+				let commandContext: CommandContext;
+				const getPlayer = async (member: GuildMember) => {
+					const start = Date.now();
+					if (!member || !member.guild) return;
+					if (!member.voice.channelId) return;
+					let player = this.kazagumo.getPlayer(member.guild.id);
+					if (player && player.voiceId !== member.voice.channelId) return;
+					if (!player && command.needsPlayer)
+						player = await this.kazagumo.createPlayer({
+							guildId: member.guild.id,
+							voiceId: member.voice.channelId,
+							textId: member.voice.channelId,
+							deaf: true,
+						});
+					playerTime = Date.now() - start;
+					return player;
 				};
-				contextTime = Date.now() - start;
-			} else {
-				const start = Date.now();
-				const message = ctx as Message;
-				commandContext = {
-					interaction: null,
-					user: message.author,
-					channel: message.channel,
-					guild: message.guild!,
-					handler: this,
-					member: message.member!,
-					args: new ArgumentMap(),
-					message,
-					player: (await getPlayer(message.member as GuildMember)) || undefined,
-					editReply: async (content, rMsg) => {
-						// get the replied message
-						if (!rMsg) return;
-						await rMsg.edit(content as string | MessageEditOptions);
-					}
-				};
-				contextTime = Date.now() - start;
-			}
-			const vStart = Date.now();
-			const res = await Promise.all(this.validations.map(async (validation) => {
-				const result = await validation(command, commandContext);
+				if (ctx.applicationId) {
+					const start = Date.now();
+					const interaction = ctx as ChatInputCommandInteraction;
+					commandContext = {
+						interaction,
+						user: interaction.user,
+						channel: interaction.channel!,
+						guild: interaction.guild!,
+						handler: this,
+						member: interaction.member! as GuildMember,
+						args: new ArgumentMap(),
+						message: null,
+						player: (await getPlayer(interaction.member as GuildMember)) || undefined,
+						editReply: async (content) => {
+							await interaction.editReply(content);
+						}
+					};
+					contextTime = Date.now() - start;
+				} else {
+					const start = Date.now();
+					const message = ctx as Message;
+					commandContext = {
+						interaction: null,
+						user: message.author,
+						channel: message.channel,
+						guild: message.guild!,
+						handler: this,
+						member: message.member!,
+						args: new ArgumentMap(),
+						message,
+						player: (await getPlayer(message.member as GuildMember)) || undefined,
+						editReply: async (content, rMsg) => {
+							// get the replied message
+							if (!rMsg) return;
+							await rMsg.edit(content as string | MessageEditOptions);
+						}
+					};
+					contextTime = Date.now() - start;
+				}
+				const vStart = Date.now();
+				const res = await Promise.all(this.validations.map(async (validation) => {
+					const result = await validation(command, commandContext);
+					return result;
+				}));
+				const failed = res.find((r) => r != true);
+				if (failed) return failed;
+				validationTime = Date.now() - vStart;
+				this.prisma.user.upsert({
+					where: {
+						id: commandContext.user.id,
+					},
+					update: {
+						name: commandContext.user.username,
+						avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+						commands: {
+							create: {
+								commandId: command.name!,
+								commandInfo: {
+									args: (commandContext.args as any) || null,
+									guild: (commandContext?.guild && commandContext.guild.id) || null,
+									channel: commandContext?.channel?.id || null,
+									message: commandContext?.message?.id || null,
+									interaction: commandContext?.interaction?.id || null,
+								},
+							},
+						},
+					},
+					create: {
+						id: commandContext.user.id,
+						name: commandContext.user.username,
+						avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+						commands: {
+							create: {
+								commandId: command.name!,
+								commandInfo: {
+									args: (commandContext.args as any) || null,
+									guild: commandContext?.guild?.id || null,
+									channel: commandContext?.channel?.id || null,
+									message: commandContext?.message?.id || null,
+									interaction: commandContext?.interaction?.id || null,
+								},
+							},
+						},
+					},
+				});
+				const eStart = Date.now();
+				const result = await command.execute(commandContext);
+				const executionTime = Date.now() - eStart;
+				const total = Date.now() - start;
+				if (commandHandler.verbose) {
+					commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
+				}
 				return result;
-			}));
-			const failed = res.find((r) => r != true);
-			if (failed) return failed;
-			validationTime = Date.now() - vStart;
-			this.prisma.user.upsert({
-				where: {
-					id: commandContext.user.id,
-				},
-				update: {
-					name: commandContext.user.username,
-					avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-					commands: {
-						create: {
-							commandId: command.name!,
-							commandInfo: {
-								args: (commandContext.args as any) || null,
-								guild: (commandContext?.guild && commandContext.guild.id) || null,
-								channel: commandContext?.channel?.id || null,
-								message: commandContext?.message?.id || null,
-								interaction: commandContext?.interaction?.id || null,
-							},
-						},
-					},
-				},
-				create: {
-					id: commandContext.user.id,
-					name: commandContext.user.username,
-					avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-					commands: {
-						create: {
-							commandId: command.name!,
-							commandInfo: {
-								args: (commandContext.args as any) || null,
-								guild: commandContext?.guild?.id || null,
-								channel: commandContext?.channel?.id || null,
-								message: commandContext?.message?.id || null,
-								interaction: commandContext?.interaction?.id || null,
-							},
-						},
-					},
+			} else {
+				const command = cmd as IContextCommand;
+				const start = Date.now();
+				if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+				const startExecution = Date.now();
+				const result = await command.execute(ctx as any);
+				const executionTime = Date.now() - startExecution;
+				const total = Date.now() - start;
+				if (commandHandler.verbose) {
+					commandHandler.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
+				}
+				return result;
+			}
+
+		} catch (e) {
+			if (commandHandler.verbose) commandHandler.logger.error(e);
+			const id = nanoid(10);
+			await this.prisma.error.create({
+				data: {
+					id,
+					channelId: ctx.channelId ?? ctx.channel?.id ?? null,
+					guildId: ctx.guildId || ctx.guild?.id || null,
+					fullJson: inspect(e) as any,
 				},
 			});
-			const eStart = Date.now();
-			const result = await command.execute(commandContext);
-			const executionTime = Date.now() - eStart;
-			const total = Date.now() - start;
-			if (commandHandler.verbose) {
-				commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
-			}
-			return result;
-		} else {
-			const command = cmd as IContextCommand;
-			const start = Date.now();
-			if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
-			const startExecution = Date.now();
-			const result = await command.execute(ctx as any);
-			const executionTime = Date.now() - startExecution;
-			const total = Date.now() - start;
-			if (commandHandler.verbose) {
-				commandHandler.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
-			}
-			return result;
+			return {
+				embeds: [new EmbedBuilder()
+					.setTitle(`${getEmoji('warn').toString()} Error`)
+					.setDescription(`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${id}`)
+					.setColor('Red')
+					.setTimestamp()
+				],
+				ephemeral: true,
+			};
 		}
-
 	}
 }

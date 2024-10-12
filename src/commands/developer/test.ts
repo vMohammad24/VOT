@@ -16,6 +16,7 @@ export default {
 	// cooldown: 60000,
 	disabled: commandHandler.prodMode,
 	execute: async ({ user, interaction, handler, args, guild }) => {
+		// return nigger
 		const formData = new FormData();
 		const fileUrl = 'https://cdn.nest.rip/uploads/b78f9638-5c97-40cf-a12a-28b71d9f1149';
 		const content = (await axios.get(fileUrl, { responseType: 'arraybuffer' })).data;

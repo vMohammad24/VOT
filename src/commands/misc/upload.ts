@@ -1,4 +1,3 @@
-import { UserTier } from '@prisma/client';
 import axios from 'axios';
 import { ApplicationCommandOptionType, Attachment } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
@@ -14,7 +13,7 @@ export default {
 			required: true,
 		},
 	],
-	userTier: UserTier.Beta,
+	// userTier: UserTier.Beta,
 	type: 'all',
 	execute: async ({ interaction, args }) => {
 		await interaction?.deferReply({ ephemeral: true });

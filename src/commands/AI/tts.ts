@@ -1,5 +1,5 @@
 import { EdgeSpeechTTS } from '@lobehub/tts';
-import { ApplicationCommandOptionType, MessageFlags, MessageFlagsBitField } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 
 const tts = new EdgeSpeechTTS({ locale: 'en-US' });
@@ -22,7 +22,7 @@ export default {
     ],
     type: 'all',
     // userTier: 'Premium',
-    slashOnly: true,
+    // slashOnly: true,
     execute: async ({ args, interaction, handler }) => {
         const text = args.get('text') as string | undefined;
         const voice = (args.get('voice') as string | undefined) || 'en-US-GuyNeural';
@@ -41,26 +41,31 @@ export default {
         });
         if (!audio) return { ephemeral: true, content: 'Failed to generate audio' }
         const buffer = Buffer.from(await audio.arrayBuffer());
-        if (handler.prodMode) {
-            return {
-                files: [{
-                    attachment: buffer,
-                    name: 'tts.mp3',
-                }],
-            }
-        } else {
-            const array = new Uint8Array(69);
-            crypto.getRandomValues(array);
-            return {
-                files: [{
-                    attachment: buffer,
-                    name: 'tts.mp3',
-                    waveform: Buffer.from(array).toString("base64"),
-                    duration_secs: 4140
-                }],
-                flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
-            }
+        return {
+            files: [{
+                attachment: buffer,
+                name: 'tts.mp3',
+            }],
         }
+        // if (handler.prodMode) {
+        //     return {
+        //         files: [{
+        //             attachment: buffer,
+        //             name: 'tts.mp3',
+        //         }],
+        //     }
+        // } else {
+        // const array = new Uint8Array(69);
+        // crypto.getRandomValues(array);
+        // return {
+        //     files: [{
+        //         attachment: buffer,
+        //         name: 'tts.mp3',
+        //         waveform: Buffer.from(array).toString("base64"),
+        //         duration_secs: 4140
+        //     }],
+        //     flags: new MessageFlagsBitField([MessageFlags.IsVoiceMessage]).toJSON()
+        // }
 
     }
 } as ICommand

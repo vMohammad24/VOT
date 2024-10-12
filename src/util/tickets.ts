@@ -36,7 +36,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 		};
 	}
 	const channel = await guild?.channels.create({
-		name: `ticket-${member.displayName}`,
+		name: `ticket-${member.user.username}`.slice(0, 32),
 		type: ChannelType.GuildText,
 		permissionOverwrites: [
 			{
@@ -114,6 +114,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	if (!chan) return { error: 'An error occurred while fetching the channel' };
 	const ticketOwner = await channel.guild?.members.fetch(ticketData.ownerId);
 	const cdnId = await transcriptTicket(chan);
+	await chan.delete();
 	await prisma.ticket.update({
 		where: {
 			id: ticketData.id,
@@ -126,7 +127,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	const logChannel = await getLogChannel(channel.guild);
 	const logEmbed = new EmbedBuilder()
 		.setTitle('Ticket Closed')
-		.setDescription(`Ticket ${chan.name} has been closed`)
+		.setDescription(`<@${ticketData.ownerId}> ticket's has been closed`)
 		.setAuthor({
 			name: closedBy.user.displayName,
 			iconURL: closedBy.user.displayAvatarURL(),
@@ -154,7 +155,6 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	try {
 		await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
 	} catch (e) { }
-	await chan.delete();
 	return { content: 'Ticked closed. ' };
 }
 
