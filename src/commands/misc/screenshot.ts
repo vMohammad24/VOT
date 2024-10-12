@@ -43,6 +43,7 @@ export default {
 			}
 		await interaction?.deferReply();
 		const time = Date.now();
+
 		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
@@ -52,7 +53,7 @@ export default {
 		try {
 			await b?.evaluate((body) => {
 				const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
-				body.innerHTML = body.innerHTML.replace(ipRegex, 'nuh uh');
+				body.innerHTML = (body.innerHTML as string).replaceAll(ipRegex, 'nuh uh');
 			});
 		} catch (e) {
 			return {
@@ -60,12 +61,7 @@ export default {
 				content: `This site has screenshotting disabled.`
 			}
 		}
-		const screenshot = await page.screenshot(
-			{
-				optimizeForSpeed: true,
-				type: 'webp',
-			}
-		);
+		const screenshot = await page.screenshot();
 		return {
 			files: [
 				{
@@ -73,7 +69,7 @@ export default {
 					name: 'screenshot.jpg',
 				},
 			],
-			content: `-# Screenshot took ${Date.now() - time}ms`,
+			content: `-# Total: ${Date.now() - time}`,
 		};
 	},
 } as ICommand;
