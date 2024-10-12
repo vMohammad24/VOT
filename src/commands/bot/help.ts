@@ -18,6 +18,7 @@ export default {
 			required: false,
 		},
 	],
+	type: 'all',
 	execute: async ({ message, interaction, handler, args, member }) => {
 		const categories = handler
 			.commands!.filter(a => a.category).map((cmd) => cmd.category)

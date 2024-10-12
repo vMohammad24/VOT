@@ -1,4 +1,3 @@
-import { UserTier } from '@prisma/client';
 import { ApplicationCommandOptionType } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { shortenUrl } from '../../util/nest';
@@ -21,7 +20,7 @@ export default {
 			required: false,
 		},
 	],
-	userTier: UserTier.Premium,
+	// userTier: UserTier.Premium,
 	execute: async ({ interaction, args }) => {
 		const url = args.get('url');
 		const password = (args.get('password') as string) || undefined;

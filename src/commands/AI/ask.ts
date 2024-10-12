@@ -77,31 +77,31 @@ export default {
 		// 	webLength = webResults.length;
 		// }
 		await editReply('Gathering previous conversations...', rMsg);
-		const trainingData = await handler.prisma.trainingData.findMany({
-			where: {
-				userId: user.id
-			},
-			orderBy: {
-				createdAt: 'asc'
-			},
-			take: 10
-		})
-		const trainingMessages: {
-			role: 'user' | 'assistant';
-			content: string;
-		}[] = [];
-		trainingData.forEach((data) => {
-			trainingMessages.push(
-				{
-					role: 'user',
-					content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
-				},
-				{
-					role: 'assistant',
-					content: data.response || "no response."
-				}
-			)
-		})
+		// const trainingData = await handler.prisma.trainingData.findMany({
+		// 	where: {
+		// 		userId: user.id
+		// 	},
+		// 	orderBy: {
+		// 		createdAt: 'asc'
+		// 	},
+		// 	take: 0
+		// })
+		// const trainingMessages: {
+		// 	role: 'user' | 'assistant';
+		// 	content: string;
+		// }[] = [];
+		// trainingData.forEach((data) => {
+		// 	trainingMessages.push(
+		// 		{
+		// 			role: 'user',
+		// 			content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
+		// 		},
+		// 		{
+		// 			role: 'assistant',
+		// 			content: data.response || "no response."
+		// 		}
+		// 	)
+		// })
 		await editReply('Generating response...', rMsg);
 		// get all urls
 		const urls = question.match(/https?:\/\/[^\s]+/g) || [];
@@ -174,7 +174,7 @@ export default {
 			// 	role: 'assistant',
 			// 	content: `These are the responses that i have gotten from the following sites ${responses.join('\n')}`,
 			// }
-			...trainingData
+			// ...trainingData
 		];
 		messages.push(
 			{
@@ -209,6 +209,9 @@ export default {
 				content: `:(`,
 				ephemeral: true
 			}
+		}
+		if ((res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
+			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
 		const response = res.data || '';//.short || '';
 		await pagination({
