@@ -1,10 +1,10 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { join } from 'path';
+import { URL } from 'url';
 import commandHandler from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 import { launchPuppeteer } from '../../util/puppeteer';
 const browser = await launchPuppeteer();
-const page = await browser.newPage();
 const blacklist = await (async () => {
 	if (commandHandler.verbose)
 		commandHandler.logger.info('Loading domain blacklist');
@@ -25,17 +25,36 @@ export default {
 			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
+		{
+			name: 'wait',
+			description: 'Whether to wait for the page to finish loading',
+			type: ApplicationCommandOptionType.Boolean,
+			required: false,
+		}
 	],
 	type: 'all',
 	execute: async ({ interaction, args }) => {
 		let url = args.get('url') as string;
+		const wait = args.get('wait') as boolean || false;
 		if (!url)
 			return {
 				content: 'Please provide a URL',
 				ephemeral: true,
 			};
 		if (!url.startsWith('http')) url = `https://${url}`;
-		const urlObject = new URL(url);
+		let urlObject: URL | null = null;
+		try {
+			urlObject = new URL(url);
+		} catch (e) {
+			return {
+				content: 'Please provide a valid URL',
+				ephemeral: true
+			}
+		}
+		if (!urlObject) return {
+			content: 'Please provide a valid URL',
+			ephemeral: true
+		}
 		if (!urlObject.hostname)
 			return {
 				content: 'Please provide a valid URL',
@@ -48,6 +67,7 @@ export default {
 			ephemeral: true,
 			content: `This site is blacklisted.`
 		}
+		const page = await browser.newPage();
 		await page.goto(url);
 		const b = await page.$('body');
 		try {
@@ -61,7 +81,13 @@ export default {
 				content: `This site has screenshotting disabled.`
 			}
 		}
-		const screenshot = await page.screenshot();
+		if (wait) await page.waitForNetworkIdle();
+		const screenshot = await page.screenshot({
+			// quality: 50,
+			// optimizeForSpeed: true,
+			// type: 'jpeg',
+		});
+		page.close();
 		return {
 			files: [
 				{
