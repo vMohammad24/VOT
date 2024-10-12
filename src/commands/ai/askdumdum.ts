@@ -4,7 +4,6 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
 
 export default {
-	name: 'ask',
 	description: 'Ask a question to the stupidest entity alive',
 	options: [
 		{
