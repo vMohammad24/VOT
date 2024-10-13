@@ -263,7 +263,7 @@ export default class CommandHandler {
 			}
 
 		} catch (e) {
-			if (commandHandler.verbose) commandHandler.logger.error(e);
+			this.logger.error(e);
 			const id = nanoid(10);
 			await this.prisma.error.create({
 				data: {
