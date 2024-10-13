@@ -11,13 +11,20 @@ const restPing = async (client: Client) => {
 export default {
 	description: 'Pong!',
 	execute: async ({ interaction, message, handler }) => {
-		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
-		const wsLatency = handler.client.ws.ping;
-		const restLatency = await restPing(handler.client);
-		const pStart = Date.now();
-		await handler.prisma.$queryRaw`SELECT 1`;
+		await interaction?.deferReply();
+		const [restLatency, wsLatency, pStart] = await Promise.all([
+			restPing(handler.client),
+			handler.client.ws.ping,
+			(async () => {
+				const pStart = Date.now();
+				await handler.prisma.$queryRaw`SELECT 1`;
+				return pStart;
+			})()
+		]);
 		const pEnd = Date.now();
 		handler.prisma.$disconnect();
+		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
+
 		return {
 			embeds: [
 				new EmbedBuilder()
@@ -29,7 +36,7 @@ export default {
 							value: '```' + `${restLatency}ms` + '```',
 						},
 						{
-							name: 'Webscoket Latency',
+							name: 'Websocket Latency',
 							value: '```' + `${wsLatency == -1 ? 'N/A' : `${wsLatency}ms`}` + '```',
 						},
 						{

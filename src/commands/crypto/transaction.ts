@@ -31,7 +31,7 @@ export default {
 		await page.setViewport({ width: 2560, height: 1440 });
 		await page.locator('span').scroll();
 		const screenshot = await page.screenshot({ optimizeForSpeed: true });
-		await page.close();
+		page.close();
 		return {
 			files: [
 				{
