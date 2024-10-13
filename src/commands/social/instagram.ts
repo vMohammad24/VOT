@@ -3,6 +3,8 @@ import { ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder } from 'd
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
+import { pagination } from '../../util/pagination';
+import { launchPuppeteer } from '../../util/puppeteer';
 
 
 interface IUser {
@@ -49,6 +51,116 @@ interface ICaption {
 }
 
 interface IVideoVersion {
+    type: number;
+    url: string;
+}
+interface Media {
+    code: string;
+    pk: string;
+    actor_fbid: string | null;
+    has_liked: boolean;
+    comments_disabled: boolean | null;
+    like_count: number;
+    user: User;
+    product_type: string;
+    view_count: number | null;
+    like_and_view_counts_disabled: boolean;
+    owner: Owner;
+    id: string;
+    organic_tracking_token: string;
+    inventory_source: string;
+    logging_info_token: string;
+    clips_metadata: ClipsMetadata;
+    comment_count: number;
+    taken_at: number;
+    caption: Caption;
+    media_type: number;
+    commenting_disabled_for_viewer: boolean | null;
+    can_reshare: boolean | null;
+    can_viewer_reshare: boolean;
+    audience: string | null;
+    ig_media_sharing_disabled: boolean;
+    carousel_media: any[] | null;
+    image_versions2: ImageVersions2;
+    media_overlay_info: any | null;
+    share_urls: any | null;
+    saved_collection_ids: string[] | null;
+    has_viewer_saved: boolean | null;
+    original_height: number;
+    original_width: number;
+    is_dash_eligible: number;
+    number_of_qualities: number;
+    video_dash_manifest: string;
+    video_versions: VideoVersion[];
+    has_audio: boolean;
+    creative_config: any | null;
+    usertags: any | null;
+    location: any | null;
+    clips_attribution_info: any | null;
+    invited_coauthor_producers: any[];
+    carousel_media_count: number | null;
+    preview: any | null;
+    __typename: string;
+}
+
+interface User {
+    pk: string;
+    username: string;
+    profile_pic_url: string;
+    id: string;
+    is_verified: boolean;
+    is_unpublished: boolean;
+    is_private: boolean;
+    friendship_status: any | null;
+}
+
+interface Owner {
+    pk: string;
+    username: string;
+    id: string;
+}
+
+interface ClipsMetadata {
+    music_info: any | null;
+    original_sound_info: OriginalSoundInfo;
+}
+
+interface OriginalSoundInfo {
+    audio_asset_id: string;
+    ig_artist: IGArtist;
+    consumption_info: ConsumptionInfo;
+    original_audio_title: string;
+    is_explicit: boolean;
+}
+
+interface IGArtist {
+    profile_pic_url: string;
+    id: string;
+    username: string;
+}
+
+interface ConsumptionInfo {
+    should_mute_audio_reason_type: any | null;
+    is_trending_in_clips: boolean;
+}
+
+interface Caption {
+    text: string;
+    pk: string;
+    has_translation: boolean | null;
+}
+
+interface ImageVersions2 {
+    candidates: Candidate[];
+}
+
+interface Candidate {
+    height: number;
+    url: string;
+    width: number;
+}
+
+interface VideoVersion {
     type: number;
     url: string;
 }
@@ -131,16 +243,17 @@ interface IJsonResponse {
     headers: IHeaders;
     raw: IRaw;
 }
+const browser = await launchPuppeteer();
 export default {
     description: "Reposts a post from instagram using it's url",
     type: 'all',
     cooldown: 60000,
     options: [
-        // {
-        //     type: ApplicationCommandOptionType.Subcommand,
-        //     name: 'trending',
-        //     description: 'Get a trending post from instagram',
-        // },
+        {
+            type: ApplicationCommandOptionType.Subcommand,
+            name: 'trending',
+            description: 'Get a trending post from instagram',
+        },
         {
             name: 'repost',
             description: 'Repost a post from instagram',
@@ -159,10 +272,10 @@ export default {
     slashOnly: true,
     execute: async ({ interaction }) => {
         if (!interaction) return;
+        interaction?.deferReply();
         switch (interaction.options.getSubcommand()) {
             case 'repost': {
                 const url = interaction.options.getString('url', true);
-                interaction?.deferReply();
                 const heartEmoji = getEmoji('heart')
                 const likeEmoji = getEmoji('like')
                 const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url);
@@ -191,6 +304,55 @@ export default {
                 } else {
                     return { embeds: [embed] };
                 }
+            }
+            case 'trending': {
+                const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":'
+                const page = await browser.newPage();
+                const res = await page.goto('https://www.instagram.com/reels/')//await axios.get('https://www.instagram.com/reels/')
+                const data = await res!.content();
+                page.close();
+                const body = Buffer.from(data).toString('utf-8');
+                const index = body.indexOf(lookFor)
+                const endIndex = body.indexOf('</script>', index)
+                // console.log(lookFor + body.slice(index + lookFor.length, endIndex))
+                const json = JSON.parse(lookFor + body.slice(index + lookFor.length, endIndex));
+                const vids: Media[] = [];
+                const edges = json.require[0][3][0].__bbox.require[0][3][1].__bbox.result.data.xdt_api__v1__clips__clips_on_logged_out_connection_v2.edges;
+                for (const edge of edges) {
+                    // console.log(edge)
+                    const media = edge.node.media;
+                    vids.push(media);
+                }
+                await pagination({
+                    interaction,
+                    type: 'select',
+                    pages: vids.map((vid) => ({
+                        name: vid.caption.text.slice(0, 100),
+                        page: {
+                            embeds: [new EmbedBuilder()
+                                // .setTitle(vid.caption.text.slice(0, 256))
+                                // .setImage(vid.image_versions2.candidates[0].url)
+                                .setURL(`https://www.instagram.com/reels/${vid.code}`)
+                                .setAuthor({
+                                    name: vid.user.username,
+                                    iconURL: vid.user.profile_pic_url,
+                                    url: `https://www.instagram.com/${vid.owner.username}`
+                                })
+                                .addFields([{
+                                    name: 'Likes',
+                                    value: vid.like_count.toString(),
+                                    inline: true
+                                }, {
+                                    name: 'Comments',
+                                    value: vid.comment_count.toString(),
+                                    inline: true
+                                }])
+                                .setFooter({ text: 'Taken at' })
+                                .setTimestamp(new Date(vid.taken_at * 1000))],
+                            files: [new AttachmentBuilder(vid.video_versions[0].url, { name: 'VOT-IG-Trending.mp4' })]
+                        },
+                    }))
+                })
             }
         }
     },
