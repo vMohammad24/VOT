@@ -60,7 +60,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 		parent: ticketSettings?.categoryId
 			? (guild.channels.cache.get(ticketSettings.categoryId) as CategoryChannel)
 			: undefined,
-		reason: `Ticket created by ${member.displayName} for ${reason}`,
+		reason: `Ticket created by ${member.user.tag} for ${reason}`,
 	});
 	if (!channel) return { error: 'An error occurred while creating the ticket' };
 	const ticket = await prisma.ticket.create({
@@ -91,7 +91,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 	const logEmbed = new EmbedBuilder()
 		.setTitle('Ticket Created')
 		.setDescription(`${channel.name} has been created for ${reason}`)
-		.setAuthor({ name: member.displayName, iconURL: member.displayAvatarURL() })
+		.setAuthor({ name: member.user.tag, iconURL: member.displayAvatarURL() })
 		.setColor('Green')
 		.setTimestamp();
 	const logChannel = await getLogChannel(guild);
@@ -129,7 +129,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 		.setTitle('Ticket Closed')
 		.setDescription(`<@${ticketData.ownerId}> ticket's has been closed`)
 		.setAuthor({
-			name: closedBy.user.displayName,
+			name: closedBy.user.tag,
 			iconURL: closedBy.user.displayAvatarURL(),
 		})
 		.setColor('Red')
@@ -137,7 +137,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	const userEmbed = new EmbedBuilder()
 		.setTitle('Ticket Closed')
 		.setAuthor({
-			name: closedBy.user.displayName,
+			name: closedBy.user.tag,
 			iconURL: closedBy.user.displayAvatarURL(),
 		})
 		.setDescription(`A ticket you have opened in ${chan.guild.name} has been closed`)
