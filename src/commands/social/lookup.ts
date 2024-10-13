@@ -188,7 +188,7 @@ export default {
                                 { name: 'Storage Used', value: filesize(nUser.storage_used), inline: true },
                                 { name: 'Uploads', value: numeral(nUser.uploads).format('0,0'), inline: true },
                             ])
-                            .setDescription(nUser.bio)
+                            .setDescription((!nUser || !nUser.bio || nUser.bio.trim() == '') ? null : nUser.bio)
                             .setFooter({
                                 text: `Invited by ${nUser.invited_by ? nUser.invited_by.username ?? 'No one' : 'No one'}`,
                             })
