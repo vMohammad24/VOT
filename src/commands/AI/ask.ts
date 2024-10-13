@@ -40,8 +40,8 @@ export default {
 		const channelMessage = channelMessages
 			? (await Promise.all(channelMessages
 				.map(
-					async (m: Message<boolean>) =>
-						await messageToText(m),
+					(m: Message<boolean>) =>
+						messageToText(m),
 				))).reverse()
 				.join('\n')
 			: '';
@@ -135,7 +135,7 @@ export default {
 				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
 			    ${guild
 						? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
-			    ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
+			    ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).user.tag}`
 						: ''
 					}.\n\n
 			    .\n\n

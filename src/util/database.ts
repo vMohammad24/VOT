@@ -17,12 +17,12 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 		},
 		update: {
 			avatar: member.avatarURL(),
-			name: member.displayName,
+			name: member.tag,
 		},
 		create: {
 			id: member.id,
 			avatar: member.avatarURL(),
-			name: member.displayName,
+			name: member.tag,
 		},
 		select,
 	});

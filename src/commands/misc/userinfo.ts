@@ -13,6 +13,7 @@ import {
 import { nanoid } from "nanoid/non-secure";
 import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
+import { getUserByID } from "../../util/database";
 import { addEmoji, getEmoji } from "../../util/emojis";
 
 
@@ -106,46 +107,40 @@ export default {
             [UserTier.Premium, getEmoji('premium').toString()],
             [UserTier.Staff, getEmoji('staff').toString()],
             [UserTier.Beta, getEmoji('beta').toString()],
-        ])
-        const pUser = await handler.prisma.user.findUnique({
-            where: {
-                id: user.id
-            }
-        })
-        const res = await axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id);
-        const statusRes = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`);
+        ]);
+        const [pUser, res, statusRes] = await Promise.all([
+            getUserByID(user.id, { tier: true }),
+            axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id),
+            axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`)
+        ]);
         const { data: sData } = statusRes;
         const { data } = res;
         const { bio, connections, badges, clan } = data;
         const ems = await handler.client.application?.emojis.fetch();
         if (badges && badges.length > 0) {
-            await (async () => {
-                for (const badge of badges) {
-                    const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
-                    const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
-                    await write(path, res.data);
-                    badge.emoji = (await addEmoji(path, ems))?.toString()!;
-                }
-            })()
+            await Promise.all(badges.map(async (badge) => {
+                const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
+                const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
+                await write(path, res.data);
+                badge.emoji = (await addEmoji(path, ems))?.toString()!;
+            }));
         }
         const buttonId = nanoid();
 
         const u = user instanceof GuildMember ? user.user : user;
         if (!u) return { content: 'User not found', ephemeral: true };
-        clan && clan.identity_guild_id && clan.tag && clan.badge && (await (async () => {
+        if (clan && clan.identity_guild_id && clan.tag && clan.badge) {
             const res = await axios.get(`https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`, { responseType: 'arraybuffer' });
             const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${clan.identity_guild_id}_${clan.tag}.png`);
             await write(path, res.data);
             clan.emoji = (await addEmoji(path, ems))?.toString()!;
-        })())
+        }
         if (sData.activities.length > 0) {
-            // delete any acitivities if they match sData.status
-            sData.activities = sData.activities.filter(a => a.name !== sData.status)
-            for (const activity of sData.activities) {
+            sData.activities = sData.activities.filter(a => a.name !== sData.status);
+            await Promise.all(sData.activities.map(async (activity) => {
                 const type = activity.type.replace('ActivityType.', '');
-                // console.log(type)
                 if (type) activity.emoji = (await addEmoji(`activity_${type}`, ems))?.toString() || '❓';
-            }
+            }));
         }
         const embed = new EmbedBuilder()
             .setTitle('User Information')
@@ -210,26 +205,23 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
         });
         const collector = sentMessage?.createMessageComponentCollector({ filter: i => i.customId === buttonId });
         collector?.on('collect', async i => {
-            const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`)
+            const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
             const reviews: any[] = reviewsRes.data.reviews;
             const embed = new EmbedBuilder()
                 .setTitle('Reviews')
                 .setAuthor({ name: u.tag, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${user.id}` })
-                // .setDescription(embedDesc)
                 .setColor(u.hexAccentColor || 'Random')
                 .setTimestamp();
             if (reviews) {
-                // remove the first one
                 reviews.shift();
                 if (reviews.length <= 0) return i.reply({ content: 'No reviews found', ephemeral: true });
-                embed.setDescription(reviews.map(review => `- **${review.sender.username}** - ${review.comment}`).join('\n'))
+                embed.setDescription(reviews.map(review => `- **${review.sender.username}** - ${review.comment}`).join('\n'));
             }
             i.reply({
-                embeds: [embed
-                ],
+                embeds: [embed],
                 ephemeral: true,
                 allowedMentions: { repliedUser: true }
-            })
-        })
+            });
+        });
     }
-} as ICommand
+} as ICommand;

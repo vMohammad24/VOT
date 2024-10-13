@@ -45,7 +45,7 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Banned by ${kicker.user.displayName}`,
+				text: `Banned by ${kicker.user.tag}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' });
@@ -56,7 +56,7 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Banned by ${kicker.user.displayName}`,
+				text: `Banned by ${kicker.user.tag}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' });

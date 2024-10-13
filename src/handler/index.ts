@@ -55,6 +55,7 @@ export default class CommandHandler {
 		this.client = handler.client;
 		this.developers = handler.developers;
 		this.prodMode = handler.prodMode;
+		this.verbose = handler.verbose || false;
 		handler.commands = [];
 		handler.client.on(Events.ClientReady, async () => {
 			this.validations = await (async () => {
@@ -195,11 +196,8 @@ export default class CommandHandler {
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const res = await Promise.all(this.validations.map(async (validation) => {
-					const result = await validation(command, commandContext);
-					return result;
-				}));
-				const failed = res.find((r) => r != true);
+				const res = await Promise.all(this.validations.map((validation) => validation(command, commandContext)));
+				const failed = res.find((r) => r !== true);
 				if (failed) return failed;
 				validationTime = Date.now() - vStart;
 				this.prisma.user.upsert({
