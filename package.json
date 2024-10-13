@@ -30,6 +30,7 @@
     "@prisma/client": "latest",
     "@types/ioredis": "latest",
     "@types/numeral": "latest",
+    "@types/user-agents": "latest",
     "axios": "latest",
     "bufferutil": "latest",
     "discord.js": "latest",
@@ -55,6 +56,7 @@
     "shoukaku": "latest",
     "tesseract.js": "latest",
     "turndown": "latest",
+    "user-agents": "latest",
     "utf-8-validate": "latest",
     "zlib-sync": "latest"
   },

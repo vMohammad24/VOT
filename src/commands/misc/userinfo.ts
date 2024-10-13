@@ -1,3 +1,4 @@
+import { UserTier } from "@prisma/client";
 import axios from "axios";
 import { write } from "bun";
 import {
@@ -12,7 +13,7 @@ import {
 import { nanoid } from "nanoid/non-secure";
 import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
-import { addEmoji } from "../../util/emojis";
+import { addEmoji, getEmoji } from "../../util/emojis";
 
 
 interface Decoration {
@@ -100,6 +101,17 @@ export default {
     execute: async ({ args, user: usr, member, interaction, handler, message, guild }) => {
         const user = (args.get('user') as GuildMember | User) || (guild ? member : usr) || usr;
         await interaction?.deferReply();
+        const emojiTierMap: Map<UserTier, string> = new Map([
+            // [UserTier.Normal, null],
+            [UserTier.Premium, getEmoji('premium').toString()],
+            [UserTier.Staff, getEmoji('staff').toString()],
+            [UserTier.Beta, getEmoji('beta').toString()],
+        ])
+        const pUser = await handler.prisma.user.findUnique({
+            where: {
+                id: user.id
+            }
+        })
         const res = await axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id);
         const statusRes = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`);
         const { data: sData } = statusRes;
@@ -140,14 +152,15 @@ export default {
             .setThumbnail(u.displayAvatarURL())
             .setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` })
             .setDescription(`
+${(pUser && pUser.tier != UserTier.Normal) ? `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}` : ''}
 ${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
 ${sData.status ? `**Status**: ${sData.status}` : ''}
 ${(sData.activities && sData.activities.length > 0) ? `**Activities**:
  ${sData.activities.map(activity => {
                 if (activity.type === 'ActivityType.listening' && activity.album && activity.artist) {
-                    return `${activity.emoji} **${activity.name}** ${activity.album ? `${activity.album}` : ''} ${activity.artist ? `- ${activity.artist}` : ''}`;
+                    return `${activity.emoji} **${activity.name}** ${activity.album ? `\`${activity.track}\`` : ''} ${activity.artist ? `- \`${activity.artist}\`` : ''}`;
                 } else {
-                    return `${activity.emoji} **${activity.name}** ${activity.details ? `${activity.details}` : ''} ${activity.state ? `- ${activity.state}` : ''}`;
+                    return `${activity.emoji} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`;
                 }
             }).join('\n')}
     ` : ''}

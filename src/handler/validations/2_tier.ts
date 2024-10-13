@@ -1,3 +1,4 @@
+import { UserTier } from '@prisma/client';
 import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import { type CommandContext } from '../interfaces/ICommand';
@@ -16,7 +17,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 				if (u.tier != 'Beta') return 'You need to be a beta tester to use this command';
 				break;
 			case 'Premium':
-				if (u.tier != 'Premium' && u.tier != 'Beta') return 'You need to be a premium user to use this command';
+				if (u.tier != UserTier.Premium && u.tier != UserTier.Beta && u.tier != UserTier.Staff) return 'You need to be a premium user to use this command';
 				break;
 			default:
 				return 'Invalid tier';

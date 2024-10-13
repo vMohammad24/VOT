@@ -213,6 +213,7 @@ enum UserTier {
   Normal
   Premium
   Beta
+  Staff
 }
 
 enum ArgumentMode {
