@@ -340,11 +340,11 @@ export default {
                                 })
                                 .addFields([{
                                     name: 'Likes',
-                                    value: vid.like_count.toString(),
+                                    value: numeral(vid.like_count).format('0,0'),
                                     inline: true
                                 }, {
                                     name: 'Comments',
-                                    value: vid.comment_count.toString(),
+                                    value: numeral(vid.comment_count).format('0,0'),
                                     inline: true
                                 }])
                                 .setFooter({ text: 'Taken at' })
