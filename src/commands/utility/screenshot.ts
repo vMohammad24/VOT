@@ -3,6 +3,7 @@ import { join } from 'path';
 import { URL } from 'url';
 import commandHandler from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
+import { cacheSite, getCachedSite } from '../../util/database';
 import { launchPuppeteer } from '../../util/puppeteer';
 const browser = await launchPuppeteer();
 const blacklist = await (async () => {
@@ -34,6 +35,7 @@ export default {
 	],
 	type: 'all',
 	execute: async ({ interaction, args }) => {
+		const time = Date.now();
 		let url = args.get('url') as string;
 		const wait = args.get('wait') as boolean || false;
 		if (!url)
@@ -66,6 +68,16 @@ export default {
 			ephemeral: true,
 			content: `This site is blacklisted.`
 		}
+		const cached = await getCachedSite(url);
+		if (cached) return {
+			files: [
+				{
+					attachment: cached,
+					name: 'screenshot.png',
+				},
+			],
+			content: `-# Took ${Date.now() - time}ms`
+		}
 		const page = await browser.newPage();
 		try {
 			await page.goto(url);
@@ -75,7 +87,6 @@ export default {
 				content: `This site is not reachable.`
 			}
 		}
-		const time = Date.now();
 		const b = await page.$('body');
 		try {
 			await b?.evaluate((body) => {
@@ -92,17 +103,19 @@ export default {
 		const screenshot = await page.screenshot({
 			// quality: 50,
 			// optimizeForSpeed: true,
-			// type: 'jpeg',
+			type: 'png',
 		});
+		const buffer = Buffer.from(screenshot);
 		page.close();
+		await cacheSite(url, buffer);
 		return {
 			files: [
 				{
-					attachment: Buffer.from(screenshot),
-					name: 'screenshot.jpg',
+					attachment: buffer,
+					name: 'screenshot.png',
 				},
 			],
-			content: `-# Total: ${Date.now() - time}`,
+			content: `-# Took ${Date.now() - time}ms`,
 		};
 	},
 } as ICommand;
