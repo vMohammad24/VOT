@@ -35,7 +35,6 @@ export default {
 	],
 	type: 'all',
 	execute: async ({ interaction, args }) => {
-		const time = Date.now();
 		let url = args.get('url') as string;
 		const wait = args.get('wait') as boolean || false;
 		if (!url) {
@@ -61,11 +60,12 @@ export default {
 			};
 		}
 		await interaction?.deferReply();
+		const time = Date.now();
 		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
 		}
-		const cached = await getCachedSite(url);
+		const cached = await getCachedSite(url, wait);
 		if (cached) return {
 			files: [
 				{
@@ -106,7 +106,7 @@ export default {
 		});
 		const buffer = Buffer.from(screenshot);
 		page.close();
-		cacheSite(url, buffer);
+		cacheSite(url, wait, buffer);
 		return {
 			files: [
 				{
