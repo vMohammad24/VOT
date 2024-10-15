@@ -129,7 +129,7 @@ export default {
 				embed.setTitle('Stickers');
 				try {
 					const sticker = await guild.stickers.create({
-						file: Buffer.from(oFile),
+						file: oFile,
 						name,
 						tags: name,
 					});
@@ -144,7 +144,7 @@ export default {
 				embed.setTitle('Emojis');
 				try {
 					const emoji = await guild.emojis.create({
-						attachment: Buffer.from(oFile),
+						attachment: oFile,
 						name,
 						reason: `Added by ${member.user.username} (${member.user.id})`,
 					});
