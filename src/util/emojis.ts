@@ -14,7 +14,9 @@ export async function addEmoji(emojiPath: string, ems: Collection<string, Applic
 	if (!ems) return;
 	const { verbose, logger, client } = commandHandler
 	const emojiName = emojiPath.split('/').pop()!.split('.')[0];
-	if (emojis.has(emojiName)) return emojis.get(emojiName)!;
+	if (emojis.has(emojiName))
+		return emojis.get(emojiName)!
+
 	let emoji = ems?.find((e) => e.name === emojiName);
 	if (emoji) {
 		if (verbose)

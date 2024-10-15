@@ -38,32 +38,29 @@ export default {
 		const time = Date.now();
 		let url = args.get('url') as string;
 		const wait = args.get('wait') as boolean || false;
-		if (!url)
+		if (!url) {
 			return {
 				content: 'Please provide a URL',
 				ephemeral: true,
 			};
+		}
 		if (!url.startsWith('http')) url = `https://${url}`;
-		let urlObject: URL | null = null;
+		let urlObject: URL;
 		try {
 			urlObject = new URL(url);
-		} catch (e) {
+		} catch {
 			return {
 				content: 'Please provide a valid URL',
 				ephemeral: true
-			}
+			};
 		}
-		if (!urlObject) return {
-			content: 'Please provide a valid URL',
-			ephemeral: true
-		}
-		if (!urlObject.hostname)
+		if (!urlObject.hostname) {
 			return {
 				content: 'Please provide a valid URL',
 				ephemeral: true
-			}
+			};
+		}
 		await interaction?.deferReply();
-
 		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
@@ -80,7 +77,9 @@ export default {
 		}
 		const page = await browser.newPage();
 		try {
-			await page.goto(url);
+			await page.goto(url, {
+				timeout: 3000
+			});
 		} catch (e) {
 			return {
 				ephemeral: true,
@@ -107,7 +106,7 @@ export default {
 		});
 		const buffer = Buffer.from(screenshot);
 		page.close();
-		await cacheSite(url, buffer);
+		cacheSite(url, buffer);
 		return {
 			files: [
 				{

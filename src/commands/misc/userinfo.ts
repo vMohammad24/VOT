@@ -3,6 +3,7 @@ import axios from "axios";
 import { write } from "bun";
 import {
     ActionRowBuilder,
+    ActivityType,
     ApplicationCommandOptionType,
     ButtonBuilder,
     ButtonStyle,
@@ -69,21 +70,50 @@ interface UserStatus {
     dnd: string[];
     status: string;
     activities: Activity[];
+    voice?: {
+        session_id: string;
+        deaf: boolean;
+        mute: boolean;
+        self_mute: boolean;
+        self_stream: boolean;
+        self_video: boolean;
+        self_deaf: boolean;
+        afk: boolean;
+        channel: {
+            id: string;
+            name: string;
+            type: string;
+            guild: {
+                id: string;
+                name: string;
+            };
+            requested_to_speak_at: string | null;
+            suppress: boolean;
+        } | null;
+    }[]
 }
 
 interface Activity {
     name: string;
-    type: 'ActivityType.unknown' | 'ActivityType.playing' | 'ActivityType.streaming' | 'ActivityType.listening' | 'ActivityType.watching' | 'ActivityType.custom' | 'ActivityType.competing';
+    type?: ActivityType;
     details: string | null;
     state: string | null;
     emoji: string;
-    album?: string;
-    album_cover_url?: string;
-    artist?: string;
-    track?: string;
-    track_id?: string;
-    duration?: number;
     start?: string;
+    flags?: number;
+    session_id?: string;
+    application_id?: string;
+    buttons?: string[];
+    assets?: {
+        large_image?: string;
+        large_text?: string;
+        small_image?: string;
+        small_text?: string;
+    }
+    timestamps?: {
+        start: number;
+        end: number;
+    }
 }
 
 
@@ -136,11 +166,25 @@ export default {
             clan.emoji = (await addEmoji(path, ems))?.toString()!;
         }
         if (sData.activities.length > 0) {
-            sData.activities = sData.activities.filter(a => a.name !== sData.status);
+            sData.activities = sData.activities.filter(a => a.type !== ActivityType.Custom);
             await Promise.all(sData.activities.map(async (activity) => {
-                const type = activity.type.replace('ActivityType.', '');
-                if (type) activity.emoji = (await addEmoji(`activity_${type}`, ems))?.toString() || '❓';
+                if (!activity.type && activity.assets && activity.assets.large_image && activity.assets.large_image.startsWith('spotify')) activity.type = ActivityType.Listening;
+                if (!activity.type) activity.type = ActivityType.Playing;
+                const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `activity_${activity.type}.svg`);
+                activity.emoji = (await addEmoji(path, ems))?.toString() || '❓';
             }));
+        }
+        if (sData.voice && sData.voice.length > 0) {
+            // create a new activity from voice data
+            const voice = sData.voice[0];
+            if (!voice.channel) return;
+            sData.activities.push({
+                name: 'Voice',
+                type: ActivityType.Listening,
+                details: voice.channel.name,
+                state: voice.channel.guild.name,
+                emoji: getEmoji('volume').toString()
+            });
         }
         const embed = new EmbedBuilder()
             .setTitle('User Information')
@@ -150,23 +194,22 @@ export default {
 ${(pUser && pUser.tier != UserTier.Normal) ? `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}` : ''}
 ${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
 ${sData.status ? `**Status**: ${sData.status}` : ''}
-${(sData.activities && sData.activities.length > 0) ? `**Activities**:
- ${sData.activities.map(activity => {
-                if (activity.type === 'ActivityType.listening' && activity.album && activity.artist) {
-                    return `${activity.emoji} **${activity.name}** ${activity.album ? `\`${activity.track}\`` : ''} ${activity.artist ? `- \`${activity.artist}\`` : ''}`;
-                } else {
-                    return `${activity.emoji} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`;
-                }
-            }).join('\n')}
+
+${(sData.activities && sData.activities.length > 0) ? `## **Activities**:
+ ${sData.activities.map(activity =>
+                `${activity.emoji ?? ''} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`
+            ).join('\n')
+                    }
     ` : ''}
 ${(badges && badges.length > 0) ? `**Badges**:\n### ${badges.map(badge => badge.emoji).join('')}` : ''}
+
 ${(connections && connections.length > 0) ? `**Connections**:
 ${connections.map(connection => (
-                connection.url ? `[${connection.name}](${connection.url})`
-                    : `${connection.type.includes('domain') ?
-                        `[${connection.name}](https://${connection.name})` :
-                        connection.name} ${connection.type.find(a => a.includes('unknown')) ?
-                            '' : `(${connection.type[0]})`}`)).join('\n')}`
+                        connection.url ? `[${connection.name}](${connection.url})`
+                            : `${connection.type.includes('domain') ?
+                                `[${connection.name}](https://${connection.name})` :
+                                connection.name} ${connection.type.includes('unknown') ?
+                                    '' : `(${connection.type})`}`)).join('\n')}`
                     : ''}
 
 ${(bio) ? `**Bio**:\n${bio}` : ''}
