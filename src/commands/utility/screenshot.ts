@@ -61,7 +61,6 @@ export default {
 				ephemeral: true
 			}
 		await interaction?.deferReply();
-		const time = Date.now();
 
 		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
@@ -76,6 +75,7 @@ export default {
 				content: `This site is not reachable.`
 			}
 		}
+		const time = Date.now();
 		const b = await page.$('body');
 		try {
 			await b?.evaluate((body) => {
