@@ -12,7 +12,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 		cooldowns.set(command.name, new Collection());
 	}
 	const pUser = await prisma.user.findUnique({ where: { id: user.id } });
-	if (pUser && (pUser.tier == 'Premium' || pUser.tier == 'Beta')) return true;
+	if (pUser && (pUser.tier == 'Premium' || pUser.tier == 'Beta' || pUser.tier == 'Staff')) return true;
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name) as Collection<string, number>;
 	if (timestamps.has(user.id)) {
