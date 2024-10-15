@@ -68,7 +68,14 @@ export default {
 			content: `This site is blacklisted.`
 		}
 		const page = await browser.newPage();
-		await page.goto(url);
+		try {
+			await page.goto(url);
+		} catch (e) {
+			return {
+				ephemeral: true,
+				content: `This site is not reachable.`
+			}
+		}
 		const b = await page.$('body');
 		try {
 			await b?.evaluate((body) => {
