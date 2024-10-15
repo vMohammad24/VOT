@@ -33,6 +33,9 @@ export default {
         const text = args.get('text') as string;
         if (!text) return 'You need to provide text to freakify!';
         const freaky = makeFreaky(text);
-        return freaky;
+        return {
+            content: freaky,
+            allowedMentions: {}
+        };
     }
 } as ICommand
