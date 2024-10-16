@@ -192,7 +192,7 @@ export default {
                             .setFooter({
                                 text: `Invited by ${nUser.invited_by ? nUser.invited_by.username ?? 'No one' : 'No one'}`,
                             })
-                            .setColor(nUser.avatar ? ((await getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${nUser.avatar}`)))[0]) : 'Random')
+                            .setColor(nUser.avatar ? ((getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${nUser.avatar}`)))[0]) : 'Random')
                             .setTimestamp(new Date(nUser.created_at))
                     ]
                 }
@@ -223,7 +223,7 @@ export default {
                         // { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
                     ])
                     .setDescription(data.userInfo.user.signature || 'No bio')
-                    .setColor(data.userInfo.user.avatarLarger ? (await getTwoMostUsedColors(await loadImage(data.userInfo.user.avatarLarger)))[0] : 'Random')
+                    .setColor(data.userInfo.user.avatarLarger ? (getTwoMostUsedColors(await loadImage(data.userInfo.user.avatarLarger)))[0] : 'Random')
                     .setTimestamp(new Date(data.userInfo.user.createTime * 1000))
                     .setFooter({ text: 'Account created on' })
                 return {

@@ -29,23 +29,20 @@ export default {
 		const rMsg = await message?.reply('Thinking...');
 		if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
 		await editReply('Gathering context...', rMsg);
-		const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
-			.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-			.values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-				.values())).concat(Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values())) : undefined;
+		const channelMessages = channel && channel.messages.cache ? (channel.messages.cache.size < 50 ? (await channel.messages.fetch({ limit: 100 })).sort((a, b) => a.createdTimestamp - b.createdTimestamp) : channel.messages.cache.sort((a, b) => a.createdTimestamp - b.createdTimestamp)).concat(await (channel as GuildTextBasedChannel).messages.fetchPinned()) : undefined;
+
 		async function messageToText(m: Message<boolean>): Promise<string> {
-			return `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - refrecning ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent} ${m.hasThread ?
-				`This message also contains a thread named: ${m.thread?.name} which has the following messages: ${(await m.thread?.awaitMessages())?.map(async tm => await messageToText(tm))}` : ''}`
+			const embedsText = m.embeds.length ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '';
+			const threadText = m.hasThread ? `This message also contains a thread named: ${m.thread?.name} which has the following messages: ${(await m.thread!.messages.fetch()).map(tm => `${tm.author.username}: ${tm.cleanContent}`).join('\n')}` : '';
+			return `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - referencing ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.cleanContent} ${embedsText} ${threadText}`;
 		}
+
 		const channelMessage = channelMessages
-			? (await Promise.all(channelMessages
-				.map(
-					(m: Message<boolean>) =>
-						messageToText(m),
-				))).reverse()
-				.join('\n')
+			? (await Promise.all(channelMessages.map(messageToText))).reverse().join('\n')
 			: '';
-		const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - Had nitro since ${user.premiumSinceTimestamp}`).join('\n') : undefined;
+
+		const users = guild ? guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - has been boosting the server since ${user.premiumSinceTimestamp}`).join('\n') : undefined;
+
 		await editReply('Searching...', rMsg);
 		const searchRes = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(question)}&source=web`)
 		const regex = /const\s+data\s*=\s*(\[.*?\]|\{.*?\})\s*;/s; // Matches the JSON array/object, stops before any trailing semicolons or code
@@ -182,6 +179,7 @@ export default {
 				content: question,
 			}
 		)
+		console.log(messages)
 		await editReply('Processing...', rMsg);
 		const res = await axios
 			.post(
@@ -210,7 +208,8 @@ export default {
 				ephemeral: true
 			}
 		}
-		if ((res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
+		console.log(res.data)
+		if (typeof res.data == 'string' && (res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
 		const response = res.data || '';//.short || '';

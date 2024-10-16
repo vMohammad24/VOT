@@ -295,7 +295,7 @@ export default {
                         `## ${getEmoji('like').toString()} ${numeral(data.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(data.comment_count).format('0,0')}`
                     )
                     .setTimestamp(new Date(data.taken_at * 1000))
-                    .setFooter({ text: 'Taken at' });
+                    .setFooter({ text: 'Uploaded' });
 
                 const videoUrl = data.video_versions[0]?.url;
                 if (videoUrl) {
@@ -347,7 +347,7 @@ export default {
                                     value: numeral(vid.comment_count).format('0,0'),
                                     inline: true
                                 }])
-                                .setFooter({ text: 'Taken at' })
+                                .setFooter({ text: 'Uploaded' })
                                 .setTimestamp(new Date(vid.taken_at * 1000))],
                             files: [new AttachmentBuilder(vid.video_versions[0].url, { name: 'VOT-IG-Trending.mp4' })]
                         },

@@ -1,5 +1,6 @@
 import { Canvas, createCanvas, Image } from '@napi-rs/canvas';
 import type { Guild, GuildTextBasedChannel } from 'discord.js';
+import commandHandler from '..';
 import { getGuild } from './database';
 export const getLogChannel = async (guild: Guild) => {
 	const g = await getGuild(guild, { loggingChannel: true })
@@ -72,12 +73,14 @@ export const rgbToHex = ([r, g, b]: RGB) => {
 	return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 };
 
-export async function getTwoMostUsedColors(img: Image | Canvas): Promise<RGB[]> {
-	const canvas = createCanvas(img.width, img.height);
+export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
+	const time = Date.now();
+	const scale = 0.1; // Scale down the image to 10% of its original size
+	const canvas = createCanvas(img.width * scale, img.height * scale);
 	const ctx = canvas.getContext('2d');
 
-	ctx.drawImage(img, 0, 0, img.width, img.height);
-	const imageData = ctx.getImageData(0, 0, img.width, img.height);
+	ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
+	const imageData = ctx.getImageData(0, 0, img.width * scale, img.height * scale);
 	const data = imageData.data;
 
 	const colors: RGB[] = [];
@@ -98,8 +101,9 @@ export async function getTwoMostUsedColors(img: Image | Canvas): Promise<RGB[]> 
 		.map((centroid, index) => ({ centroid, count: counts[index] }))
 		.sort((a, b) => b.count - a.count)
 		.map(item => item.centroid);
-
-	return sortedCentroids.map((centroid) => centroid.map(Math.round) as RGB);
+	const result = sortedCentroids.map((centroid) => centroid.map(Math.round) as RGB);
+	if (commandHandler.verbose) commandHandler.logger.info(`Took ${Date.now() - time}ms to get two most used colors`);
+	return result;
 }
 export function parseTime(timestr: string): number {
 	timestr = timestr

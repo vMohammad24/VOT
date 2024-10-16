@@ -37,7 +37,7 @@ export default {
 		// const canvas = createCanvas(width, height);
 		// const ctx = canvas.getContext('2d');
 		// const pfp = await loadImage(user.displayAvatarURL({ extension: 'png', size: 256 }));
-		// const mostUsedColors = await getTwoMostUsedColors(pfp)
+		// const mostUsedColors = getTwoMostUsedColors(pfp)
 		// const grad = ctx.createLinearGradient(0, 0, width, height);
 		// for (const [i, color] of mostUsedColors.entries()) {
 		//     grad.addColorStop(i, `rgb(${color[0]}, ${color[2]}, ${color[2]})`);

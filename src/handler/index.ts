@@ -151,7 +151,7 @@ export default class CommandHandler {
 							guildId: member.guild.id,
 							voiceId: member.voice.channelId,
 							textId: member.voice.channelId,
-							deaf: true,
+							// deaf: true,
 						});
 					playerTime = Date.now() - start;
 					return player;

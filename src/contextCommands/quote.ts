@@ -28,7 +28,7 @@ export default {
         ctx.fillStyle = 'black';
         ctx.fillRect(width / 2, 0, width / 2, height);
         ctx.shadowBlur = 50;
-        const colors = await getTwoMostUsedColors(loadedAvatar);
+        const colors = getTwoMostUsedColors(loadedAvatar);
         const colorsS = `rgba(${colors[0].join(', ')}, 1)`;
         // console.log(colorsS)
         ctx.shadowColor = colorsS;
