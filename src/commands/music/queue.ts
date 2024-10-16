@@ -5,6 +5,7 @@ import { pagination } from '../../util/pagination';
 export default {
 	description: 'Shows the queue',
 	needsPlayer: true,
+	aliases: ['q'],
 	execute: async ({ player, interaction, message, member }) => {
 		if (!player)
 			return {

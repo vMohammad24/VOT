@@ -1,3 +1,4 @@
+import { loadImage } from "@napi-rs/canvas";
 import { UserTier } from "@prisma/client";
 import axios from "axios";
 import { write } from "bun";
@@ -16,6 +17,7 @@ import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
 import { getUserByID } from "../../util/database";
 import { addEmoji, getEmoji } from "../../util/emojis";
+import { getTwoMostUsedColors } from "../../util/util";
 
 
 interface Decoration {
@@ -178,11 +180,12 @@ export default {
             // create a new activity from voice data
             const voice = sData.voice[0];
             if (!voice.channel) return;
+            // console.log(voice);
             sData.activities.push({
                 name: 'Voice',
                 type: ActivityType.Listening,
                 details: voice.channel.name,
-                state: voice.channel.guild.name,
+                state: (voice.channel.guild.name || 'Unknown') + (voice.afk ? ' (AFK)' : '') + (voice.self_deaf ? ' (Deafened)' : '') + (voice.self_mute ? ' (Muted)' : ''),
                 emoji: getEmoji('volume').toString()
             });
         }
@@ -226,9 +229,19 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
                     }
                 ] : []),
             ])
-            .setColor(u.hexAccentColor || 'Random')
+            // .setColor(u.hexAccentColor || 'Random')
             .setTimestamp(u.createdTimestamp)
             .setFooter({ text: 'Created at' });
+        const avatar = u.displayAvatarURL();
+        if (avatar) {
+            // const listening = sData.activities.find(a => a.type === ActivityType.Listening);
+            // const image = listening?.assets?.large_image;
+            // console.log(listening)
+            // const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
+            const imagew = await loadImage(avatar);
+            const dColor = getTwoMostUsedColors(imagew);
+            embed.setColor(dColor[0]);
+        }
         const sentMessage = message ? await message.reply({
             embeds: [embed],
             allowedMentions: { repliedUser: true },
@@ -246,13 +259,15 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
                 )
             ]
         });
+
+
         const collector = sentMessage?.createMessageComponentCollector({ filter: i => i.customId === buttonId });
         collector?.on('collect', async i => {
             const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
             const reviews: any[] = reviewsRes.data.reviews;
             const embed = new EmbedBuilder()
                 .setTitle('Reviews')
-                .setAuthor({ name: u.tag, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${user.id}` })
+                .setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
                 .setColor(u.hexAccentColor || 'Random')
                 .setTimestamp();
             if (reviews) {
