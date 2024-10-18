@@ -121,6 +121,6 @@ export async function getCachedSite(site: string, wait: boolean = false) {
 }
 
 export async function cacheSite(site: string, wait: boolean, data: Buffer) {
-	await redis.set(`${site}:${wait}:${site}`, data.toString('base64'), 'EX', 600);
+	await redis.set(`site:${wait}:${site}`, data.toString('base64'), 'EX', 600);
 	return data;
 }

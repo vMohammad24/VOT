@@ -7,6 +7,9 @@ import commandHandler from '..';
 const emojis = new Map<string, ApplicationEmoji>();
 
 export function getEmoji(name: string) {
+	if (commandHandler.verbose && !emojis.has(name)) {
+		commandHandler.logger.warn(`Emoji ${name} not found`);
+	};
 	return emojis.get(name)!;
 }
 
