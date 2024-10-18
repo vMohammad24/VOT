@@ -18,7 +18,7 @@ export default {
             return { content: "Couldn't find the message" };
         }
         const avatar = message.author.displayAvatarURL({ size: 1024 });
-        const content = message.content;
+        const content = message.cleanContent;
         const userName = message.author.username;
         const loadedAvatar = await loadImage(avatar);
         const width = 1200;
