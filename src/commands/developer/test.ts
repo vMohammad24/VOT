@@ -10,9 +10,10 @@ function generateBraveServicesKey(apiKey: string): string {
 const browser = await launchPuppeteer();
 
 
+
 export default {
 	description: 'test command for devs',
-	// perms: 'dev',
+	perms: 'dev',
 	type: 'all',
 	// cooldown: 60000,
 	disabled: commandHandler.prodMode,
