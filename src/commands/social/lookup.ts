@@ -1,6 +1,6 @@
 import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "discord.js";
 import { filesize } from "filesize";
 import numeral from "numeral";
 import UserAgent from "user-agents";
@@ -130,6 +130,7 @@ interface RangeUser {
     description: string;
     avatar: string;
     background: string;
+    background_color: string;
     audio: string;
     uid: string;
     view_count: string;
@@ -285,7 +286,7 @@ export default {
                                 { name: 'View Count', value: numeral(user.view_count).format('0,0'), inline: true },
                                 { name: 'Discord', value: user.discord_id ? `<@${user.discord_id}>` : 'Not linked', inline: true }
                             ])
-                            .setColor('Random')
+                            .setColor(user.background_color as ColorResolvable)
                             .setFooter({ text: `UID: ${user.uid} • Created` })
                             .setTimestamp(new Date(user.created_at))
                     ]
