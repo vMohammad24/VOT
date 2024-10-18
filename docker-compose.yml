@@ -30,7 +30,7 @@ services:
     depends_on:
       - vot
   postgres:
-    image: postgres:16
+    image: pgautoupgrade/pgautoupgrade:latest
     container_name: postgres
     restart: always
     profiles:
@@ -45,6 +45,7 @@ services:
       - 5432
     volumes:
       - ./db/data_prod:/var/lib/postgresql/data
+    command: ['sh', '-c', 'pg_dump -U postgres -d vot > /var/lib/postgresql/data/backup.sql && postgres']
   lavalink:
     image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
@@ -92,7 +93,7 @@ services:
       - ./caddy/certs:/etc/caddy/certs # (Optional) Cloudflare Origin Certs
 
   postgres_dev:
-    image: postgres:16
+    image: pgautoupgrade/pgautoupgrade:latest
     container_name: postgres
     restart: unless-stopped
     profiles:
@@ -105,6 +106,7 @@ services:
       - '5432:5432'
     volumes:
       - ./db/data:/var/lib/postgresql/data
+    command: ['sh', '-c', 'pg_dump -U postgres -d vot > /var/lib/postgresql/data/backup.sql && postgres']
   lavalink_dev:
     image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
