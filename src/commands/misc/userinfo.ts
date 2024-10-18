@@ -8,6 +8,7 @@ import {
     ApplicationCommandOptionType,
     ButtonBuilder,
     ButtonStyle,
+    ColorResolvable,
     EmbedBuilder,
     GuildMember,
     User,
@@ -34,11 +35,12 @@ interface Badge {
 }
 
 interface Connection {
-    type: string[];
+    type: string;
     name: string;
     id: string;
     metadata: any;
     url: string | null;
+    emoji?: string;
 }
 
 interface UserInfo {
@@ -158,6 +160,7 @@ export default {
             }));
         }
         const buttonId = nanoid();
+        const connectionsButtonId = nanoid();
 
         const u = user instanceof GuildMember ? user.user : user;
         if (!u) return { content: 'User not found', ephemeral: true };
@@ -197,6 +200,7 @@ export default {
 ${(pUser && pUser.tier != UserTier.Normal) ? `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}` : ''}
 ${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
 ${sData.status ? `**Status**: ${sData.status}` : ''}
+${(badges && badges.length > 0) ? `**Badges**:\n## ${badges.map(badge => badge.emoji).join(' ')}` : ''}
 
 ${(sData.activities && sData.activities.length > 0) ? `## **Activities**:
  ${sData.activities.map(activity =>
@@ -204,16 +208,6 @@ ${(sData.activities && sData.activities.length > 0) ? `## **Activities**:
             ).join('\n')
                     }
     ` : ''}
-${(badges && badges.length > 0) ? `**Badges**:\n### ${badges.map(badge => badge.emoji).join('')}` : ''}
-
-${(connections && connections.length > 0) ? `**Connections**:
-${connections.map(connection => (
-                        connection.url ? `[${connection.name}](${connection.url})`
-                            : `${connection.type.includes('domain') ?
-                                `[${connection.name}](https://${connection.name})` :
-                                connection.name} ${connection.type.includes('unknown') ?
-                                    '' : `(${connection.type})`}`)).join('\n')}`
-                    : ''}
 
 ${(bio) ? `**Bio**:\n${bio}` : ''}
             `)
@@ -229,10 +223,11 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
                     }
                 ] : []),
             ])
-            // .setColor(u.hexAccentColor || 'Random')
+            // .setColor(embedColor)
             .setTimestamp(u.createdTimestamp)
             .setFooter({ text: 'Created at' });
         const avatar = u.displayAvatarURL();
+        let embedColor: ColorResolvable = 'Random';
         if (avatar) {
             // const listening = sData.activities.find(a => a.type === ActivityType.Listening);
             // const image = listening?.assets?.large_image;
@@ -240,6 +235,7 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
             // const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
             const imagew = await loadImage(avatar);
             const dColor = getTwoMostUsedColors(imagew);
+            embedColor = dColor[0];
             embed.setColor(dColor[0]);
         }
         const sentMessage = message ? await message.reply({
@@ -247,7 +243,8 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
             allowedMentions: { repliedUser: true },
             components: [
                 new ActionRowBuilder<ButtonBuilder>().addComponents(
-                    new ButtonBuilder().setLabel('View reviews').setStyle(ButtonStyle.Primary).setCustomId(buttonId)
+                    new ButtonBuilder().setLabel('View reviews').setStyle(ButtonStyle.Primary).setCustomId(buttonId),
+                    new ButtonBuilder().setLabel('View connections').setStyle(ButtonStyle.Secondary).setCustomId(connectionsButtonId)
                 )
             ]
         }) : await interaction!.editReply({
@@ -255,31 +252,54 @@ ${(bio) ? `**Bio**:\n${bio}` : ''}
             allowedMentions: { repliedUser: true },
             components: [
                 new ActionRowBuilder<ButtonBuilder>().addComponents(
-                    new ButtonBuilder().setLabel('View reviews').setStyle(ButtonStyle.Primary).setCustomId(buttonId)
+                    new ButtonBuilder().setLabel('View reviews').setStyle(ButtonStyle.Primary).setCustomId(buttonId),
+                    new ButtonBuilder().setLabel('View connections').setStyle(ButtonStyle.Secondary).setCustomId(connectionsButtonId)
                 )
             ]
         });
 
-
-        const collector = sentMessage?.createMessageComponentCollector({ filter: i => i.customId === buttonId });
+        const collector = sentMessage?.createMessageComponentCollector({ filter: i => i.customId === buttonId || i.customId === connectionsButtonId });
         collector?.on('collect', async i => {
-            const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
-            const reviews: any[] = reviewsRes.data.reviews;
-            const embed = new EmbedBuilder()
-                .setTitle('Reviews')
-                .setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
-                .setColor(u.hexAccentColor || 'Random')
-                .setTimestamp();
-            if (reviews) {
-                reviews.shift();
-                if (reviews.length <= 0) return i.reply({ content: 'No reviews found', ephemeral: true });
-                embed.setDescription(reviews.map(review => `- **${review.sender.username}** - ${review.comment}`).join('\n'));
+            if (i.customId === buttonId) {
+                const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
+                const reviews: any[] = reviewsRes.data.reviews;
+                const embed = new EmbedBuilder()
+                    .setTitle('Reviews')
+                    .setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
+                    .setColor(embedColor)
+                    .setTimestamp();
+                if (reviews) {
+                    reviews.shift();
+                    if (reviews.length <= 0) return i.reply({ content: 'No reviews found', ephemeral: true });
+                    embed.setDescription(reviews.map(review => `- **${review.sender.username}** - ${review.comment}`).join('\n'));
+                }
+                i.reply({
+                    embeds: [embed],
+                    ephemeral: true,
+                    allowedMentions: { repliedUser: true }
+                });
+            } else if (i.customId === connectionsButtonId) {
+                const embed = new EmbedBuilder()
+                    .setTitle('Connections')
+                    .setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
+                    .setColor(embedColor)
+                    .setTimestamp();
+                if (connections && connections.length > 0) {
+                    embed.setDescription(connections.map(connection => {
+                        connection.emoji = (getEmoji(connection.type.replace('unknown_', '').replace('-', '_')) || '❓').toString() || '❓';
+                        if (!connection.url && connection.type.includes('domain')) connection.url = `https://${connection.name}`;
+                        if (connection.url) connection.url = encodeURI(connection.url);
+                        return `${connection.emoji} **${connection.url ? `[${connection.name}](${connection.url})` : connection.name}**`
+                    }).join('\n\n'));
+                } else {
+                    embed.setDescription('No connections found');
+                }
+                i.reply({
+                    embeds: [embed],
+                    ephemeral: true,
+                    allowedMentions: { repliedUser: true }
+                });
             }
-            i.reply({
-                embeds: [embed],
-                ephemeral: true,
-                allowedMentions: { repliedUser: true }
-            });
         });
     }
 } as ICommand;

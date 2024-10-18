@@ -41,7 +41,7 @@ export default class SlashCommandHandler {
 	}
 
 	public async initCommands(client: Client) {
-		const commands = this.commands.filter(isICommand).filter(a => a.category != null).map((cmd: ICommand) => {
+		const commands = this.commands.filter(isICommand).filter(a => (a.category != null && !a.disabled)).map((cmd: ICommand) => {
 			let perms: bigint | null = 0n;
 			if (!cmd.options) cmd.options = [];
 			if (cmd.perms && cmd.perms != 'dev') {

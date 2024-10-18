@@ -3,6 +3,7 @@ import axios from "axios";
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import { filesize } from "filesize";
 import numeral from "numeral";
+import UserAgent from "user-agents";
 import ICommand from "../../handler/interfaces/ICommand";
 import { getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
@@ -118,6 +119,25 @@ interface TikTokResponse {
     needFix: boolean;
 }
 
+interface Badge {
+    tooltip: string;
+    url: string;
+}
+
+interface RangeUser {
+    username: string;
+    display_name: string;
+    description: string;
+    avatar: string;
+    background: string;
+    audio: string;
+    uid: string;
+    view_count: string;
+    discord_id: string;
+    created_at: string;
+    badges: Badge[];
+}
+const userAgent = new UserAgent();
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -135,6 +155,10 @@ export default {
                 {
                     name: 'tiktok',
                     value: 'tiktok'
+                },
+                {
+                    name: 'range.wtf',
+                    value: 'range.wtf'
                 }
             ]
         },
@@ -197,38 +221,73 @@ export default {
                     ]
                 }
             case 'tiktok':
-                const res = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`);
-                const tiktokData = res.data;
+                const tRes = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`);
+                const tiktokData = tRes.data;
                 if (!tiktokData) return {
                     ephemeral: true,
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
                 }
-                const data: TikTokResponse = tiktokData;
-                if (data.statusCode != 0) return {
+                const tData: TikTokResponse = tiktokData;
+                if (tData.statusCode != 0) return {
                     ephemeral: true,
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\` (1)`
                 }
                 const embed = new EmbedBuilder()
                     // .setAuthor({ name: data.userInfo.user.nickname, url: `https://www.tiktok.com/@${data.userInfo.user.uniqueId}`, iconURL: data.userInfo.user.avatarThumb })
-                    .setTitle(`${data.userInfo.user.nickname} ${data.userInfo.user.verified ? getEmoji('verified').toString() : ''}`)
-                    .setURL(`https://www.tiktok.com/@${data.userInfo.user.uniqueId}`)
-                    .setThumbnail(data.userInfo.user.avatarLarger)
+                    .setTitle(`${tData.userInfo.user.nickname} ${tData.userInfo.user.verified ? getEmoji('verified').toString() : ''}`)
+                    .setURL(`https://www.tiktok.com/@${tData.userInfo.user.uniqueId}`)
+                    .setThumbnail(tData.userInfo.user.avatarLarger)
                     .addFields([
                         // { name: 'Username', value: data.userInfo.user.uniqueId, inline: true },
-                        { name: 'Followers', value: numeral(data.userInfo.stats.followerCount).format('0,0'), inline: true },
-                        { name: 'Following', value: numeral(data.userInfo.stats.followingCount).format('0,0'), inline: true },
-                        { name: 'Friends', value: numeral(data.userInfo.stats.friendCount).format('0,0'), inline: true },
-                        { name: 'Hearts', value: numeral(data.userInfo.stats.heart).format('0,0'), inline: true },
-                        { name: 'Videos', value: numeral(data.userInfo.stats.videoCount).format('0,0'), inline: true },
+                        { name: 'Followers', value: numeral(tData.userInfo.stats.followerCount).format('0,0'), inline: true },
+                        { name: 'Following', value: numeral(tData.userInfo.stats.followingCount).format('0,0'), inline: true },
+                        { name: 'Friends', value: numeral(tData.userInfo.stats.friendCount).format('0,0'), inline: true },
+                        { name: 'Hearts', value: numeral(tData.userInfo.stats.heart).format('0,0'), inline: true },
+                        { name: 'Videos', value: numeral(tData.userInfo.stats.videoCount).format('0,0'), inline: true },
                         // { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
                     ])
-                    .setDescription(data.userInfo.user.signature || 'No bio')
-                    .setColor(data.userInfo.user.avatarLarger ? (getTwoMostUsedColors(await loadImage(data.userInfo.user.avatarLarger)))[0] : 'Random')
-                    .setTimestamp(new Date(data.userInfo.user.createTime * 1000))
+                    .setDescription(tData.userInfo.user.signature || 'No bio')
+                    .setColor(tData.userInfo.user.avatarLarger ? (getTwoMostUsedColors(await loadImage(tData.userInfo.user.avatarLarger)))[0] : 'Random')
+                    .setTimestamp(new Date(tData.userInfo.user.createTime * 1000))
                     .setFooter({ text: 'Account created on' })
                 return {
                     embeds: [
                         embed
+                    ]
+                }
+            case 'range.wtf':
+                const url = `https://xjig.cc/rangewtfapi57yfv2475ty34/c476hn85923.php?username=${query}`;
+                const res = await axios.get(url);
+                const { data } = res;
+                if (!data.success) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const user = data.data as RangeUser;
+                // const avatarImg = user.avatar ? await loadImage(user.avatar, {
+                //     requestOptions: {
+                //         headers: {
+                //             'User-Agent': userAgent.random().toString(),
+                //             'cookie': 'PHPSESSID=6v9g6br11q29jafjhq0saehval'
+                //         }
+                //     }
+                // }) : null;
+                return {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({ name: user.display_name, iconURL: user.avatar })
+                            .setTitle(user.username)
+                            .setURL(`https://range.wtf/${user.username}`)
+                            .setDescription(user.description)
+                            .setThumbnail(user.avatar)
+                            .setImage(user.background)
+                            .addFields([
+                                { name: 'View Count', value: numeral(user.view_count).format('0,0'), inline: true },
+                                { name: 'Discord', value: user.discord_id ? `<@${user.discord_id}>` : 'Not linked', inline: true }
+                            ])
+                            .setColor('Random')
+                            .setFooter({ text: `UID: ${user.uid} • Created` })
+                            .setTimestamp(new Date(user.created_at))
                     ]
                 }
             default:

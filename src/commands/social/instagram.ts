@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
@@ -278,26 +277,35 @@ export default {
                 const url = interaction.options.getString('url', true);
                 const heartEmoji = getEmoji('heart')
                 const likeEmoji = getEmoji('like')
-                const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url);
-                const data = res.data as IJsonResponse;
+                const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":'
+                const page = await browser.newPage();
+                const res = await page.goto(url)//await axios.get('https://www.instagram.com/reels/')
+                const data = await res!.content();
+                page.close();
+                const body = Buffer.from(data).toString('utf-8');
+                const index = body.indexOf(lookFor)
+                const endIndex = body.indexOf('</script>', index)
+                // console.log(lookFor + body.slice(index + lookFor.length, endIndex))
+                const json = JSON.parse(lookFor + body.slice(index + lookFor.length, endIndex));
                 if (!data) return { content: 'No data found', ephemeral: true };
+                const media = json.require[0][3][0].__bbox.require[0][3][1].__bbox.result.data.xdt_api__v1__clips__clips_on_logged_out_connection_v2.edges[0].node.media as Media;
                 const embed = new EmbedBuilder()
-                    .setTitle(data.caption?.text.substring(0, 256) || 'No Caption')
-                    .setURL(url)
-                    .setAuthor({ name: data.user.username, iconURL: data.user.profile_pic_url })
-                    .setThumbnail(data.image_versions2.candidates[0].url)
+                    .setTitle(media.caption?.text.substring(0, 256) || 'No Caption')
+                    .setURL(`https://www.instagram.com/p/${media.code}`)
+                    .setAuthor({ name: media.user.username, iconURL: media.user.profile_pic_url })
+                    .setThumbnail(media.image_versions2.candidates[0].url)
                     // .addFields(
                     //     { name: 'Likes', value: numeral(data.like_count).format('0,0'), inline: true },
                     //     { name: 'Comments', value: numeral(data.comment_count).format('0,0'), inline: true },
                     //     { name: 'Views', value: numeral(data.view_count!).format('0,0') || 'N/A', inline: true },
                     // )
                     .setDescription(
-                        `## ${getEmoji('like').toString()} ${numeral(data.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(data.comment_count).format('0,0')}`
+                        `## ${getEmoji('like').toString()} ${numeral(media.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(media.comment_count).format('0,0')}`
                     )
-                    .setTimestamp(new Date(data.taken_at * 1000))
+                    .setTimestamp(new Date(media.taken_at * 1000))
                     .setFooter({ text: 'Uploaded' });
 
-                const videoUrl = data.video_versions[0]?.url;
+                const videoUrl = media.video_versions[0]?.url;
                 if (videoUrl) {
                     const attachment = new AttachmentBuilder(videoUrl, { name: `VOT_Instagram_Repost.mp4` });
                     return { embeds: [embed], files: [attachment] };

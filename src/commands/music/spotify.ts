@@ -3,6 +3,7 @@ import { EmbedBuilder, GuildMember } from 'discord.js';
 import { KazagumoTrack } from 'kazagumo';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { getEmoji } from '../../util/emojis';
 
 
 interface UserStatus {
@@ -50,6 +51,7 @@ export default {
 	description: 'Gets your current playing song from spotify and adds it to the queue',
 	// needsPlayer: true,
 	aliases: ['sp'],
+	type: 'all',
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
 		await interaction?.deferReply({ ephemeral: true });
 
@@ -153,14 +155,18 @@ export default {
 				ephemeral: true,
 			};
 		} else {
+			const info = track.getRaw()._raw.pluginInfo as {
+				artistUrl: string;
+				artistArtworkUrl: string;
+			}
 			return {
 				embeds: [
 					new EmbedBuilder()
-						.setTitle('Spotify - Currently Playing')
+						.setTitle(getEmoji('spotify').toString() + ' Spotify')
 						.setColor('Green')
-						.setDescription(`[${track.title || 'Error getting title'}](${track.uri})`)
+						.setDescription(`### Currently Playing:\n[${track.title || 'Error getting title'}](${track.uri})`)
 						.setThumbnail(track.thumbnail || null)
-						.setAuthor({ name: track.author || 'Error getting author' })
+						.setAuthor({ name: track.author || 'Error getting author', iconURL: info.artistArtworkUrl, url: info.artistUrl })
 				]
 			}
 		}

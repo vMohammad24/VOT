@@ -59,12 +59,11 @@ export default {
 				ephemeral: true
 			};
 		}
-		await interaction?.deferReply();
-		const time = Date.now();
 		if (blacklist.includes(urlObject.hostname)) return {
 			ephemeral: true,
 			content: `This site is blacklisted.`
 		}
+		const time = Date.now();
 		const cached = await getCachedSite(url, wait);
 		if (cached) return {
 			files: [
@@ -75,6 +74,7 @@ export default {
 			],
 			content: `-# Took ${Date.now() - time}ms`
 		}
+		await interaction?.deferReply();
 		const page = await browser.newPage();
 		try {
 			await page.goto(url, {
@@ -98,7 +98,11 @@ export default {
 				content: `This site has screenshotting disabled.`
 			}
 		}
-		if (wait) await page.waitForNetworkIdle();
+		if (wait) await page.waitForNetworkIdle({
+			timeout: 3000,
+			idleTime: 100,
+		});
+		// if (wait) await page.waitForNavigation();
 		const screenshot = await page.screenshot({
 			// quality: 50,
 			// optimizeForSpeed: true,
