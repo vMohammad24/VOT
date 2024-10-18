@@ -132,6 +132,7 @@ model Guild {
   members         Member[]
   memberCount     Int              @default(0)
   onlineCount     Int              @default(0)
+  autoRole        String?
 }
 
 model Ticket {

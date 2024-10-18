@@ -105,7 +105,7 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 60); // Expires in 1 hour
+	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 10); // Expires in 1 hour
 	return guildData;
 }
 
