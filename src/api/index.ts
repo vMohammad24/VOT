@@ -1,7 +1,9 @@
 import { cors } from '@elysiajs/cors';
+import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType } from 'discord.js';
-import Elysia from 'elysia';
-import commandHandler, { upSince } from '..';
+import { Elysia, t } from 'elysia';
+import commandHandler, { redis, upSince } from '..';
+import { getTwoMostUsedColors } from '../util/util';
 import discord from './discord';
 import spotify from './spotify';
 
@@ -50,6 +52,22 @@ elysia.get('/commands/:name', ({ params: { name }, set }) => {
 	}
 	return command;
 });
+
+elysia.get('/mostUsedColors', async ({ query }) => {
+	const { url } = query;
+	// if (!file.type.startsWith('image')) return { error: 'Invalid file type' };
+	const cached = await redis.get(`colors:${url}`);
+	if (cached) return JSON.parse(cached);
+	const image = await loadImage(url);
+	const colors = getTwoMostUsedColors(image);
+	await redis.set(`colors:${url}`, JSON.stringify(colors), 'EX', 60 * 60);
+	return colors;
+}, {
+	query: t.Object({
+		url: t.String(),
+	})
+})
+
 
 discord(elysia);
 spotify(elysia);
