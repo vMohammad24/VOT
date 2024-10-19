@@ -8,10 +8,7 @@ export default function (command: ICommand, ctx: CommandContext) {
 	const { member, user } = ctx;
 	if (perms === 'dev') {
 		if (!ctx.handler.developers.includes(user.id))
-			return {
-				content: 'This command is only available to the bot developers',
-				ephemeral: true,
-			};
+			return false;
 		else return true;
 	}
 	const missingPerms = perms.filter((a) => !member.permissions.has(a));

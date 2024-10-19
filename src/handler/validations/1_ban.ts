@@ -4,6 +4,6 @@ import type { CommandContext } from '../interfaces/ICommand';
 export default async function (command: ICommand, ctx: CommandContext) {
 	const { handler, user } = ctx;
 	const { banned } = await getUser(user, { banned: true });
-	if (banned) return 'You are banned from using VOT.';
+	if (banned) return false;
 	return true;
 }
