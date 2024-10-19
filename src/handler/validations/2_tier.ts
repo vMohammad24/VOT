@@ -14,10 +14,10 @@ export default async function (command: ICommand, ctx: CommandContext) {
 		if (!u) return 'You are not in the database';
 		switch (userTier) {
 			case 'Beta':
-				if (u.tier != 'Beta') return 'You need to be a beta tester to use this command';
+				if (u.tier != 'Beta' || u.tier != 'Staff') return false;
 				break;
 			case 'Premium':
-				if (u.tier != UserTier.Premium && u.tier != UserTier.Beta && u.tier != UserTier.Staff) return 'You need to be a premium user to use this command';
+				if (u.tier != UserTier.Premium && u.tier != UserTier.Beta && u.tier != UserTier.Staff) return false;
 				break;
 			default:
 				return 'Invalid tier';
