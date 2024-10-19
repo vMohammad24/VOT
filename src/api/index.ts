@@ -3,7 +3,7 @@ import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Elysia, t } from 'elysia';
 import commandHandler, { redis, upSince } from '..';
-import { getTwoMostUsedColors } from '../util/util';
+import { getTwoMostUsedColors, rgbToHex } from '../util/util';
 import discord from './discord';
 import spotify from './spotify';
 
@@ -59,7 +59,13 @@ elysia.get('/mostUsedColors', async ({ query }) => {
 	const cached = await redis.get(`colors:${url}`);
 	if (cached) return JSON.parse(cached);
 	const image = await loadImage(url);
-	const colors = getTwoMostUsedColors(image);
+	const mostUsed = getTwoMostUsedColors(image);
+	const colors = mostUsed.map((color) => ({
+		r: color[0],
+		g: color[1],
+		b: color[2],
+		hex: rgbToHex(color),
+	}));
 	await redis.set(`colors:${url}`, JSON.stringify(colors), 'EX', 60 * 60);
 	return colors;
 }, {
