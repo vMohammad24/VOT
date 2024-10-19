@@ -47,66 +47,33 @@ export default {
 		const searchRes = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(question)}&source=web`)
 		const regex = /const\s+data\s*=\s*(\[.*?\]|\{.*?\})\s*;/s; // Matches the JSON array/object, stops before any trailing semicolons or code
 		const webMessage = (searchRes.data as string).match(regex);
-
-		// const webRes = await axios.get(`https://api.evade.rest/search?query=${encodeURIComponent(question)}`);
-		// const { data: webData } = webRes;
-		// let webMessage = 'No web results found';
-		// let webLength = 0;
-		// if (webData && webData.response && webData.response.web.results) {
-		// 	const webResults: {
-		// 		profile: { name: string };
-		// 		title: string;
-		// 		description: string;
-		// 		url: string;
-		// 		page_age: string;
-		// 		content: string;
-		// 	}[] = webData.response.web.results as {
-		// 		profile: { name: string };
-		// 		title: string;
-		// 		description: string;
-		// 		url: string;
-		// 		page_age: string;
-		// 		content: string;
-		// 	}[];
-		// 	webMessage = webResults.map((result) =>
-		// 		`WEBRESULT: ${result.title} (${result.description}) from ${result.url} (page age: ${result.page_age})`
-		// 	).join('\n')
-		// 	webLength = webResults.length;
-		// }
 		await editReply('Gathering previous conversations...', rMsg);
-		// const trainingData = await handler.prisma.trainingData.findMany({
-		// 	where: {
-		// 		userId: user.id
-		// 	},
-		// 	orderBy: {
-		// 		createdAt: 'asc'
-		// 	},
-		// 	take: 0
-		// })
-		// const trainingMessages: {
-		// 	role: 'user' | 'assistant';
-		// 	content: string;
-		// }[] = [];
-		// trainingData.forEach((data) => {
-		// 	trainingMessages.push(
-		// 		{
-		// 			role: 'user',
-		// 			content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
-		// 		},
-		// 		{
-		// 			role: 'assistant',
-		// 			content: data.response || "no response."
-		// 		}
-		// 	)
-		// })
+		const trainingData = await handler.prisma.trainingData.findMany({
+			where: {
+				userId: user.id
+			},
+			orderBy: {
+				createdAt: 'asc'
+			},
+			take: 0
+		})
+		const trainingMessages: {
+			role: 'user' | 'assistant';
+			content: string;
+		}[] = [];
+		trainingData.forEach((data) => {
+			trainingMessages.push(
+				{
+					role: 'user',
+					content: data.question + `\n\n$${data.context ? `Context: ${data.context}` : ''}`,
+				},
+				{
+					role: 'assistant',
+					content: data.response || "no response."
+				}
+			)
+		})
 		await editReply('Generating response...', rMsg);
-		// get all urls
-		const urls = question.match(/https?:\/\/[^\s]+/g) || [];
-		const responses = await Promise.all(urls.map(async (url: any) => {
-			const res = await axios.get(url);
-			return `*${url}*: ${res.data}`;
-		}))
-		// console.log(urls, responses)
 		const messages = [
 			{
 				role: 'user',
@@ -117,34 +84,46 @@ export default {
 				content:
 					'I am VOT, a discord bot created by vmohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.',
 			},
+			...trainingData,
 			{
 				role: 'user',
-				content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
-					handler.commands?.map((c) => ({
-						name: c.name,
-						description: c.description,
-						options: c.options,
-						type: c.type,
-						cateogry: c.category,
-						commandId: c.id,
-					})),
-				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
+				content: question,
+			}
+		];
+		// console.log(messages)
+		await editReply('Processing...', rMsg);
+		const res = await axios
+			.post(
+				'https://api.evade.rest/llama',
+				{
+					messages,
+					props: {
+						system: `You are VOT, use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
+							handler.commands?.map((c) => ({
+								name: c.name,
+								description: c.description,
+								options: c.options,
+								type: c.type,
+								cateogry: c.category,
+								commandId: c.id,
+							})),
+						)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
 				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
 			    ${guild
-						? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+								? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
 			    ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).user.tag}`
-						: ''
-					}.\n\n
+								: ''
+							}.\n\n
 			    .\n\n
 			    if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
 			    ${channel
-						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
-							? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
+								? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
+									? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
 			    			${channelMessage}`
-							: ''
-						}`
-						: ''
-					}.\n\n
+									: ''
+								}`
+								: ''
+							}.\n\n
 			    note that you can respond to anything not related to vot.\n\n
 			    also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
 				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows although you should never prioritize  them above channel messages or pinned messages:\n\n
@@ -156,42 +135,11 @@ export default {
 				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
 				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
 				when mentioning a message always use the following format (url) "https://discord.com/channels/guildId/channelId/messageId" where channelId is the id of the channel and messageId is the id of the message,and guildId is the id of the server you are currently in (${guild ? guild.id : '(not in a guild)'}), this will allow the user to click on the message and view it.\n\n
-			    This is some data provided by the user ${responses}
 				`,
-			},
-			{
-				role: 'assistant',
-				content: 'Ok, from now on I will respond to any command questions using the json object you provided.',
-			},
-			// {
-			// 	role: 'user',
-			// 	content: `parse ${urls}`,
-			// },
-			// {
-			// 	role: 'assistant',
-			// 	content: `These are the responses that i have gotten from the following sites ${responses.join('\n')}`,
-			// }
-			// ...trainingData
-		];
-		messages.push(
-			{
-				role: 'user',
-				content: question,
-			}
-		)
-		console.log(messages)
-		await editReply('Processing...', rMsg);
-		const res = await axios
-			.post(
-				'https://api.evade.rest/streamingchat',
-				{
-					messages,
-					// 	props: {
-					// 		system: null,
-					// 		top_p: null,
-					// 		temperature: null,
-					// 		forceWeb: null,
-					// 	}
+						top_p: 0.9,
+						temperature: 1,
+						forceWeb: null,
+					}
 				},
 				{
 					headers: {
@@ -208,11 +156,10 @@ export default {
 				ephemeral: true
 			}
 		}
-		console.log(res.data)
 		if (typeof res.data == 'string' && (res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
-		const response = res.data || '';//.short || '';
+		const response = res.data.short || '';//.short || '';
 		await pagination({
 			interaction,
 			message,
