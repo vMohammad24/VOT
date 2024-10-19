@@ -81,6 +81,7 @@ export default {
 				timeout: 3000
 			});
 		} catch (e) {
+			console.error(e)
 			return {
 				ephemeral: true,
 				content: `This site is not reachable.`

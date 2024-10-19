@@ -1,9 +1,7 @@
 import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
 import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "discord.js";
-import { filesize } from "filesize";
 import numeral from "numeral";
-import UserAgent from "user-agents";
 import ICommand from "../../handler/interfaces/ICommand";
 import { getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
@@ -138,7 +136,16 @@ interface RangeUser {
     created_at: string;
     badges: Badge[];
 }
-const userAgent = new UserAgent();
+
+interface BiographyUser {
+    id: number;
+    username: string;
+    created_at: string;
+    bio: string;
+    aboutme: string;
+    invite_code: string;
+    invited_by: string;
+}
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -154,13 +161,17 @@ export default {
                     value: 'nest.rip'
                 },
                 {
-                    name: 'tiktok',
+                    name: 'Tiktok',
                     value: 'tiktok'
                 },
                 {
                     name: 'range.wtf',
                     value: 'range.wtf'
-                }
+                },
+                // {
+                //     name: 'Biography',
+                //     value: 'biography'
+                // }
             ]
         },
         {
@@ -210,7 +221,7 @@ export default {
                                 { name: 'Rank', value: captitalizeString(nUser.rank), inline: true },
                                 { name: 'Contributor', value: nUser.contributor ? 'Yes' : 'No', inline: true },
                                 // { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
-                                { name: 'Storage Used', value: filesize(nUser.storage_used), inline: true },
+                                { name: 'Storage Used', value: numeral(nUser.storage_used).format('0.00b'), inline: true },
                                 { name: 'Uploads', value: numeral(nUser.uploads).format('0,0'), inline: true },
                             ])
                             .setDescription((!nUser || !nUser.bio || nUser.bio.trim() == '') ? null : nUser.bio)
@@ -258,13 +269,13 @@ export default {
                 }
             case 'range.wtf':
                 const url = `https://xjig.cc/rangewtfapi57yfv2475ty34/c476hn85923.php?username=${query}`;
-                const res = await axios.get(url);
-                const { data } = res;
-                if (!data.success) return {
+                const rRes = await axios.get(url);
+                const { data: rData } = rRes;
+                if (!rData.success) return {
                     ephemeral: true,
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
                 }
-                const user = data.data as RangeUser;
+                const rUser = rData.data as RangeUser;
                 // const avatarImg = user.avatar ? await loadImage(user.avatar, {
                 //     requestOptions: {
                 //         headers: {
@@ -276,21 +287,47 @@ export default {
                 return {
                     embeds: [
                         new EmbedBuilder()
-                            .setAuthor({ name: user.display_name, iconURL: user.avatar })
-                            .setTitle(user.username)
-                            .setURL(`https://range.wtf/${user.username}`)
-                            .setDescription(user.description)
-                            .setThumbnail(user.avatar)
-                            .setImage(user.background)
+                            .setAuthor({ name: rUser.display_name, iconURL: rUser.avatar })
+                            .setTitle(rUser.username)
+                            .setURL(`https://range.wtf/${rUser.username}`)
+                            .setDescription(rUser.description)
+                            .setThumbnail(rUser.avatar)
+                            .setImage(rUser.background)
                             .addFields([
-                                { name: 'View Count', value: numeral(user.view_count).format('0,0'), inline: true },
-                                { name: 'Discord', value: user.discord_id ? `<@${user.discord_id}>` : 'Not linked', inline: true }
+                                { name: 'View Count', value: numeral(rUser.view_count).format('0,0'), inline: true },
+                                { name: 'Discord', value: rUser.discord_id ? `<@${rUser.discord_id}>` : 'Not linked', inline: true }
                             ])
-                            .setColor(user.background_color as ColorResolvable)
-                            .setFooter({ text: `UID: ${user.uid} • Created` })
-                            .setTimestamp(new Date(user.created_at))
+                            .setColor(rUser.background_color as ColorResolvable)
+                            .setFooter({ text: `UID: ${rUser.uid} • Created` })
+                            .setTimestamp(new Date(rUser.created_at))
                     ]
                 }
+            // case 'biography':
+            //     const res = await axios.get(`https://bio.polardev.net/api/${query}`);
+            //     if(res.status != 200) return {
+            //         ephemeral: true,
+            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+            //     }
+            //     const bUser = res.data as BiographyUser;
+            //     if(!bUser.id && bUser.id != 0) return {
+            //         ephemeral: true,
+            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+            //     }
+            //     return {
+            //         embeds: [
+            //             new EmbedBuilder()
+            //                 .setAuthor({ name: bUser.username, iconURL: `https://bio.polardev.net/avatars/${bUser.id}` })
+            //                 .setTitle(bUser.username)
+            //                 .setDescription(bUser.bio)
+            //                 .addFields([
+            //                     { name: 'About Me', value: bUser.aboutme || 'No bio' },
+            //                 ])
+            //                 .setThumbnail(`https://bio.polardev.net/avatars/${bUser.id}`)
+            //                 .setColor('Random')
+            //                 .setFooter({ text: `ID: ${bUser.id} • Created` })
+            //                 .setTimestamp(new Date(bUser.created_at))
+            //         ]
+            //     }
             default:
                 return { ephemeral: true, content: `I'm sorry, but the service "${service}" is not yet supported.` };
         }
