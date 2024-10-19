@@ -182,7 +182,7 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 process.on('uncaughtException', (err, origin) => {
-	commandHandler.logger.error('Uncaught Exception at: ', origin, ' reason: ', err);
+	commandHandler.logger.error('Uncaught Exception at: ' + origin + ' reason: ' + err);
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle('Uncaught Exception/Catch')
@@ -203,7 +203,7 @@ process.on('uncaughtException', (err, origin) => {
 });
 
 process.on('uncaughtExceptionMonitor', (err, origin) => {
-	commandHandler.logger.error('Uncaught Exception at: ', origin, ' reason: ', err);
+	commandHandler.logger.error('Uncaught Exception at: ' + origin, ' reason: ' + err);
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle('Uncaught Exception Monitor')

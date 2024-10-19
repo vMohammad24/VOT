@@ -95,6 +95,12 @@ interface UserStatus {
             suppress: boolean;
         } | null;
     }[]
+    last_online?: {
+        status: string;
+        before: string;
+        timestamp: number;
+        uid: string;
+    };
 }
 
 interface Activity {
@@ -199,18 +205,19 @@ export default {
             .setDescription(`
 ${(pUser && pUser.tier != UserTier.Normal) ? `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}` : ''}
 ${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
+${(sData && sData.last_online && sData.last_online.status == 'offline') ? `**Last Online**: <t:${sData.last_online.timestamp}:R>` : ''}
 ${sData.status ? `**Status**: ${sData.status}` : ''}
-${(badges && badges.length > 0) ? `**Badges**:\n## ${badges.map(badge => badge.emoji).join(' ')}` : ''}
+${(badges && badges.length > 0) ? `### **Badges**:\n## ${badges.map(badge => badge.emoji).join(' ')}` : ''}
 
-${(sData.activities && sData.activities.length > 0) ? `## **Activities**:
+${(sData.activities && sData.activities.length > 0) ? `### **Activities**:
  ${sData.activities.map(activity =>
                 `${activity.emoji ?? ''} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`
             ).join('\n')
                     }
     ` : ''}
 
-${(bio) ? `**Bio**:\n${bio}` : ''}
-            `)
+${(bio) ? `## **Bio**:\n${bio}` : ''}
+            `.split('\n').filter(l => l.trim() != '').join('\n'))
             .setFields([
                 ...(user instanceof GuildMember ? [
                     {
