@@ -3,6 +3,7 @@ import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Elysia, t } from 'elysia';
 import commandHandler, { redis, upSince } from '..';
+import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
 import discord from './discord';
 import spotify from './spotify';
@@ -71,6 +72,20 @@ elysia.get('/mostUsedColors', async ({ query }) => {
 }, {
 	query: t.Object({
 		url: t.String(),
+	})
+})
+
+elysia.post('/googleLens', async ({ body }) => {
+	const { file } = body;
+	// if (file.type.startsWith('image')) return { error: 'File is not an image.' };
+	// const buffer = Buffer.from(await file.text());
+	const lens = new GoogleLens();
+	const result = await lens.searchByFile(file)
+	const filteredResults = result.similar.filter((item: { pageURL: any; sourceWebsite: any; thumbnail: any; }) => item.pageURL && item.sourceWebsite && item.thumbnail);
+	return filteredResults;
+}, {
+	body: t.Object({
+		file: t.File(),
 	})
 })
 

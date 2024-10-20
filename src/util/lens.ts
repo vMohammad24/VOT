@@ -67,17 +67,18 @@ export class GoogleLens {
         return data;
     }
 
-    async searchByFile(buffer: Buffer): Promise<any> {
+    async searchByFile(buffer: File): Promise<any> {
         const formData = new FormData();
-        formData.append('encoded_image', buffer);
+        formData.append('encoded_image', buffer, 'image.jpg');
         formData.append('image_content', '');
 
-        const response = await this.session.post(`${this.url}/upload`, formData, { maxRedirects: 0 });
-        const $ = cheerio.load(response.data);
-        const searchUrl = $('meta[http-equiv="refresh"]').attr('content')?.replace(/^.*URL='([^']+)'.*/, '$1');
+        const response = await this.session.post(`${this.url}/upload`, formData, {
+            // headers: formData.getHeaders(),
+            maxRedirects: 0,
+            // validateStatus: (status) => status >= 200 && status < 400
+        });
 
-        if (!searchUrl) throw new Error('Search URL not found');
-
+        const searchUrl = response.headers['location'];
         const searchResponse = await this.session.get(searchUrl);
         const prerenderScript = await this.getPrerenderScript(searchResponse.data);
 
