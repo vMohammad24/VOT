@@ -10,6 +10,7 @@ const restPing = async (client: Client) => {
 
 export default {
 	description: 'Pong!',
+	shouldCache: true,
 	execute: async ({ interaction, message, handler }) => {
 		await interaction?.deferReply();
 		const [restLatency, wsLatency, pStart] = await Promise.all([
@@ -24,7 +25,6 @@ export default {
 		const pEnd = Date.now();
 		handler.prisma.$disconnect();
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
-
 		return {
 			embeds: [
 				new EmbedBuilder()

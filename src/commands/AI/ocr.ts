@@ -35,6 +35,7 @@ const langs: { name: string; value: string }[] = [
 export default {
     description: 'Extract text from an image',
     category: 'ai',
+    shouldCache: true,
     options: [{
         name: 'image',
         description: 'The image you want to extract text from',

@@ -33,6 +33,7 @@
     "@types/user-agents": "latest",
     "axios": "latest",
     "bufferutil": "latest",
+    "cheerio": "latest",
     "discord.js": "latest",
     "elysia": "latest",
     "genius-lyrics": "latest",

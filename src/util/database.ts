@@ -31,6 +31,23 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 	return user;
 }
 
+
+export async function getCachedCommand(commandId: string, args: string, user: string, guild: string) {
+	const cachedCommand = await redis.get(`command:${commandId}:${args}:${user}:${guild}`);
+
+	if (cachedCommand) {
+		try {
+			return JSON.parse(cachedCommand);
+		} catch (e) {
+			return cachedCommand;
+		}
+	}
+
+	return null;
+}
+export async function cacheCommand(commandId: string, args: string, user: string, guild: string, response: string) {
+	return await redis.set(`command:${commandId}:${args}:${user}:${guild}`, response, 'EX', 60);
+}
 export async function getUserByID(id: string, select?: Prisma.UserSelect<DefaultArgs>) {
 	const cacheKey = `user:${id}:${JSON.stringify(select)}`;
 	const cachedUser = await redis.get(cacheKey);

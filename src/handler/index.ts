@@ -13,6 +13,7 @@ import path from 'path';
 import PinoLogger from 'pino';
 import { inspect } from 'util';
 import commandHandler from '..';
+import { cacheCommand, getCachedCommand } from '../util/database';
 import { getEmoji } from '../util/emojis';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
@@ -239,11 +240,21 @@ export default class CommandHandler {
 					},
 				});
 				const eStart = Date.now();
+				if (command.shouldCache && commandContext.guild.id && commandContext.user.id) {
+					const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
+					if (cachedCommand) {
+						return cachedCommand;
+					}
+				}
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
+				if (command.shouldCache && commandContext.guild.id && commandContext.user.id && result) {
+					await cacheCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id, JSON.stringify(result));
+				}
+				const cacheTime = Date.now() - executionTime - eStart;
 				const total = Date.now() - start;
 				if (commandHandler.verbose) {
-					commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`);
+					commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms) || cache: ${cacheTime}ms`);
 				}
 				return result;
 			} else {
