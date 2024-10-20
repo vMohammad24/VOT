@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
+import { getEmoji } from '../../util/emojis';
 import { GoogleLens } from '../../util/lens';
 import { pagination, PaginationPage } from '../../util/pagination';
 
@@ -28,8 +29,10 @@ export default {
         const lens = new GoogleLens();
         const result = await lens.searchByUrl(query)
         const filteredResults = result.similar.filter((item: { pageURL: any; sourceWebsite: any; thumbnail: any; }) => item.pageURL && item.sourceWebsite && item.thumbnail);
-        const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: any; title: any; pageURL: string | null; thumbnail: string | null; }) => ({
-            name: item.title.substring(0, 99) || 'No source',
+        const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: string; title: string; pageURL: string | null; thumbnail: string | null; }) => ({
+            name: item.sourceWebsite.substring(0, 99) || 'No source',
+            description: item.title.substring(0, 99) || 'No title',
+            emoji: (getEmoji(item.sourceWebsite.toLowerCase().split(' ')[0].trim()) || '').toString() || '🔍',
             page: {
                 embeds: [new EmbedBuilder()
                     .setTitle(item.sourceWebsite || 'No source')

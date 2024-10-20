@@ -1,5 +1,6 @@
 import {
 	ActionRowBuilder,
+	APISelectMenuOption,
 	ButtonBuilder,
 	ButtonStyle,
 	ChatInputCommandInteraction,
@@ -9,7 +10,9 @@ import {
 	Message,
 	MessageEditOptions,
 	MessageReplyOptions,
+	SelectMenuComponentOptionData,
 	StringSelectMenuBuilder,
+	StringSelectMenuOptionBuilder,
 } from 'discord.js';
 import { getEmoji } from './emojis';
 
@@ -17,6 +20,8 @@ export interface PaginationPage {
 	page: InteractionReplyOptions | MessageReplyOptions | EmbedBuilder;
 	name?: string;
 	pageNumber?: number;
+	emoji?: string;
+	description?: string;
 }
 
 export interface PaginationOptions {
@@ -117,9 +122,11 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 				throw new Error('Select type supports up to 25 pages. Use multipleSelect for more pages.');
 			}
 			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>();
-			const options = pages.map((e, index) => ({
+			const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] = pages.map((e, index) => ({
 				label: e.name || `Page ${index + 1}`,
 				value: index.toString(),
+				emoji: e.emoji,
+				description: e.description,
 			}));
 			const selectMenu = new StringSelectMenuBuilder()
 				.setCustomId(`${id}`)
@@ -183,9 +190,11 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 			for (let i = 0; i < selectMenuCount; i++) {
 				const start = i * 25;
 				const end = Math.min(start + 25, pages.length);
-				const options = pages.slice(start, end).map((e, index) => ({
-					label: e.name || `Page ${start + index + 1}`,
-					value: (start + index).toString(),
+				const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] = pages.map((e, index) => ({
+					label: e.name || `Page ${index + 1}`,
+					value: index.toString(),
+					emoji: e.emoji,
+					description: e.description,
 				}));
 				const selectMenu = new StringSelectMenuBuilder()
 					.setCustomId(`${id}_${i}`)
