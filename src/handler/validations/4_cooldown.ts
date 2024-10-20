@@ -6,7 +6,7 @@ const cooldowns = new Collection();
 
 export default async function (command: ICommand, ctx: CommandContext) {
 	const { cooldown } = command;
-	const { user, handler: { prisma } } = ctx;
+	const { user, handler: { prisma, logger } } = ctx;
 	if (!cooldown) return true;
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Collection());
@@ -34,6 +34,5 @@ export default async function (command: ICommand, ctx: CommandContext) {
 	}
 	timestamps.set(user.id, now);
 	setTimeout(() => timestamps.delete(user.id), cooldown);
-
 	return true;
 }
