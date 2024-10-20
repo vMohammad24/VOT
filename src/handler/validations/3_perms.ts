@@ -7,14 +7,11 @@ export default function (command: ICommand, ctx: CommandContext) {
 	const { perms } = command;
 	const { member, user } = ctx;
 	if (perms === 'dev') {
-		if (!ctx.handler.developers.includes(user.id))
-			return false;
-		else return true;
+		return ctx.handler.developers.includes(user.id);
 	}
 	const missingPerms = perms.filter((a) => !member.permissions.has(a));
 	if (missingPerms.length > 0)
 		return {
-			// content: `You are missing the following permissions: ${missingPerms.map((a) => '``' + a + '``').join(', ')}`,
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Missing Permissions')

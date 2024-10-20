@@ -4,24 +4,14 @@ import type ICommand from '../interfaces/ICommand';
 import { type CommandContext } from '../interfaces/ICommand';
 
 export default async function (command: ICommand, ctx: CommandContext) {
-	// TODO: make a way for ppl to parchase tiers
-
 	if (!command.userTier) return true;
 	const { userTier } = command;
-	const { user } = ctx;
+	const { user, handler: { logger } } = ctx;
 	if (userTier != 'Normal') {
 		const u = await getUserByID(user.id, { tier: true });
 		if (!u) return 'You are not in the database';
-		switch (userTier) {
-			case 'Beta':
-				if (u.tier != 'Beta' || u.tier != 'Staff') return false;
-				break;
-			case 'Premium':
-				if (u.tier != UserTier.Premium && u.tier != UserTier.Beta && u.tier != UserTier.Staff) return false;
-				break;
-			default:
-				return 'Invalid tier';
-		}
+		if (u.tier == UserTier.Staff) return true;
+		return u.tier == userTier;
 	}
 	return true;
 }
