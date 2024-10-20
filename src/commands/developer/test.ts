@@ -3,7 +3,6 @@ import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 import { ApplicationCommandOptionType } from 'discord.js';
-import TurnDownService from 'turndown';
 import { launchPuppeteer } from '../../util/puppeteer';
 const hasher = new Bun.CryptoHasher('sha256');
 function generateBraveServicesKey(apiKey: string): string {
@@ -24,7 +23,11 @@ const parseDDG = async (query: string) => {
 	const urls = res2.match(urlRegex);
 	console.log(urls)
 }
-const turndownService = new TurnDownService();
+
+
+
+
+
 export default {
 	description: 'test command for devs',
 	perms: 'dev',
@@ -37,8 +40,9 @@ export default {
 		type: ApplicationCommandOptionType.String,
 		required: false
 	}],
-	userTier: 'Beta',
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
-		return 'hi'
+		const query = args.get('query') || user.displayAvatarURL({ size: 1024 });
+
+
 	},
 } as ICommand;

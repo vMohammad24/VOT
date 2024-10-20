@@ -13,13 +13,15 @@ import {
 } from 'discord.js';
 import { getEmoji } from './emojis';
 
+export interface PaginationPage {
+	page: InteractionReplyOptions | MessageReplyOptions | EmbedBuilder;
+	name?: string;
+	pageNumber?: number;
+}
+
 export interface PaginationOptions {
-	pages: {
-		page: InteractionReplyOptions | MessageReplyOptions | EmbedBuilder;
-		name?: string;
-		pageNumber?: number;
-	}[];
-	type?: 'buttons' | 'select';
+	pages: PaginationPage[];
+	type?: 'buttons' | 'select' | 'multipleSelect';
 	interaction?: ChatInputCommandInteraction | null;
 	message?: Message<boolean> | null;
 	rMsg?: Message<boolean>;
@@ -34,19 +36,26 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 	if (interaction && message) {
 		throw new Error('Both interaction and message provided for pagination');
 	}
+
 	const id = Buffer.from(`${interaction ? interaction.id : message!.id}_${Date.now()}`).toString('base64');
-	if ((pages.length > 25 && type == 'select') || !type) type = 'buttons';
+	if (!type) type = 'buttons';
+
+	// If type is 'select' and pages exceed 25, switch to 'buttons'
+	if (type === 'select' && pages.length > 25) {
+		type = 'buttons';
+	}
+
 	switch (type) {
 		case 'buttons': {
 			const arrowLeft = getEmoji('arrow_left')!;
 			const arrowRight = getEmoji('arrow_right')!;
 			if (!arrowLeft || !arrowRight) throw new Error('Arrow emojis not found');
-			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>(); // page, message
+			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>();
 			let oldPage = 0;
 			for (const embed of pages) {
-				const { page: e, name } = embed;
+				const { page: e } = embed;
 				let { pageNumber: page } = embed;
-				if (!page) {
+				if (page === undefined || page === null) {
 					if (messages.has(0)) {
 						page = oldPage + 1;
 					} else {
@@ -104,38 +113,101 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 			break;
 		}
 		case 'select': {
-			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>(); // page, message
-			let oldPage = 0;
-			for (const embed of pages) {
-				const { page: e, name } = embed;
-				const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId(id)
-						.setPlaceholder(name || 'Select a page')
-						.addOptions(
-							pages.map((e, i) => ({
-								label: e.name || `Page ${i + 1}`,
-								value: i.toString(),
-							})),
-						),
-				);
-				let { pageNumber: page } = embed;
-				if (!page) {
-					if (messages.has(0)) {
-						page = oldPage + 1;
-					} else {
-						page = 0;
-					}
-				}
+			if (pages.length > 25) {
+				throw new Error('Select type supports up to 25 pages. Use multipleSelect for more pages.');
+			}
+			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>();
+			const options = pages.map((e, index) => ({
+				label: e.name || `Page ${index + 1}`,
+				value: index.toString(),
+			}));
+			const selectMenu = new StringSelectMenuBuilder()
+				.setCustomId(`${id}`)
+				.setPlaceholder('Select a page')
+				.addOptions(options);
+
+			const actionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+
+			pages.forEach((embed, index) => {
+				const { page: e } = embed;
+				const page = index;
 				if (e instanceof EmbedBuilder) {
-					messages.set(page, { embeds: [e as EmbedBuilder], components: [row] });
+					messages.set(page, { embeds: [e as EmbedBuilder], components: [actionRow] });
 				} else {
-					const combinedRows = [row, ...(e.components || [])];
+					const combinedRows = [actionRow, ...(e.components || [])];
 					e.components = combinedRows;
 					messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
 				}
-				oldPage = page;
+			});
+
+			const sentMessage = message
+				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				: interaction?.deferred
+					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
+					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
+			const userId = interaction?.user.id || message?.author.id;
+			const collector = sentMessage?.createMessageComponentCollector({
+				filter: (i) => i.isStringSelectMenu() && i.customId === id && i.user.id == userId,
+			});
+
+			collector?.on('collect', async (i) => {
+				if (!i.isStringSelectMenu()) return;
+				const page = parseInt(i.values[0]);
+				const msg = messages.get(page);
+				if (!msg) return;
+				await i.update({});
+				interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as any);
+			});
+
+			collector?.on('end', async (_, reason) => {
+				if (reason == 'time')
+					interaction ? interaction.editReply({ components: [] }) : sentMessage?.edit({ components: [] });
+			});
+			return sentMessage as Message;
+			break;
+		}
+		case 'multipleSelect': {
+			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>();
+			pages.forEach((embed, index) => {
+				const { page: e } = embed;
+				const page = index;
+				if (e instanceof EmbedBuilder) {
+					messages.set(page, { embeds: [e as EmbedBuilder] });
+				} else {
+					messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+				}
+			});
+
+			const selectMenus = [];
+			const selectMenuCount = Math.ceil(pages.length / 25);
+			for (let i = 0; i < selectMenuCount; i++) {
+				const start = i * 25;
+				const end = Math.min(start + 25, pages.length);
+				const options = pages.slice(start, end).map((e, index) => ({
+					label: e.name || `Page ${start + index + 1}`,
+					value: (start + index).toString(),
+				}));
+				const selectMenu = new StringSelectMenuBuilder()
+					.setCustomId(`${id}_${i}`)
+					.setPlaceholder('Select a page')
+					.addOptions(options);
+				selectMenus.push(selectMenu);
 			}
+
+			const actionRows = selectMenus.map((selectMenu) => new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu));
+
+			pages.forEach((embed, index) => {
+				const { page: e } = embed;
+				const page = index;
+				if (e instanceof EmbedBuilder) {
+					messages.set(page, { embeds: [e as EmbedBuilder], components: actionRows });
+				} else {
+					const combinedRows = [...actionRows, ...(e.components || [])];
+					e.components = combinedRows;
+					messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+				}
+			});
+
 			const sentMessage = message
 				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
@@ -143,7 +215,7 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
 			const userId = message ? message.author.id : interaction?.user.id;
 			const collector = sentMessage?.createMessageComponentCollector({
-				filter: (i) => i.isStringSelectMenu() && i.customId == id && i.user.id == userId,
+				filter: (i) => i.isStringSelectMenu() && i.customId.startsWith(id) && i.user.id == userId,
 			});
 
 			collector?.on('collect', async (i) => {

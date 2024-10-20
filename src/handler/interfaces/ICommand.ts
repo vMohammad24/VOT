@@ -27,6 +27,7 @@ export default interface ICommand {
 	userTier?: UserTier;
 	disabled?: boolean;
 	slashOnly?: boolean;
+	shouldCache?: boolean;
 	needsPlayer?: boolean;
 	type?: 'dmOnly' | 'guildOnly' | 'installable' | 'all';
 	options?: ApplicationCommandOption[];
