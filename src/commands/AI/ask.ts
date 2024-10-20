@@ -142,7 +142,7 @@ Use these mention formats:
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
 		const tokens = res.data.diagnostics.tokens;
-		const response = (res.data.short as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using Tokens: ${tokens}`;
+		const response = (res.data.short as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
 		await pagination({
 			interaction,
 			message,

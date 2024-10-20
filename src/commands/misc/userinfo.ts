@@ -144,9 +144,9 @@ export default {
         await interaction?.deferReply();
         const emojiTierMap: Map<UserTier, string> = new Map([
             // [UserTier.Normal, null],
-            [UserTier.Premium, getEmoji('premium').toString()],
-            [UserTier.Staff, getEmoji('staff').toString()],
-            [UserTier.Beta, getEmoji('beta').toString()],
+            [UserTier.Premium, getEmoji('t_premium').toString()],
+            [UserTier.Staff, getEmoji('t_staff').toString()],
+            [UserTier.Beta, getEmoji('t_beta').toString()],
         ]);
         const [pUser, res, statusRes] = await Promise.all([
             getUserByID(user.id, { tier: true }),
