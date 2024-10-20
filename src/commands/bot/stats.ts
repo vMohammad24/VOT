@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { APIApplication, EmbedBuilder, Routes } from 'discord.js';
+import { ActionRowBuilder, APIApplication, ButtonBuilder, ButtonStyle, EmbedBuilder, Routes } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
@@ -119,6 +119,13 @@ export default {
 			.setFooter({ text: commit.message })
 			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
 			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
-		return { embeds: [embed] };
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder()
+				.setEmoji('🔗')
+				.setLabel('Invite')
+				.setStyle(ButtonStyle.Link)
+				.setURL(`discord://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=8&scope=bot%20applications.commands`),
+		)
+		return { embeds: [embed], components: [row] };
 	},
 } as ICommand;
