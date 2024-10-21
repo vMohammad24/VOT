@@ -31,7 +31,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 		if (lastUpdate && Date.now() - lastUpdate.getTime() < 60 * 1000) {
 			return { error: 'maybe later' };
 		}
-		console.trace(`Updating guilds for ${userId}`);
+		commandHandler.logger.info(`Updating guilds for ${userId}`);
 		const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds?with_counts=true', {
 			headers: {
 				Authorization: `Bearer ${discord.token}`,
@@ -194,6 +194,13 @@ export const refreshToken = async (refreshToken: string) => {
 			},
 		},
 	);
+	commandHandler.logger.info(`
+		refreshToken: ${refreshToken}
+		discordClientId: ${discordClientId}
+		discordClientSecret: ${discordClientSecret}
+		tokenResponseData: ${tokenResponseData.data}
+		tokenResponseDataStatus: ${tokenResponseData.statusText} (${tokenResponseData.status})
+		`);
 	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
 		return {
 			error: 'Invalid refresh token, please reauthorize',
