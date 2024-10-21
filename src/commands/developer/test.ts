@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType } from 'discord.js';
-import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 
@@ -23,9 +22,9 @@ const parseDDG = async (query: string) => {
 export default {
 	description: 'test command for devs',
 	perms: 'dev',
-	type: 'all',
+	type: 'dmOnly',
 	// cooldown: 60000,
-	disabled: commandHandler.prodMode,
+	// disabled: commandHandler.prodMode,
 	options: [{
 		name: 'query',
 		description: 'The search query',
@@ -34,7 +33,6 @@ export default {
 	}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
 		const query = args.get('query') || user.displayAvatarURL({ size: 1024 });
-
-
+		return await handler.prisma.discord.deleteMany()
 	},
 } as ICommand;
