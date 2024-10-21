@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { inspect } from 'bun';
 import { PermissionFlagsBits, type APIGuild, type APIUser } from 'discord.js';
 import commandHandler from '..';
 import { getUserByID } from '../util/database';
@@ -196,9 +197,7 @@ export const refreshToken = async (refreshToken: string) => {
 	);
 	commandHandler.logger.info(`
 		refreshToken: ${refreshToken}
-		discordClientId: ${discordClientId}
-		discordClientSecret: ${discordClientSecret}
-		tokenResponseData: ${tokenResponseData.data}
+		tokenResponseData: ${inspect(tokenResponseData.data)}
 		tokenResponseDataStatus: ${tokenResponseData.statusText} (${tokenResponseData.status})
 		`);
 	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
