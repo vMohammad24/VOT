@@ -200,16 +200,16 @@ export const refreshToken = async (refreshToken: string) => {
 		tokenResponseData: ${inspect(tokenResponseData.data)}
 		tokenResponseDataStatus: ${tokenResponseData.statusText} (${tokenResponseData.status})
 		`);
-	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
-		return {
-			error: 'Invalid refresh token, please reauthorize',
-			code: 401,
-		};
-	}
 	const tokenResponse = (await tokenResponseData.data) as any;
 	if (tokenResponse.error === 'invalid_grant') {
 		return {
 			error: 'Invalid refresh token, please reauthorize (2)',
+			code: 401,
+		};
+	}
+	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
+		return {
+			error: 'Invalid refresh token, please reauthorize',
 			code: 401,
 		};
 	}
