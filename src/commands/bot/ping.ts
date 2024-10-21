@@ -13,15 +13,10 @@ export default {
 	shouldCache: true,
 	execute: async ({ interaction, message, handler }) => {
 		await interaction?.deferReply();
-		const [restLatency, wsLatency, pStart] = await Promise.all([
-			restPing(handler.client),
-			handler.client.ws.ping,
-			(async () => {
-				const pStart = Date.now();
-				await handler.prisma.$queryRaw`SELECT 1`;
-				return pStart;
-			})()
-		]);
+		const wsLatency = handler.client.ws.ping;
+		const restLatency = await restPing(handler.client);
+		const pStart = Date.now();
+		await handler.prisma.$queryRaw`SELECT 1`;
 		const pEnd = Date.now();
 		handler.prisma.$disconnect();
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
