@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import TurnDownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
+import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 
 const turndownService = new TurnDownService();
@@ -21,6 +22,7 @@ export default {
 	execute: async ({ args, interaction, message, handler: { client } }) => {
 		const query = args.get('query') as string | undefined;
 		if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
+		interaction?.deferReply();
 		const searchRes = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`);
 		const data = searchRes.data as string;
 		const lookFor = 'const data = ';
@@ -35,6 +37,11 @@ export default {
 			url: string;
 		}[] = json[1].data.body.response.web.results;
 		const pages = results.map((result, index) => {
+			const emojiName = (() => {
+				let r = result.profile.name.toLowerCase().split(' ')[0].trim()
+				if (r == 'x') r = 'twitter'
+				return r
+			})()
 			return {
 				page: {
 					embeds: [
@@ -45,6 +52,8 @@ export default {
 					],
 				},
 				name: result.profile.name,
+				description: result.title.substring(0, 99) || 'No title',
+				emoji: (getEmoji(emojiName) || '').toString() || '🔍',
 			};
 		});
 		await pagination({ interaction, message, pages, type: 'select' });

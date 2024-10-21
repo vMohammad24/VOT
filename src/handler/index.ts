@@ -197,9 +197,10 @@ export default class CommandHandler {
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const res = await Promise.all(this.validations.map((validation) => validation(command, commandContext)));
-				const failed = res.find((r) => r !== true);
-				if (failed != null) return failed;
+				const validationResults = await Promise.all(this.validations.map(validation => validation(command, commandContext)));
+				for (const result of validationResults) {
+					if (result !== true) return result;
+				}
 				validationTime = Date.now() - vStart;
 				this.prisma.user.upsert({
 					where: {

@@ -2,7 +2,7 @@ import { GuildTextBasedChannel } from "discord.js";
 import { IListener } from "../handler/ListenerHandler";
 
 export default {
-    name: 'sticky',
+    name: 'Sticky messages',
     description: 'Sticky messages',
     execute: async ({ client, prisma }) => {
         setInterval(async () => {
@@ -12,6 +12,7 @@ export default {
                 if (!channel || !channel.isTextBased()) return;
                 const textChannel = channel as GuildTextBasedChannel;
                 const message = stickyMessage.messageId ? await textChannel.messages.fetch(stickyMessage.messageId).catch(() => null) : null;
+                if (message && message.channel.lastMessageId == message.id) return;
                 if (message && message.deletable) await message.delete();
                 const newMessage = await textChannel.send(stickyMessage.content);
                 // (await newMessage.pin()).delete();

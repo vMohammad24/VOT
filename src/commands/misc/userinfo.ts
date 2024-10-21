@@ -198,6 +198,12 @@ export default {
                 emoji: getEmoji('volume').toString()
             });
         }
+        if (!u.tag) {
+            return {
+                ephemeral: true,
+                content: 'User not found'
+            }
+        }
         const embed = new EmbedBuilder()
             .setTitle('User Information')
             .setThumbnail(u.displayAvatarURL())
