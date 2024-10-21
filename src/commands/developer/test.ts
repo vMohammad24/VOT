@@ -1,15 +1,7 @@
 import axios from 'axios';
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
-
-import { ApplicationCommandOptionType } from 'discord.js';
-import { launchPuppeteer } from '../../util/puppeteer';
-const hasher = new Bun.CryptoHasher('sha256');
-function generateBraveServicesKey(apiKey: string): string {
-	hasher.update(apiKey);
-	return hasher.digest('hex');
-}
-const browser = await launchPuppeteer();
 
 
 const parseDDG = async (query: string) => {
