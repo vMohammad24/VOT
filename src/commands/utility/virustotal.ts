@@ -15,19 +15,21 @@ export default {
 	type: 'all',
 	aliases: ['vt'],
 	execute: async ({ args }) => {
-		const url = (args.get('url') as string) || undefined;
+		let url = (args.get('url') as string) || undefined;
 		if (!url)
 			return {
 				content: 'No url provided.',
 				ephemeral: true,
 			};
-		const expression = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-		const regex = new RegExp(expression);
-		if (!url.match(regex))
+		if (!url.startsWith('http')) url = `https://${url}`;
+		try {
+			new URL(url);
+		} catch (e) {
 			return {
 				content: 'Invalid url.',
 				ephemeral: true,
 			};
+		}
 		const res = await axios.get(
 			`https://www.virustotal.com/vtapi/v2/url/report?apikey=${import.meta.env.VIRUSTOTAL_API_KEY}&resource=${url}`,
 		);

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType } from 'discord.js';
+import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { searchBrave } from '../../util/brave';
 
 
 const parseDDG = async (query: string) => {
@@ -21,10 +23,10 @@ const parseDDG = async (query: string) => {
 
 export default {
 	description: 'test command for devs',
-	perms: 'dev',
+	// perms: 'dev',
 	type: 'dmOnly',
 	// cooldown: 60000,
-	// disabled: commandHandler.prodMode,
+	disabled: commandHandler.prodMode,
 	options: [{
 		name: 'query',
 		description: 'The search query',
@@ -32,6 +34,18 @@ export default {
 		required: false
 	}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
-		return await handler.prisma.guild.update({ where: { id: guild.id }, data: { prefix: '$' } })
+		const query = args.get('query') as string || 'test';
+		const b = await searchBrave(query)
+		console.log(JSON.stringify(b))
+		// return {
+		// 	embeds: [
+		// 		new EmbedBuilder()
+		// 			.setTitle(result.title)
+		// 			.setDescription(result.long_desc)
+		// 			.setURL(result.url)
+		// 			.setThumbnail(result.images[0].src)
+		// 			.setColor('Random')
+		// 	]
+		// }
 	},
 } as ICommand;
