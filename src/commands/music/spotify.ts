@@ -152,7 +152,6 @@ export default {
 			}
 			return {
 				embeds: [embed],
-				ephemeral: true,
 			};
 		} else {
 			const info = track.getRaw()._raw.pluginInfo as {
