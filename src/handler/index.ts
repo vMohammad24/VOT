@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { nanoid } from 'nanoid/non-secure';
 import path from 'path';
-import PinoLogger from 'pino';
+import PinoLogger, { Logger } from 'pino';
 import { inspect } from 'util';
 import commandHandler from '..';
 import { cacheCommand, getCachedCommand } from '../util/database';
@@ -45,17 +45,19 @@ export default class CommandHandler {
 	public verbose: ICommandHandler['verbose'];
 	private glob = new Glob('**/*.{ts,js}');
 	private validations: Function[] = [];
-	public logger = PinoLogger({
-		name: import.meta.dirname.split('/')[import.meta.dirname.split('/').length - 3],
-	});
+	public logger: Logger;
 	constructor(mHandler: IMCommandHandler) {
 		const handler = mHandler as ICommandHandler;
 		const { commandsDir, listenersDir, contextCommandsDir } = handler;
+		this.prodMode = handler.prodMode;
+		this.logger = PinoLogger({
+			name: import.meta.dirname.split('/')[import.meta.dirname.split('/').length - 3],
+			level: this.prodMode ? 'info' : 'debug',
+		});
 		this.prisma = handler.prisma;
 		this.kazagumo = handler.kazagumo;
 		this.client = handler.client;
 		this.developers = handler.developers;
-		this.prodMode = handler.prodMode;
 		this.verbose = handler.verbose || false;
 		handler.commands = [];
 		handler.client.on(Events.ClientReady, async () => {
@@ -241,7 +243,7 @@ export default class CommandHandler {
 					},
 				});
 				const eStart = Date.now();
-				if (command.shouldCache && commandContext.guild.id && commandContext.user.id) {
+				if (commandHandler.prodMode && command.shouldCache && commandContext.guild.id && commandContext.user.id) {
 					const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
 					if (cachedCommand) {
 						return cachedCommand;

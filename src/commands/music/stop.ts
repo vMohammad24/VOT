@@ -2,7 +2,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Clears the queue',
-	needsPlayer: true,
+	// needsPlayer: true,
 	aliases: ['dc', 'disconnect', 's', 'leave'],
 	execute: async ({ player, member }) => {
 		if (!player) {

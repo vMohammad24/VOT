@@ -8,8 +8,8 @@ plugins:
   youtube:
     enabled: true # Whether this source can be used.
     allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
-    allowDirectVideoIds: false # Whether just video IDs can match. If false, only complete URLs will be loaded.
-    allowDirectPlaylistIds: false # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
+    allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
+    allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
     # The clients to use for track loading. See below for a list of valid clients.
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     oauth:
@@ -21,7 +21,7 @@ plugins:
       - WEB
       - TVHTML5EMBEDDED
   dunctebot:
-    ttsLanguage: 'en-AU' # language of the TTS engine
+    ttsLanguage: 'en-US' # language of the TTS engine
     sources:
       # true = source enabled, false = source disabled
       getyarn: true # www.getyarn.io
@@ -93,7 +93,7 @@ lavalink:
       vimeo: true
       nico: true
       http: true # warning: keeping HTTP enabled without a proxy configured could expose your server's IP address.
-      local: false
+      local: true
     filters:
       volume: true
       equalizer: true

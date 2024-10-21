@@ -1,4 +1,5 @@
 import { Client, EmbedBuilder, Routes } from 'discord.js';
+import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 
@@ -19,31 +20,44 @@ export default {
 		await handler.prisma.$queryRaw`SELECT 1`;
 		const pEnd = Date.now();
 		handler.prisma.$disconnect();
+		const llStats = await (await handler.kazagumo.getLeastUsedNode()).rest.stats();
 		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
+		const embed = new EmbedBuilder()
+			.setColor('Random')
+			.setTitle('Pong!')
+			.addFields(
+				{
+					name: 'API Latency',
+					value: '```' + `${restLatency}ms` + '```',
+				},
+				{
+					name: 'Websocket Latency',
+					value: '```' + `${wsLatency == -1 ? 'N/A' : `${wsLatency}ms`}` + '```',
+				},
+				{
+					name: 'Message Latency',
+					value: '```' + `${messageLatency}ms` + '```',
+				},
+				{
+					name: 'Database Latency',
+					value: '```' + `${pEnd - pStart}ms` + '```',
+				},
+			)
+			.setTimestamp();
+		if (llStats) {
+			embed.addFields({
+				name: 'Playing players',
+				value: '```' + llStats.playingPlayers + '```',
+				inline: true
+			},
+				{
+					name: 'Players CPU',
+					value: '```' + numeral(llStats.cpu.lavalinkLoad).format('0,0') + '%' + '```',
+				})
+		}
 		return {
 			embeds: [
-				new EmbedBuilder()
-					.setColor('Random')
-					.setTitle('Pong!')
-					.addFields(
-						{
-							name: 'API Latency',
-							value: '```' + `${restLatency}ms` + '```',
-						},
-						{
-							name: 'Websocket Latency',
-							value: '```' + `${wsLatency == -1 ? 'N/A' : `${wsLatency}ms`}` + '```',
-						},
-						{
-							name: 'Message Latency',
-							value: '```' + `${messageLatency}ms` + '```',
-						},
-						{
-							name: 'Database Latency',
-							value: '```' + `${pEnd - pStart}ms` + '```',
-						},
-					)
-					.setTimestamp(),
+				embed
 			],
 		};
 	},

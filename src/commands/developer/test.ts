@@ -32,7 +32,6 @@ export default {
 		required: false
 	}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
-		const query = args.get('query') || user.displayAvatarURL({ size: 1024 });
-		return await handler.prisma.discord.deleteMany()
+		return await handler.prisma.guild.update({ where: { id: guild.id }, data: { prefix: '$' } })
 	},
 } as ICommand;
