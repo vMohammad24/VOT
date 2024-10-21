@@ -172,7 +172,7 @@ export default {
         if (!u) return { content: 'User not found', ephemeral: true };
         if (clan && clan.identity_guild_id && clan.tag && clan.badge) {
             const res = await axios.get(`https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`, { responseType: 'arraybuffer' });
-            const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${clan.identity_guild_id}_${clan.tag}.png`);
+            const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${clan.identity_guild_id}_${clan.tag.trim().replace('樂', '')}.png`);
             await write(path, res.data);
             clan.emoji = (await addEmoji(path, ems))?.toString()!;
         }
