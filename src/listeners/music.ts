@@ -8,13 +8,13 @@ export default {
 	execute: async (handler) => {
 		const { client, kazagumo, logger, executeCommand, commands } = handler;
 		kazagumo.shoukaku.on('ready', (name) => { if (handler.verbose) logger.info(`Lavalink ${name}: Ready!`) });
-		kazagumo.shoukaku.on('error', (name, error) => { if (handler.verbose) logger.error(`Lavalink ${name}: Error Caught,`, error) });
+		kazagumo.shoukaku.on('error', (name, error) => { if (handler.verbose) logger.error(`Lavalink ${name}: Error Caught: ${error}`) });
 		kazagumo.shoukaku.on('close', (name, code, reason) => {
 			if (handler.verbose)
 				logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`)
 		}
 		);
-		kazagumo.shoukaku.on('debug', (name, info) => { if (handler.verbose) logger.debug(`Lavalink ${name}: Debug,`, info) });
+		kazagumo.shoukaku.on('debug', (name, info) => { if (handler.verbose) logger.debug(`Lavalink ${name}: Debug: ${info}`) });
 		kazagumo.shoukaku.on('disconnect', (name, players) => {
 			if (handler.verbose)
 				logger.warn(`Lavalink ${name}: Disconnected, Players: ${players}}`)
