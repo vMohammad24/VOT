@@ -328,6 +328,102 @@ interface BraveSearchBody {
 }
 
 
+interface BraveSearchImages {
+    type: string;
+    data: {
+        body: {
+            key: number;
+            mixerTime: number;
+            badResults: undefined | null;
+            response: {
+                type: string;
+                query: {
+                    original: string;
+                    show_strict_warning: boolean;
+                    altered: null;
+                    potential_alteration: null;
+                    search_operators: null;
+                    safesearch: null;
+                    is_geolocal: null;
+                    local_decision: null;
+                    spellcheck_off: boolean;
+                    country: null;
+                    bad_results: boolean;
+                    lat: null;
+                    long: null;
+                    localQueryType: undefined | null;
+                    postal_code: null;
+                    city: null;
+                    header_country: null;
+                    more_results_available: null;
+                    state: null;
+                    location_label: null;
+                    user_location_label: null;
+                    related_queries: any[];
+                    related_queries_autocomplete_like: boolean;
+                    bo_summary_key: undefined | null;
+                    bo_altered_diff: any[];
+                };
+                results: {
+                    title: string;
+                    url: string;
+                    is_source_local: boolean;
+                    is_source_both: boolean;
+                    full_title: string | null;
+                    description: string;
+                    page_age: number | null;
+                    page_fetched: string;
+                    profile: string | null;
+                    language: string | null;
+                    family_friendly: boolean;
+                    bo_debug: object;
+                    source: string;
+                    thumbnail: {
+                        src: string;
+                        alt: string | null;
+                        height: number | null;
+                        width: number | null;
+                        bg_color: string | null;
+                        original: string;
+                        logo: string | null;
+                        click_url: string | null;
+                        duplicated: boolean | null;
+                        theme: string | null;
+                        is_tripadvisor: boolean;
+                    };
+                    properties: {
+                        url: string;
+                        resized: string;
+                        placeholder: string;
+                        height: number | null;
+                        width: number | null;
+                        format: string | null;
+                        content_size: string | null;
+                    };
+                    meta_url: {
+                        scheme: string;
+                        netloc: string;
+                        hostname: string;
+                        favicon: string;
+                        path: string;
+                    };
+                    from_context: boolean;
+                }[];
+            };
+        };
+        status: number;
+        page: string;
+        searchPage: string;
+        title: string;
+    };
+    uses: {
+        search_params: string[];
+        route: number;
+        url: number;
+    };
+}
+
+
 interface BraveSearchResult {
     type: string;
     data: {
@@ -351,11 +447,20 @@ interface BraveSearchResult {
     };
 }
 
-const getQueryResult = async (query: string) => {
-    const cache = await redis.get(`brave:${query}`);
-    if (cache && commandHandler.prodMode) return JSON.parse(cache);
-    const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=llmSuggest&summary=1&rich=true`);
-    return res.data as string;
+const getQueryResult = async (query: string, type: 'images' | 'query' = 'query') => {
+    switch (type) {
+        case 'query':
+            const cache = await redis.get(`brave:${query}`);
+            if (cache && commandHandler.prodMode) return JSON.parse(cache);
+            const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=llmSuggest&summary=1&rich=true`);
+            return res.data as string;
+        case 'images':
+            const imageCache = await redis.get(`braveImages:${query}`);
+            if (imageCache && commandHandler.prodMode) return JSON.parse(imageCache);
+            const imagesRes = await axios.get(`https://search.brave.com/images?q=${encodeURIComponent(query)}`);
+            return imagesRes.data as string;
+
+    }
 }
 
 export async function searchBrave(query: string) {
@@ -370,6 +475,22 @@ export async function searchBrave(query: string) {
         return json;
     } else {
         return data as BraveSearchResult;
+    }
+}
+
+
+export async function searchBraveImages(query: string) {
+    const data = await getQueryResult(query, 'images');
+    if (typeof data == 'string') {
+        const lookFor = 'const data = ';
+        const index = data.indexOf(lookFor);
+        const endIndex = data.indexOf('];', index);
+        const end = data.substring(index + lookFor.length, endIndex + 1);
+        const json = new Function(`"use strict";return ${end}`)()[1] as BraveSearchImages;
+        await redis.set(`braveImages:${query}`, JSON.stringify(json), 'EX', 60 * 60);
+        return json;
+    } else {
+        return data as BraveSearchImages;
     }
 }
 

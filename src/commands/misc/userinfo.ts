@@ -139,6 +139,7 @@ export default {
         required: false
     }],
     type: 'all',
+    shouldCache: true,
     execute: async ({ args, user: usr, member, interaction, handler, message, guild }) => {
         const user = (args.get('user') as GuildMember | User) || (guild ? member : usr) || usr;
         await interaction?.deferReply();

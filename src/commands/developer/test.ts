@@ -1,14 +1,11 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { searchBrave } from '../../util/brave';
+import { searchBraveImages } from '../../util/brave';
 
 
 import TurnDownService from 'turndown';
-import { getEmoji } from '../../util/emojis';
-import { pagination } from '../../util/pagination';
-import { isNullish } from '../../util/util';
 const turndownService = new TurnDownService();
 const parseDDG = async (query: string) => {
 	const res1 = (await axios.get(`https://duckduckgo.com/?t=ffab&q=${encodeURIComponent(query)}&ia=web`)).data;
@@ -40,33 +37,12 @@ export default {
 	}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
 		const query = args.get('query') as string || 'test';
-		const b = await searchBrave(query)
-		if (!b.data.body.response.videos.results.length) return {
-			content: 'No results found',
-			ephemeral: true
-		}
-		await pagination({
-			interaction,
-			message,
-			type: 'select',
-			pages: b.data.body.response.videos.results.map(v => {
-				if (isNullish(v.title) || isNullish(v.description)) return null;
-				const description = turndownService.turndown(v.description);
-				return {
-					name: v.title.slice(0, 99) || 'No title',
-					description: description.slice(0, 99) || 'No description',
-					emoji: (getEmoji(v.meta_url.netloc.split('.')[0]) || '🔗').toString(),
-					page: new EmbedBuilder().setTitle(
-						v.title
-					).setDescription(
-						description
-					).setURL(
-						v.url
-					).setAuthor({ iconURL: v.meta_url.favicon, name: v.meta_url.netloc })
-						.setThumbnail(v.thumbnail.original)
-						.setURL(v.url)
-				}
-			}).filter(v => v != null)
-		})
+		const b = await searchBraveImages(query) as any;
+		const res = b.data.body.response.results[0];
+		console.log(res.bo_debug)
+
+		console.log(res.thumbnail)
+		console.log(res.properties)
+		console.log(res.meta_url)
 	},
 } as ICommand;
