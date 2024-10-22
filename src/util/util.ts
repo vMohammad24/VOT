@@ -136,3 +136,7 @@ export function parseTime(timestr: string): number {
 	} catch (ignored) { }
 	return time;
 }
+
+export function isNullish(value: any): boolean {
+	return value === null || value === undefined || value === '';
+}
