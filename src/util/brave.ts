@@ -354,7 +354,7 @@ interface BraveSearchResult {
 const getQueryResult = async (query: string) => {
     const cache = await redis.get(`brave:${query}`);
     if (cache && commandHandler.prodMode) return JSON.parse(cache);
-    const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=llmSuggest&summary=1`);
+    const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=llmSuggest&summary=1&rich=true`);
     return res.data as string;
 }
 
