@@ -1,6 +1,6 @@
 import axios from "axios";
+import { Transform } from 'stream';
 import commandHandler, { redis } from "..";
-
 interface BraveSearchBody {
     key: number;
     mixerTime: number;
@@ -370,5 +370,37 @@ export async function searchBrave(query: string) {
         return json;
     } else {
         return data as BraveSearchResult;
+    }
+}
+
+export async function chatllm(key: string) {
+
+    try {
+        const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${key}`, {
+            responseType: 'stream'
+        });
+
+        const originalStream = res.data;
+
+        const transformStream = new Transform({
+            transform(chunk, encoding, callback) {
+                const regex = /"(?:[^"\\]|\\.)*"/;
+                const modifiedChunk = chunk.toString()
+                    .replace(/\\n/g, '\n')
+                    .replace(/""/g, '\n')
+                    .replace(/\\t/g, '\t')
+                    .replace('" "', ' ')
+                    .replace(/"\s*/g, '').replace(/\n/g, '')
+                if (modifiedChunk)
+                    this.push(modifiedChunk);
+                callback();
+            }
+        });
+        originalStream.pipe(transformStream);
+
+        return transformStream;
+    } catch (error) {
+        console.error('Error fetching stream:', error);
+        throw error;
     }
 }

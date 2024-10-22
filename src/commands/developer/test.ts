@@ -3,10 +3,12 @@ import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { searchBrave } from '../../util/brave';
-import { pagination } from '../../util/pagination';
 
 
 import TurnDownService from 'turndown';
+import { getEmoji } from '../../util/emojis';
+import { pagination } from '../../util/pagination';
+import { isNullish } from '../../util/util';
 const turndownService = new TurnDownService();
 const parseDDG = async (query: string) => {
 	const res1 = (await axios.get(`https://duckduckgo.com/?t=ffab&q=${encodeURIComponent(query)}&ia=web`)).data;
@@ -39,25 +41,32 @@ export default {
 	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
 		const query = args.get('query') as string || 'test';
 		const b = await searchBrave(query)
+		if (!b.data.body.response.videos.results.length) return {
+			content: 'No results found',
+			ephemeral: true
+		}
 		await pagination({
 			interaction,
 			message,
 			type: 'select',
-			pages: b.data.body.response.news.results.map(x => {
-				const description = turndownService.turndown(x.description);
+			pages: b.data.body.response.videos.results.map(v => {
+				if (isNullish(v.title) || isNullish(v.description)) return null;
+				const description = turndownService.turndown(v.description);
 				return {
-					name: x.title.slice(0, 99) || 'No title',
+					name: v.title.slice(0, 99) || 'No title',
 					description: description.slice(0, 99) || 'No description',
+					emoji: (getEmoji(v.meta_url.netloc.split('.')[0]) || '🔗').toString(),
 					page: new EmbedBuilder().setTitle(
-						x.title
+						v.title
 					).setDescription(
 						description
 					).setURL(
-						x.url
-					).setAuthor({ iconURL: x.meta_url.favicon, name: x.meta_url.hostname })
-						.setURL(x.url)
+						v.url
+					).setAuthor({ iconURL: v.meta_url.favicon, name: v.meta_url.netloc })
+						.setThumbnail(v.thumbnail.original)
+						.setURL(v.url)
 				}
-			})
+			}).filter(v => v != null)
 		})
 	},
 } as ICommand;

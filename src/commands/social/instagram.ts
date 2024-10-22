@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
@@ -277,18 +278,13 @@ export default {
                 const url = interaction.options.getString('url', true);
                 const heartEmoji = getEmoji('heart')
                 const likeEmoji = getEmoji('like')
-                const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":'
-                const page = await browser.newPage();
-                const res = await page.goto(url)//await axios.get('https://www.instagram.com/reels/')
-                const data = await res!.content();
-                page.close();
-                const body = Buffer.from(data).toString('utf-8');
-                const index = body.indexOf(lookFor)
-                const endIndex = body.indexOf('</script>', index)
-                // console.log(lookFor + body.slice(index + lookFor.length, endIndex))
-                const json = JSON.parse(lookFor + body.slice(index + lookFor.length, endIndex));
-                if (!data) return { content: 'No data found', ephemeral: true };
-                const media = json.require[0][3][0].__bbox.require[0][3][1].__bbox.result.data.xdt_api__v1__clips__clips_on_logged_out_connection_v2.edges[0].node.media as Media;
+                const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url, {
+                    headers: {
+                        'Authorization': process.env.OTHER_EVADE_API_KEY
+                    }
+                });
+                const media = res.data as IJsonResponse;
+                if (!media) return { content: 'No data found', ephemeral: true };
                 const embed = new EmbedBuilder()
                     .setTitle(media.caption?.text.substring(0, 256) || 'No Caption')
                     .setURL(`https://www.instagram.com/p/${media.code}`)
