@@ -114,7 +114,7 @@ export default {
 					if (typeof chunk != 'string') chunk = Buffer.from(chunk).toString('utf-8');
 					chunks.push(chunk);
 					const endRes = chunks.join('').replace(/\\n/g, '\n');
-					if (endRes !== '' && index % 3 == 0 && shouldUpdate) {
+					if (endRes !== '' && index % 2 == 0 && shouldUpdate) {
 						await update();
 					}
 					index++;

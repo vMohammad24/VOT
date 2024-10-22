@@ -24,7 +24,11 @@ export default {
 		const enURL = `https://api.evade.rest/search/llm/enrichments?query=${question}`;
 		const strings: string[] = [];
 		await interaction?.deferReply();
-		const res = await axios.get(apiURL, { responseType: 'stream' }).then((res) => {
+		const res = await axios.get(apiURL, {
+			responseType: 'stream', headers: {
+				Authorization: import.meta.env.OTHER_EVADE_API_KEY
+			}
+		}).then((res) => {
 			let i = 0;
 			res.data.on('data', async (chunk: string) => {
 				if (typeof chunk != 'string') chunk = Buffer.from(chunk).toString('utf-8');
@@ -55,7 +59,11 @@ export default {
 				i++;
 			});
 			res.data.on('end', async () => {
-				res = await axios.get(enURL, { responseType: 'json' });
+				res = await axios.get(enURL, {
+					responseType: 'json', headers: {
+						Authorization: import.meta.env.OTHER_EVADE_API_KEY
+					}
+				});
 				const id = Buffer.from(res.data.raw_response).toString('base64').slice(0, 22);
 				const reply = await pagination({
 					interaction,
