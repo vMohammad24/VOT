@@ -233,7 +233,11 @@ export default {
                     ]
                 }
             case 'tiktok':
-                const tRes = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`);
+                const tRes = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`, {
+                    headers: {
+                        'Authorization': import.meta.env.OTHER_EVADE_API_KEY
+                    }
+                });
                 const tiktokData = tRes.data;
                 if (!tiktokData) return {
                     ephemeral: true,
