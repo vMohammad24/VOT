@@ -232,7 +232,15 @@ export default {
             case 'repost':
                 const url = interaction.options.getString('url');
                 if (!url) return interaction.reply('Please provide a Tiktok video URL');
-                if (!url.startsWith('https://www.tiktok.com/') && !url.includes('video'))
+                try {
+                    new URL(url);
+                } catch (e) {
+                    return {
+                        ephemeral: true,
+                        content: 'Invalid URL'
+                    }
+                }
+                if (!url.includes('tiktok.com') && !url.includes('video'))
                     return {
                         ephemeral: true,
                         content: 'Invalid Tiktok video URL'

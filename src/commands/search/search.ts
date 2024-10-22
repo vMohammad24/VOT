@@ -23,8 +23,9 @@ export default {
 		if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
 		interaction?.deferReply();
 		const json = await searchBrave(query);
-		const results = json.data.body.response.web.results;
-		const pages = results.map(result => {
+		const { web, infobox } = json.data.body.response;
+		const results = web.results;
+		let pages = results.map(result => {
 			const emojiName = (() => {
 				let r = result.profile.name.toLowerCase().split(' ')[0].trim()
 				if (r == 'x') r = 'twitter'
@@ -45,6 +46,26 @@ export default {
 				emoji: (getEmoji(emojiName) || '').toString() || '🔍',
 			};
 		});
+		if (infobox) {
+			const ib = infobox.results[0];
+			const description = turndownService.turndown(ib.description);
+			const infoPage = {
+				page: {
+					embeds: [
+						new EmbedBuilder()
+							.setTitle(ib.title)
+							.setDescription(turndownService.turndown(ib.long_desc))
+							.setThumbnail(ib.images[0].original)
+							.setURL(ib.url)
+							.setAuthor({ name: ib.providers[0].name || 'No title', iconURL: ib.providers[0].img || undefined, url: ib.providers[0].url || undefined })
+					],
+				},
+				name: ib.title.slice(0, 99),
+				description: description.substring(0, 99) || 'No description',
+				emoji: (getEmoji('info') || '').toString() || '🔍',
+			};
+			pages = [infoPage, ...pages];
+		}
 		await pagination({ interaction, message, pages, type: 'select' });
 	},
 } as ICommand;
