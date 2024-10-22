@@ -150,8 +150,17 @@ export default {
         ]);
         const [pUser, res, statusRes] = await Promise.all([
             getUserByID(user.id, { tier: true }),
-            axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id),
-            axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`)
+            axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id, {
+                headers: {
+                    Authorization: import.meta.env.OTHER_EVADE_API_KEY
+                }
+
+            }),
+            axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
+                headers: {
+                    Authorization: import.meta.env.OTHER_EVADE_API_KEY
+                }
+            })
         ]);
         const { data: sData } = statusRes;
         const { data } = res;
