@@ -134,6 +134,7 @@ export default class CommandHandler {
 	}
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
+		const cId = nanoid(5);
 		try {
 			if ('aliases' in cmd) {
 				const start = Date.now();
@@ -174,7 +175,8 @@ export default class CommandHandler {
 						player: (await getPlayer(interaction.member as GuildMember)) || undefined,
 						editReply: async (content) => {
 							await interaction.editReply(content);
-						}
+						},
+						cID: cId
 					};
 					contextTime = Date.now() - start;
 				} else {
@@ -194,7 +196,8 @@ export default class CommandHandler {
 							// get the replied message
 							if (!rMsg) return;
 							await rMsg.edit(content as string | MessageEditOptions);
-						}
+						},
+						cID: cId
 					};
 					contextTime = Date.now() - start;
 				}
@@ -204,44 +207,6 @@ export default class CommandHandler {
 					if (result !== true) return result;
 				}
 				validationTime = Date.now() - vStart;
-				this.prisma.user.upsert({
-					where: {
-						id: commandContext.user.id,
-					},
-					update: {
-						name: commandContext.user.username,
-						avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-						commands: {
-							create: {
-								commandId: command.name!,
-								commandInfo: {
-									args: (commandContext.args as any) || null,
-									guild: (commandContext?.guild && commandContext.guild.id) || null,
-									channel: commandContext?.channel?.id || null,
-									message: commandContext?.message?.id || null,
-									interaction: commandContext?.interaction?.id || null,
-								},
-							},
-						},
-					},
-					create: {
-						id: commandContext.user.id,
-						name: commandContext.user.username,
-						avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-						commands: {
-							create: {
-								commandId: command.name!,
-								commandInfo: {
-									args: (commandContext.args as any) || null,
-									guild: commandContext?.guild?.id || null,
-									channel: commandContext?.channel?.id || null,
-									message: commandContext?.message?.id || null,
-									interaction: commandContext?.interaction?.id || null,
-								},
-							},
-						},
-					},
-				});
 				const eStart = Date.now();
 				if (commandHandler.prodMode && command.shouldCache && commandContext.guild.id && commandContext.user.id) {
 					const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
@@ -251,7 +216,7 @@ export default class CommandHandler {
 				}
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
-				if (command.shouldCache && commandContext.guild.id && commandContext.user.id && result) {
+				if (command.shouldCache && commandContext.guild && commandContext.user && result) {
 					await cacheCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id, JSON.stringify(result));
 				}
 				const cacheTime = Date.now() - executionTime - eStart;
@@ -276,19 +241,23 @@ export default class CommandHandler {
 
 		} catch (e) {
 			this.logger.error(e);
-			const id = nanoid(10);
 			await this.prisma.error.create({
 				data: {
-					id,
+					id: `error_${cId}`,
 					channelId: ctx.channelId ?? ctx.channel?.id ?? null,
 					guildId: ctx.guildId || ctx.guild?.id || null,
 					fullJson: inspect(e) as any,
+					command: {
+						connect: {
+							id: `cmd_${cId}`,
+						}
+					}
 				},
 			});
 			return {
 				embeds: [new EmbedBuilder()
 					.setTitle(`${getEmoji('warn').toString()} Error`)
-					.setDescription(`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${id}`)
+					.setDescription(`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${cId}`)
 					.setColor('Red')
 					.setTimestamp()
 				],

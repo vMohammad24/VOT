@@ -1,4 +1,5 @@
 import { Collection, EmbedBuilder } from 'discord.js';
+import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
@@ -6,13 +7,13 @@ const cooldowns = new Collection();
 
 export default async function (command: ICommand, ctx: CommandContext) {
 	const { cooldown } = command;
-	const { user, handler: { prisma, logger } } = ctx;
+	const { user, handler: { prisma } } = ctx;
 	if (!cooldown) return true;
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Collection());
 	}
-	const pUser = await prisma.user.findUnique({ where: { id: user.id } });
-	if (pUser && (pUser.tier == 'Premium' || pUser.tier == 'Beta' || pUser.tier == 'Staff')) return true;
+	const { tier } = await getUserByID(user.id, { tier: true });
+	if (tier && (tier == 'Premium' || tier == 'Beta' || tier == 'Staff')) return true;
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name) as Collection<string, number>;
 	if (timestamps.has(user.id)) {

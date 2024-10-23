@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 
 
@@ -31,6 +32,7 @@ export default {
 				const commands = handler.commands!.filter((cmd) => cmd.category === category).sort();
 				return {
 					name: category,
+					emoji: (getEmoji(`c_${category.toLowerCase()}`) || '❔').toString(),
 					page: new EmbedBuilder()
 						.setTitle(category)
 						.setDescription(

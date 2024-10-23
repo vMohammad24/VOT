@@ -180,7 +180,7 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 			content: message.content,
 			username: message.author.username,
 			roleColor: message.member?.displayHexColor,
-			attachments: message.attachments.map(async (attachment) => {
+			attachments: await Promise.all(message.attachments.map(async (attachment) => {
 				const file = new File(
 					[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
 					attachment.name,
@@ -188,7 +188,7 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 				);
 				const uploadedData = await uploadFile(file);
 				return uploadedData.cdnFileName;
-			}),
+			})),
 		});
 	}
 	const file = new File([JSON.stringify(json)], `${ticketData.id}.json`, {

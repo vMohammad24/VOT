@@ -48,4 +48,5 @@ export interface CommandContext {
 	handler: CommandHandler;
 	player: KazagumoPlayer | undefined;
 	editReply: (content: string | InteractionReplyOptions | MessageEditOptions | MessagePayload, msg?: Message<boolean> | OmitPartialGroupDMChannel<Message<boolean>> | InteractionResponse<boolean>) => Promise<void>;
+	cID?: string;
 }
