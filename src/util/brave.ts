@@ -1,5 +1,4 @@
 import axios from "axios";
-import { Transform } from 'stream';
 import commandHandler, { redis } from "..";
 interface BraveSearchBody {
     key: number;
@@ -447,6 +446,38 @@ interface BraveSearchResult {
     };
 }
 
+
+interface BraveEnrichments {
+    raw_response: string;
+    references: any[];
+    urls: string[];
+    images: {
+        src: string;
+        text: string;
+        page_url: string;
+        query_text: string;
+        click_url: string | null;
+    }[];
+    qa: {
+        answer: string;
+        score: number;
+        highlight: object | null;
+        href: string | null;
+    }[];
+    entities: any[];
+    main_entity: string | null;
+    main_entity_infobox: any | null;
+    predicate: any | null;
+    context: any[];
+    context_urls: string[];
+    context_results: {
+        url: string;
+        title: string;
+        hostname: string;
+        favicon: string;
+    }[];
+}
+
 const getQueryResult = async (query: string, type: 'images' | 'query' = 'query') => {
     switch (type) {
         case 'query':
@@ -496,32 +527,30 @@ export async function searchBraveImages(query: string) {
 
 export async function chatllm(key: string) {
 
-    try {
-        const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${key}`, {
-            responseType: 'stream'
-        });
+    // try {
+    const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${key}`);
+    const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${key}`);
+    return enrichments.data as BraveEnrichments;
+    // const originalStream = res.data;
+    //     const transformStream = new Transform({
+    //         transform(chunk, encoding, callback) {
+    //             const regex = /"(?:[^"\\]|\\.)*"/;
+    //             const modifiedChunk = chunk.toString()
+    //                 .replace(/\\n/g, '\n')
+    //                 .replace(/""/g, '\n')
+    //                 .replace(/\\t/g, '\t')
+    //                 .replace('" "', ' ')
+    //                 .replace(/"\s*/g, '').replace(/\n/g, '')
+    //             if (modifiedChunk)
+    //                 this.push(modifiedChunk);
+    //             callback();
+    //         }
+    //     });
+    //     originalStream.pipe(transformStream);
 
-        const originalStream = res.data;
-
-        const transformStream = new Transform({
-            transform(chunk, encoding, callback) {
-                const regex = /"(?:[^"\\]|\\.)*"/;
-                const modifiedChunk = chunk.toString()
-                    .replace(/\\n/g, '\n')
-                    .replace(/""/g, '\n')
-                    .replace(/\\t/g, '\t')
-                    .replace('" "', ' ')
-                    .replace(/"\s*/g, '').replace(/\n/g, '')
-                if (modifiedChunk)
-                    this.push(modifiedChunk);
-                callback();
-            }
-        });
-        originalStream.pipe(transformStream);
-
-        return transformStream;
-    } catch (error) {
-        console.error('Error fetching stream:', error);
-        throw error;
-    }
+    //     return transformStream;
+    // } catch (error) {
+    //     console.error('Error fetching stream:', error);
+    //     throw error;
+    // }
 }
