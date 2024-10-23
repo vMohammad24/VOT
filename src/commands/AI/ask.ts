@@ -141,7 +141,7 @@ Use these mention formats:
 		if (typeof res.data == 'string' && (res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
-		const tokens = res.data.diagnostics.tokens;
+		const tokens = (res.data.diagnostics && res.data.diagnostics.tokens) ? res.data.diagnostics.tokens : 'unknown';
 		const response = (res.data.short as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
 		await pagination({
 			interaction,
