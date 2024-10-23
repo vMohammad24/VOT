@@ -4,6 +4,7 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { searchBrave } from '../../util/brave';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
+import { isNullish } from '../../util/util';
 
 const turndownService = new TurnDownService();
 export default {
@@ -48,23 +49,25 @@ export default {
 		});
 		if (infobox) {
 			const ib = infobox.results[0];
-			const description = turndownService.turndown(ib.description);
-			const infoPage = {
-				page: {
-					embeds: [
-						new EmbedBuilder()
-							.setTitle(ib.title)
-							.setDescription(turndownService.turndown(ib.long_desc))
-							.setThumbnail(ib.images[0].original)
-							.setURL(ib.url)
-							.setAuthor({ name: ib.providers[0].name || 'No title', iconURL: ib.providers[0].img || undefined, url: ib.providers[0].url || undefined })
-					],
-				},
-				name: ib.title.slice(0, 99),
-				description: description.substring(0, 99) || 'No description',
-				emoji: (getEmoji('info') || '').toString() || '🔍',
-			};
-			pages = [infoPage, ...pages];
+			if (!isNullish(ib.description)) {
+				const description = turndownService.turndown(ib.description);
+				const infoPage = {
+					page: {
+						embeds: [
+							new EmbedBuilder()
+								.setTitle(ib.title)
+								.setDescription(turndownService.turndown(ib.long_desc))
+								.setThumbnail(ib.images[0].original)
+								.setURL(ib.url)
+								.setAuthor({ name: ib.providers[0].name || 'No title', iconURL: ib.providers[0].img || undefined, url: ib.providers[0].url || undefined })
+						],
+					},
+					name: ib.title.slice(0, 99),
+					description: description.substring(0, 99) || 'No description',
+					emoji: (getEmoji('info') || '').toString() || '🔍',
+				};
+				pages = [infoPage, ...pages];
+			}
 		}
 		await pagination({ interaction, message, pages, type: 'select' });
 	},

@@ -1,7 +1,6 @@
-import axios from 'axios';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
-import { pagination } from '../../util/pagination';
+import { chatllm, searchBrave } from '../../util/brave';
 
 export default {
 	description: 'Ask brave a question',
@@ -15,91 +14,36 @@ export default {
 		},
 	],
 	type: 'all',
-	slashOnly: true,
-	execute: async ({ args, interaction, message, handler: { logger }, user }) => {
-		const question = args.get('question');
-		if (!question) return { ephemeral: true, content: 'Please provide a question to ask' };
-		const encoded = encodeURIComponent(question);
-		const apiURL = `https://api.evade.rest/search/llm?query=${encoded}`;
-		const enURL = `https://api.evade.rest/search/llm/enrichments?query=${question}`;
-		const strings: string[] = [];
-		await interaction?.deferReply();
-		const res = await axios.get(apiURL, {
-			responseType: 'stream', headers: {
-				Authorization: import.meta.env.OTHER_EVADE_API_KEY
-			}
-		}).then((res) => {
-			let i = 0;
-			res.data.on('data', async (chunk: string) => {
-				if (typeof chunk != 'string') chunk = Buffer.from(chunk).toString('utf-8');
-				strings.push(
-					chunk
-						.split('\n')
-						.join('')
-						.replace(/"(.{1})"/g, '$1'),
-				);
-				const endRes = strings
-					.join('')
-					.replace(/\\n/g, '\n')
-					.replace(/""/g, '\n')
-					.replace(/\\t/g, '\t')
-					.replace('" "', ' ');
-				if (endRes !== '' && i % 2 === 0) {
-					await pagination({
-						interaction,
-						message,
-						pages: endRes.match(/[\s\S]{1,1999}/g)!.map((text, i) => ({
-							page: {
-								content: text,
-							},
-						})),
-						type: 'buttons',
-					});
-				}
-				i++;
-			});
-			res.data.on('end', async () => {
-				res = await axios.get(enURL, {
-					responseType: 'json', headers: {
-						Authorization: import.meta.env.OTHER_EVADE_API_KEY
-					}
-				});
-				const id = Buffer.from(res.data.raw_response).toString('base64').slice(0, 22);
-				const reply = await pagination({
-					interaction,
-					message,
-					pages: (res.data.raw_response as string).match(/[\s\S]{1,1999}/g)!.map((text, i) => ({
-						page: {
-							content: text,
-							components: [
-								new ActionRowBuilder<ButtonBuilder>().setComponents(
-									new ButtonBuilder()
-										.setCustomId(`enrichment_${id}`)
-										.setLabel('View sources')
-										.setStyle(ButtonStyle.Primary),
-								),
-							],
-						},
-					})),
-					type: 'buttons',
-				});
-				const collector = await reply.createMessageComponentCollector({
-					filter: (i) => i.customId == `enrichment_${id}`,
-				});
-				collector.on('collect', async (i) => {
-					i.reply({
-						embeds: [
-							{
-								title: 'Sources',
-								description: res.data.context_results
-									.map((i: { url: string; title: string }) => `[${i.title}](${i.url})`)
-									.join('\n'),
-							},
-						],
-						ephemeral: true,
-					});
-				});
-			});
-		});
+	execute: async ({ args, interaction, message, editReply }) => {
+		const query = args.get('question') as string || 'test';
+		const rMsg = message ? await message.reply('Thinking...') : await interaction!.deferReply();
+		const queryResponse = (await searchBrave(query)).data.body.response;
+		if (!queryResponse || !queryResponse.chatllm || !queryResponse.chatllm.results || queryResponse.chatllm.results.length === 0) {
+			return editReply({ content: 'No results found.', components: [] });
+		}
+		const { key } = queryResponse.chatllm.results[0];
+		const llm = await chatllm(key);
+		const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == 'enrichments' })
+		collector.on('collect', async i => {
+			const embed = new EmbedBuilder()
+				.setTitle('Sources')
+				.setDescription(llm.context_results.map(v => `- [${v.title}](${v.url})`).join('\n'))
+			await i.reply({
+				embeds: [embed],
+				ephemeral: true
+			})
+		})
+		const embed = new EmbedBuilder()
+			.setTitle('Search results')
+			.setDescription(llm.raw_response)
+		await editReply({
+			embeds: [embed],
+			content: '',
+			components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder()
+				.setLabel('View sources').setStyle(ButtonStyle.Primary)
+				.setCustomId('enrichments')
+			)],
+			files: llm.images.map(v => ({ attachment: v.src, name: 'image.png' })),
+		}, rMsg)
 	},
 } as ICommand;

@@ -20,13 +20,7 @@ export default {
 				ephemeral: true,
 			};
 		}
-
-		if (amount > 100) {
-			return {
-				content: 'You can only purge 100 messages at a time',
-				ephemeral: true,
-			};
-		}
+		await message?.delete();
 		try {
 			const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(amount, true);
 			return {

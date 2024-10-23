@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { searchBraveImages } from '../../util/brave';
+import { chatllm, searchBrave } from '../../util/brave';
 
 
 import TurnDownService from 'turndown';
@@ -26,7 +26,7 @@ const parseDDG = async (query: string) => {
 export default {
 	description: 'test command for devs',
 	// perms: 'dev',
-	type: 'dmOnly',
+	type: 'all',
 	// cooldown: 60000,
 	disabled: commandHandler.prodMode,
 	options: [{
@@ -35,14 +35,34 @@ export default {
 		type: ApplicationCommandOptionType.String,
 		required: false
 	}],
-	execute: async ({ user, interaction, handler, args, guild, channel, message }) => {
+	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const query = args.get('query') as string || 'test';
-		const b = await searchBraveImages(query) as any;
-		const res = b.data.body.response.results[0];
-		console.log(res.bo_debug)
-
-		console.log(res.thumbnail)
-		console.log(res.properties)
-		console.log(res.meta_url)
+		const { key } = (await searchBrave(query)).data.body.response.chatllm.results[0];
+		const llm = await chatllm(key);
+		const rMsg = message ? await message.reply('Loading...') : await interaction!.deferReply();
+		console.log(llm)
+		const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == 'enrichments' })
+		collector.on('collect', async i => {
+			const embed = new EmbedBuilder()
+				.setTitle('Sources')
+				.setDescription(llm.context_results.map(v => `- [${v.title}](${v.url})`).join('\n'))
+			await i.reply({
+				embeds: [embed],
+				ephemeral: true
+			})
+		})
+		const embed = new EmbedBuilder()
+			.setTitle('AI Search')
+			.setDescription(llm.raw_response)
+		await editReply({
+			embeds: [embed],
+			content: '',
+			components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder()
+				// .setCustomId(`enrichments_${id}`)
+				.setLabel('View sources').setStyle(ButtonStyle.Primary)
+				.setCustomId('enrichments')
+			)],
+			files: llm.images.map(v => ({ attachment: v.src, name: 'image.png' })),
+		}, rMsg)
 	},
 } as ICommand;
