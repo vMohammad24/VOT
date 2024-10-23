@@ -96,6 +96,7 @@ export default class SlashCommandHandler {
 		});
 		const contextCommands = this.commands!.filter(a => (a as IContextCommand).context != null).map((c) => {
 			const cmd = c as IContextCommand;
+			if (cmd.disabled) return null;
 			const uInstall = {
 				contexts: [] as number[],
 				integration_types: [] as number[],
@@ -128,7 +129,7 @@ export default class SlashCommandHandler {
 				.setIntegrationTypes(uInstall.integration_types)
 				.setType(cmd.type)
 				.toJSON()
-		});
+		}).filter(a => a != null);
 		try {
 			if (commandHandler.verbose)
 				commandHandler.logger.info('Started refreshing application (/) commands.');

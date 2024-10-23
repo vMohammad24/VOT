@@ -36,6 +36,7 @@ export default {
 		required: false
 	}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
+		return nigger;
 		const query = args.get('query') as string || 'test';
 		const { key } = (await searchBrave(query)).data.body.response.chatllm.results[0];
 		const llm = await chatllm(key);
