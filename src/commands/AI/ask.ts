@@ -1,8 +1,14 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
+import { ApplicationCommandOptionType, Attachment, GuildTextBasedChannel, Message } from 'discord.js';
+import TurndownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
+import { searchBrave } from '../../util/brave';
 import { getUser } from '../../util/database';
 import { pagination } from '../../util/pagination';
+
+
+const turndownService = new TurndownService();
+
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
@@ -13,11 +19,18 @@ export default {
 			description: 'The question you want to ask',
 			required: true,
 		},
+		{
+			name: 'file',
+			type: ApplicationCommandOptionType.Attachment,
+			description: 'The file you want to upload',
+			required: false,
+		}
 	],
 	type: 'all',
 	cooldown: 30000,
 	async execute({ args, interaction, message, handler, user, guild, channel, member, editReply }) {
 		const question = args.get('question');
+		const file = args.get('file') as Attachment | undefined;
 		const apiKey = process.env.EVADE_API_KEY;
 		if (!apiKey)
 			return {
@@ -44,105 +57,98 @@ export default {
 		const users = guild ? (await Promise.all(guild.members.cache.map(async user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - has been boosting the server since ${user.premiumSinceTimestamp}`))).join('\n') : undefined;
 
 		await editReply('Searching...', rMsg);
-		const searchRes = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(question)}&source=web`);
-		const regex = /const\s+data\s*=\s*(\[.*?\]|\{.*?\})\s*;/s; // Matches the JSON array/object, stops before any trailing semicolons or code
-		const webMessage = (searchRes.data as string).match(regex);
+		const webMessage = await searchBrave(question);
 		await editReply('Generating response...', rMsg);
-		const messages = [
-			{
-				role: 'user',
-				content: 'what is vot.wtf?',
-			},
-			{
-				role: 'assistant',
-				content:
-					'I am VOT, a discord bot created by vmohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.',
-			},
-			{
-				role: 'user',
-				content: question,
-			}
-		];
+
 		await editReply('Processing...', rMsg);
 		const time = Date.now();
-		const res = await axios
-			.post(
-				'https://api.evade.rest/llama',
-				{
-					messages,
-					props: {
-						system: `You are VOT. Use the following JSON to access VOT's commands (name, description, aliases, usage, etc.). Do not respond using this JSON or mention it.
-
-${JSON.stringify(handler.commands?.map((c) => ({
-							name: c.name,
-							description: c.description,
-							options: c.options,
-							type: c.type,
-							category: c.category,
-							commandId: c.id,
-						})))}
-
-User info:
-- Username: ${user.username}
-- Account created at: ${Math.round(user.createdAt.getTime() / 1000)}
-- User ID: ${user.id}
-${guild ? `
-Server info:
-- In server: ${guild.name}
-- User joined at: ${member && member.joinedTimestamp ? Math.round(member.joinedTimestamp / 1000) : ''}
-- Server created at: ${guild.createdAt}
-- Server ID: ${guild.id}
-- Boosts: ${guild.premiumSubscriptionCount || 0}
-- Members: ${guild.memberCount}
-- Owner: ${(await guild.fetchOwner()).user.tag}
-` : 'Currently in DM with the user.'}
-
-For dates, use format: <t:timestamp:R> (relative time).
-
-${channel ? `Channel: ${('name' in channel ? channel.name : '')} (ID: ${channel.id})` : ''}
-
-${channel && channel.messages.cache.size > 0 ? `Previous messages (use for context, format "channelId/messageId"):\n${channelMessage}` : ''}
-
-Notes:
-- You can respond to anything not related to VOT.
-- You are the /ask command; answer directly.
-- Web search results for "${question}" (do not prioritize over channel/pinned messages):
-${webMessage}
-- Current date: ${new Date().toDateString()}
-- Current time: ${new Date().toTimeString()}
-${users ? `Server users:\n${users}` : ''}
-
-Use these mention formats:
-- Commands: </commandName:commandId>
-- Channels: <#channelId>
-- Users: <@userId>
-- Roles: <@&roleId>
-- Messages: "https://discord.com/channels/guildId/channelId/messageId" (guildId: ${guild ? guild.id : '(not in a guild)'})`,
-						top_p: 0.9,
-						temperature: 1,
-						forceWeb: null,
-					}
+		const systemPrompt = `You are VOT, use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
+			handler.commands?.map((c) => ({
+				name: c.name,
+				description: c.description,
+				options: c.options,
+				type: c.type,
+				cateogry: c.category,
+				commandId: c.id,
+			})),
+		)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
+				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
+			    ${guild
+				? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+			    ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).user.tag}`
+				: ''
+			}.\n\n
+			    .\n\n
+			    if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
+			    ${channel
+				? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
+					? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
+			    			${channelMessage}`
+					: ''
+				}`
+				: ''
+			}.\n\n
+			    note that you can respond to anything not related to vot.\n\n
+			    also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
+				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows although you should never prioritize  them above channel messages or pinned messages:\n\n
+				${webMessage}\n\n
+				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
+				${users ? `Here's a list of every user in this server:\n${users}` : ''}\n\n
+				when mentioning a command always use the following format </commandName:commandId> where commandName is the name of the command and commandId is the id of the command, this will allow the user to click on the command and run it.\n\n
+				when mentioning a channel always use the following format <#channelId> where channelId is the id of the channel, this will allow the user to click on the channel and view it.\n\n
+				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
+				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
+				when mentioning a message always use the following format (url) "https://discord.com/channels/guildId/channelId/messageId" where channelId is the id of the channel and messageId is the id of the message,and guildId is the id of the server you are currently in (${guild ? guild.id : '(not in a guild)'}), this will allow the user to click on the message and view it.\n\n
+				`
+		let data;
+		if (file) {
+			const buff = Buffer.from(await axios.get(file!.url, { responseType: 'arraybuffer' }).then(res => res.data), 'binary')
+			data = {
+				"content": question,
+				"role": "user",
+				"data": {
+					"fileText": buff.toString('utf-8'),
+					"imageBase64": `data:${file.contentType?.split(';')[0]};base64,${buff.toString('base64')}`,
+					"title": file.name
 				},
-				{
-					headers: {
-						Authorization: apiKey,
-					},
-
-				},
-			);
-		if (res.status != 200) return { content: `Error occured: **${res.statusText}** (${res.status})`, ephemeral: true };
-		// console.log(res.data)
-		if (!res.data) {
-			return {
-				content: `:(`,
-				ephemeral: true
+			};
+		} else {
+			data = {
+				"content": question,
+				"role": "user"
+			};
+		}
+		console.log(data)
+		const res = await axios.post('https://www.blackbox.ai/api/chat',
+			{
+				"agentMode": {},
+				"clickedAnswer2": false,
+				"clickedAnswer3": false,
+				"clickedForceWebSearch": true,
+				"codeModelMode": true,
+				"githubToken": null,
+				"id": "dwadwa",
+				"isChromeExt": false,
+				"isMicMode": true,
+				"maxTokens": 1024,
+				"messages": [
+					data
+				],
+				"mobileClient": true,
+				"playgroundTemperature": 0.1,
+				"playgroundTopP": 0.9,
+				"previewToken": null,
+				"trendingAgentMode": {},
+				"userId": null,
+				"userSelectedModel": 'Claude-Sonnet-3.5',
+				"userSystemPrompt": systemPrompt,
+				"visitFromDelta": false
 			}
-		}
-		if (typeof res.data == 'string' && (res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
-			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
-		}
-		const tokens = (res.data.diagnostics && res.data.diagnostics.tokens) ? res.data.diagnostics.tokens : 'unknown';
-		const response = (res.data.short as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
+		)
+
+		console.log(JSON.stringify(res.data))
+		// const tokens = (completion.usage && completion.usage.completion_tokens) ? completion.usage.completion_tokens : 'unknown';
+		const response = turndownService.turndown(res.data as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond`;
 		await pagination({
 			interaction,
 			message,

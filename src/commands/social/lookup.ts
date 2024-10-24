@@ -217,11 +217,12 @@ export default {
         }
     ],
     type: 'all',
-    execute: async ({ args, handler }) => {
+    execute: async ({ args, handler, interaction }) => {
         const service = args.get('service') as string;
         const query = args.get('query') as string;
         if (!service) return { ephemeral: true, content: `Please provide a service to lookup the user in.` };
         if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
+        await interaction?.deferReply();
         const ems = await handler.client.application?.emojis.fetch();
         switch (service) {
             case 'nest.rip':
@@ -388,6 +389,7 @@ export default {
                 const { badges } = deathUser;
                 if (badges && badges.length != 0) {
                     await Promise.all(badges.map(async (badge) => {
+                        if (!badge.toggle) return;
                         const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
                         const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
                         await write(path, res.data);
