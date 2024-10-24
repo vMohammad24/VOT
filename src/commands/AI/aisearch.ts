@@ -35,7 +35,7 @@ export default {
 		})
 		const embed = new EmbedBuilder()
 			.setTitle('Search results')
-			.setDescription(llm.raw_response)
+			.setDescription(llm.raw_response || 'No results found')
 		await editReply({
 			embeds: [embed],
 			content: '',

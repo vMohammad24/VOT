@@ -702,6 +702,6 @@ export async function chatllm(result: BraveSearchResult['data']['body']['respons
     if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
     const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
     const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`);
-    await redis.set(`braveChatllm:${result.query}`, JSON.stringify(res.data), 'EX', 60 * 60);
+    await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60);
     return enrichments.data as BraveEnrichments;
 }
