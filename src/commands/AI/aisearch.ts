@@ -21,8 +21,8 @@ export default {
 		if (!queryResponse || !queryResponse.chatllm || !queryResponse.chatllm.results || queryResponse.chatllm.results.length === 0) {
 			return editReply({ content: 'No results found.', components: [] });
 		}
-		const { key } = queryResponse.chatllm.results[0];
-		const llm = await chatllm(key);
+		const result = queryResponse.chatllm.results[0];
+		const llm = await chatllm(result);
 		const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == 'enrichments' })
 		collector.on('collect', async i => {
 			const embed = new EmbedBuilder()

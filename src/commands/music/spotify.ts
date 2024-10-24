@@ -55,7 +55,11 @@ export default {
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
 		await interaction?.deferReply({ ephemeral: true });
 
-		const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`)
+		const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
+			headers: {
+				Authorization: import.meta.env.OTHER_EVADE_API_KEY,
+			}
+		})
 		if (!res.data.activities) {
 			return {
 				content: 'No activity found',
@@ -132,7 +136,8 @@ export default {
 		// 	};
 
 		if (player) {
-			const cTrack = new KazagumoTrack(track.getRaw()._raw, track.requester)
+			const t = (await (await handler.kazagumo.getLeastUsedNode()).rest.resolve(track.uri!))!.data as any;
+			const cTrack = new KazagumoTrack(t, member as GuildMember);
 			if (player.queue.current) {
 				await player.queue.add(cTrack);
 				if (!player.playing) player.play();
@@ -163,7 +168,7 @@ export default {
 					new EmbedBuilder()
 						.setTitle(getEmoji('spotify').toString() + ' Spotify')
 						.setColor('Green')
-						.setDescription(`### Currently Playing:\n[${track.title || 'Error getting title'}](${track.uri})`)
+						.setDescription(`### [${track.title || 'Error getting title'}](${track.uri})`)
 						.setThumbnail(track.thumbnail || null)
 						.setAuthor({ name: track.author || 'Error getting author', iconURL: info.artistArtworkUrl, url: info.artistUrl })
 				]
