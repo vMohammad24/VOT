@@ -478,7 +478,159 @@ interface BraveEnrichments {
     }[];
 }
 
-const getQueryResult = async (query: string, type: 'images' | 'query' = 'query') => {
+
+interface BraveSearchGoggles {
+    type: string
+    data: {
+        body: {
+            key: number
+            mixerTime: number
+            clusterResultsMin: number
+            response: {
+                query: {
+                    original: string
+                    show_strict_warning: boolean
+                    spellcheck_off: boolean
+                    country: string
+                    bad_results: boolean
+                    postal_code: string
+                    city: string
+                    header_country: string
+                    more_results_available: boolean
+                    state: string
+                    related_queries: Array<Array<[boolean, string]>>
+                    related_queries_autocomplete_like: boolean
+                    bo_altered_diff: Array<any>
+                }
+                mixed: {
+                    type: string
+                    top: Array<any>
+                    main: Array<{
+                        all: boolean
+                        index?: number
+                        type: string
+                    }>
+                    side: Array<any>
+                }
+                web: {
+                    type: string
+                    results: Array<{
+                        title: string
+                        url: string
+                        description: string
+                        page_age?: string
+                        profile: {
+                            name: string
+                            url: string
+                            long_name: string
+                            img: string
+                        }
+                        language: string
+                        type: string
+                        subtype: string
+                        is_live: boolean
+                        meta_url: {
+                            scheme: string
+                            netloc: string
+                            hostname: string
+                            favicon: string
+                            path: string
+                        }
+                        thumbnail?: {
+                            src: string
+                            original: string
+                            logo: boolean
+                            is_tripadvisor: boolean
+                            duplicated?: boolean
+                        }
+                        age?: string
+                        descriptionLength: number
+                        full_title?: string
+                        video?: {
+                            thumbnail: {
+                                src: string
+                                original: string
+                                is_tripadvisor: boolean
+                            }
+                        }
+                        article?: {
+                            author: Array<{
+                                type: string
+                                name: string
+                                url?: string
+                            }>
+                            date: string
+                            publisher: {
+                                type: string
+                                name: string
+                                thumbnail: {
+                                    src: string
+                                    original: string
+                                    is_tripadvisor: boolean
+                                }
+                                url?: string
+                            }
+                            isAccessibleForFree?: boolean
+                        }
+                        organization?: {
+                            type: string
+                            name: string
+                            contactPoints: Array<any>
+                        }
+                    }>
+                    bo_left_right_divisive: boolean
+                }
+                videos: {
+                    type: string
+                    mutated_by_goggles: boolean
+                    results: Array<{
+                        title: string
+                        url: string
+                        meta_url: {
+                            scheme: string
+                            netloc: string
+                            hostname: string
+                            favicon: string
+                            path: string
+                        }
+                        page_age?: string
+                        description: string
+                        thumbnail: {
+                            src: string
+                            original: string
+                            is_tripadvisor: boolean
+                        }
+                        age?: string
+                        video: {
+                            thumbnail: {
+                                src: string
+                                original: string
+                                is_tripadvisor: boolean
+                            }
+                        }
+                    }>
+                }
+            }
+            goggles: {
+                result: any
+            }
+        }
+        title: string
+        page: string
+        searchPage: string
+        paid: boolean
+        noResults: boolean
+        tf: string
+    }
+    uses: {
+        search_params: Array<string>
+        route: number
+        url: number
+    }
+}
+
+
+const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles' = 'query') => {
     switch (type) {
         case 'query':
             const cache = await redis.get(`brave:${query}`);
@@ -490,6 +642,11 @@ const getQueryResult = async (query: string, type: 'images' | 'query' = 'query')
             if (imageCache && commandHandler.prodMode) return JSON.parse(imageCache);
             const imagesRes = await axios.get(`https://search.brave.com/images?q=${encodeURIComponent(query)}`);
             return imagesRes.data as string;
+        case 'goggles':
+            const gogglesCache = await redis.get(`braveGoggles:${query}`);
+            if (gogglesCache && commandHandler.prodMode) return JSON.parse(gogglesCache);
+            const gogglesRes = await axios.get(`https://search.brave.com/goggles?q=${encodeURIComponent(query)}`);
+            return gogglesRes.data as string;
 
     }
 }
@@ -522,6 +679,21 @@ export async function searchBraveImages(query: string) {
         return json;
     } else {
         return data as BraveSearchImages;
+    }
+}
+
+export async function searchBraveGoggles(query: string) {
+    const data = await getQueryResult(query, 'goggles');
+    if (typeof data == 'string') {
+        const lookFor = 'const data = ';
+        const index = data.indexOf(lookFor);
+        const endIndex = data.indexOf('];', index);
+        const end = data.substring(index + lookFor.length, endIndex + 1);
+        const json = new Function(`"use strict";return ${end}`)()[1];
+        await redis.set(`braveImages:${query}`, JSON.stringify(json), 'EX', 60 * 60);
+        return json as BraveSearchGoggles;
+    } else {
+        return data as BraveSearchGoggles;
     }
 }
 

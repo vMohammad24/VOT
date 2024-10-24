@@ -208,7 +208,7 @@ export default class CommandHandler {
 				}
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
-				if (commandHandler.prodMode && command.shouldCache && commandContext.guild.id && commandContext.user.id) {
+				if (commandHandler.prodMode && command.shouldCache && commandContext.guild && commandContext.user) {
 					const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
 					if (cachedCommand) {
 						return cachedCommand;

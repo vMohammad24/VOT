@@ -130,7 +130,7 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 export async function getCachedSite(site: string, wait: boolean = false) {
 	const cachedSite = await redis.get(`site:${wait}:${site}`);
 
-	if (cachedSite) {
+	if (cachedSite && commandHandler.prodMode) {
 		return Buffer.from(cachedSite, 'base64');
 	}
 
