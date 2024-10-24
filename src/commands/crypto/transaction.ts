@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { launchPuppeteer } from '../../util/puppeteer';
+import { launchPuppeteer, newPage } from '../../util/puppeteer';
 
 const browser = await launchPuppeteer();
 export default {
@@ -26,7 +26,7 @@ export default {
 			};
 		await interaction?.deferReply();
 		const url = `https://blockchair.com/litecoin/transaction/${txid}`;
-		const page = await browser.newPage();
+		const page = await newPage();
 		await page.goto(url);
 		await page.setViewport({ width: 2560, height: 1440 });
 		await page.locator('span').scroll();

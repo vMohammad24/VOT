@@ -4,7 +4,7 @@ import { URL } from 'url';
 import commandHandler from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 import { cacheSite, getCachedSite } from '../../util/database';
-import { launchPuppeteer } from '../../util/puppeteer';
+import { launchPuppeteer, newPage } from '../../util/puppeteer';
 const browser = await launchPuppeteer();
 const blacklist = await (async () => {
 	if (commandHandler.verbose)
@@ -75,7 +75,7 @@ export default {
 			content: `-# Took ${Date.now() - time}ms`
 		}
 		await interaction?.deferReply();
-		const page = await browser.newPage();
+		const page = await newPage();
 		try {
 			await page.goto(url, {
 				timeout: 3000

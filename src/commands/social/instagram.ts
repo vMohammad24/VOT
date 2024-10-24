@@ -4,7 +4,7 @@ import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
-import { launchPuppeteer } from '../../util/puppeteer';
+import { launchPuppeteer, newPage } from '../../util/puppeteer';
 
 
 interface IUser {
@@ -311,7 +311,7 @@ export default {
             }
             case 'trending': {
                 const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":'
-                const page = await browser.newPage();
+                const page = await newPage();
                 const res = await page.goto('https://www.instagram.com/reels/')//await axios.get('https://www.instagram.com/reels/')
                 const data = await res!.content();
                 page.close();

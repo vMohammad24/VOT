@@ -1,10 +1,13 @@
 import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
+import { write } from "bun";
 import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "discord.js";
 import numeral from "numeral";
+import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
-import { getEmoji } from "../../util/emojis";
+import { addEmoji, getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
+
 interface User {
     avatar: string;
     banned: boolean;
@@ -145,7 +148,35 @@ interface BiographyUser {
     aboutme: string;
     invite_code: string;
     invited_by: string;
+    avatar?: string;
+    banner?: string;
 }
+
+
+
+interface DeathUser {
+    username: string;
+    uid: number;
+    description: string;
+    avatarUrl: string;
+    views: number;
+    premium: boolean;
+    joined_at: number;
+    alias: string;
+    badges: {
+        name: string;
+        url: string;
+        id: string;
+        toggle: boolean;
+    }[];
+    discord_id: string;
+    discord_username: string;
+    backgroundUrl: string;
+    audioUrl: string;
+    cursorUrl: string;
+}
+
+
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -168,10 +199,14 @@ export default {
                     name: 'range.wtf',
                     value: 'range.wtf'
                 },
-                // {
-                //     name: 'Biography',
-                //     value: 'biography'
-                // }
+                {
+                    name: 'Biography',
+                    value: 'biography'
+                },
+                {
+                    name: 'death.ovh',
+                    value: 'death.ovh'
+                }
             ]
         },
         {
@@ -182,11 +217,12 @@ export default {
         }
     ],
     type: 'all',
-    execute: async ({ args }) => {
+    execute: async ({ args, handler }) => {
         const service = args.get('service') as string;
         const query = args.get('query') as string;
         if (!service) return { ephemeral: true, content: `Please provide a service to lookup the user in.` };
         if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
+        const ems = await handler.client.application?.emojis.fetch();
         switch (service) {
             case 'nest.rip':
                 const response = await axios.get(`https://nest.rip/${query}`);
@@ -306,32 +342,78 @@ export default {
                             .setTimestamp(new Date(rUser.created_at))
                     ]
                 }
-            // case 'biography':
-            //     const res = await axios.get(`https://bio.polardev.net/api/${query}`);
-            //     if(res.status != 200) return {
-            //         ephemeral: true,
-            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
-            //     }
-            //     const bUser = res.data as BiographyUser;
-            //     if(!bUser.id && bUser.id != 0) return {
-            //         ephemeral: true,
-            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
-            //     }
-            //     return {
-            //         embeds: [
-            //             new EmbedBuilder()
-            //                 .setAuthor({ name: bUser.username, iconURL: `https://bio.polardev.net/avatars/${bUser.id}` })
-            //                 .setTitle(bUser.username)
-            //                 .setDescription(bUser.bio)
-            //                 .addFields([
-            //                     { name: 'About Me', value: bUser.aboutme || 'No bio' },
-            //                 ])
-            //                 .setThumbnail(`https://bio.polardev.net/avatars/${bUser.id}`)
-            //                 .setColor('Random')
-            //                 .setFooter({ text: `ID: ${bUser.id} • Created` })
-            //                 .setTimestamp(new Date(bUser.created_at))
-            //         ]
-            //     }
+            case 'biography':
+                const res = await axios.get(`https://bio.polardev.net/api/${query}`);
+                if (res.status != 200) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const bUser = res.data as BiographyUser;
+                if (!bUser.id && bUser.id != 0) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const color: ColorResolvable = bUser.avatar ? getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/uploads/${bUser.avatar}`))[0] : 'Random';
+                return {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({ name: bUser.username, iconURL: bUser.avatar ? `https://cdn.nest.rip/uploads/${bUser.avatar}` : undefined, url: `https://bio.polardev.net/${bUser.username}` })
+                            .setTitle(bUser.username || 'No username')
+                            .setDescription(bUser.bio || 'No bio')
+                            .addFields([
+                                { name: 'About Me', value: bUser.aboutme || 'No about me' },
+                            ])
+                            .setThumbnail(`https://cdn.nest.rip/uploads/${bUser.avatar}`)
+                            .setColor(color)
+                            .setFooter({ text: `ID: ${bUser.id} • Created` })
+                            // .setImage(`https://cdn.nest.rip/uploads/${bUser.banner}`)
+                            .setTimestamp(new Date(bUser.created_at))
+                    ]
+                }
+            case 'death.ovh':
+                const deathRes = await axios.post(`https://death.ovh/api/bot/lookup2`, {
+                    key: import.meta.env.DEATH_OVH_API_KEY,
+                    username: query
+                });
+                if (deathRes.status !== 200) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const deathUser = deathRes.data as DeathUser;
+                if (!deathUser.uid) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const emojis: string[] = [];
+                const { badges } = deathUser;
+                if (badges && badges.length != 0) {
+                    await Promise.all(badges.map(async (badge) => {
+                        const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
+                        const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
+                        await write(path, res.data);
+                        emojis.push((await addEmoji(path, ems))?.toString()!);
+                    }));
+                }
+                const ucolor: ColorResolvable = deathUser.backgroundUrl ? getTwoMostUsedColors(await loadImage(deathUser.avatarUrl))[0] : 'Random';
+                return {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({ name: deathUser.username, iconURL: deathUser.avatarUrl, url: `https://death.ovh/${deathUser.alias}` })
+                            // .setTitle(deathUser.username)
+                            .setDescription(`
+### ${emojis.join('')}                                
+${deathUser.description}`)
+                            .setThumbnail(deathUser.avatarUrl || null)
+                            .setImage(deathUser.backgroundUrl || null)
+                            .addFields([
+                                { name: 'Views', value: numeral(deathUser.views).format('0,0'), inline: true },
+                                { name: 'Discord', value: deathUser.discord_username ? `<@${deathUser.discord_id}>` : 'Not linked', inline: true }
+                            ])
+                            .setColor(ucolor)
+                            .setFooter({ text: `UID: ${deathUser.uid} • Joined` })
+                            .setTimestamp(new Date(deathUser.joined_at * 1000))
+                    ]
+                }
             default:
                 return { ephemeral: true, content: `I'm sorry, but the service "${service}" is not yet supported.` };
         }

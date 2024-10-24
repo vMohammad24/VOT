@@ -1,11 +1,10 @@
 import axios from 'axios';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { chatllm, searchBrave } from '../../util/brave';
-
 
 import TurnDownService from 'turndown';
+import { searchBrave } from '../../util/brave';
 const turndownService = new TurnDownService();
 const parseDDG = async (query: string) => {
 	const res1 = (await axios.get(`https://duckduckgo.com/?t=ffab&q=${encodeURIComponent(query)}&ia=web`)).data;
@@ -20,50 +19,69 @@ const parseDDG = async (query: string) => {
 }
 
 
-
-
-
 export default {
 	description: 'test command for devs',
 	// perms: 'dev',
 	type: 'all',
 	// cooldown: 60000,
 	disabled: commandHandler.prodMode,
-	options: [{
-		name: 'query',
-		description: 'The search query',
-		type: ApplicationCommandOptionType.String,
-		required: false
-	}],
+	options: [
+		{
+			name: 'person',
+			description: 'The person you want to ask',
+			type: ApplicationCommandOptionType.String,
+			required: true,
+		},
+		{
+			name: 'query',
+			description: 'The search query',
+			type: ApplicationCommandOptionType.String,
+			required: false
+		}],
+	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		return nigger;
 		const query = args.get('query') as string || 'test';
-		const { key } = (await searchBrave(query)).data.body.response.chatllm.results[0];
-		const llm = await chatllm(key);
-		const rMsg = message ? await message.reply('Loading...') : await interaction!.deferReply();
-		console.log(llm)
-		const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == 'enrichments' })
-		collector.on('collect', async i => {
-			const embed = new EmbedBuilder()
-				.setTitle('Sources')
-				.setDescription(llm.context_results.map(v => `- [${v.title}](${v.url})`).join('\n'))
-			await i.reply({
-				embeds: [embed],
-				ephemeral: true
-			})
-		})
-		const embed = new EmbedBuilder()
-			.setTitle('AI Search')
-			.setDescription(llm.raw_response)
-		await editReply({
-			embeds: [embed],
-			content: '',
-			components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder()
-				// .setCustomId(`enrichments_${id}`)
-				.setLabel('View sources').setStyle(ButtonStyle.Primary)
-				.setCustomId('enrichments')
-			)],
-			files: llm.images.map(v => ({ attachment: v.src, name: 'image.png' })),
-		}, rMsg)
+		const person = args.get('person') as string || 'playboicartii';
+		// const person = query.split(' ')[0]
+		await interaction?.deferReply();
+		const brave = await searchBrave(query)
+		const { infobox, web } = brave.data.body.response;
+		const systemPrompt = `You Are ${person} and have to act like them all the time never forget that, you have to talk like them and talk to the user as of they were your friend even if you dont know them, ${infobox?.results.map(result => `
+			${result.title} is ${result.long_desc}. Some of your pictures are ${(result.images || []).map(image => `
+				${image.src} (${image.alt}) 
+				`).join(' ')}, just say that you are ${person} and act like them, some more data about you (${person}) are: ${web.results.map(result => `
+					${result.title} - ${result.description} - ${result.faq} - ${result.article}`).join(' ')}
+				`).join('\n\n')}`
+		const res = await axios.post('https://www.blackbox.ai/api/chat',
+			{
+				"agentMode": {},
+				"clickedAnswer2": false,
+				"clickedAnswer3": false,
+				"clickedForceWebSearch": true,
+				"codeModelMode": true,
+				"githubToken": null,
+				"id": "dwadwa",
+				"isChromeExt": false,
+				"isMicMode": true,
+				"maxTokens": 8048,
+				"messages": [
+					{
+						"content": query,
+						"role": "user"
+					}
+				],
+				"mobileClient": true,
+				"playgroundTemperature": 0.1,
+				"playgroundTopP": 0.9,
+				"previewToken": null,
+				"trendingAgentMode": {},
+				"userId": null,
+				"userSelectedModel": null,
+				"userSystemPrompt": systemPrompt,
+				"visitFromDelta": false
+			}
+		)
+
+
 	},
 } as ICommand;
