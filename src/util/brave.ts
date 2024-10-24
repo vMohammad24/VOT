@@ -697,32 +697,11 @@ export async function searchBraveGoggles(query: string) {
     }
 }
 
-export async function chatllm(key: string) {
-
-    // try {
-    const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${key}`);
-    const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${key}`);
+export async function chatllm(result: BraveSearchResult['data']['body']['response']['chatllm']['results'][0]) {
+    const cache = await redis.get(`braveChatllm:${result.query}`);
+    if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
+    const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
+    const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`);
+    await redis.set(`braveChatllm:${result.query}`, JSON.stringify(res.data), 'EX', 60 * 60);
     return enrichments.data as BraveEnrichments;
-    // const originalStream = res.data;
-    //     const transformStream = new Transform({
-    //         transform(chunk, encoding, callback) {
-    //             const regex = /"(?:[^"\\]|\\.)*"/;
-    //             const modifiedChunk = chunk.toString()
-    //                 .replace(/\\n/g, '\n')
-    //                 .replace(/""/g, '\n')
-    //                 .replace(/\\t/g, '\t')
-    //                 .replace('" "', ' ')
-    //                 .replace(/"\s*/g, '').replace(/\n/g, '')
-    //             if (modifiedChunk)
-    //                 this.push(modifiedChunk);
-    //             callback();
-    //         }
-    //     });
-    //     originalStream.pipe(transformStream);
-
-    //     return transformStream;
-    // } catch (error) {
-    //     console.error('Error fetching stream:', error);
-    //     throw error;
-    // }
 }

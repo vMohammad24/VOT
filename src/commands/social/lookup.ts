@@ -1,11 +1,9 @@
 import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
-import { write } from "bun";
 import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "discord.js";
 import numeral from "numeral";
-import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
-import { addEmoji, getEmoji } from "../../util/emojis";
+import { addEmojiByURL, getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
 
 interface User {
@@ -177,6 +175,110 @@ interface DeathUser {
 }
 
 
+
+
+interface DiscordConnection {
+    id: string;
+    userId: string;
+    discordId: string;
+    displayName: string;
+    username: string;
+    avatar: string;
+    connectedAt: string;
+    nitro: boolean;
+}
+
+interface Customization {
+    id: string;
+    bioId: string;
+    joinDate: boolean;
+    branding: boolean;
+    nsfw: boolean;
+    forceNsfw: boolean;
+    avatar: boolean;
+    badges: boolean;
+    metaDescription: string;
+    metaTitle: string;
+    metaThemeColor: ColorResolvable;
+    metaFavicon: string;
+}
+
+interface ProfileButton {
+    id: string;
+    type: string;
+    value: string;
+    bioId: string;
+}
+
+interface Component {
+    id: string;
+    parentId: string | null;
+    type: string;
+    position: number;
+    textValue: string | null;
+    textSize: number;
+    textPosition: string;
+    textWeight: number;
+    imageSize: number;
+    url: string;
+    title: string | null;
+    bioId: string;
+    visibleOn: string;
+    integration: Integration | null;
+}
+
+interface Integration {
+    id: string;
+    type: string;
+    bioId: string;
+    componentId: string;
+}
+
+interface Bio {
+    avatarURL: string;
+    customization: Customization;
+    bannerURL: string;
+    description: string;
+    profileButtons: ProfileButton[];
+    components: Component[];
+    displayName: string;
+    location: string;
+    education: string;
+    jobTitle: string;
+    id: string;
+}
+
+interface SoclUser {
+    status_code: number;
+    username: string;
+    roles: string[];
+    id: string;
+    banned: boolean;
+    discordConnection: DiscordConnection;
+    createdAt: string;
+    plan: string;
+    bio: Bio;
+}
+
+interface SoclUserResponse {
+    props: {
+        pageProps: {
+            user: SoclUser;
+        };
+        referer: string;
+    };
+    __N_SSP: boolean;
+    page: string;
+    query: {
+        username: string;
+    };
+    buildId: string;
+    isFallback: boolean;
+    isExperimentalCompile: boolean;
+    gssp: boolean;
+    scriptLoader: any[];
+}
+
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -206,6 +308,10 @@ export default {
                 {
                     name: 'death.ovh',
                     value: 'death.ovh'
+                },
+                {
+                    name: 'socl.gg',
+                    value: 'socl.gg'
                 }
             ]
         },
@@ -224,11 +330,11 @@ export default {
         if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
         await interaction?.deferReply();
         const ems = await handler.client.application?.emojis.fetch();
+        const regex = /<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
         switch (service) {
             case 'nest.rip':
                 const response = await axios.get(`https://nest.rip/${query}`);
                 const html = response.data;
-                const regex = /<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
                 const match = html.match(regex);
                 if (!match) {
                     return {
@@ -390,10 +496,11 @@ export default {
                 if (badges && badges.length != 0) {
                     await Promise.all(badges.map(async (badge) => {
                         if (!badge.toggle) return;
-                        const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
-                        const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
-                        await write(path, res.data);
-                        emojis.push((await addEmoji(path, ems))?.toString()!);
+                        const emoji = addEmojiByURL(`death_${badge.id}`, badge.url, ems);
+                        // const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
+                        // const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
+                        // await write(path, res.data);
+                        emojis.push(emoji?.toString()!);
                     }));
                 }
                 const ucolor: ColorResolvable = deathUser.backgroundUrl ? getTwoMostUsedColors(await loadImage(deathUser.avatarUrl))[0] : 'Random';
@@ -414,6 +521,41 @@ ${deathUser.description}`)
                             .setColor(ucolor)
                             .setFooter({ text: `UID: ${deathUser.uid} • Joined` })
                             .setTimestamp(new Date(deathUser.joined_at * 1000))
+                    ]
+                }
+            case 'socl.gg':
+                const sHtml = (await axios.get(`https://socl.gg/${query}`)).data;
+                const sMatch = sHtml.match(regex);
+                if (!sMatch) {
+                    return {
+                        ephemeral: true,
+                        content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                    }
+                }
+                const sData = JSON.parse(sMatch[1]) as SoclUserResponse;
+                const sUser = sData.props.pageProps.user;
+                if (!sUser || !sUser.createdAt) {
+                    return {
+                        ephemeral: true,
+                        content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                    }
+                }
+                const sColor: ColorResolvable = sUser.bio.customization.metaThemeColor || 'Random';
+                const sEmbed = new EmbedBuilder()
+                    .setAuthor({ name: sUser.username, iconURL: `https://r2.socl.gg${sUser.bio.avatarURL}`, url: `https://socl.gg/${sUser.username}` })
+                    .setDescription(`${sUser.bio.description || 'No bio'}\n\n${sUser.bio.location ? `**Location:** ${sUser.bio.location}\n` : ''}${sUser.bio.education ? `**Education:** ${sUser.bio.education}\n` : ''}${sUser.bio.jobTitle ? `**Job Title:** ${sUser.bio.jobTitle}\n` : ''}\n${sUser.bio.profileButtons.map((button) => button.value).join('\n')}`)
+                    .setThumbnail(`https://r2.socl.gg${sUser.bio.avatarURL}` || null)
+                    .setColor(sColor)
+                    .addFields({
+                        name: 'Discord',
+                        value: sUser.discordConnection.discordId ? `<@${sUser.discordConnection.discordId}>` : 'Not linked',
+                        inline: true
+                    })
+                    .setFooter({ text: `Created` })
+                    .setTimestamp(new Date(sUser.createdAt));
+                return {
+                    embeds: [
+                        sEmbed
                     ]
                 }
             default:

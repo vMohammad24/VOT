@@ -1,4 +1,5 @@
-import { file } from 'bun';
+import axios from 'axios';
+import { file, write } from 'bun';
 import { ApplicationEmoji, Collection } from 'discord.js';
 import { join } from 'path';
 import sharp from 'sharp';
@@ -12,6 +13,7 @@ export function getEmoji(name: string) {
 	};
 	return emojis.get(name)!;
 }
+
 
 export async function addEmoji(emojiPath: string, ems: Collection<string, ApplicationEmoji> | undefined) {
 	if (!ems) return;
@@ -68,4 +70,15 @@ export async function initEmojis() {
 		await addEmoji(emojiPath, ems);
 	}));
 	logger.info('Finished initializing emojis, took ' + (Date.now() - start) + 'ms');
+}
+
+
+
+export async function addEmojiByURL(name: string, url: string, ems: Collection<string, ApplicationEmoji> | undefined) {
+	// if (!badge.toggle) return;
+	const res = await axios.get(url, { responseType: 'arraybuffer' });
+	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${name}.png`);
+	await write(path, res.data);
+	const emoji = await addEmoji(path, ems)
+	return emoji;
 }

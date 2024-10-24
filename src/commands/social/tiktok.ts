@@ -1,7 +1,9 @@
+import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
-import { ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType, AttachmentBuilder, ColorResolvable, EmbedBuilder } from "discord.js";
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
+import { getTwoMostUsedColors } from "../../util/util";
 
 
 
@@ -273,6 +275,7 @@ export default {
                     },
                     responseType: 'arraybuffer'
                 });
+                const color: ColorResolvable = video.video.cover ? getTwoMostUsedColors(await loadImage(video.video.cover))[0] : 'Random';
                 return {
                     ephemeral: true,
                     embeds: [
@@ -280,7 +283,7 @@ export default {
                             .setAuthor({ name: video.author.nickname, iconURL: video.author.avatarLarger, url: `https://www.tiktok.com/@${video.author.uniqueId}` })
                             .setDescription(video.desc)
                             .setFooter({ text: `Likes: ${numeral(video.statsV2.diggCount).format('0,0')} | Comments: ${numeral(video.statsV2.commentCount).format('0,0')} | Shares: ${numeral(video.statsV2.shareCount).format('0,0')}` })
-                            .setColor('Random')
+                            .setColor(color)
                             .setTimestamp(parseInt(video.createTime) * 1000)
                     ],
                     files: [

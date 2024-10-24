@@ -17,7 +17,7 @@ import { nanoid } from "nanoid/non-secure";
 import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
 import { getUserByID } from "../../util/database";
-import { addEmoji, getEmoji } from "../../util/emojis";
+import { addEmoji, addEmojiByURL, getEmoji } from "../../util/emojis";
 import { getTwoMostUsedColors } from "../../util/util";
 
 
@@ -169,10 +169,10 @@ export default {
         const ems = await handler.client.application?.emojis.fetch();
         if (badges && badges.length > 0) {
             await Promise.all(badges.map(async (badge) => {
-                const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
-                const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
-                await write(path, res.data);
-                badge.emoji = (await addEmoji(path, ems))?.toString()!;
+                // const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
+                // const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
+                // await write(path, res.data);
+                badge.emoji = (await addEmojiByURL(badge.name, badge.url, ems))?.toString()!;
             }));
         }
         const buttonId = nanoid();
@@ -259,8 +259,9 @@ ${(sData.activities && sData.activities.length > 0) ? `### **Activities**:
             embedColor = dColor[0];
             embed.setColor(dColor[0]);
         }
-        const sentMessage = message ? await message.reply({
+        const content = {
             embeds: [embed],
+            content: `<@${u.id}>`,
             allowedMentions: { repliedUser: true },
             components: [
                 new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -268,16 +269,8 @@ ${(sData.activities && sData.activities.length > 0) ? `### **Activities**:
                     new ButtonBuilder().setLabel('View connections').setStyle(ButtonStyle.Secondary).setCustomId(connectionsButtonId)
                 )
             ]
-        }) : await interaction!.editReply({
-            embeds: [embed],
-            allowedMentions: { repliedUser: true },
-            components: [
-                new ActionRowBuilder<ButtonBuilder>().addComponents(
-                    new ButtonBuilder().setLabel('View reviews').setStyle(ButtonStyle.Primary).setCustomId(buttonId),
-                    new ButtonBuilder().setLabel('View connections').setStyle(ButtonStyle.Secondary).setCustomId(connectionsButtonId)
-                )
-            ]
-        });
+        }
+        const sentMessage = message ? await message.reply(content) : await interaction!.editReply(content);
 
         const collector = sentMessage?.createMessageComponentCollector({ filter: i => i.customId === buttonId || i.customId === connectionsButtonId });
         collector?.on('collect', async i => {
