@@ -330,6 +330,7 @@ export default {
                 await pagination({
                     interaction,
                     type: 'select',
+                    name: 'Select a reel',
                     pages: vids.map((vid) => ({
                         name: vid.caption.text.slice(0, 100),
                         page: {

@@ -31,9 +31,10 @@ export interface PaginationOptions {
 	message?: Message<boolean> | null;
 	rMsg?: Message<boolean>;
 	id?: string;
+	name?: string;
 }
 
-export async function pagination({ interaction, pages, type, message, rMsg }: PaginationOptions): Promise<Message> {
+export async function pagination({ interaction, pages, type, message, rMsg, name }: PaginationOptions): Promise<Message> {
 	if (!interaction && !message) {
 		throw new Error('No interaction or message provided for pagination');
 	}
@@ -45,7 +46,6 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 	const id = Buffer.from(`${interaction ? interaction.id : message!.id}_${Date.now()}`).toString('base64');
 	if (!type) type = 'buttons';
 
-	// If type is 'select' and pages exceed 25, switch to 'buttons'
 	if (type === 'select' && pages.length > 25) {
 		type = 'buttons';
 	}
@@ -130,7 +130,7 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 			}));
 			const selectMenu = new StringSelectMenuBuilder()
 				.setCustomId(`${id}`)
-				.setPlaceholder('Select a page')
+				.setPlaceholder(name ?? 'Select a page')
 				.addOptions(options);
 
 			const actionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
@@ -198,7 +198,7 @@ export async function pagination({ interaction, pages, type, message, rMsg }: Pa
 				}));
 				const selectMenu = new StringSelectMenuBuilder()
 					.setCustomId(`${id}_${i}`)
-					.setPlaceholder('Select a page')
+					.setPlaceholder(name ?? 'Select a page')
 					.addOptions(options);
 				selectMenus.push(selectMenu);
 			}

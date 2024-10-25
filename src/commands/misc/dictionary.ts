@@ -70,6 +70,7 @@ export default {
 				type: 'select',
 				message,
 				interaction,
+				name: 'Select a definition',
 			})
 			return;
 		}
@@ -114,6 +115,7 @@ export default {
 			type: 'select',
 			message,
 			interaction,
+			name: 'Select an interjection',
 		});
 	},
 } as ICommand;

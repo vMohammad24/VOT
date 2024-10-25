@@ -29,24 +29,30 @@ export default {
         const lens = new GoogleLens();
         const result = await lens.searchByUrl(query)
         const filteredResults = result.similar.filter((item: { pageURL: any; sourceWebsite: any; thumbnail: any; }) => item.pageURL && item.sourceWebsite && item.thumbnail);
-        const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: string; title: string; pageURL: string | null; thumbnail: string | null; }) => ({
-            name: item.sourceWebsite.substring(0, 99) || 'No source',
-            description: item.title.substring(0, 99) || 'No title',
-            emoji: (getEmoji(item.sourceWebsite.toLowerCase().split(' ')[0].trim()) || '').toString() || '🔍',
-            page: {
-                embeds: [new EmbedBuilder()
-                    .setTitle(item.sourceWebsite || 'No source')
-                    .setDescription(item.title || 'No title')
-                    .setURL(item.pageURL)
-                    .setImage(item.thumbnail)],
-                content: `Found ${filteredResults.length} similar images`
+        const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: string; title: string; pageURL: string | null; thumbnail: string | null; }) => {
+            let emojiName = item.sourceWebsite.toLowerCase().split(' ')[0].trim();
+            if (emojiName === 'x') emojiName = 'twitter';
+            const emoji = getEmoji(emojiName).toString() || '🔍';
+            return {
+                name: item.sourceWebsite.substring(0, 99) || 'No source',
+                description: item.title.substring(0, 99) || 'No title',
+                emoji,
+                page: {
+                    embeds: [new EmbedBuilder()
+                        .setTitle(item.sourceWebsite || 'No source')
+                        .setDescription(item.title || 'No title')
+                        .setURL(item.pageURL)
+                        .setImage(item.thumbnail)],
+                    content: `Found ${filteredResults.length} similar images`
+                }
             }
-        }));
+        });
         if (mappedResults.length > 0) await pagination({
             interaction,
             message,
             pages: mappedResults,
-            type: 'select'
+            type: 'select',
+            name: 'Select an image',
         }); else
             return { content: 'No results found', ephemeral: true };
     },

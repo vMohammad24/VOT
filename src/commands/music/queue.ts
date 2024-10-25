@@ -52,6 +52,7 @@ export default {
 			type: 'select',
 			interaction,
 			message,
+			name: 'Select a track',
 		});
 	},
 } as ICommand;

@@ -236,7 +236,7 @@ ${(sData.activities && sData.activities.length > 0) ? `### **Activities**:
                 ...(user instanceof GuildMember ? [
                     {
                         name: 'Roles',
-                        value: user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' '),
+                        value: user.roles.cache.size > 0 ? user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ') : 'None',
                     },
                     {
                         name: 'Joined',

@@ -36,6 +36,7 @@ export default {
             interaction,
             message,
             type: 'select',
+            name: 'Select a video',
             pages: results.map(v => {
                 if (isNullish(v.title) || isNullish(v.description)) return null;
                 const description = turndownService.turndown(v.description);
