@@ -214,37 +214,75 @@ export default {
                 content: 'User not found'
             }
         }
+        const roles = user instanceof GuildMember ? user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ') : undefined;
         const embed = new EmbedBuilder()
             .setThumbnail(u.displayAvatarURL())
-            .setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` })
-            .setDescription(`
-${(badges && badges.length > 0) ? badges.map(badge => badge.emoji).join(' ') : ''}
-${(bio) ?? ''}
-${(pUser && pUser.tier != UserTier.Normal) ? `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}` : ''}
-${(clan && clan.emoji && clan.tag && clan.identity_guild_id) ? `**Clan**: ${clan.emoji} ${clan.tag}` : ''}
-${(sData && sData.last_online && sData.last_online.status == 'offline') ? `**Last Online**: <t:${sData.last_online.timestamp}:R>` : ''}
-${sData.status ? `**Status**: ${sData.status}` : ''}
+            .setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` });
 
-${(sData.activities && sData.activities.length > 0) ? `### **Activities**:
- ${sData.activities.map(activity =>
+        let description = '';
+
+        if (badges && badges.length > 0) {
+            description += `${badges.map(badge => badge.emoji).join(' ')}\n`;
+        }
+
+        if (bio) {
+            description += `${bio}\n`;
+        }
+
+        if (pUser && pUser.tier != UserTier.Normal) {
+            description += `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}\n`;
+        }
+
+        if (clan && clan.emoji && clan.tag && clan.identity_guild_id) {
+            description += `**Clan**: ${clan.emoji} ${clan.tag}\n`;
+        }
+
+        if (sData && sData.last_online && sData.last_online.status == 'offline') {
+            description += `**Last Online**: <t:${sData.last_online.timestamp}:R>\n`;
+        }
+
+        if (sData.status) {
+            description += `**Status**: ${sData.status}\n`;
+        }
+
+        if (sData.activities && sData.activities.length > 0) {
+            description += `### **Activities**:\n${sData.activities.map(activity =>
                 `${activity.emoji ?? ''} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`
-            ).join('\n')
-                    }
-    ` : ''}
-            `.split('\n').filter(l => l.trim() != '').join('\n'))
-            .setFields([
-                ...(user instanceof GuildMember ? [
-                    {
-                        name: 'Roles',
-                        value: user.roles.cache.size > 0 ? user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ') : 'None',
-                    },
-                    {
-                        name: 'Joined',
-                        value: user.joinedTimestamp ? `<t:${Math.round(user.joinedTimestamp! / 1000)}>` : 'Unknown',
-                    }
-                ] : []),
-            ])
-            // .setColor(embedColor)
+            ).join('\n')}\n`;
+        }
+
+
+        const fields = [];
+
+        if (user instanceof GuildMember) {
+            if (roles) {
+                fields.push({
+                    name: 'Roles',
+                    value: roles,
+                });
+            }
+
+            if (user.nickname) {
+                description += `**Nickname**: ${user.nickname}\n`;
+            }
+
+            if (user.premiumSinceTimestamp) {
+                fields.push({
+                    name: 'Boosting',
+                    value: `<t:${Math.round(user.premiumSinceTimestamp / 1000)}>`,
+                });
+            }
+
+            if (user.joinedTimestamp) {
+                fields.push({
+                    name: 'Joined',
+                    value: `<t:${Math.round(user.joinedTimestamp / 1000)}>`,
+                });
+            }
+        }
+
+        embed.setDescription(description.split('\n').filter(l => l.trim() != '').join('\n'));
+        embed.setFields(fields.map(field => ({ ...field, value: field.value || 'Unknown' })))
             .setTimestamp(u.createdTimestamp)
             .setFooter({ text: 'Created at' });
         const avatar = u.displayAvatarURL();
