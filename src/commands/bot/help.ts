@@ -64,6 +64,11 @@ export default {
 					value: `**Type**: ${getOptionName(option.type)}\n**Required**: ${'required' in option ? (option.required ? 'Yes' : 'No') : 'Yes'}`,
 				});
 			}
+
+			cmd.aliases && cmd.aliases.length > 0 && embed.addFields({
+				name: 'Aliases',
+				value: cmd.aliases.join(', '),
+			})
 			return {
 				embeds: [
 					embed
