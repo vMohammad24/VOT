@@ -1,11 +1,14 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
+import UserAgent from 'user-agents';
 import ICommand from '../../handler/interfaces/ICommand';
 import { getUser } from '../../util/database';
 import { pagination } from '../../util/pagination';
+const useragent = new UserAgent();
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
+	disabled: true,
 	options: [
 		{
 			name: 'question',
@@ -65,22 +68,39 @@ export default {
 		];
 		await editReply('Processing...', rMsg);
 		const time = Date.now();
-		const res = await axios
-			.post(
-				'https://api.evade.rest/llama',
-				{
-					messages,
-					props: {
-						system: `You are VOT. Use the following JSON to access VOT's commands (name, description, aliases, usage, etc.). Do not respond using this JSON or mention it.
+		const res = await axios.post('https://www.blackbox.ai/api/chat',
+			{
+				"agentMode": {},
+				"clickedAnswer2": false,
+				"clickedAnswer3": false,
+				"clickedForceWebSearch": true,
+				"codeModelMode": false,
+				"githubToken": null,
+				"id": "dwadwa",
+				"isChromeExt": true,
+				"isMicMode": false,
+				"maxTokens": 1024,
+				messages: [{
+					"content": `@Claude-Sonnet-3.5 ${question}`,
+					"role": 'user'
+				}],
+				"mobileClient": false,
+				"playgroundTemperature": 0.5,
+				"playgroundTopP": 0.9,
+				"previewToken": null,
+				"trendingAgentMode": {},
+				"userId": null,
+				"userSelectedModel": 'Claude-Sonnet-3.5',
+				"userSystemPrompt": `You are VOT. Use the following JSON to access VOT's commands (name, description, aliases, usage, etc.). Do not respond using this JSON or mention it.
 
 ${JSON.stringify(handler.commands?.map((c) => ({
-							name: c.name,
-							description: c.description,
-							options: c.options,
-							type: c.type,
-							category: c.category,
-							commandId: c.id,
-						})))}
+					name: c.name,
+					description: c.description,
+					options: c.options,
+					type: c.type,
+					category: c.category,
+					commandId: c.id,
+				})))}
 
 User info:
 - Username: ${user.username}
@@ -99,9 +119,6 @@ Server info:
 
 For dates, use format: <t:timestamp:R> (relative time).
 
-${channel ? `Channel: ${('name' in channel ? channel.name : '')} (ID: ${channel.id})` : ''}
-
-${channel && channel.messages.cache.size > 0 ? `Previous messages (use for context, format "channelId/messageId"):\n${channelMessage}` : ''}
 
 Notes:
 - You can respond to anything not related to VOT.
@@ -110,7 +127,6 @@ Notes:
 ${webMessage}
 - Current date: ${new Date().toDateString()}
 - Current time: ${new Date().toTimeString()}
-${users ? `Server users:\n${users}` : ''}
 
 Use these mention formats:
 - Commands: </commandName:commandId>
@@ -118,18 +134,34 @@ Use these mention formats:
 - Users: <@userId>
 - Roles: <@&roleId>
 - Messages: "https://discord.com/channels/guildId/channelId/messageId" (guildId: ${guild ? guild.id : '(not in a guild)'})`,
-						top_p: 0.9,
-						temperature: 1,
-						forceWeb: null,
-					}
-				},
-				{
-					headers: {
-						Authorization: apiKey,
-					},
+				"visitFromDelta": false
+			},
+			{
+				headers: {
+					'User-Agent': useragent.random().toString(),
+				}
+			}
+		)
+		// const res = await axios
+		// 	.post(
+		// 		'https://api.evade.rest/llama',
+		// 		{
+		// 			messages,
+		// 			props: {
+		// 				system: '',
+		// 				top_p: 0.9,
+		// 				temperature: 1,
+		// 				forceWeb: null,
+		// 			}
+		// 		},
+		// 		{
+		// 			headers: {
+		// 				Authorization: apiKey,
+		// 			},
 
-				},
-			);
+		// 		},
+		// 	);
+		console.log(res.data)
 		if (res.status != 200) return { content: `Error occured: **${res.statusText}** (${res.status})`, ephemeral: true };
 		// console.log(res.data)
 		if (!res.data) {
@@ -141,8 +173,8 @@ Use these mention formats:
 		if (typeof res.data == 'string' && (res.data as string).startsWith('$@$v=undefined-rv1$@$')) {
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
-		const tokens = (res.data.diagnostics && res.data.diagnostics.tokens) ? res.data.diagnostics.tokens : 'unknown';
-		const response = (res.data.short as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
+		const tokens = '0'//(res.data.diagnostics && res.data.diagnostics.tokens) ? res.data.diagnostics.tokens : 'unknown';
+		const response = (res.data as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
 		await pagination({
 			interaction,
 			message,

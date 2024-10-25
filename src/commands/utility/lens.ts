@@ -3,7 +3,6 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
 import { GoogleLens } from '../../util/lens';
 import { pagination, PaginationPage } from '../../util/pagination';
-import { isNullish } from '../../util/util';
 
 export default {
     description: 'Search an image using google lens',
@@ -31,9 +30,8 @@ export default {
         const result = await lens.searchByUrl(query)
         const filteredResults = result.similar.filter((item: { pageURL: any; sourceWebsite: any; thumbnail: any; }) => item.pageURL && item.sourceWebsite && item.thumbnail);
         const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: string; title: string; pageURL: string | null; thumbnail: string | null; }) => {
-            let emojiName = item.sourceWebsite.toLowerCase().split(' ')[0].trim();
-            if (emojiName === 'x') emojiName = 'twitter';
-            const emoji = !isNullish(emojiName) ? getEmoji(emojiName).toString() || '🔍' : '🔍';
+            const emojiName = item.sourceWebsite.toLowerCase().split(' ')[0].trim();
+            const emoji = (getEmoji(emojiName) || '').toString() || '🔍'
             return {
                 name: item.sourceWebsite.substring(0, 99) || 'No source',
                 description: item.title.substring(0, 99) || 'No title',
