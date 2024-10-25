@@ -476,6 +476,7 @@ interface BraveEnrichments {
         hostname: string;
         favicon: string;
     }[];
+    followups?: string[];
 }
 
 
@@ -630,12 +631,13 @@ interface BraveSearchGoggles {
 }
 
 
-const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles' = 'query') => {
+const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles' = 'query', params?: string) => {
     switch (type) {
         case 'query':
             const cache = await redis.get(`brave:${query}`);
             if (cache && commandHandler.prodMode) return JSON.parse(cache);
-            const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&source=llmSuggest&summary=1&rich=true`);
+            //(`https://search.brave.com/search?q=${encodeURIComponent(query)}?rich=true` + (params ?? ''))
+            const res = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(query)}&rich=true` + (params ?? ''));
             return res.data as string;
         case 'images':
             const imageCache = await redis.get(`braveImages:${query}`);
@@ -651,8 +653,8 @@ const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles
     }
 }
 
-export async function searchBrave(query: string) {
-    const data = await getQueryResult(query);
+export async function searchBrave(query: string, params?: string) {
+    const data = await getQueryResult(query, 'query', params);
     if (typeof data == 'string') {
         const lookFor = 'const data = ';
         const index = data.indexOf(lookFor);
@@ -702,6 +704,8 @@ export async function chatllm(result: BraveSearchResult['data']['body']['respons
     if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
     const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
     const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`);
-    await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60);
+    const followUps = await axios.get(`https://search.brave.com/api/chatllm/followups?key=${result.key}`);
+    enrichments.data.followups = followUps.data;
+    await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60 * 24 * 7);
     return enrichments.data as BraveEnrichments;
 }
