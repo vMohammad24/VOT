@@ -445,7 +445,7 @@ export default {
                                 { name: 'Discord', value: rUser.discord_id ? `<@${rUser.discord_id}>` : 'Not linked', inline: true }
                             ])
                             .setColor(rUser.background_color as ColorResolvable)
-                            .setFooter({ text: `UID: ${rUser.uid} • Created` })
+                            .setFooter({ text: `UID: ${rUser.uid}` })
                             .setTimestamp(new Date(rUser.created_at))
                     ]
                 }
@@ -460,7 +460,14 @@ export default {
                     ephemeral: true,
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
                 }
-                const color: ColorResolvable = bUser.avatar ? getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/uploads/${bUser.avatar}`))[0] : 'Random';
+                let color: ColorResolvable = 'Random';
+                if (bUser.avatar) {
+                    try {
+                        const image = await loadImage(`https://cdn.nest.rip/uploads/${bUser.avatar}`);
+                        color = getTwoMostUsedColors(image)[0];
+                    } catch (error) {
+                    }
+                }
                 return {
                     embeds: [
                         new EmbedBuilder()
@@ -470,9 +477,9 @@ export default {
                             .addFields([
                                 { name: 'About Me', value: bUser.aboutme || 'No about me' },
                             ])
-                            .setThumbnail(`https://cdn.nest.rip/uploads/${bUser.avatar}`)
+                            .setThumbnail(bUser.avatar ? `https://cdn.nest.rip/uploads/${bUser.avatar}` : null)
                             .setColor(color)
-                            .setFooter({ text: `ID: ${bUser.id} • Created` })
+                            .setFooter({ text: `Invited by ${bUser.invited_by} • ID: ${bUser.id}` })
                             // .setImage(`https://cdn.nest.rip/uploads/${bUser.banner}`)
                             .setTimestamp(new Date(bUser.created_at))
                     ]
@@ -551,7 +558,7 @@ ${deathUser.description}`)
                         value: sUser.discordConnection.discordId ? `<@${sUser.discordConnection.discordId}>` : 'Not linked',
                         inline: true
                     })
-                    .setFooter({ text: `Created` })
+                    // .setFooter({ text: `Created` })
                     .setTimestamp(new Date(sUser.createdAt));
                 return {
                     embeds: [
