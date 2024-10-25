@@ -35,6 +35,7 @@ export default {
             interaction,
             message,
             type: 'select',
+            name: 'Select an image',
             pages: results.map(v => {
                 const description = turndownService.turndown(v.description || '');
                 return {

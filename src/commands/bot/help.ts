@@ -51,6 +51,7 @@ export default {
 				message: message || undefined,
 				type: 'select',
 				pages: embeds,
+				name: 'Select a category'
 			});
 		} else {
 			const cmd = handler.commands!.find((cmd) => cmd.name === command);

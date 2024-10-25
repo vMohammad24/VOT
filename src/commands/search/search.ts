@@ -69,6 +69,6 @@ export default {
 				pages = [infoPage, ...pages];
 			}
 		}
-		await pagination({ interaction, message, pages, type: 'select' });
+		await pagination({ interaction, message, pages, type: 'select', name: 'Select a result' });
 	},
 } as ICommand;

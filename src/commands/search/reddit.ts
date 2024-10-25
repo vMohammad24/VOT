@@ -22,8 +22,6 @@ export default {
         if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
         interaction?.deferReply();
         const b = await searchBrave(query)
-        // const result = b.data.body.response.infobox!.results[0];
-        // console.log(`https://search.brave.com/api/chatllm/enrichments?key=${b.data.body.response.chatllm.results[0].key}`)
         if (!b.data.body.response.discussions) return { ephemeral: true, content: 'No results found' }
         const results = b.data.body.response.discussions.results
         if (results.length === 0) return { ephemeral: true, content: 'No results found' }
@@ -31,6 +29,7 @@ export default {
             interaction,
             message,
             type: 'select',
+            name: 'Select a discussion',
             pages: results.slice(0, 25).map(result => {
                 return {
                     page: {

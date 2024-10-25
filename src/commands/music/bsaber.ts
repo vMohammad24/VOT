@@ -74,6 +74,7 @@ export default {
 				message: message,
 				pages: (await Promise.all(items)) as PaginationOptions['pages'],
 				type: 'select',
+				name: 'Select a map',
 			});
 		} catch (error) {
 			commandHandler.logger.error(error);
