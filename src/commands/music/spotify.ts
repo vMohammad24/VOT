@@ -53,7 +53,7 @@ export default {
 	aliases: ['sp'],
 	type: 'all',
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
-		await interaction?.deferReply({ ephemeral: true });
+		await interaction?.deferReply();
 
 		const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
 			headers: {
