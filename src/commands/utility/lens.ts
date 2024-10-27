@@ -30,7 +30,8 @@ export default {
         const result = await lens.searchByUrl(query)
         const filteredResults = result.similar.filter((item: { pageURL: any; sourceWebsite: any; thumbnail: any; }) => item.pageURL && item.sourceWebsite && item.thumbnail);
         const mappedResults: PaginationPage[] = filteredResults.splice(0, 24).map((item: { sourceWebsite: string; title: string; pageURL: string | null; thumbnail: string | null; }) => {
-            const emojiName = item.sourceWebsite.toLowerCase().split(' ')[0].trim();
+            let emojiName = item.sourceWebsite.toLowerCase().split(' ')[0].trim();
+            if (emojiName == 'X') emojiName = 'twitter';
             const emoji = (getEmoji(emojiName) || '').toString() || '🔍'
             return {
                 name: item.sourceWebsite.substring(0, 99) || 'No source',

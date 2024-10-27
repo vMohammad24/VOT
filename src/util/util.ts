@@ -137,6 +137,10 @@ export function parseTime(timestr: string): number {
 	return time;
 }
 
+export function isURL(url: string): boolean {
+	return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(url);
+}
+
 export function isNullish(value: any): boolean {
 	return value === null || value === undefined || value === '';
 }
