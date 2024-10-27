@@ -4,7 +4,7 @@ import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "dis
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors } from "../../util/util";
+import { getTwoMostUsedColors, isURL } from "../../util/util";
 
 interface User {
     avatar: string;
@@ -260,6 +260,22 @@ interface SoclUser {
     bio: Bio;
 }
 
+interface AmmoUser {
+    uid: number;
+    username: string;
+    alias: string;
+    profile_views: number;
+    premium: boolean;
+    url: string;
+    created: string;
+    created_formatted: string;
+    background_url: string;
+    audio_url: string;
+    cursor_url: string;
+    avatar_url: string;
+    description: string;
+}
+
 interface SoclUserResponse {
     props: {
         pageProps: {
@@ -312,6 +328,10 @@ export default {
                 {
                     name: 'socl.gg',
                     value: 'socl.gg'
+                },
+                {
+                    name: 'ammo.lol',
+                    value: 'ammo.lol'
                 }
             ]
         },
@@ -563,6 +583,42 @@ ${deathUser.description}`)
                 return {
                     embeds: [
                         sEmbed
+                    ]
+                }
+            case 'ammo.lol':
+                const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
+                    params: {
+                        username: query
+                    },
+                    headers: {
+                        'API-KEY': import.meta.env.AMMO_LOL_API_KEY
+                    }
+                });
+                const aData = aRes.data as AmmoUser;
+                if (!aData) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const hasBackground = aData.background_url && isURL(aData.background_url);
+                const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
+                const hasURL = aData.url && isURL(aData.url);
+                const aColor: ColorResolvable = hasAvatar ? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0] : 'Random';
+                const [day, month, year] = aData.created.split('/').map(Number);
+                const date = new Date(year, month - 1, day);
+                return {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({ name: aData.username, iconURL: hasAvatar ? aData.avatar_url : undefined, url: hasURL ? aData.url : undefined })
+                            .setDescription(aData.description)
+                            .setThumbnail(hasAvatar ? aData.avatar_url : null)
+                            .setImage(hasBackground ? aData.background_url : null)
+                            .addFields([
+                                { name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
+                                { name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true }
+                            ])
+                            .setColor(aColor)
+                            .setFooter({ text: `UID: ${aData.uid} • Created` })
+                            .setTimestamp(date)
                     ]
                 }
             default:
