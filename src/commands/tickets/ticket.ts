@@ -53,6 +53,12 @@ export default {
 				ephemeral: true,
 			};
 		}
+		const ticketSettings = await prisma.ticketSettings.findUnique({ where: { guildId: guild!.id } })
+		if (!ticketSettings) return {
+			content: 'Please setup ticket settings first',
+			ephemeral: true
+		}
+		const ticketsRole = ticketSettings.roleId ? await guild!.roles.fetch(ticketSettings.roleId) : null;
 		const subCommand = interaction.options.getSubcommand(true);
 		if (!subCommand)
 			return {
@@ -65,7 +71,7 @@ export default {
 				content: 'Invalid user',
 				ephemeral: true,
 			};
-		if (ticket.ownerId !== executer.id) {
+		if ((ticket.ownerId !== executer.id) && !executer.roles.cache.has(ticketsRole!.id)) {
 			return {
 				content: 'You are not the owner of this ticket',
 				ephemeral: true,
