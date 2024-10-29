@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
-import { pagination } from '../../util/pagination';
+import { isVPN } from '../../util/vpn';
 const turndownService = new TurnDownService();
 const parseDDG = async (query: string) => {
 	const res1 = (await axios.get(`https://duckduckgo.com/?t=ffab&q=${encodeURIComponent(query)}&ia=web`)).data;
@@ -208,22 +208,7 @@ export default {
 		}],
 	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		const query = args.get('query') as string || 'Summrsxo';
-		const res = await axios.get(`https://socials.evade.rest/experiments/instagram/${query}/story`)
-		const stories: Reel[] = res.data;
-		// $[0].items[0].video_versions[0].url
-		// const items = reel;
-		await pagination({
-			interaction,
-			message,
-			type: 'select',
-			pages: stories.flatMap((story) =>
-				story.items.map((item) => ({
-					page: {
-						files: [new AttachmentBuilder(item.video_versions[0].url, { name: 'VOT-IG-Trending.mp4' })]
-					},
-				}))
-			)
-		})
+		const query = args.get('query');
+		return `${(await isVPN(query))}`;
 	},
 } as ICommand;

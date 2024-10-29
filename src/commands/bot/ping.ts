@@ -13,6 +13,7 @@ export default {
 	description: 'Pong!',
 	shouldCache: true,
 	execute: async ({ interaction, message, handler }) => {
+		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
 		await interaction?.deferReply();
 		const wsLatency = handler.client.ws.ping;
 		const restLatency = await restPing(handler.client);
@@ -21,7 +22,6 @@ export default {
 		const pEnd = Date.now();
 		handler.prisma.$disconnect();
 		const llStats = await (await handler.kazagumo.getLeastUsedNode()).rest.stats();
-		const messageLatency = Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!;
 		const embed = new EmbedBuilder()
 			.setColor('Random')
 			.setTitle('Pong!')

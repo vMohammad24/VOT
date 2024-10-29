@@ -6,40 +6,32 @@ import { upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
-	const results = await glob.scanSync({
+	const results = glob.scanSync({
 		absolute: true,
 		cwd: join(import.meta.dir, '..', '..'),
 	});
-	const node_modules = await glob.scanSync({
-		absolute: true,
-		cwd: join(import.meta.dir, '..', '..', '..', 'node_modules'),
-	});
-	let lines = 0;
-	const files = [];;
-	for (const path of results) {
-		if (!path) continue;
-		try {
-			const file = Bun.file(path);
-			files.push(file)
-			// const content = await file.text();
-			// lines += content.split('\n').length;
-		} catch (e) { }
-	}
-	for (const path of node_modules) {
-		if (!path) continue;
-		try {
-			const file = Bun.file(path);
-			files.push(file)
-			// const content = await file.text();
-			// lines += content.split('\n').length;
-		} catch (e) { }
-	}
-	await Promise.all(files.map(async (file) => {
-		const content = await file.text();
-		lines += content.split('\n').length;
-	}));
-	return lines;
+
+	const lineCounts = await Promise.all(
+		Array.from(results).map(async (path) => {
+			if (!path) return 0;
+			try {
+				const content = await Bun.file(path).arrayBuffer();
+				const buffer = new Uint8Array(content);
+				let count = 0;
+				for (let i = 0; i < buffer.length; i++) {
+					if (buffer[i] === 10) count++;
+				}
+				return count;
+			} catch {
+				return 0;
+			}
+		})
+	);
+
+	const totalLines = lineCounts.reduce((acc, curr) => acc + curr, 0);
+	return totalLines;
 }
+
 const globalLines = await getLines();
 async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	const headers = {

@@ -5,9 +5,9 @@ import queryString from 'query-string';
 import commandHandler from '..';
 import { getFrontEndURL, getRedirectURL } from '../util/urls';
 import { discordClientId, discordClientSecret, updateGuilds } from './apiUtils';
-export default (elysia: Elysia) => {
+export default (elysia: Elysia<"discord">) => {
 	elysia.get(
-		'/discord/guilds',
+		'/guilds',
 		async ({ headers, set }) => {
 			const token = headers.authorization;
 			if (!token) {
@@ -40,7 +40,7 @@ export default (elysia: Elysia) => {
 	);
 
 	elysia.get(
-		'/discord/guilds/:id',
+		'/guilds/:id',
 		async ({ headers, set, params: { id } }) => {
 			const token = headers.authorization;
 			if (!token) {
@@ -100,7 +100,7 @@ export default (elysia: Elysia) => {
 	);
 
 	elysia.patch(
-		'/discord/guilds/:id',
+		'/guilds/:id',
 		async ({ headers, set, params: { id }, body }) => {
 			const token = headers.authorization;
 			if (!token) {
@@ -142,6 +142,7 @@ export default (elysia: Elysia) => {
 				oldChannel,
 				oldMessage,
 				shouldUpdateTickets,
+				shouldUpdateVerification,
 			} = body as any;
 			let mes = 'Updated';
 			if (prefix) {
@@ -237,6 +238,42 @@ export default (elysia: Elysia) => {
 					});
 				}
 			}
+			if (shouldUpdateVerification) {
+				const verificationSettings = await commandHandler.prisma.verificationSettings.findFirst({
+					where: { guildId: guild.id },
+				});
+				if (!verificationSettings) return;
+				if (verificationSettings.channelId) {
+					const channel = commandHandler.client.guilds.cache
+						.get(guild.id)
+						?.channels.cache.get(verificationSettings.channelId) as GuildTextBasedChannel;
+					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+						new ButtonBuilder()
+							.setLabel('Verify')
+							.setEmoji('✅')
+							.setURL(getFrontEndURL() + '/verify/' + guild.id)
+							.setStyle(ButtonStyle.Link),
+					);
+					const message = await channel.send({
+						embeds: [
+							{
+								title: verificationSettings.embedTitle || '',
+								description: verificationSettings.embedDesc || '',
+								color: 0x00ff00,
+							},
+						],
+						components: [row],
+					});
+					await commandHandler.prisma.ticketSettings.update({
+						where: {
+							id: verificationSettings.id,
+						},
+						data: {
+							messageId: message.id,
+						},
+					});
+				}
+			}
 			if (mes.split(' ').length < 2) mes += ' Nothing';
 			return { success: true, message: mes };
 		},
@@ -247,7 +284,7 @@ export default (elysia: Elysia) => {
 		},
 	);
 
-	elysia.get('/discord/callback', async ({ query, redirect, set }) => {
+	elysia.get('/callback', async ({ query, redirect, set }) => {
 		const { code, refresh_token } = query as any;
 		if (!code && !refresh_token)
 			return redirect(
@@ -351,7 +388,7 @@ export default (elysia: Elysia) => {
 		return redirect(getFrontEndURL() + '/?token=' + user.token);
 	});
 
-	elysia.get('/discord/invite', ({ redirect }) => {
+	elysia.get('/invite', ({ redirect }) => {
 		return redirect('https://discord.com/api/oauth2/authorize?client_id=' + import.meta.env.DISCORD_CLIENT_ID!);
 	});
 };

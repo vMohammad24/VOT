@@ -48,6 +48,8 @@ model User {
   TrainingData     TrainingData[]
   shouldTrain      Boolean        @default(true)
   ArgumentMode     ArgumentMode   @default(Normal)
+  hashedIp         String?
+  previousIps      String[]
 }
 
 model Member {
@@ -63,6 +65,7 @@ model Member {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   ticketsParticipatedIn Ticket[]
+  banned                Boolean   @default(false)
 
   @@unique([userId, guildId])
 }
@@ -116,24 +119,25 @@ model Command {
 }
 
 model Guild {
-  id              String           @id @unique @default(uuid())
-  name            String
-  prefix          String           @default(";")
-  icon            String?
-  banner          String?
-  playlists       Playlist[]
-  admins          User[]
-  tickets         Ticket[]
-  giveaways       Giveaway[]
-  loggingChannel  String?
-  TicketSettings  TicketSettings?
-  WelcomeSettings WelcomeSettings?
-  leveling        Boolean          @default(false)
-  members         Member[]
-  memberCount     Int              @default(0)
-  onlineCount     Int              @default(0)
-  autoRole        String?
-  stickyMessage   StickyMessage?
+  id                   String                @id @unique @default(uuid())
+  name                 String
+  prefix               String                @default(";")
+  icon                 String?
+  banner               String?
+  loggingChannel       String?
+  autoRole             String?
+  leveling             Boolean               @default(false)
+  memberCount          Int                   @default(0)
+  onlineCount          Int                   @default(0)
+  admins               User[]
+  members              Member[]
+  playlists            Playlist[]
+  tickets              Ticket[]
+  giveaways            Giveaway[]
+  TicketSettings       TicketSettings?
+  WelcomeSettings      WelcomeSettings?
+  stickyMessage        StickyMessage?
+  VerificationSettings VerificationSettings?
 }
 
 model Ticket {
@@ -163,6 +167,22 @@ model TicketSettings {
   updatedAt  DateTime @updatedAt
   guild      Guild    @relation(fields: [guildId], references: [id])
   guildId    String   @unique
+}
+
+model VerificationSettings {
+  id            String   @id @default(uuid())
+  channelId     String?
+  messageId     String?
+  embedDesc     String?
+  embedTitle    String?
+  roleId        String?
+  allowVpns     Boolean  @default(false)
+  blockIfBanned Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  guild         Guild    @relation(fields: [guildId], references: [id])
+  guildId       String   @unique
+  enabled       Boolean  @default(false)
 }
 
 model WelcomeSettings {

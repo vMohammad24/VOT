@@ -1,6 +1,8 @@
-import { EmbedBuilder, Events } from 'discord.js';
+import { VerificationSettings, WelcomeSettings } from '@prisma/client';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
-import { getGuild } from '../util/database';
+import { getGuild, getUser } from '../util/database';
+import { getFrontEndURL } from '../util/urls';
 import { getLogChannel } from '../util/util';
 
 export default {
@@ -11,34 +13,64 @@ export default {
 			const guild = await getGuild(user.guild, {
 				WelcomeSettings: true,
 				autoRole: true,
+				VerificationSettings: true,
 			}) as any;
 			if (!guild) return;
-
+			const vSettings = guild.VerificationSettings as VerificationSettings;
+			const wSettings = guild.WelcomeSettings as WelcomeSettings;
 			// Welcome message logic
-			if (guild.WelcomeSettings) {
-				if (guild.WelcomeSettings.channelId) {
-					const channel = user.guild.channels.cache.get(guild.WelcomeSettings.channelId);
+			if (wSettings) {
+				if (wSettings.channelId) {
+					const channel = user.guild.channels.cache.get(wSettings.channelId);
 					if (channel && channel.isTextBased()) {
 						const embed = new EmbedBuilder();
 						const userMention = user.toString();
-						const embedDescription = guild.WelcomeSettings.embedDesc?.replaceAll('{{user}}', userMention);
-						const embedTitle = guild.WelcomeSettings.embedTitle?.replaceAll('{{user}}', userMention);
-						const message = guild.WelcomeSettings.message?.replaceAll('{{user}}', userMention);
-						if (guild.WelcomeSettings.embedTitle) embed.setTitle(embedTitle!);
-						if (guild.WelcomeSettings.embedDesc) embed.setDescription(embedDescription!);
+						const embedDescription = wSettings.embedDesc?.replaceAll('{{user}}', userMention);
+						const embedTitle = wSettings.embedTitle?.replaceAll('{{user}}', userMention);
+						const message = wSettings.message?.replaceAll('{{user}}', userMention);
+						if (wSettings.embedTitle) embed.setTitle(embedTitle!);
+						if (wSettings.embedDesc) embed.setDescription(embedDescription!);
 						embed.setColor('Random')
 						if (embed.data.title || embed.data.description) {
-							if (guild.WelcomeSettings.message) {
+							if (wSettings.message) {
 								channel.send({ embeds: [embed], content: message! });
 							} else {
 								channel.send({ embeds: [embed] });
 							}
 						} else {
-							if (guild.WelcomeSettings.message) {
+							if (wSettings.message) {
 								channel.send(message!);
 							}
 						}
 					}
+				}
+			}
+
+			if (vSettings) {
+				try {
+					const dmChannel = user.user.dmChannel || (await user.createDM());
+					const embed = new EmbedBuilder()
+						.setTitle(vSettings.embedTitle)
+						.setDescription(vSettings.embedDesc)
+						.setFooter({ text: 'Do NOT share the link below with anyone!' })
+						.setColor('Random');
+					if (dmChannel && dmChannel.isSendable()) {
+						const pUser = await getUser(user.user);
+						dmChannel.send({
+							embeds: [embed],
+							components: [
+								new ActionRowBuilder<ButtonBuilder>()
+									.addComponents(new ButtonBuilder()
+										.setURL(`${getFrontEndURL()}/verify/${user.guild.id}?token=${pUser.token}`)
+										.setLabel('Verify')
+										.setStyle(ButtonStyle.Link)
+										.setEmoji('🔗')
+									)
+							]
+						})
+					}
+				} catch (e) {
+
 				}
 			}
 
