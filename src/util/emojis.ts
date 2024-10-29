@@ -61,7 +61,7 @@ export async function initEmojis() {
 	const glob = new Bun.Glob('*.{png,jpg,jpeg,gif,svg}');
 	const gEmojis = await glob.scanSync({ cwd: emojiFolder, absolute: true });
 	const ems = await client.application?.emojis.fetch();
-	const paths = [];
+	const paths: string[] = [];
 	for (const emojiPath of gEmojis) {
 		paths.push(emojiPath);
 	}
@@ -69,13 +69,22 @@ export async function initEmojis() {
 	await Promise.all(paths.map(async (emojiPath) => {
 		await addEmoji(emojiPath, ems);
 	}));
+	// check if a file was deleted and the emoji still exists
+	emojis.forEach((emoji) => {
+		const emojiFileExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
+		const emojiExists = emojiFileExtensions.some(ext => paths.includes(join(emojiFolder, `${emoji.name}.${ext}`)));
+		if (!emojiExists) {
+			if (verbose)
+				logger.info(`Deleting emoji ${emoji.name}`);
+			emoji.delete();
+		}
+	});
 	logger.info('Finished initializing emojis, took ' + (Date.now() - start) + 'ms');
 }
 
 
 
 export async function addEmojiByURL(name: string, url: string, ems: Collection<string, ApplicationEmoji> | undefined) {
-	// if (!badge.toggle) return;
 	const res = await axios.get(url, { responseType: 'arraybuffer' });
 	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${name}.png`);
 	await write(path, res.data);

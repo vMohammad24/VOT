@@ -4,7 +4,7 @@ import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "dis
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors, isURL } from "../../util/util";
+import { getTwoMostUsedColors, isNullish, isURL } from "../../util/util";
 
 interface User {
     avatar: string;
@@ -126,10 +126,10 @@ interface Badge {
 interface RangeUser {
     username: string;
     display_name: string;
+    background_color: string;
     description: string;
     avatar: string;
     background: string;
-    background_color: string;
     audio: string;
     uid: string;
     view_count: string;
@@ -314,8 +314,8 @@ export default {
                     value: 'tiktok'
                 },
                 {
-                    name: 'range.wtf',
-                    value: 'range.wtf'
+                    name: 'inject.bio',
+                    value: 'inject.bio'
                 },
                 {
                     name: 'Biography',
@@ -434,8 +434,8 @@ export default {
                         embed
                     ]
                 }
-            case 'range.wtf':
-                const url = `https://xjig.cc/rangewtfapi57yfv2475ty34/c476hn85923.php?username=${query}`;
+            case 'inject.bio':
+                const url = `https://api.inject.bio/80c734yt8c795t43/UserInfo/?api_key=${import.meta.env.INJECT_API_KEY}&username=${encodeURI(query)}`;
                 const rRes = await axios.get(url);
                 const { data: rData } = rRes;
                 if (!rData.success) return {
@@ -454,10 +454,10 @@ export default {
                 return {
                     embeds: [
                         new EmbedBuilder()
-                            .setAuthor({ name: rUser.display_name, iconURL: rUser.avatar })
-                            .setTitle(rUser.username)
-                            .setURL(`https://range.wtf/${rUser.username}`)
-                            .setDescription(rUser.description)
+                            .setAuthor({ name: rUser.username, iconURL: rUser.avatar ? rUser.avatar : undefined, url: `https://inject.bio/${rUser.username}` })
+                            .setTitle(isNullish(rUser.display_name) ? rUser.username : rUser.display_name)
+                            .setURL(`https://inject.bio/${rUser.username}`)
+                            .setDescription(isNullish(rUser.description) ? 'No description' : rUser.description)
                             .setThumbnail(rUser.avatar)
                             .setImage(rUser.background)
                             .addFields([
@@ -523,7 +523,7 @@ export default {
                 if (badges && badges.length != 0) {
                     await Promise.all(badges.map(async (badge) => {
                         if (!badge.toggle) return;
-                        const emoji = addEmojiByURL(`death_${badge.id}`, badge.url, ems);
+                        const emoji = await addEmojiByURL(`death_${badge.id}`, badge.url, ems);
                         // const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
                         // const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
                         // await write(path, res.data);

@@ -1,4 +1,5 @@
 import { cors } from '@elysiajs/cors';
+import { swagger } from '@elysiajs/swagger';
 import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Elysia, t } from 'elysia';
@@ -7,9 +8,19 @@ import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
 import discord from './discord';
 import spotify from './spotify';
-
-const elysia = new Elysia().use(cors());
-
+import verification from './verification';
+const discordElysia = new Elysia({ prefix: 'discord' })
+const spotifyElysia = new Elysia({ prefix: 'spotify' })
+const guildsElysia = new Elysia({ prefix: 'guilds' })
+discord(discordElysia);
+spotify(spotifyElysia);
+verification(guildsElysia);
+const elysia = new Elysia()
+	.use(cors())
+	.use(swagger())
+	.use(discordElysia)
+	.use(spotifyElysia)
+	.use(guildsElysia);
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
 elysia.get('/', function () {
@@ -89,8 +100,4 @@ elysia.post('/googleLens', async ({ body }) => {
 	})
 })
 
-
-discord(elysia);
-spotify(elysia);
-// functions(elysia);
 export default elysia;

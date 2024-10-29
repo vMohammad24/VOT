@@ -25,6 +25,7 @@
   "dependencies": {
     "@discordjs/voice": "latest",
     "@elysiajs/cors": "latest",
+    "@elysiajs/swagger": "^1.1.5",
     "@lobehub/tts": "latest",
     "@napi-rs/canvas": "latest",
     "@prisma/client": "latest",

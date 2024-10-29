@@ -267,6 +267,7 @@ export default {
                         content: 'Failed to parse video data'
                     }
                 }
+                console.log(parsed['__DEFAULT_SCOPE__'])
                 const video: TikTokVideo = parsed['__DEFAULT_SCOPE__']['webapp.video-detail'].itemInfo.itemStruct;
                 const cookies = headers['set-cookie'] ? headers['set-cookie'].map((cookie: string) => cookie.split(';')[0]).join('; ') : '';
                 const { data: videoData } = await axios.get(video.video.playAddr, {

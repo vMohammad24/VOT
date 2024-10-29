@@ -7,6 +7,7 @@ export default {
 	execute: async ({ client, prisma }) => {
 		client.on(Events.GuildCreate, async (guild) => {
 			const guildMembers = await guild.members.cache;
+			const bans = await guild.bans.fetch();
 			await prisma.guild.upsert({
 				where: {
 					id: guild.id,
@@ -24,11 +25,15 @@ export default {
 							skipDuplicates: true,
 							data: guildMembers.map((member) => ({
 								userId: member.id,
-							})),
+							})).concat(bans.map((ban) => ({
+								userId: ban.user.id,
+								banned: true,
+							}))),
 						},
 					},
 				},
 			});
+
 		});
 	},
 } as IListener;

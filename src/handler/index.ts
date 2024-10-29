@@ -203,9 +203,8 @@ export default class CommandHandler {
 				}
 				const vStart = Date.now();
 				const validationResults = await Promise.all(this.validations.map(validation => validation(command, commandContext)));
-				for (const result of validationResults) {
-					if (result !== true) return result;
-				}
+				const invalidResult = validationResults.find(result => result !== true);
+				if (invalidResult) return invalidResult;
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
 				if (commandHandler.prodMode && command.shouldCache && commandContext.guild && commandContext.user) {
