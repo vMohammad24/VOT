@@ -65,9 +65,7 @@ export default class CommandHandler {
 			this.logger.debug('Fetching guilds...')
 			await Promise.all((await this.client.guilds.fetch()).map(async (guild) => {
 				const fetchedGuild = await guild.fetch();
-				await Promise.all((await fetchedGuild.members.list({
-					cache: true,
-				})).map(async mem => mem.fetch(true)));
+				return fetchedGuild.members.fetch();
 			}));
 			this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
 			this.validations = await (async () => {
