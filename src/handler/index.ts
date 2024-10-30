@@ -61,6 +61,15 @@ export default class CommandHandler {
 		this.verbose = handler.verbose || false;
 		handler.commands = [];
 		handler.client.on(Events.ClientReady, async () => {
+			const time = Date.now();
+			this.logger.debug('Fetching guilds...')
+			await Promise.all((await this.client.guilds.fetch()).map(async (guild) => {
+				const fetchedGuild = await guild.fetch();
+				await Promise.all((await fetchedGuild.members.list({
+					cache: true,
+				})).map(async mem => mem.fetch(true)));
+			}));
+			this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
 			this.validations = await (async () => {
 				const validationDir = path.join(import.meta.dir, 'validations');
 				const validationFiles = [];
