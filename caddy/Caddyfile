@@ -2,30 +2,11 @@
     email info@vot.wtf
 }
 
-
 vot.wtf {
     tls /etc/caddy/certs/cloudflare.crt /etc/caddy/certs/cloudflare.key
     reverse_proxy vot-frontend:3000 {
         header_up X-Forwarded-For {remote_host}
     }
-    @not_cloudflare {
-    not remote_ip 173.245.48.0/20
-    not remote_ip 103.21.244.0/22
-    not remote_ip 103.22.200.0/22
-    not remote_ip 103.31.4.0/22
-    not remote_ip 141.101.64.0/18
-    not remote_ip 108.162.192.0/18
-    not remote_ip 190.93.240.0/20
-    not remote_ip 188.114.96.0/20
-    not remote_ip 197.234.240.0/22
-    not remote_ip 198.41.128.0/17
-    not remote_ip 162.158.0.0/15
-    not remote_ip 104.16.0.0/13
-    not remote_ip 104.24.0.0/14
-    not remote_ip 172.64.0.0/13
-    not remote_ip 131.0.72.0/22
-    
-    respond @not_cloudflare "403 Forbidden" 403
 }
 
 api.vot.wtf {
@@ -33,24 +14,6 @@ api.vot.wtf {
     reverse_proxy vot:8080 {
         header_up X-Forwarded-For {remote_host}
     }
-    @not_cloudflare {
-    not remote_ip 173.245.48.0/20
-    not remote_ip 103.21.244.0/22
-    not remote_ip 103.22.200.0/22
-    not remote_ip 103.31.4.0/22
-    not remote_ip 141.101.64.0/18
-    not remote_ip 108.162.192.0/18
-    not remote_ip 190.93.240.0/20
-    not remote_ip 188.114.96.0/20
-    not remote_ip 197.234.240.0/22
-    not remote_ip 198.41.128.0/17
-    not remote_ip 162.158.0.0/15
-    not remote_ip 104.16.0.0/13
-    not remote_ip 104.24.0.0/14
-    not remote_ip 172.64.0.0/13
-    not remote_ip 131.0.72.0/22
-    }
-    respond @not_cloudflare "403 Forbidden" 403
 }
 
 http://vot.wtf, http://api.vot.wtf {
