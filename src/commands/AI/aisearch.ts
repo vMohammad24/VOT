@@ -26,12 +26,12 @@ export default {
 		let rMsg = message ? await message.reply('Thinking...') : await inter!.deferReply();
 		const func = async (query: string, params?: string) => {
 			const queryResponse = (await searchBrave(query, params)).data.body.response;
-			if (!queryResponse || !queryResponse.chatllm || !queryResponse.chatllm.results || queryResponse.chatllm.results.length === 0) {
+			console.log(queryResponse.chatllm);
+			if (!queryResponse || !queryResponse.chatllm) {
 				return editReply({ content: 'No results found.', components: [] });
 			}
-			const result = queryResponse.chatllm.results[0];
 			const summary = queryResponse.chatllm.summary_og;
-			const llm = await chatllm(result);
+			const llm = await chatllm(queryResponse.chatllm);
 			const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == `enrichments_${rMsg.id}` })
 			collector.on('collect', async i => {
 				const embed = new EmbedBuilder()
@@ -68,7 +68,7 @@ export default {
 				const followUp = llm.followups![page];
 				if (!followUp) return;
 				rMsg = await i.deferReply();
-				await func(followUp, `&summary=${result.key}&summary_og=${summary}&source=llmFollowup`);
+				await func(followUp, `&summary=${queryResponse.chatllm.key}&summary_og=${summary}&source=llmFollowup`);
 			})
 		}
 		await func(q, `&source=llm`);
