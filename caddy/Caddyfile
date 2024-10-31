@@ -2,7 +2,7 @@
     email info@vot.wtf
 }
 
-(cf_ips) {
+(cloudflare_ips) {
     remote_ip 173.245.48.0/20
     remote_ip 103.21.244.0/22
     remote_ip 103.22.200.0/22
