@@ -208,20 +208,22 @@ interface BraveSearchBody {
             }[];
         };
         chatllm: {
-            type: string;
-            trigger: boolean;
-            possible: boolean;
+            type: "chatllm";
+            key: string;
+            query: string;
             summary_og: string;
             nonce: string;
-            results: Array<{
-                key: string;
-                query: string;
-                context: any[];
+            trigger: boolean;
+            possible: boolean;
+            context: any[];
+            entity_infobox_url: string | undefined;
+            feature_callbacks: {
                 bo_callback_lazy_load: string;
                 bo_callback_show_more: string;
                 bo_callback_copy_to_clipboard: string;
                 bo_callback_share_link: string;
-            }>;
+            };
+            conversation: string;
         };
         discussions: {
             type: "search";
@@ -699,7 +701,7 @@ export async function searchBraveGoggles(query: string) {
     }
 }
 
-export async function chatllm(result: BraveSearchResult['data']['body']['response']['chatllm']['results'][0]) {
+export async function chatllm(result: BraveSearchResult['data']['body']['response']['chatllm']) {
     const cache = await redis.get(`braveChatllm:${result.query}`);
     if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
     const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
