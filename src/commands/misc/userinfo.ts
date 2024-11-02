@@ -195,8 +195,7 @@ export default {
                 activity.emoji = (await addEmoji(path, ems))?.toString() || '❓';
             }));
         }
-        if (sData.voice && sData.voice.length > 0) {
-            // create a new activity from voice data
+        if (sData.voice && sData.voice.length > 0) {   // create a new activity from voice data
             const voice = sData.voice[0];
             if (!voice.channel) return;
             // console.log(voice);
@@ -213,6 +212,31 @@ export default {
                 ephemeral: true,
                 content: 'User not found'
             }
+        }
+
+        if (sData.dnd.length > 0) {
+            badges.unshift({
+                name: 'Do Not Disturb',
+                description: 'User is in Do Not Disturb mode',
+                url: 'https://discord.com',
+                emoji: getEmoji('dnd_' + sData.dnd[0]).toString()
+            })
+        }
+        if (sData.online.length > 0) {
+            badges.unshift({
+                name: 'Online',
+                description: 'User is online',
+                url: 'https://discord.com',
+                emoji: getEmoji('online_' + sData.online[0]).toString()
+            })
+        }
+        if (sData.idle.length > 0) {
+            badges.unshift({
+                name: 'Idle',
+                description: 'User is idle',
+                url: 'https://discord.com',
+                emoji: getEmoji('idle_' + sData.idle[0]).toString()
+            })
         }
         const roles = user instanceof GuildMember ? user.roles.cache.filter(role => (!role.managed && (role.id != user.guild.roles.everyone.id))).map(role => role.toString()).join(' ') : undefined;
         const embed = new EmbedBuilder()
