@@ -60,9 +60,23 @@ export async function getUserByID(id: string, select?: Prisma.UserSelect<Default
 		where: {
 			id,
 		},
-		update: {},
+		update: {
+			economy: {
+				connectOrCreate: {
+					where: {
+						userId: id,
+					},
+					create: {},
+				}
+			}
+		},
 		create: {
 			id,
+			economy: {
+				create: {
+
+				}
+			}
 		},
 		select,
 	});

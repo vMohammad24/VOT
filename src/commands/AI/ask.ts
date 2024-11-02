@@ -2,13 +2,14 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from 'discord.js';
 import UserAgent from 'user-agents';
 import ICommand from '../../handler/interfaces/ICommand';
+import { searchBrave } from '../../util/brave';
 import { getUser } from '../../util/database';
 import { pagination } from '../../util/pagination';
 const useragent = new UserAgent();
 export default {
 	name: 'ask',
 	description: 'Ask a question to VOT',
-	disabled: true,
+	// disabled: true,
 	options: [
 		{
 			name: 'question',
@@ -47,9 +48,7 @@ export default {
 		const users = guild ? (await Promise.all(guild.members.cache.map(async user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - has been boosting the server since ${user.premiumSinceTimestamp}`))).join('\n') : undefined;
 
 		await editReply('Searching...', rMsg);
-		const searchRes = await axios.get(`https://search.brave.com/search?q=${encodeURIComponent(question)}&source=web`);
-		const regex = /const\s+data\s*=\s*(\[.*?\]|\{.*?\})\s*;/s; // Matches the JSON array/object, stops before any trailing semicolons or code
-		const webMessage = (searchRes.data as string).match(regex);
+		const webMessage = (await searchBrave(question)).data.body.response.web.results.map((r) => `- ${r.title} - ${r.description} - ${r.url}`).join('\n');
 		await editReply('Generating response...', rMsg);
 		const messages = [
 			{
@@ -63,85 +62,62 @@ export default {
 			},
 			{
 				role: 'user',
-				content: question,
-			}
-		];
-		await editReply('Processing...', rMsg);
-		const time = Date.now();
-		const res = await axios.post('https://www.blackbox.ai/api/chat',
-			{
-				"agentMode": {},
-				"clickedAnswer2": false,
-				"clickedAnswer3": false,
-				"clickedForceWebSearch": true,
-				"codeModelMode": false,
-				"githubToken": null,
-				"id": "dwadwa",
-				"isChromeExt": true,
-				"isMicMode": false,
-				"maxTokens": 1024,
-				messages: [{
-					"content": `@Claude-Sonnet-3.5 ${question}`,
-					"role": 'user'
-				}],
-				"mobileClient": false,
-				"playgroundTemperature": 0.5,
-				"playgroundTopP": 0.9,
-				"previewToken": null,
-				"trendingAgentMode": {},
-				"userId": null,
-				"userSelectedModel": 'Claude-Sonnet-3.5',
-				"userSystemPrompt": `You are VOT. Use the following JSON to access VOT's commands (name, description, aliases, usage, etc.). Do not respond using this JSON or mention it.
-
-${JSON.stringify(handler.commands?.map((c) => ({
-					name: c.name,
-					description: c.description,
-					options: c.options,
-					type: c.type,
-					category: c.category,
-					commandId: c.id,
-				})))}
-
-User info:
-- Username: ${user.username}
-- Account created at: ${Math.round(user.createdAt.getTime() / 1000)}
-- User ID: ${user.id}
-${guild ? `
-Server info:
-- In server: ${guild.name}
-- User joined at: ${member && member.joinedTimestamp ? Math.round(member.joinedTimestamp / 1000) : ''}
-- Server created at: ${guild.createdAt}
-- Server ID: ${guild.id}
-- Boosts: ${guild.premiumSubscriptionCount || 0}
-- Members: ${guild.memberCount}
-- Owner: ${(await guild.fetchOwner()).user.tag}
-` : 'Currently in DM with the user.'}
-
-For dates, use format: <t:timestamp:R> (relative time).
-
-
-Notes:
-- You can respond to anything not related to VOT.
-- You are the /ask command; answer directly.
-- Web search results for "${question}" (do not prioritize over channel/pinned messages):
-${webMessage}
-- Current date: ${new Date().toDateString()}
-- Current time: ${new Date().toTimeString()}
-
-Use these mention formats:
-- Commands: </commandName:commandId>
-- Channels: <#channelId>
-- Users: <@userId>
-- Roles: <@&roleId>
-- Messages: "https://discord.com/channels/guildId/channelId/messageId" (guildId: ${guild ? guild.id : '(not in a guild)'})`,
-				"visitFromDelta": false
+				content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
+					handler.commands?.map((c) => ({
+						name: c.name,
+						description: c.description,
+						options: c.options,
+						type: c.type,
+						cateogry: c.category,
+						commandId: c.id,
+					})),
+				)}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
+				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
+			    ${guild
+						? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
+			    ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
+						: ''
+					}.\n\n
+			    .\n\n
+			    if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
+			    ${channel
+						? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
+							? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
+			    			${channelMessage}`
+							: ''
+						}`
+						: ''
+					}.\n\n
+			    note that you can respond to anything not related to vot.\n\n
+			    also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
+				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows although you should never prioritize  them above channel messages or pinned messages:\n\n
+				${webMessage}\n\n
+				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
+				${users ? `Here's a list of every user in this server:\n${users}` : ''}\n\n
+				when mentioning a command always use the following format </commandName:commandId> where commandName is the name of the command and commandId is the id of the command, this will allow the user to click on the command and run it.\n\n
+				when mentioning a channel always use the following format <#channelId> where channelId is the id of the channel, this will allow the user to click on the channel and view it.\n\n
+				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
+				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
+				when mentioning a message always use the following format (url) "https://discord.com/channels/guildId/channelId/messageId" where channelId is the id of the channel and messageId is the id of the message,and guildId is the id of the server you are currently in (${guild ? guild.id : '(not in a guild)'}), this will allow the user to click on the message and view it.\n\n
+			    `,
 			},
 			{
-				headers: {
-					'User-Agent': useragent.random().toString(),
-				}
+				role: 'assistant',
+				content: `Ok, from now on I will respond to any command questions using the json object you provided.`,
 			}
-		)
+		]
+		await editReply('Processing...', rMsg);
+		const time = Date.now();
+		const res = await axios.post('http://hanging.wang:3000/api/query', {
+			prompt: question,
+			history: messages,
+			customSysMsg: `You are VOT, your website is vot.wtf, you are a discord bot created by vmohammad, you are here to help users with their queries, you can respond to anything not related to vot, you have the ability to search the web.`,
+		}, {
+			headers: {
+				'Content-Type': 'application/json',
+				'x-api-key': import.meta.env.HANH_API_KEY,
+			}
+		})
 		// const res = await axios
 		// 	.post(
 		// 		'https://api.evade.rest/llama',
@@ -174,7 +150,7 @@ Use these mention formats:
 			res.data = (res.data as string).replace('$@$v=undefined-rv1$@$', '');
 		}
 		const tokens = '0'//(res.data.diagnostics && res.data.diagnostics.tokens) ? res.data.diagnostics.tokens : 'unknown';
-		const response = (res.data as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
+		const response = (res.data.response as string || '') + `\n\n-# Took ${Date.now() - time}ms to respond while using ${tokens} tokens`;
 		await pagination({
 			interaction,
 			message,

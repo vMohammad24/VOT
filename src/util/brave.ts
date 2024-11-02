@@ -662,9 +662,13 @@ export async function searchBrave(query: string, params?: string) {
         const index = data.indexOf(lookFor);
         const endIndex = data.indexOf('];', index);
         const end = data.substring(index + lookFor.length, endIndex + 1);
-        const json = new Function(`"use strict";return ${end}`)()[1] as BraveSearchResult;
-        await redis.set(`brave:${query}`, JSON.stringify(json), 'EX', 60 * 60);
-        return json;
+        try {
+            const json = new Function(`"use strict";return ${end}`)()[1] as BraveSearchResult;
+            await redis.set(`brave:${query}`, JSON.stringify(json), 'EX', 60 * 60);
+            return json;
+        } catch (e) {
+            return {} as BraveSearchResult;
+        }
     } else {
         return data as BraveSearchResult;
     }

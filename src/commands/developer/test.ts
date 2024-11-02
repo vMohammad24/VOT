@@ -5,8 +5,60 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
-import { isVPN } from '../../util/vpn';
 const turndownService = new TurnDownService();
+// Mocking the DDG object to mimic the input function's behavior in TypeScript
+
+
+type DynamicDataItem = any[];
+
+// Example data parsing function using index numbers
+function parseDynamicDataWithRegex(data: Array<DynamicDataItem>) {
+	data.forEach((item, index) => {
+		console.log(`Item ${index + 1}:`);
+
+		let description = "No description available";
+		let url = "";
+		let domain = "";
+		let title = "";
+		let link = "";
+
+		item.forEach((value) => {
+			if (typeof value === "string") {
+				// Use regex patterns to identify fields based on common structures
+
+				// Check for description (assume it has a substantial amount of text and no URL pattern)
+				if (/^[\w\s,.!?"'&<>;:-]{20,}$/.test(value)) {
+					description = value;
+				}
+
+				// Check for URL pattern
+				else if (/https?:\/\/[^\s]+/.test(value)) {
+					url = value;
+					link = value;
+				}
+
+				// Check for domain (basic domain pattern)
+				else if (/^[\w.-]+\.[a-z]{2,6}$/.test(value)) {
+					domain = value;
+				}
+
+				// Check for title (assume it is often shorter than description but not a URL)
+				else if (/^[\w\s,.!?"'&<>;:-]{5,60}$/.test(value)) {
+					title = value;
+				}
+			}
+		});
+
+		// Display results for each item
+		console.log(`Description: ${description}`);
+		console.log(`URL: ${url}`);
+		console.log(`Domain: ${domain}`);
+		console.log(`Title: ${title}`);
+		console.log(`Link: ${link}`);
+		console.log('---');
+	});
+}
+
 const parseDDG = async (query: string) => {
 	const res1 = (await axios.get(`https://duckduckgo.com/?t=ffab&q=${encodeURIComponent(query)}&ia=web`)).data;
 	const lookFor = '<link id="deep_preload_link" rel="preload" as="script" href=';
@@ -14,9 +66,16 @@ const parseDDG = async (query: string) => {
 	const index2 = res1.indexOf('>', index);
 	const url = res1.substring(index + lookFor.length + 1, index2 - 2);
 	const res2 = (await axios.get(url)).data;
-	const urlRegex = /(?:http[s]?:\/\/.)(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
-	const urls = res2.match(urlRegex);
-	console.log(urls)
+	const lookFor2 = `if (DDG.pageLayout) DDG.pageLayout.load('d',`;
+	const index3 = res2.indexOf(lookFor2);
+	const index4 = res2.indexOf(');', index3);
+	const json = res2.substring(index3 + lookFor2.length, index4);
+	const data = JSON.parse(json);
+	parseDynamicDataWithRegex(data);
+	return ['cool']
+	// const urlRegex = /(?:http[s]?:\/\/.)(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
+	// const urls = res2.match(urlRegex);
+	// console.log(urls)
 }
 
 const larp = async (person: string, query: string) => {
@@ -208,7 +267,7 @@ export default {
 		}],
 	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		const query = args.get('query');
-		return `${(await isVPN(query))}`;
+		const query = args.get('query') as string || 'test';
+
 	},
 } as ICommand;
