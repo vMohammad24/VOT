@@ -67,7 +67,7 @@ export default {
                     where: { userId: user.id },
                     data: { balance: eco.balance }
                 });
-                embed.setDescription(`You cashed out at ${multiplier}x and won ${payout} coins!`);
+                embed.setDescription(`You cashed out at ${multiplier.toFixed(2)}x and won ${payout.toFixed(2)} coins!`);
                 embed.setColor('Green');
                 await i.update({ embeds: [embed], components: [] });
                 collector.stop();
