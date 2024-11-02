@@ -38,6 +38,7 @@ model User {
   guilds           Guild[]
   spotify          Spotify?
   discord          Discord?
+  economy          Economy?
   giveawaysHosted  Giveaway[]     @relation("giveawayHoster")
   enteredGiveaways Giveaway[]     @relation("giveawayEntrants")
   giveawaysWon     Giveaway[]     @relation("giveawayWinners")
@@ -235,6 +236,15 @@ model StickyMessage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   guildId   String   @unique
+}
+
+model Economy {
+  id        String   @id @default(uuid())
+  balance   Int      @default(100)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PanelType {
