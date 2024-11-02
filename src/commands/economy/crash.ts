@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000,
     description: 'Play the crash game!',
     aliases: ['crashgame'],
+    type: 'all',
     options: [
         {
             name: 'bet',

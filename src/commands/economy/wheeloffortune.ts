@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000 * 60 * 24,
     description: 'Place bets on segments of a spinning wheel!',
     aliases: ['wof', 'wheel'],
+    type: 'all',
     options: [
         {
             name: 'bet',

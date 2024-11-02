@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000,
     description: 'Place bets on either "red" or "black" for a card draw!',
     aliases: ['rb', 'redorblack'],
+    type: 'all',
     options: [
         {
             name: 'bet',

@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000,
     description: 'Place bets on either the "Player," "Banker," or a "Tie."',
     aliases: ['bac', 'bacc'],
+    type: 'all',
     options: [
         {
             name: 'bet',

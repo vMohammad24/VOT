@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000,
     description: 'Place bets on a dice roll!',
     aliases: ['roll', 'diceroll'],
+    type: 'all',
     options: [
         {
             name: 'bet',

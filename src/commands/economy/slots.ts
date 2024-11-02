@@ -8,6 +8,7 @@ export default {
     cooldown: 60_000,
     description: 'Play the slot machine!',
     aliases: ['slot', 'slotmachine'],
+    type: 'all',
     options: [
         {
             name: 'amount',
