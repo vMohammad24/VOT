@@ -12,6 +12,7 @@ export default {
     cooldown: 60_000,
     description: 'Play the mines game!',
     aliases: ['minefield', 'minesweeper'],
+    type: 'all',
     options: [
         {
             name: 'bet',

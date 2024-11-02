@@ -6,6 +6,7 @@ export default {
     name: "leaderboard",
     description: "View the economy leaderboard",
     aliases: ["lb"],
+    type: 'all',
     execute: async ({ handler: { prisma }, args }) => {
         const users = await prisma.economy.findMany({
             orderBy: {

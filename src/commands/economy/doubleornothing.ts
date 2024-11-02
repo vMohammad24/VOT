@@ -6,6 +6,7 @@ export default {
     cooldown: 60_000,
     description: 'Bet any amount of money and go for either double the amount or nothing',
     aliases: ['don', 'double'],
+    type: 'all',
     options: [
         {
             name: 'bet',

@@ -268,6 +268,6 @@ export default {
 	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const query = args.get('query') as string || 'test';
-
+		return "hello123"
 	},
 } as ICommand;

@@ -6,6 +6,7 @@ export default {
     name: "balance",
     description: "Check your balance",
     aliases: ["bal"],
+    type: 'all',
     options: [{
         name: "user",
         description: "The user you want to check the balance of",
