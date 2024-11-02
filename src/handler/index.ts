@@ -8,6 +8,7 @@ import {
 	type Interaction,
 	type Message,
 } from 'discord.js';
+import { watch } from "fs/promises";
 import { nanoid } from 'nanoid/non-secure';
 import path from 'path';
 import PinoLogger, { Logger } from 'pino';
@@ -97,25 +98,43 @@ export default class CommandHandler {
 				cwd: contextCommandsDir,
 			})) {
 				contextCommandPaths.push(file);
-			}
-
-			await Promise.all(commandPaths.map(async (file) => {
+			} const loadCommand = async (file: string) => {
 				const start = Date.now();
 				const categoryName = file.split('/').slice(-2, -1)[0];
 				const fileName = file.split('/').pop()!.split('.')[0];
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
-				const command = (await import(path.join(commandsDir, file))).default;
+
+				// Clear the require cache for the module
+				const modulePath = path.join(commandsDir, file) + '?t=' + Date.now();
+				const command = (await import(modulePath)).default;
 				const commandName = command.name || fileName;
+				const old = handler.commands.find((c) => c.name === fileName);
+				if (old) {
+					this.logger.info(`Refreshing command ${commandName}`);
+					const index = handler.commands.indexOf(old);
+					handler.commands.splice(index, 1);
+				}
+
 				const modifiedData: ICommand = Object.assign({}, command, {
 					name: commandName,
 					category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
 					aliases: command.aliases || [],
 				});
-				// if (modifiedData.disabled) continue;
+
 				handler.commands.push(modifiedData);
-				if (modifiedData.init && !modifiedData.disabled) commandInits.push(modifiedData.init)//await modifiedData.init(this);
-				if (mHandler.verbose)
+				if (modifiedData.init && !modifiedData.disabled) {
+					commandInits.push(modifiedData.init);
+				}
+				if (mHandler.verbose) {
 					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category} in ${Date.now() - start}ms`);
+				}
+				if (old === modifiedData) {
+					this.logger.info(`Command ${commandName} is the same as the old one`);
+				}
+			};
+
+			await Promise.all(commandPaths.map(async (file) => {
+				return loadCommand(file);
 			}));
 			await Promise.all(contextCommandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
@@ -137,8 +156,16 @@ export default class CommandHandler {
 			const slash = new SlashCommandHandler(Islash, this);
 			const legacy = new LegacyCommandHandler(Ilegacy, this);
 			this.commands = handler.commands;
-			// listener
 			const listener = new ListenerHandler(this, listenersDir, this.glob);
+
+			const watcher = watch(commandsDir, {
+				recursive: true,
+			});
+			for await (const event of watcher) {
+				if (event.filename) {
+					await loadCommand(event.filename);
+				}
+			}
 		});
 	}
 
@@ -164,7 +191,7 @@ export default class CommandHandler {
 							guildId: member.guild.id,
 							voiceId: member.voice.channelId,
 							textId: member.voice.channelId,
-							// deaf: true,
+							deaf: true,
 						});
 					playerTime = Date.now() - start;
 					return player;
@@ -202,7 +229,6 @@ export default class CommandHandler {
 						message,
 						player: (await getPlayer(message.member as GuildMember)) || undefined,
 						editReply: async (content, rMsg) => {
-							// get the replied message
 							if (!rMsg) return;
 							await rMsg.edit(content as string | MessageEditOptions);
 						},

@@ -83,12 +83,12 @@ export default {
 				},
 				{
 					name: 'Members',
-					value: `${usersSize}`,
+					value: `${numeral(usersSize).format('0,0')}`,
 					inline: true,
 				},
 				{
 					name: 'Channels',
-					value: `${client.channels.cache.size}`,
+					value: `${numeral(client.channels.cache.size).format('0,0')}`,
 					inline: true,
 				},
 				{
