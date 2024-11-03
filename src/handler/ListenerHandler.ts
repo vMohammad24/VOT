@@ -18,8 +18,6 @@ export default class ListenerHandler {
 			absolute: false,
 			cwd: listenersDir,
 		})) {
-			const fileName = file.split('/').pop();
-			if (fileName?.startsWith('_')) return;
 			const listener = await import(join(listenersDir, file));
 			this.listeners.push(listener.default as IListener);
 			listener.default.execute(this.handler);
