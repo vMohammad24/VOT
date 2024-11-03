@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { expNeededForLevel } from '../../listeners/_leveling';
+import { expNeededForLevel } from '../../listeners/_leveling.ts.old';
 
 export default {
 	description: 'Displays your current level or the level of a selected user',
