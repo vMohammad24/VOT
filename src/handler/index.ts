@@ -158,12 +158,14 @@ export default class CommandHandler {
 			this.commands = handler.commands;
 			const listener = new ListenerHandler(this, listenersDir, this.glob);
 
-			const watcher = watch(commandsDir, {
-				recursive: true,
-			});
-			for await (const event of watcher) {
-				if (event.filename) {
-					await loadCommand(event.filename);
+			if (!handler.prodMode) {
+				const watcher = watch(commandsDir, {
+					recursive: true,
+				});
+				for await (const event of watcher) {
+					if (event.filename) {
+						await loadCommand(event.filename);
+					}
 				}
 			}
 		});

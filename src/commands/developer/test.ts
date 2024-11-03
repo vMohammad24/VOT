@@ -256,7 +256,7 @@ export default {
 	description: 'test command for devs',
 	// perms: 'dev',
 	type: 'all',
-	// cooldown: 60000,
+	cooldown: 600000000000000000000000,
 	disabled: commandHandler.prodMode,
 	options: [
 		{

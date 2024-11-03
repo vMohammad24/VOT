@@ -38,17 +38,21 @@ export default {
             content: 'You do not have enough coins to bet that amount',
             ephemeral: true
         };
-
-        const segments = [
-            { multiplier: 2, emoji: '🍒' },
-            { multiplier: 3, emoji: '🍋' },
-            { multiplier: 5, emoji: '🍉' },
-            { multiplier: 10, emoji: '🍇' },
-            { multiplier: 20, emoji: '🔔' },
-            { multiplier: 50, emoji: '⭐' },
-            { multiplier: 100, emoji: '💎' }
+        const weightedSegments = [
+            { multiplier: 1.25, emoji: '🍒', weight: 50 },
+            { multiplier: 1.50, emoji: '🔔', weight: 30 },
+            { multiplier: 1.75, emoji: '⭐', weight: 15 },
+            { multiplier: 2.00, emoji: '💎', weight: 5 }
         ];
-        const segment = segments[Math.floor(Math.random() * segments.length)];
+
+        const totalWeight = weightedSegments.reduce((acc, segment) => acc + segment.weight, 0);
+        const random = Math.floor(Math.random() * totalWeight);
+
+        let cumulativeWeight = 0;
+        const segment = weightedSegments.find(segment => {
+            cumulativeWeight += segment.weight;
+            return random < cumulativeWeight;
+        })!;
         const payout = bet * segment.multiplier;
 
         const embed = new EmbedBuilder()

@@ -1,4 +1,4 @@
-import { Collection, EmbedBuilder } from 'discord.js';
+import { Collection } from 'discord.js';
 import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
@@ -21,16 +21,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1_000);
-			return {
-				embeds: [new EmbedBuilder()
-					.setTitle('Cooldown')
-					.setColor('DarkRed')
-					.setDescription(`You can run this command again <t:${expiredTimestamp}:R>.`)
-					.setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() })
-					.setTimestamp()
-				],
-				ephemeral: true
-			}
+			return 'You are on cooldown, please wait ' + (expiredTimestamp - Math.round(now / 1_000)) + ' seconds.';
 		}
 	}
 	timestamps.set(user.id, now);
