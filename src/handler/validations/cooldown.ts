@@ -22,6 +22,7 @@ export default async function (command: ICommand, ctx: CommandContext) {
 
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1_000);
+			console.log(expiredTimestamp)
 			return {
 				embeds: [
 					makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined)
