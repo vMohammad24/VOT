@@ -1,12 +1,13 @@
 import axios from 'axios';
-import type ICommand from '../../handler/interfaces/ICommand';
 import { EmbedBuilder } from 'discord.js';
+import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Get a random raccoon image',
 	aliases: ['raccoon'],
 	name: 'raccoon',
 	type: 'all',
+	cooldown: 2500,
 	execute: async () => {
 		const res = await axios.get('https://api.racc.lol/v1/raccoon?json=true');
 		const data = res.data.data;
