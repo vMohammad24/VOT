@@ -5,6 +5,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
+import { askGPT } from '../../util/ddg';
 const turndownService = new TurnDownService();
 // Mocking the DDG object to mimic the input function's behavior in TypeScript
 
@@ -268,6 +269,7 @@ export default {
 	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const query = args.get('query') as string || 'test';
-		return "hello123"
+		const res = await askGPT(query);
+		return res.choices[0].message.content;
 	},
 } as ICommand;
