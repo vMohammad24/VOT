@@ -4,7 +4,7 @@ import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Elysia, t } from 'elysia';
 import commandHandler, { redis, upSince } from '..';
-import { askGPT } from '../util/ddg';
+import { askDDG } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
 import discord from './discord';
@@ -102,17 +102,18 @@ elysia.post('/googleLens', async ({ body }) => {
 })
 const bAPIKEy = 'VOT-MSSWAKANGHYUK-ELY-KEY';
 elysia.post('/askDDG', async ({ body, headers, set }) => {
-	const { query } = body;
+	const { query, model } = body;
 	const { authorization } = headers;
 	if (authorization !== bAPIKEy) {
 		set.status = 401;
 		return { error: 'Unauthorized' };
 	};
-	const res = await askGPT(query);
+	const res = await askDDG(query, model);
 	return res;
 }, {
 	body: t.Object({
 		query: t.String(),
+		model: t.String(),
 	}),
 	headers: t.Object({
 		authorization: t.String(),
