@@ -18,7 +18,7 @@ import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
 import { getUserByID } from "../../util/database";
 import { addEmoji, addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors } from "../../util/util";
+import { getTwoMostUsedColors, isNullish } from "../../util/util";
 
 
 interface Decoration {
@@ -304,8 +304,8 @@ export default {
                 });
             }
         }
-
-        embed.setDescription(description.split('\n').filter(l => l.trim() != '').join('\n'));
+        const finalDesc = description.split('\n').filter(l => l.trim() != '').join('\n');
+        embed.setDescription(isNullish(finalDesc) ? null : finalDesc);
         embed.setFields(fields.map(field => ({ ...field, value: field.value || 'Unknown' })))
             .setTimestamp(u.createdTimestamp)
             .setFooter({ text: 'Created at' });
