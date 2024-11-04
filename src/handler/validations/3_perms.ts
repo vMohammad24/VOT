@@ -17,7 +17,7 @@ export default function (command: ICommand, ctx: CommandContext) {
 					.setTitle('Missing Permissions')
 					.setColor('Red')
 					.setDescription(
-						`You are missing the following permissions: ${missingPerms
+						`You're missing the following permissions: ${missingPerms
 							.map((a) => '``' + a.toString()
 								.replace(/([a-z])([A-Z])/g, '$1 $2')
 								.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
