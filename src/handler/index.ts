@@ -14,7 +14,7 @@ import path from 'path';
 import PinoLogger, { Logger } from 'pino';
 import { inspect } from 'util';
 import commandHandler from '..';
-import { cacheCommand, getCachedCommand } from '../util/database';
+import { cacheCommand } from '../util/database';
 import { getEmoji } from '../util/emojis';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
@@ -241,15 +241,17 @@ export default class CommandHandler {
 				const vStart = Date.now();
 				const validationResults = await Promise.all(this.validations.map(validation => validation(command, commandContext)));
 				const invalidResult = validationResults.find(result => result !== true);
-				if (invalidResult) return invalidResult;
+				if (invalidResult) {
+
+				}
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
-				if (commandHandler.prodMode && command.shouldCache && commandContext.guild && commandContext.user) {
-					const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
-					if (cachedCommand) {
-						return cachedCommand;
-					}
-				}
+				// if (commandHandler.prodMode && command.shouldCache && commandContext.guild && commandContext.user) {
+				// 	const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
+				// 	if (cachedCommand) {
+				// 		return cachedCommand;
+				// 	}
+				// }
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
 				if (command.shouldCache && commandContext.guild && commandContext.user && result) {

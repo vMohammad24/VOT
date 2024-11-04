@@ -43,7 +43,7 @@ export default {
                     description: description.slice(0, 99) || 'No description',
                     emoji: (getEmoji(v.meta_url.netloc.split('.')[0]) || '🔗').toString(),
                     page: new EmbedBuilder().setTitle(
-                        v.title
+                        v.title.substring(0, 256)
                     ).setDescription(
                         isNullish(description) ? null : description
                     ).setURL(

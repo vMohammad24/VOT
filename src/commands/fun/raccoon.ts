@@ -4,7 +4,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Get a random raccoon image',
-	aliases: ['raccoon'],
+	aliases: ['raccoon', 'racc'],
 	name: 'raccoon',
 	type: 'all',
 	cooldown: 2500,
