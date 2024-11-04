@@ -66,15 +66,15 @@ export default {
 					evaluatedResult = (await redis.eval(code, 0)) as string;
 					break;
 				case 'js':
-					evaluatedResult = eval(code);
+					evaluatedResult = await eval(code);
 					break;
 				default:
-					evaluatedResult = Function(`"use strict";return ${code}`)();
+					evaluatedResult = new Function(`return ${code}`)();
 					break;
 			}
 			embed.setDescription(`\`\`\`js\n${evaluatedResult}\`\`\``);
 		} catch (e) {
-			embed.setDescription(`\`\`\`js\n${e}\`\`\``);
+			embed.setDescription(`\`\`\`js\n${e}\`\`\``).setColor('DarkRed');
 		}
 		embed.setFooter({
 			text: `Took ${new Date().getTime() - startTime.getTime()}ms`,
