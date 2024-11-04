@@ -3,7 +3,7 @@ import ICommand from "../../handler/interfaces/ICommand";
 
 export default {
     name: 'wheeloffortune',
-    cooldown: 60_000 * 60 * 24,
+    cooldown: 60_000 * 60,
     description: 'Place bets on segments of a spinning wheel!',
     aliases: ['wof', 'wheel'],
     type: 'all',

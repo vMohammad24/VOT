@@ -5,7 +5,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
-import { askDDG } from '../../util/ddg';
+import { DuckDuckGoChat } from '../../util/ddg';
 const turndownService = new TurnDownService();
 // Mocking the DDG object to mimic the input function's behavior in TypeScript
 
@@ -253,6 +253,7 @@ interface Reel {
 	latest_reel_media: number;
 	muted: boolean | null;
 }
+const agent = new DuckDuckGoChat('gpt-4o-mini');
 export default {
 	description: 'test command for devs',
 	// perms: 'dev',
@@ -269,7 +270,8 @@ export default {
 	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const query = args.get('query') as string || 'test';
-		const res = await askDDG(query);
-		// return res.choices[0].message.content;
+
+		const yes = await agent.chat(query);
+		return yes;
 	},
 } as ICommand;

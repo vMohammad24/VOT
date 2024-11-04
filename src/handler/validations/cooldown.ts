@@ -1,10 +1,14 @@
-import { Collection } from 'discord.js';
+import { Collection, EmbedBuilder } from 'discord.js';
 import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 const cooldowns = new Collection();
+const embed = new EmbedBuilder()
+	.setTitle('Cooldown')
+	.setColor('DarkRed')
 
+const makeEmbed = (time: number, name: string, avatar?: string) => embed.setDescription(`You can use this command again <t:${time}:R>`).setAuthor({ name, iconURL: avatar });
 export default async function (command: ICommand, ctx: CommandContext) {
 	const { cooldown } = command;
 	const { user, handler: { prisma } } = ctx;
@@ -21,7 +25,11 @@ export default async function (command: ICommand, ctx: CommandContext) {
 
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1_000);
-			return 'You are on cooldown, please wait ' + (expiredTimestamp - Math.round(now / 1_000)) + ' seconds.';
+			return {
+				embeds: [
+					makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined)
+				]
+			}
 		}
 	}
 	timestamps.set(user.id, now);
