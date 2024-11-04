@@ -258,7 +258,7 @@ export default {
 	description: 'test command for devs',
 	// perms: 'dev',
 	type: 'all',
-	cooldown: 600000000000000000000000,
+	cooldown: 1000000,
 	disabled: commandHandler.prodMode,
 	options: [
 		{
@@ -267,11 +267,10 @@ export default {
 			type: ApplicationCommandOptionType.String,
 			required: false
 		}],
-	userTier: "Premium",
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const query = args.get('query') as string || 'test';
 
-		const yes = await agent.chat(query);
-		return yes;
+		// const yes = await agent.chat(query);
+		return query;
 	},
 } as ICommand;

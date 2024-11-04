@@ -1,5 +1,4 @@
 import { Collection, EmbedBuilder } from 'discord.js';
-import { getUserByID } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
@@ -16,8 +15,6 @@ export default async function (command: ICommand, ctx: CommandContext) {
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Collection());
 	}
-	const { tier } = await getUserByID(user.id, { tier: true });
-	if (tier && (tier == 'Premium' || tier == 'Beta' || tier == 'Staff')) return true;
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name) as Collection<string, number>;
 	if (timestamps.has(user.id)) {

@@ -168,7 +168,6 @@ export class DuckDuckGoChat {
                 reject(err);
             });
         });
-        console.log(response)
         return response;
     }
 }
