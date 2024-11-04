@@ -1,4 +1,4 @@
-import { Collection, EmbedBuilder } from 'discord.js';
+import { Collection, EmbedBuilder, InteractionReplyOptions } from 'discord.js';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
@@ -8,7 +8,7 @@ const embed = new EmbedBuilder()
 	.setColor('DarkRed')
 
 const makeEmbed = (time: number, name: string, avatar?: string) => embed.setDescription(`You can use this command again <t:${time}:R>`).setAuthor({ name, iconURL: avatar });
-export default async function (command: ICommand, ctx: CommandContext) {
+export default async function (command: ICommand, ctx: CommandContext): Promise<true | InteractionReplyOptions> {
 	const { cooldown } = command;
 	const { user, handler: { prisma } } = ctx;
 	if (!cooldown) return true;
