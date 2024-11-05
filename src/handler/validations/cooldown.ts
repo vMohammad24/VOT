@@ -1,4 +1,5 @@
 import { Collection, EmbedBuilder, InteractionReplyOptions } from 'discord.js';
+import { timeUntil } from '../../util/util';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
@@ -7,7 +8,7 @@ const embed = new EmbedBuilder()
 	.setTitle('Cooldown')
 	.setColor('DarkRed')
 
-const makeEmbed = (time: number, name: string, avatar?: string) => embed.setDescription(`You can use this command again <t:${time}:R>`).setAuthor({ name, iconURL: avatar });
+const makeEmbed = (time: number, name: string, avatar?: string) => embed.setDescription(`You can use this command again in ${timeUntil(time * 1000)} (<t:${time}:R>)`).setAuthor({ name, iconURL: avatar });
 export default async function (command: ICommand, ctx: CommandContext): Promise<true | InteractionReplyOptions> {
 	const { cooldown } = command;
 	const { user, handler: { prisma } } = ctx;
