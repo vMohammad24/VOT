@@ -32,10 +32,16 @@ export interface DDGAIRes {
 
 
 
-const models = ["gpt-4o-mini", "claude-3-haiku-20240307", "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "mistralai/Mixtral-8x7B-Instruct-v0.1"];
-export async function askDDG(message: string, model: string = "gpt-4o-mini"): Promise<DDGAIRes | { error: string }> {
-    if (!models.includes(model)) return {
-        error: "Invalid model"
+export const ddgModels = {
+    "gpt-4o-mini": "GPT-4o Mini",
+    "claude-3-haiku-20240307": "Claude 3 Haiku",
+    "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": "Llama 3.1 70B",
+    "mistralai/Mixtral-8x7B-Instruct-v0.1": "Mixtral"
+};
+
+export async function askDDG(message: string, model: keyof typeof ddgModels = "gpt-4o-mini"): Promise<DDGAIRes | { error: string }> {
+    if (!ddgModels[model]) {
+        return { error: "Invalid model" };
     }
     return (await axios.post(
         `${API_URL}v1/chat/completions`,
@@ -72,29 +78,25 @@ export class DuckDuckGoChat {
     private vqd: string | undefined;
     private messages: { content: string; role: string; }[] = [];
     private userAgent = new UserAgent();
-    constructor(model: "gpt-4o-mini" | "claude-3-haiku-20240307" | "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo" | "mistralai/Mixtral-8x7B-Instruct-v0.1") {
+    constructor(model: string) {
+        if (!Object.keys(ddgModels).includes(model)) {
+            throw new Error("Invalid model");
+        }
         this.model = model;
+    }
+
+    public getModel() {
+        return this.model;
     }
 
     private async generateVQD() {
         const response = await axios.get('https://duckduckgo.com/duckchat/v1/status', {
             headers: {
-                'sec-ch-ua-platform': '"Linux"',
                 'cache-control': 'no-store',
                 'user-agent': this.userAgent.toString(),
-                'sec-ch-ua': '"Chromium";v="130", "Brave";v="130", "Not?A_Brand";v="99"',
-                'sec-ch-ua-mobile': '?0',
                 'x-vqd-accept': '1',
-                'accept': '*/*',
-                'sec-gpc': '1',
-                'accept-language': 'en-US,en;q=0.9',
                 'sec-fetch-site': 'same-origin',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-dest': 'empty',
                 'referer': 'https://duckduckgo.com/',
-                'accept-encoding': 'gzip, deflate, br, zstd',
-                'cookie': 'dcm=6',
-                'priority': 'u=1, i'
             }
         });
         this.vqd = response.headers['x-vqd-4'];
@@ -113,22 +115,10 @@ export class DuckDuckGoChat {
             model: this.model
         }, {
             headers: {
-                'sec-ch-ua-platform': '"Linux"',
                 'cache-control': 'no-store',
                 'user-agent': this.userAgent.toString(),
-                'sec-ch-ua': '"Chromium";v="130", "Brave";v="130", "Not?A_Brand";v="99"',
-                'sec-ch-ua-mobile': '?0',
                 'x-vqd-accept': '1',
-                'accept': '*/*',
-                'sec-gpc': '1',
-                'accept-language': 'en-US,en;q=0.9',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-dest': 'empty',
                 'referer': 'https://duckduckgo.com/',
-                'accept-encoding': 'gzip, deflate, br, zstd',
-                'cookie': `dcm=6;`,
-                'priority': 'u=1, i',
                 'x-vqd-4': this.vqd
             },
             responseType: 'stream'
