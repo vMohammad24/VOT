@@ -150,7 +150,7 @@ export default {
             [UserTier.Beta, getEmoji('t_beta').toString()],
         ]);
         const [pUser, res, statusRes] = await Promise.all([
-            getUserByID(user.id, { tier: true }),
+            getUserByID(user.id, { tier: true, commands: true }),
             axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id, {
                 headers: {
                     Authorization: import.meta.env.OTHER_EVADE_API_KEY
@@ -255,6 +255,26 @@ export default {
 
         if (pUser && pUser.tier != UserTier.Normal) {
             description += `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}\n`;
+        }
+
+        if (pUser && pUser.commands) {
+            description += `**Commands ran**: ${pUser.commands.length}\n`;
+        }
+
+        if (pUser && pUser.commands) {
+            // check commandId inside of every command for most used
+            const commands = pUser.commands;
+            const commandMap = new Map<string, number>();
+            commands.forEach((c: any) => {
+                if (commandMap.has(c.commandId)) {
+                    commandMap.set(c.commandId, commandMap.get(c.commandId)! + 1);
+                } else {
+                    commandMap.set(c.commandId, 1);
+                }
+            });
+            const sortedCommands = Array.from(commandMap).sort((a, b) => b[1] - a[1]);
+            const mostUsedCommand = sortedCommands[0];
+            description += `**Most used command**: ${mostUsedCommand[0]} (${mostUsedCommand[1]} times)\n`;
         }
 
         if (clan && clan.emoji && clan.tag && clan.identity_guild_id) {
