@@ -173,3 +173,9 @@ export function isURL(url: string): boolean {
 export function isNullish(value: any): boolean {
 	return value === null || value === undefined || value === '';
 }
+
+export function camelToTitleCase(str: string): string {
+	return str.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+		.trim();
+}

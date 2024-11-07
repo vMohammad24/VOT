@@ -74,7 +74,6 @@ export function generateTopography(canvas: Canvas, seed: number, nrlines: number
 
 function drawShape([start, ...pts]: [number, number][]): [number, number][] {
     if (pts.length < 2) {
-        // Ensure at least 4 points by duplicating the start point
         return [start, ...pts, start, start, start];
     }
     return [start, ...pts, start];

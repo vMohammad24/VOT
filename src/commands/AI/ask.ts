@@ -35,23 +35,17 @@ export default {
 	type: 'all',
 	cooldown: 30000,
 	async execute({ args, interaction, message, user, editReply }) {
-		const question = args.get('question');
-		const apiKey = process.env.EVADE_API_KEY;
-		if (!apiKey)
-			return {
-				content: 'API Key not found, please contact the developer',
-				ephemeral: true,
-			};
-		await interaction?.deferReply();
+		const question = args.get('question') as string | undefined;
+		if (!question) return {
+			content: 'Please provide a question',
+			ephemeral: true,
+		};
 
-		const rMsg = await message?.reply('Thinking...');
 		let context = '';
-		const web = args.get('web') as boolean ?? false;
+		const web = args.get('web') ?? false;
 		if (web) {
-			await editReply('Searching...', rMsg);
 			context += (await searchBrave(question)).data.body.response.web.results.map((r) => `- ${r.title} - ${r.description} - ${r.url}`).join('\n');
 		}
-		await editReply('Processing...', rMsg);
 		const model = args.get('model') as string;
 		let ddg = collection.get(user.id);
 
@@ -66,7 +60,6 @@ export default {
 		await pagination({
 			interaction,
 			message,
-			rMsg,
 			pages: (response).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
 				page: {
 					content: text,

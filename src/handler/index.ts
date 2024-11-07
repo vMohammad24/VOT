@@ -1,6 +1,7 @@
 import { Glob } from 'bun';
 import {
 	ChatInputCommandInteraction,
+	CommandInteraction,
 	EmbedBuilder,
 	Events,
 	GuildMember,
@@ -14,7 +15,6 @@ import path from 'path';
 import PinoLogger, { Logger } from 'pino';
 import { inspect } from 'util';
 import commandHandler from '..';
-import { cacheCommand } from '../util/database';
 import { getEmoji } from '../util/emojis';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
@@ -36,6 +36,53 @@ type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
 interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
+
+const createCommand = async (commandContext: CommandContext, command: ICommand) => {
+	const cId = commandContext.cID || nanoid(10);
+	return await commandContext.handler.prisma.user.upsert({
+		where: {
+			id: commandContext.user.id,
+		},
+		update: {
+			name: commandContext.user.username,
+			avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+			commands: {
+				create: {
+					commandId: command.name!,
+					commandInfo: {
+						args: (commandContext.args as any) || null,
+						guild: (commandContext?.guild && commandContext.guild.id) || null,
+						channel: commandContext?.channel?.id || null,
+						message: commandContext?.message?.id || null,
+						interaction: commandContext?.interaction?.id || null,
+					},
+					id: `cmd_${cId}`
+				},
+			},
+		},
+		create: {
+			id: commandContext.user.id,
+			name: commandContext.user.username,
+			avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+			commands: {
+				create: {
+					commandId: command.name!,
+					commandInfo: {
+						args: (commandContext.args as any) || null,
+						guild: commandContext?.guild?.id || null,
+						channel: commandContext?.channel?.id || null,
+						message: commandContext?.message?.id || null,
+						interaction: commandContext?.interaction?.id || null,
+					},
+					id: `cmd_${cId}`
+				},
+			},
+		},
+		select: {
+			commands: { orderBy: { createdAt: 'desc' } },
+		},
+	})
+}
 export default class CommandHandler {
 	public prisma: ICommandHandler['prisma'];
 	public kazagumo: ICommandHandler['kazagumo'];
@@ -139,6 +186,7 @@ export default class CommandHandler {
 			await Promise.all(contextCommandPaths.map(async (file) => {
 				const commandName = file.split('/').pop()!.split('.')[0];
 				const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
+				if (command.disabled) return;
 				const modifiedData: IContextCommand = Object.assign({}, command, {
 					name: command.name || commandName,
 				});
@@ -177,7 +225,7 @@ export default class CommandHandler {
 			if ('aliases' in cmd) {
 				const start = Date.now();
 				const command = cmd as ICommand;
-				if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+				if (command.disabled) return;
 				let playerTime = undefined;
 				let contextTime = undefined;
 				let validationTime = undefined;
@@ -239,7 +287,14 @@ export default class CommandHandler {
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const validationResults = await Promise.all(this.validations.map(validation => validation(command, commandContext)));
+				const validationResults = await Promise.all(this.validations.map(async (validation) => {
+					const vStart = Date.now();
+					// file name
+					const result = await validation(command, commandContext);
+					const vTime = Date.now() - vStart;
+					this.logger.info(`Validation took ${vTime}ms`);
+					return result;
+				}));
 				const invalidResult = validationResults.find(result => result !== true);
 				if (invalidResult) {
 					return invalidResult;
@@ -252,11 +307,21 @@ export default class CommandHandler {
 				// 		return cachedCommand;
 				// 	}
 				// }
+				setTimeout(() => {
+					if (ctx instanceof CommandInteraction) {
+						if (!ctx.deferred && !ctx.replied) {
+							console.log('deferred');
+							ctx.deferReply();
+						}
+					}
+				}, 2700);
+
+				await createCommand(commandContext, command);
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
-				if (command.shouldCache && commandContext.guild && commandContext.user && result) {
-					await cacheCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id, JSON.stringify(result));
-				}
+				// if (command.shouldCache && commandContext.guild && commandContext.user && result) {
+				// 	await cacheCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id, JSON.stringify(result));
+				// }
 				const cacheTime = Date.now() - executionTime - eStart;
 				const total = Date.now() - start;
 				if (commandHandler.verbose) {

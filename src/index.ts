@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { inspect } from 'bun';
-import { Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
+import { ActivityType, Client, EmbedBuilder, Events, IntentsBitField, WebhookClient } from 'discord.js';
 import Redis from 'ioredis';
 import { Kazagumo, Plugins } from 'kazagumo';
 import Spotify from 'kazagumo-spotify';
@@ -81,6 +81,11 @@ commandHandler.logger.info(`Starting in ${isProduction ? 'production' : 'develop
 
 client.on(Events.ClientReady, async (c) => {
 	initEmojis();
+	c.user.setActivity({
+		name: 'vot.wtf',
+		type: ActivityType.Watching,
+		url: 'https://vot.wtf',
+	})
 	const giveaways = await prisma.giveaway.findMany();
 	for (const giveaway of giveaways) {
 		if (!giveaway.ended) {

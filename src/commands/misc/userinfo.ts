@@ -11,6 +11,7 @@ import {
     ColorResolvable,
     EmbedBuilder,
     GuildMember,
+    PermissionsBitField,
     User,
 } from "discord.js";
 import { nanoid } from "nanoid/non-secure";
@@ -18,7 +19,7 @@ import { join } from 'path';
 import ICommand from "../../handler/interfaces/ICommand";
 import { getUserByID } from "../../util/database";
 import { addEmoji, addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors, isNullish } from "../../util/util";
+import { camelToTitleCase, getTwoMostUsedColors, isNullish } from "../../util/util";
 
 
 interface Decoration {
@@ -125,6 +126,17 @@ interface Activity {
         end: number;
     }
 }
+
+const notablePerms = [
+    PermissionsBitField.Flags.Administrator,
+    PermissionsBitField.Flags.ManageGuild,
+    PermissionsBitField.Flags.ManageChannels,
+    PermissionsBitField.Flags.ManageRoles,
+    PermissionsBitField.Flags.ManageWebhooks,
+    PermissionsBitField.Flags.ManageMessages,
+    PermissionsBitField.Flags.BanMembers,
+    PermissionsBitField.Flags.KickMembers,
+];
 
 
 export default {
@@ -261,7 +273,7 @@ export default {
             description += `**Commands ran**: ${pUser.commands.length}\n`;
         }
 
-        if (pUser && pUser.commands) {
+        if (pUser && pUser.commands && pUser.commands.length > 0) {
             // check commandId inside of every command for most used
             const commands = pUser.commands;
             const commandMap = new Map<string, number>();
@@ -321,6 +333,15 @@ export default {
                 fields.push({
                     name: 'Joined',
                     value: `<t:${Math.round(user.joinedTimestamp / 1000)}>`,
+                });
+            }
+
+            const n = user.permissions.toArray().filter(p => notablePerms.includes(PermissionsBitField.Flags[p as keyof typeof PermissionsBitField.Flags])).map(p => camelToTitleCase(p.toString()));
+
+            if (n && n.length > 0) {
+                fields.push({
+                    name: 'Notable Permissions',
+                    value: n.join(', ')
                 });
             }
         }
