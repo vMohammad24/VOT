@@ -256,9 +256,7 @@ interface Reel {
 const agent = new DuckDuckGoChat('gpt-4o-mini');
 export default {
 	description: 'test command for devs',
-	// perms: 'dev',
 	type: 'all',
-	cooldown: 1000000,
 	disabled: commandHandler.prodMode,
 	options: [
 		{
@@ -268,9 +266,6 @@ export default {
 			required: false
 		}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		const query = args.get('query') as string || 'test';
-
-		// const yes = await agent.chat(query);
-		return query;
+		const query = args.get('query'); return query;
 	},
 } as ICommand;

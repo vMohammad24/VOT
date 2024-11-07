@@ -1,7 +1,7 @@
 import { Events, type Client } from 'discord.js';
 import type { Kazagumo } from 'kazagumo';
 import CommandHandler from '.';
-import { getGuild } from '../util/database';
+import { getGuild, getUserByID } from '../util/database';
 import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
@@ -18,7 +18,7 @@ export default class LegacyCommandHandler {
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 			let prefix = gPrefix;
-			const pUser = await this.handler.prisma.user.findUnique({ where: { id: message.author.id } });
+			const pUser = await getUserByID(message.author.id, { prefix: true });
 			if (pUser && pUser.prefix) {
 				prefix = pUser.prefix;
 			} else {

@@ -82,7 +82,7 @@ export default {
 			maxLength: 32,
 		},
 	],
-	perms: ['ManageEmojisAndStickers'],
+	perms: ['CreateGuildExpressions'],
 	execute: async ({ args, interaction, guild, member }) => {
 		const type = args.get('type') as string | undefined;
 		const file = args.get('file') as Attachment | undefined;

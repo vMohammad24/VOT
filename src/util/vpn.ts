@@ -41,6 +41,5 @@ export async function getIpInfo(ip: string): Promise<VPNCheckResponse> {
 
 export async function isVPN(ip: string): Promise<Boolean> {
     const info = await getIpInfo(ip);
-    console.log(`IP: ${ip} is a VPN: ${info.vpn_service}`);
     return info.vpn_service;
 }

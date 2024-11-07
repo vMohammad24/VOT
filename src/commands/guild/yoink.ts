@@ -1,5 +1,7 @@
-import { ApplicationCommandOptionType } from 'discord.js';
+import axios from 'axios';
+import { ApplicationCommandOptionType, AttachmentBuilder, Sticker } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { isNullish } from '../../util/util';
 
 export default {
     name: 'yoink',
@@ -9,20 +11,73 @@ export default {
             name: 'emojis',
             description: 'The emojis to yoink',
             type: ApplicationCommandOptionType.String,
-            required: true,
+            required: false,
         },
     ],
-    perms: ['ManageEmojisAndStickers'],
+    perms: ['CreateGuildExpressions'],
     aliases: ['yoinkemoji', 'stealemoji', 'steal'],
-    execute: async ({ args, interaction, guild, member }) => {
+    execute: async ({ args, interaction, guild, member, message }) => {
         await interaction?.deferReply();
-        const text = args.get('emojis') as string | undefined;
-        if (!text) {
-            return {
-                content: 'No emojis provided',
-                ephemeral: true,
-            };
+        let text = args.get('emojis') as string | undefined;
+        const err = {
+            content: 'Please provide some emojis to yoink',
+            ephemeral: true,
         }
+        const type: 'emojis' | 'stickers' = 'emojis';
+        const stickers: Sticker[] = [];
+        if (!text) {
+            if (!message) return err;
+            if (message.reference) {
+                const m = await message.fetchReference();
+                if (!m) return err;
+                text = m.content;
+                if (m.stickers.size > 0) {
+                    stickers.push(...m.stickers.values());
+                }
+            }
+            if (message.stickers.size > 0) {
+                stickers.push(...message.stickers.values());
+            }
+        }
+        if (stickers.length > 0) {
+            let yoined = '';
+            for (const sticker of stickers) {
+                try {
+                    console.log(sticker.url);
+                    const buffer = (await axios.get(sticker.url, { responseType: 'arraybuffer' })).data;
+                    const e = await guild.stickers.create({
+                        name: sticker.name,
+                        description: sticker.description,
+                        tags: sticker.tags ?? sticker.name,
+                        file: new AttachmentBuilder(buffer, { name: sticker.name + '.png' }).attachment,
+                        reason: `Yoinked by ${member.user.tag}`,
+                    });
+                    yoined += e.url + '\n'
+                } catch (e) {
+                    if ((e as any).message.includes('Maximum number of stickers reached')) {
+                        return {
+                            content: 'Maximum number of stickers reached',
+                            ephemeral: true,
+                        };
+                    }
+                    return {
+                        content: `An error occurred while trying to yoink stickers (${(e as any).message})`,
+                        ephemeral: true,
+                    }
+                }
+            }
+            if (isNullish(yoined)) {
+                return {
+                    content: "Couldn't yoink any stickers",
+                    ephemeral: true,
+                };
+            } else {
+                return {
+                    content: `Successfully yoinked stickers: ${yoined}`,
+                };
+            }
+        }
+        if (!text) return err;
         const emojiMatches = text.match(/<a?:\w+:(\d+)>/g);
         if (!emojiMatches) {
             return {

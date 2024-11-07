@@ -22,7 +22,6 @@ const verifyCaptcha = async (token: string, ip: string) => {
         }
     });
     const data = await res.data;
-    console.log(data)
     return data.success;
 }
 

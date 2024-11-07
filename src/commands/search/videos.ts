@@ -31,7 +31,6 @@ export default {
             ephemeral: true
         }
         const results = videos.data.body.response.videos.results;
-        console.log(results[0])
         await pagination({
             interaction,
             message,

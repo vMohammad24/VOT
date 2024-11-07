@@ -81,7 +81,16 @@ export default {
         collector.on('collect', async i => {
             if (i.customId === 'mines-end') {
                 collector.stop();
-                await i.update({});
+                await prisma.economy.update({
+                    where: { userId: user.id },
+                    data: { balance: eco.balance + collectedMoney }
+                });
+                const newEmbed = new EmbedBuilder()
+                    .setTitle('Minesweeper')
+                    .setDescription(`Congratulations! You won ${collectedMoney} coins!`)
+                    .setColor('Green');
+                rows.forEach(row => row.components.forEach(button => button.setDisabled(true)));
+                await i.update({ embeds: [newEmbed], components: rows });
                 return;
             }
             const index = parseInt(i.customId.split('-')[1]);
@@ -110,20 +119,6 @@ export default {
             collectedMoney += bet * multiplier;
             button.setLabel(multiplier.toString()).setDisabled(true);
             await i.update({ components: rows });
-        });
-
-        collector.on('end', async collected => {
-            if (collected.size > 0 && !collected.some(i => mines.has(parseInt(i.customId.split('-')[1])))) {
-                await prisma.economy.update({
-                    where: { userId: user.id },
-                    data: { balance: eco.balance + collectedMoney }
-                });
-                const newEmbed = new EmbedBuilder()
-                    .setTitle('Minesweeper')
-                    .setDescription(`Congratulations! You won ${collectedMoney} coins!`)
-                    .setColor('Green');
-                await rMsg.edit({ embeds: [newEmbed] });
-            }
         });
     }
 } as ICommand;

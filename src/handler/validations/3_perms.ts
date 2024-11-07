@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { camelToTitleCase } from '../../util/util';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
@@ -18,10 +19,7 @@ export default function (command: ICommand, ctx: CommandContext) {
 					.setColor('Red')
 					.setDescription(
 						`You're missing the following permissions: ${missingPerms
-							.map((a) => '``' + a.toString()
-								.replace(/([a-z])([A-Z])/g, '$1 $2')
-								.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-								.trim() + '``')
+							.map((a) => '``' + camelToTitleCase(a.toString()) + '``')
 							.join(', ')}`
 					)
 			],

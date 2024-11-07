@@ -145,7 +145,6 @@ export class DuckDuckGoChat {
             });
             res.data.on('end', () => {
                 response = responses.map(response => {
-                    console.log(response)
                     return response.message || '';
                 }).join('')
                 resolve();
