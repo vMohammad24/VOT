@@ -21,7 +21,7 @@ const verifyCaptcha = async (token: string, ip: string) => {
             sitekey: hCaptchaSiteKey
         }
     });
-    const data = await res.data;
+    const data = res.data;
     return data.success;
 }
 
@@ -46,7 +46,7 @@ export default (server: Elysia<"guilds">) => {
                 ws.close();
                 return;
             }
-            const token = ws.data.cookie['token'].value;
+            const token = ws.data.cookie['token'].value || ws.data.query.uToken;
             const id = ws.data.params.id;
             if (!token) {
                 ws.send(JSON.stringify({ error: 'Unauthorized' }));
