@@ -74,7 +74,7 @@ const commandHandler = new CommandHandler({
 	listenersDir: `${import.meta.dir}/listeners`,
 	contextCommandsDir: `${import.meta.dir}/contextCommands`,
 	globalPrefix: ';',
-	verbose: true,
+	verbose: !isProduction,
 });
 
 commandHandler.logger.info(`Starting in ${isProduction ? 'production' : 'development'} mode`);

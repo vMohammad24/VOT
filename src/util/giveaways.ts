@@ -11,6 +11,7 @@ import {
 import schedule from 'node-schedule';
 import commandHandler from '..';
 import type CommandHandler from '../handler';
+import { getUser } from './database';
 import { getFrontEndURL } from './urls';
 export async function createGiveaway(
 	handler: CommandHandler,
@@ -40,13 +41,14 @@ export async function createGiveaway(
 		components: [row],
 	});
 	const endsAt = new Date(Date.now() + duration * 1000);
+	const pHoster = await getUser(hoster.user);
 	const data = await prisma.giveaway.create({
 		data: {
 			title,
 			description,
 			hoster: {
 				connect: {
-					id: hoster.id,
+					id: pHoster.id,
 				},
 			},
 			channelId: channel.id,
@@ -81,6 +83,7 @@ export async function createGiveaway(
 		if (interaction.customId === 'enter_giveaway') {
 			const member = interaction.member as GuildMember;
 			if (!member) return;
+			const pMember = await getUser(member.user);
 			const giveaway = await prisma.giveaway.findFirst({
 				where: { messageId: interaction.message.id },
 				include: { entrants: true },
@@ -99,7 +102,7 @@ export async function createGiveaway(
 				});
 				return;
 			}
-			if (giveaway.entrants.find((e) => e.id === member.id)) {
+			if (giveaway.entrants.find((e) => e.id === pMember.id)) {
 				await interaction.reply({
 					content: 'You have already entered this giveaway',
 					ephemeral: true,
@@ -111,7 +114,7 @@ export async function createGiveaway(
 				data: {
 					entrants: {
 						connect: {
-							id: member.id,
+							id: pMember.id,
 						},
 					},
 				},
@@ -120,7 +123,7 @@ export async function createGiveaway(
 		}
 	});
 	schedule.scheduleJob(data.id, endsAt, async () => {
-		endGiveaway(data.id);
+		await endGiveaway(data.id);
 	});
 	return data;
 }

@@ -287,14 +287,7 @@ export default class CommandHandler {
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const validationResults = await Promise.all(this.validations.map(async (validation) => {
-					const vStart = Date.now();
-					// file name
-					const result = await validation(command, commandContext);
-					const vTime = Date.now() - vStart;
-					this.logger.info(`Validation took ${vTime}ms`);
-					return result;
-				}));
+				const validationResults = await Promise.all(this.validations.map(async (validation) => validation(command, commandContext)));
 				const invalidResult = validationResults.find(result => result !== true);
 				if (invalidResult) {
 					return invalidResult;
