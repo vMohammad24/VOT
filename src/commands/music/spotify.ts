@@ -150,10 +150,10 @@ export default {
 				.setDescription(`Added [${cTrack.title || 'Error getting title'}](${cTrack.uri}) to the queue`)
 				.setThumbnail(cTrack.thumbnail || null)
 			if (player.queue.current?.realUri == cTrack.realUri && spotify.timestamps?.start) {
-				const progress = Math.floor((Date.now() - spotify.timestamps.start) / 1000);
+				const progress = Math.floor((Date.now() - spotify.timestamps.start));
 				await player.seek(progress);
 				// minute:second
-				embed.setDescription(embed.data.description + ` and seeked to ${numeral(progress).format('00:00')} (May not be accurate)`);
+				embed.setDescription(embed.data.description + ` and seeked to ${numeral(progress / 1000).format('00:00')}`);
 			}
 			return {
 				embeds: [embed],
