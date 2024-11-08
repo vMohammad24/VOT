@@ -1,51 +1,19 @@
-server: # Configuration for the REST and WebSocket server
-  port: 2333
-  address: 0.0.0.0
-  http2:
-    enabled: false # Enable or disable HTTP/2 support
-
 plugins:
-  youtube:
-    enabled: true # Whether this source can be used.
-    allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
-    allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
-    allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
-    # The clients to use for track loading. See below for a list of valid clients.
-    # Clients are queried in the order they are given (so the first client is queried first and so on...)
-    oauth:
-      enabled: true
-      refreshToken: '1//056lcUHKh4BsbCgYIARAAGAUSNwF-L9Irz81fcdUhOMHz3iNEyP7gq8NQAwrleoLPFh7eNTkQVmGFrIRdYMlD1uWVrlm5TiT_P-g'
-    clients:
-      - MUSIC
-      - ANDROID_TESTSUITE
-      - WEB
-  dunctebot:
-    ttsLanguage: 'en-US' # language of the TTS engine
-    sources:
-      # true = source enabled, false = source disabled
-      getyarn: true # www.getyarn.io
-      clypit: true # www.clyp.it
-      tts: true # speak:Words to speak
-      pornhub: true # should be self-explanatory
-      reddit: true # should be self-explanatory
-      ocremix: true # www.ocremix.org
-      tiktok: true # tiktok.com
-      mixcloud: true # mixcloud.com
-      soundgasm: true # soundgasm.net
-      pixeldrain: true # pixeldrain.com
   lavasrc:
     providers: # Custom providers for track loading. This is the default
-      # - "dzisrc:%ISRC%" # Deezer ISRC provider
-      # - "dzsearch:%QUERY%" # Deezer search provider
+      #      - "dzisrc:%ISRC%" # Deezer ISRC provider
+      #      - "dzsearch:%QUERY%" # Deezer search provider
       - 'ytsearch:"%ISRC%"' # Will be ignored if track does not have an ISRC. See https://en.wikipedia.org/wiki/International_Standard_Recording_Code
+      - 'spsearch:%ISRC%' # Spotify search provider
       - 'ytsearch:%QUERY%' # Will be used if track has no ISRC or no track could be found for the ISRC
-      #  you can add multiple other fallback sources here
+      - 'spsearch:%QUERY%' # Spotify search provider
+    #        you can add multiple other fallback sources here
     sources:
       spotify: true # Enable Spotify source
       applemusic: false # Enable Apple Music source
       deezer: false # Enable Deezer source
       yandexmusic: false # Enable Yandex Music source
-      flowerytts: false # Enable Flowery TTS source
+      flowerytts: false # Enable Flowery TTs source
       youtube: true # Enable YouTube search source (https://github.com/topi314/LavaSearch)
       vkmusic: false # Enable Vk Music source
     lyrics-sources:
@@ -57,34 +25,49 @@ plugins:
     spotify:
       clientId: '9b9142f028634de49fe0f8ec00cf8e8a'
       clientSecret: '4bd252328bcd425cad060615b02a1b84'
-      # spDc: "your sp dc cookie" # the sp dc cookie used for accessing the spotify lyrics api
+      # spDc: 'your sp dc cookie' # the sp dc cookie used for accessing the spotify lyrics api
       countryCode: 'US' # the country code you want to use for filtering the artists top tracks. See https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
       playlistLoadLimit: 6 # The number of pages at 100 tracks each
       albumLoadLimit: 6 # The number of pages at 50 tracks each
-      resolveArtistsInSearch: true # Whether to resolve artists in track search results (can be slow)
-      localFiles: false # Enable local files support with Spotify playlists. Please note `uri` & `isrc` will be `null` & `identifier` will be `"local"`
-    flowerytts:
-      voice: 'Aaghnya' # (case-sensitive) get default voice from here https://api.flowery.pw/v1/tts/voices
-      translate: false # whether to translate the text to the native language of voice
-      silence: 0 # the silence parameter is in milliseconds. Range is 0 to 10000. The default is 0.
-      speed: 1.0 # the speed parameter is a float between 0.5 and 10. The default is 1.0. (0.5 is half speed, 2.0 is double speed, etc.)
-      audioFormat: 'ogg_opus' # supported formats are: mp3, ogg_opus, ogg_vorbis, aac, wav, and flac. Default format is mp3
+      localFiles: false #  Enable local files support with Spotify playlists. Please note `uri` & `isrc` will be `null` & `identifier` will be `"local"`
+    applemusic:
+      countryCode: 'US' # the country code you want to use for filtering the artists top tracks and language. See https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+      mediaAPIToken: '...' # apple music api token
+      playlistLoadLimit: 6 # The number of pages at 300 tracks each
+      albumLoadLimit: 6 # The number of pages at 300 tracks each
     youtube:
-      countryCode: 'US' # the country code you want to use for searching lyrics via ISRC. See https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+      countryCode: 'US'
+  youtube:
+    enabled: true # Whether this source can be used.
+    allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
+    allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
+    allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
+    # The clients to use for track loading. See below for a list of valid clients.
+    # Clients are queried in the order they are given (so the first client is queried first and so on...)
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED
+server: # REST and WS server
+  port: 2333
+  address: 0.0.0.0
+  http2:
+    enabled: false # Whether to enable HTTP/2 support
 lavalink:
   plugins:
-    # Specify the Lavalink plugin version or snapshot
-    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.8.3'
-      snapshot: false # Use snapshot version if true
-    - dependency: 'com.dunctebot:skybot-lavalink-plugin:1.7.0'
-      repository: 'https://maven.lavalink.dev/releases' # (optional on lavalink 4)
-      snapshot: false # (optional, tells lavalink to use the default snaptshot repository instead)
     - dependency: 'com.github.topi314.lavasrc:lavasrc-plugin:4.3.0'
-      repository: 'https://maven.lavalink.dev/releases' # this is optional for lavalink v4.0.0-beta.5 or greater
-      snapshot: false
+    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.8.3'
+  #    - dependency: "com.github.example:example-plugin:1.0.0" # required, the coordinates of your plugin
+  #      repository: "https://maven.example.com/releases" # optional, defaults to the Lavalink releases repository by default
+  #      snapshot: false # optional, defaults to false, used to tell Lavalink to use the snapshot repository instead of the release repository
+  #  pluginsDir: "./plugins" # optional, defaults to "./plugins"
+  #  defaultPluginRepository: "https://maven.lavalink.dev/releases" # optional, defaults to the Lavalink release repository
+  #  defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots" # optional, defaults to the Lavalink snapshot repository
   server:
     password: 'wS2WzhJDpPLuRkBmMqXEyAGx9vC7QHn8dVTNeYKrb435Zt6'
-    sources: # Configure available sources
+    sources:
+      # The default Youtube source is now deprecated and won't receive further updates. Please use https://github.com/lavalink-devs/youtube-source#plugin instead.
       youtube: false
       bandcamp: true
       soundcloud: true
@@ -92,8 +75,8 @@ lavalink:
       vimeo: true
       nico: true
       http: true # warning: keeping HTTP enabled without a proxy configured could expose your server's IP address.
-      local: true
-    filters:
+      local: false
+    filters: # All filters are enabled by default
       volume: true
       equalizer: true
       karaoke: true
@@ -113,6 +96,53 @@ lavalink:
     useSeekGhosting: true # Seek ghosting is the effect where whilst a seek is in progress, the audio buffer is read from until empty, or until seek is ready.
     youtubePlaylistLoadLimit: 6 # Number of pages at 100 each
     playerUpdateInterval: 5 # How frequently to send player updates to clients, in seconds
-    youtubeSearchEnabled: false
+    youtubeSearchEnabled: true
     soundcloudSearchEnabled: true
     gc-warnings: true
+#    ratelimit:
+#      ipBlocks: [ "1.0.0.0/8", "..." ] # list of ip blocks
+#      excludedIps: [ "...", "..." ] # ips which should be explicit excluded from usage by lavalink
+#      strategy: "RotateOnBan" # RotateOnBan | LoadBalance | NanoSwitch | RotatingNanoSwitch
+#      searchTriggersFail: true # Whether a search 429 should trigger marking the ip as failing
+#      retryLimit: -1 # -1 = use default lavaplayer value | 0 = infinity | >0 = retry will happen this numbers times
+#    youtubeConfig: # Required for avoiding all age restrictions by YouTube, some restricted videos still can be played without.
+#      email: "" # Email of Google account
+#      password: "" # Password of Google account
+#    httpConfig: # Useful for blocking bad-actors from ip-grabbing your music node and attacking it, this way only the http proxy will be attacked
+#      proxyHost: "localhost" # Hostname of the proxy, (ip or domain)
+#      proxyPort: 3128 # Proxy port, 3128 is the default for squidProxy
+#      proxyUser: "" # Optional user for basic authentication fields, leave blank if you don't use basic auth
+#    proxyPassword: "" # Password for basic authentication
+
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+sentry:
+  dsn: ''
+  environment: ''
+#  tags:
+#    some_key: some_value
+#    another_key: another_value
+
+logging:
+  file:
+    path: ./logs/
+
+  level:
+    root: INFO
+    lavalink: INFO
+
+  request:
+    enabled: true
+    includeClientInfo: true
+    includeHeaders: false
+    includeQueryString: true
+    includePayload: true
+    maxPayloadLength: 10000
+
+  logback:
+    rollingpolicy:
+      max-file-size: 1GB
+      max-history: 30
