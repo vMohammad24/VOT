@@ -11,7 +11,6 @@ export default {
 				if (!query) return inter.respond([{ name: 'Provide a query to continue', value: '' }]);
 				const results = await kazagumo.search(query, {
 					requester: inter.member as GuildMember,
-					source: 'ytm:'
 				});
 				const options = results.tracks.map((track, index) => ({
 					name: track.title,
