@@ -4,7 +4,7 @@ plugins:
       #      - "dzisrc:%ISRC%" # Deezer ISRC provider
       #      - "dzsearch:%QUERY%" # Deezer search provider
       - 'ytsearch:"%ISRC%"' # Will be ignored if track does not have an ISRC. See https://en.wikipedia.org/wiki/International_Standard_Recording_Code
-      - 'spsearch:%ISRC%' # Spotify search provider
+      - 'spsearch:"%ISRC%"' # Spotify search provider
       - 'ytsearch:%QUERY%' # Will be used if track has no ISRC or no track could be found for the ISRC
       - 'spsearch:%QUERY%' # Spotify search provider
     #        you can add multiple other fallback sources here
