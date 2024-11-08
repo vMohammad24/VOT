@@ -42,6 +42,9 @@ plugins:
     allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
     allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
     allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
+    oauth:
+      enabled: true
+      refreshToken: '1//056lcUHKh4BsbCgYIARAAGAUSNwF-L9Irz81fcdUhOMHz3iNEyP7gq8NQAwrleoLPFh7eNTkQVmGFrIRdYMlD1uWVrlm5TiT_P-g'
     # The clients to use for track loading. See below for a list of valid clients.
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     clients:
