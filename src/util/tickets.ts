@@ -11,6 +11,7 @@ import {
 	type GuildTextBasedChannel,
 } from 'discord.js';
 import commandHandler from '..';
+import { getUser } from './database';
 import { uploadFile } from './nest';
 import { getFrontEndURL } from './urls';
 import { getLogChannel } from './util';
@@ -63,11 +64,12 @@ export async function createTicket(member: GuildMember, reason: string) {
 		reason: `Ticket created by ${member.user.tag} for ${reason}`,
 	});
 	if (!channel) return { error: 'An error occurred while creating the ticket' };
+	const pUser = await getUser(member.user);
 	const ticket = await prisma.ticket.create({
 		data: {
 			guildId: guild.id!,
 			channelId: channel.id,
-			ownerId: member.id,
+			ownerId: pUser.id,
 			open: true,
 			reason,
 		},
