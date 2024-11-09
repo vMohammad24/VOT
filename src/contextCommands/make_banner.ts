@@ -51,11 +51,10 @@ export default {
         ctx.fillStyle = '#ffffff';
         ctx.fillText(user.displayName, width / 2, height / 2 - 50);
 
-        // Add glowing 'evade.rest' text
         ctx.font = '50px sans-serif';
         ctx.shadowBlur = 10;
         ctx.fillStyle = '#a3a3a3';
-        ctx.fillText('evade.rest', width / 2, height / 2 + 80);
+        ctx.fillText('vot.wtf', width / 2, height / 2 + 80);
 
         // Save image to file
         const buffer = canvas.toBuffer('image/png');
