@@ -16,6 +16,7 @@ import PinoLogger, { Logger } from 'pino';
 import { inspect } from 'util';
 import commandHandler from '..';
 import { getEmoji } from '../util/emojis';
+import VOTEmbed from '../util/VOTEmbed';
 import type ICommand from './interfaces/ICommand';
 import type { CommandContext } from './interfaces/ICommand';
 import { IContextCommand } from './interfaces/IContextCommand';
@@ -335,6 +336,18 @@ export default class CommandHandler {
 			}
 
 		} catch (e) {
+			if ((e as any).code == 50013) {
+				return {
+					embeds: [
+						new VOTEmbed()
+							.setTitle('Missing Permissions')
+							.setDescription('I am missing permissions to execute this command')
+							.setColor('DarkRed')
+							.setTimestamp()
+					],
+					ephemeral: true,
+				}
+			}
 			this.logger.error(e);
 			await this.prisma.error.create({
 				data: {

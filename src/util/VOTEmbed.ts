@@ -1,9 +1,10 @@
 import { EmbedBuilder, EmbedData } from 'discord.js';
 import commandHandler from '..';
-const votIcon = commandHandler.client.user?.displayAvatarURL({ size: 1024 });
+let votIcon: string | undefined = undefined;
 class VOTEmbed extends EmbedBuilder {
     constructor(data?: EmbedData) {
         super(data);
+        if (!votIcon) commandHandler.client.user?.displayAvatarURL({ size: 1024 });
     }
 
     toJSON() {
