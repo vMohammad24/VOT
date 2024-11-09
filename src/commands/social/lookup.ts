@@ -4,7 +4,7 @@ import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "dis
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors, isNullish, isURL } from "../../util/util";
+import { getTwoMostUsedColors, isNullish } from "../../util/util";
 
 interface User {
     avatar: string;
@@ -23,7 +23,7 @@ interface User {
 }
 
 function captitalizeString(string: string) {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    return (string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()).replace(/_/g, ' ');
 }
 
 interface BioLink {
@@ -295,6 +295,90 @@ interface SoclUserResponse {
     scriptLoader: any[];
 }
 
+
+export interface Socials {
+    social: string;
+    value: string;
+    id: string;
+}
+
+export interface Second_tab {
+    discord: string;
+}
+
+export interface Premium {
+    cursor_effects: string;
+    font: string;
+    page_enter_text: string;
+    hide_badges: boolean;
+    hide_views: boolean;
+    effects_color: string;
+    badge_color: string;
+    monochrome_badges: boolean;
+    layout: string;
+    second_tab: Second_tab;
+    buttons: string[];
+    show_url: boolean;
+    text_align: string;
+    button_shadow: boolean;
+    button_border_radius: number;
+    typewriter: string[];
+    typewriter_enabled: boolean;
+    banner: string;
+    border_width: number;
+    border_radius: number;
+    border_color: string;
+    border_enabled: boolean;
+    second_tab_enabled: boolean;
+}
+
+export interface Config {
+    socials: Socials[];
+    description: string;
+    url: string;
+    audio: string;
+    avatar: string;
+    color: string;
+    text_color: string;
+    bg_color: string;
+    gradient_1: string;
+    gradient_2: string;
+    presence: string;
+    monochrome: boolean;
+    animated_title: boolean;
+    custom_cursor: string;
+    page_views: number;
+    user_badges: string[];
+    custom_badges: string[][];
+    display_name: string;
+    profile_gradient: boolean;
+    background_effects: string;
+    volume_control: boolean;
+    premium: Premium;
+    blur: number;
+    opacity: number;
+    username_effects: string;
+    use_discord_avatar: boolean;
+    badge_glow: boolean;
+    username_glow: boolean;
+    swap_colors: boolean;
+    icon_color: string;
+    social_glow: boolean;
+}
+
+export interface GunsUser {
+    username: string;
+    account_created: number;
+    verified: boolean;
+    alias: string;
+    config: Config;
+    premium: boolean;
+    uid: number;
+    error: boolean;
+}
+
+
+
 export default {
     description: 'Lookup a user in a service',
     // slashOnly: true,
@@ -304,36 +388,7 @@ export default {
             description: 'The service to lookup the user in',
             type: ApplicationCommandOptionType.String,
             required: true,
-            choices: [
-                {
-                    name: 'nest.rip',
-                    value: 'nest.rip'
-                },
-                {
-                    name: 'Tiktok',
-                    value: 'tiktok'
-                },
-                {
-                    name: 'inject.bio',
-                    value: 'inject.bio'
-                },
-                {
-                    name: 'Biography',
-                    value: 'biography'
-                },
-                {
-                    name: 'death.ovh',
-                    value: 'death.ovh'
-                },
-                {
-                    name: 'socl.gg',
-                    value: 'socl.gg'
-                },
-                {
-                    name: 'ammo.lol',
-                    value: 'ammo.lol'
-                }
-            ]
+            choices: ['nest.rip', 'guns.lol', 'inject.bio', 'death.ovh', 'socl.gg', 'biography', 'tiktok'].map((service) => ({ name: service, value: service }))
         },
         {
             name: 'query',
@@ -585,44 +640,87 @@ ${deathUser.description}`)
                         sEmbed
                     ]
                 }
-            case 'ammo.lol':
-                const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
-                    params: {
-                        username: query
-                    },
-                    headers: {
-                        'API-KEY': import.meta.env.AMMO_LOL_API_KEY
-                    }
+            // case 'ammo.lol':
+            //     const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
+            //         params: {
+            //             username: query
+            //         },
+            //         headers: {
+            //             'API-KEY': import.meta.env.AMMO_LOL_API_KEY
+            //         }
+            //     });
+            //     const aData = aRes.data as AmmoUser;
+            //     if (!aData) return {
+            //         ephemeral: true,
+            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+            //     }
+            //     const hasBackground = aData.background_url && isURL(aData.background_url);
+            //     const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
+            //     const hasURL = aData.url && isURL(aData.url);
+            //     const aColor: ColorResolvable = hasAvatar ? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0] : 'Random';
+            //     const [day, month, year] = aData.created.split('/').map(Number);
+            //     const date = new Date(year, month - 1, day);
+            //     return {
+            //         embeds: [
+            //             new EmbedBuilder()
+            //                 .setAuthor({ name: aData.username, iconURL: hasAvatar ? aData.avatar_url : undefined, url: hasURL ? aData.url : undefined })
+            //                 .setDescription(aData.description)
+            //                 .setThumbnail(hasAvatar ? aData.avatar_url : null)
+            //                 .setImage(hasBackground ? aData.background_url : null)
+            //                 .addFields([
+            //                     { name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
+            //                     { name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true }
+            //                 ])
+            //                 .setColor(aColor)
+            //                 .setFooter({ text: `UID: ${aData.uid} • Created` })
+            //                 .setTimestamp(date)
+            //         ]
+            //     }
+            case 'guns.lol':
+                const gRes = await axios.post(`https://guns.lol/api/user/lookup?type=username`, {
+                    key: import.meta.env.GUNS_API_KEY!,
+                    username: query
                 });
-                const aData = aRes.data as AmmoUser;
-                if (!aData) return {
+                const gData = gRes.data as GunsUser;
+                if (!gData || gData.error) return {
                     ephemeral: true,
                     content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
                 }
-                const hasBackground = aData.background_url && isURL(aData.background_url);
-                const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
-                const hasURL = aData.url && isURL(aData.url);
-                const aColor: ColorResolvable = hasAvatar ? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0] : 'Random';
-                const [day, month, year] = aData.created.split('/').map(Number);
-                const date = new Date(year, month - 1, day);
+                let gColor: ColorResolvable = 'Random';
+                if (gData.config.color) {
+                    gColor = gData.config.color as ColorResolvable;
+                } else {
+                    try {
+                        gColor = gData.config.avatar ? getTwoMostUsedColors(await loadImage(gData.config.avatar))[0] : 'Random';
+                    } catch (error) {
+
+                    }
+                }
+                let gEmojis: string = ''
+                if (gData.config.custom_badges) {
+                    for (const badge of gData.config.custom_badges) {
+                        const emoji = await addEmojiByURL(`guns_${badge[0]}`, badge[1], ems);
+                        gEmojis += emoji?.toString()!;
+                    }
+                }
                 return {
                     embeds: [
                         new EmbedBuilder()
-                            .setAuthor({ name: aData.username, iconURL: hasAvatar ? aData.avatar_url : undefined, url: hasURL ? aData.url : undefined })
-                            .setDescription(aData.description)
-                            .setThumbnail(hasAvatar ? aData.avatar_url : null)
-                            .setImage(hasBackground ? aData.background_url : null)
-                            .addFields([
-                                { name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
-                                { name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true }
-                            ])
-                            .setColor(aColor)
-                            .setFooter({ text: `UID: ${aData.uid} • Created` })
-                            .setTimestamp(date)
+                            .setAuthor({ name: gData.username, iconURL: isNullish(gData.config.avatar) ? undefined : gData.config.avatar, url: `https://guns.lol/${gData.alias}` })
+                            .setDescription(`## ${gEmojis}\n${gData.config.description}`)
+                            .setThumbnail(isNullish(gData.config.avatar) ? null : gData.config.avatar)
+                            .addFields(gData.config.socials.map((social) => ({
+                                name: captitalizeString(social.social),
+                                value: social.value,
+                                inline: true
+                            })))
+                            .setColor(gColor)
+                            .setFooter({ text: `UID: ${gData.uid} • Views: ${numeral(gData.config.page_views).format("0,0")} • Created` })
+                            .setTimestamp(new Date(gData.account_created * 1000))
                     ]
                 }
             default:
-                return { ephemeral: true, content: `I'm sorry, but the service "${service}" is not yet supported.` };
+                return { ephemeral: true, content: `I'm sorry, but the service "${service}" is not yet supported.\n-# If you want it added, feel free to contact the developer of the service and the bot.` };
         }
     }
 } as ICommand

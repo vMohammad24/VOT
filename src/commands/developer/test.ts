@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, Routes } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -266,6 +266,34 @@ export default {
 			required: false
 		}],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		const query = args.get('query'); return query;
-	},
+		const channelId = channel.id;
+		await handler.client.rest.post(Routes.channelMessages(channelId), {
+			body: {
+				embeds: [
+					{
+						"id": "embed_480",
+						"url": "https://open.spotify.com/track/5OYLUabPBep5tKWkpvoBcH?si=df42eea139ea4a23",
+						"type": "link",
+						"title": "Cold World",
+						"description": "Eric Reprid · Cold World · Song · 2020",
+						"contentScanVersion": 1,
+						"provider": {
+							"name": "Spotify",
+							"url": "https://spotify.com/"
+						},
+						"thumbnail": {
+							"url": "https://i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
+							"proxyURL": "https://images-ext-1.discordapp.net/external/YkDkl_EblqcuQXoOAgM5Os1H3HaaDXhux1IlEP2l2G0/https/i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
+							"width": 128,
+							"height": 640,
+							"placeholder": "lcYNJwT0dXh3lYeIdrh3Z3h4eEBrB7QG",
+							"placeholderVersion": 1,
+							"srcIsAnimated": false
+						},
+						"fields": []
+					}
+				],
+			},
+		});
+	}
 } as ICommand;
