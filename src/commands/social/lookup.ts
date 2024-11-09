@@ -697,6 +697,12 @@ ${deathUser.description}`)
                     }
                 }
                 let gEmojis: string = ''
+                if (gData.config.user_badges && gData.config.user_badges.length != 0) {
+                    for (const badge of gData.config.user_badges) {
+                        const emoji = getEmoji(`guns_${badge}_badge`);
+                        if (emoji) gEmojis += emoji.toString();
+                    }
+                }
                 if (gData.config.custom_badges) {
                     for (const badge of gData.config.custom_badges) {
                         const emoji = await addEmojiByURL(`guns_${badge[0]}`, badge[1], ems);

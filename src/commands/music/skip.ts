@@ -22,10 +22,16 @@ export default {
 		const amount = args.get('amount') || 1;
 		if (member.voice && member.voice.channelId == player.voiceId) {
 			let skippedSongs = 0;
-			for (let i = 0; i < amount; i++) {
-				player.skip();
-				skippedSongs++;
+			for (let i = 0; i < amount - 1; i++) {
+				if (player.queue.length > 0) {
+					player.queue.shift();
+					skippedSongs++;
+				} else {
+					break;
+				}
 			}
+			player.skip();
+			skippedSongs++;
 			return {
 				content: `Skipped ${skippedSongs} song(s)`,
 				ephemeral: true,
