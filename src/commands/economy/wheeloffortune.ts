@@ -39,10 +39,10 @@ export default {
             ephemeral: true
         };
         const weightedSegments = [
-            { multiplier: 1.25, emoji: '🍒', weight: 50 },
-            { multiplier: 1.50, emoji: '🔔', weight: 30 },
-            { multiplier: 1.75, emoji: '⭐', weight: 15 },
-            { multiplier: 2.00, emoji: '💎', weight: 5 }
+            { multiplier: 1.5, emoji: '🍒', weight: 50 },
+            { multiplier: 2.0, emoji: '🔔', weight: 30 },
+            { multiplier: 2.5, emoji: '⭐', weight: 15 },
+            { multiplier: 3.0, emoji: '💎', weight: 5 }
         ];
 
         const totalWeight = weightedSegments.reduce((acc, segment) => acc + segment.weight, 0);

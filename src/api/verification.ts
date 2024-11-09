@@ -100,7 +100,6 @@ export default (server: Elysia<"guilds">) => {
                 return;
             }
             const channel = guild.loggingChannel ? await aGuild.channels.fetch(guild.loggingChannel) : null;
-            if (channel && !channel.isTextBased()) return;
             const bans = user.guildMembers.filter(member => member.banned);
             if (!guild.VerificationSettings.roleId) {
                 ws.send(JSON.stringify({ error: 'This server does not have a verification role.' }));
@@ -127,16 +126,20 @@ export default (server: Elysia<"guilds">) => {
 
                 }
                 if (channel && channel.isTextBased()) {
-                    channel.send({
-                        embeds: [
-                            new EmbedBuilder()
-                                .setTitle('Member Verified')
-                                .setDescription(`${member.user.tag} has been verified.`)
-                                .setColor('Green')
-                        ],
-                        content: `<@${member.id}>`,
-                        allowedMentions: {},
-                    });
+                    try {
+                        await channel.send({
+                            embeds: [
+                                new EmbedBuilder()
+                                    .setTitle('Member Verified')
+                                    .setDescription(`${member.user.tag} has been verified.`)
+                                    .setColor('Green')
+                            ],
+                            content: `<@${member.id}>`,
+                            allowedMentions: {},
+                        });
+                    } catch (error) {
+
+                    }
                 }
                 return {
                     success: true
@@ -145,34 +148,43 @@ export default (server: Elysia<"guilds">) => {
             if (blockIfBanned && bans.length >= blockIfBanned) {
                 ws.send(JSON.stringify({ error: `This server does not allow members with over ${blockIfBanned} bans.` }));
                 ws.close();
-                if (channel) {
-                    const msg = await channel.send({
-                        embeds: [
-                            new EmbedBuilder()
-                                .setTitle('Verification')
-                                .setAuthor({ name: user.name || 'Unknown', iconURL: user.avatar || undefined })
-                                .setDescription(`${user.name || 'Unknown'} has tried to verify but has over ${bans.length} bans in servers with VOT.`)
-                                .setColor('Red')
-                        ],
-                        components: [
-                            new ActionRowBuilder<ButtonBuilder>()
-                                .addComponents(
-                                    new ButtonBuilder()
-                                        .setCustomId('verify')
-                                        .setLabel('Verify Anyways')
-                                        .setStyle(ButtonStyle.Success)
-                                )
-                        ]
-                    })
-                    const col = msg.createMessageComponentCollector();
-                    col.on('collect', async i => {
-                        i.deferReply();
-                        const ver = await verifyMember();
-                        if (!ver.success) {
-                            i.editReply('An error occurred while verifying the user.');
-                        };
-                        i.reply(member.user.tag + ' has been verified by ' + i.user.tag);
-                    })
+                if (channel && channel.isTextBased()) {
+                    try {
+                        const msg = await channel.send({
+                            embeds: [
+                                new EmbedBuilder()
+                                    .setTitle('Verification')
+                                    .setAuthor({ name: user.name || 'Unknown', iconURL: user.avatar || undefined })
+                                    .setDescription(`${user.name || 'Unknown'} has tried to verify but has over ${bans.length} bans in servers with VOT.`)
+                                    .setColor('Red')
+                            ],
+                            components: [
+                                new ActionRowBuilder<ButtonBuilder>()
+                                    .addComponents(
+                                        new ButtonBuilder()
+                                            .setCustomId('verify')
+                                            .setLabel('Verify Anyways')
+                                            .setStyle(ButtonStyle.Success)
+                                    )
+                            ]
+                        })
+                        const col = msg.createMessageComponentCollector();
+                        col.on('collect', async i => {
+                            i.deferReply();
+                            const ver = await verifyMember();
+                            if (!ver.success) {
+                                i.editReply('An error occurred while verifying the user.');
+                            };
+                            i.reply(member.user.tag + ' has been verified by ' + i.user.tag);
+                        })
+                    } catch (error) {
+
+                    }
+                }
+                try {
+                    ws.close();
+                } catch (e) {
+
                 }
                 return;
             }

@@ -318,12 +318,10 @@ export default {
                 const body = Buffer.from(data).toString('utf-8');
                 const index = body.indexOf(lookFor)
                 const endIndex = body.indexOf('</script>', index)
-                // console.log(lookFor + body.slice(index + lookFor.length, endIndex))
                 const json = JSON.parse(lookFor + body.slice(index + lookFor.length, endIndex));
                 const vids: Media[] = [];
                 const edges = json.require[0][3][0].__bbox.require[0][3][1].__bbox.result.data.xdt_api__v1__clips__clips_on_logged_out_connection_v2.edges;
                 for (const edge of edges) {
-                    // console.log(edge)
                     const media = edge.node.media;
                     vids.push(media);
                 }

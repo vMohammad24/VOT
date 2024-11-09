@@ -14,7 +14,8 @@ const makeEmbed = (time: number, name: string, avatar?: string) =>
 		.setDescription(
 			`You can use this command again ${timeUntil(time * 1000)} (<t:${time}:R>)`
 		)
-		.setAuthor({ name, iconURL: avatar });
+		.setAuthor({ name, iconURL: avatar })
+		.setColor('Red');
 
 export default async function (
 	command: ICommand,
@@ -44,7 +45,6 @@ export default async function (
 	if (expirationTime) {
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1000);
-			console.log(expiredTimestamp);
 			return {
 				embeds: [
 					makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined),

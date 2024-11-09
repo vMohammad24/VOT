@@ -49,12 +49,35 @@ export default class LegacyCommandHandler {
 			const execution = await this.handler.executeCommand(command, message);
 			if (execution) {
 				try {
-					await message.reply({
+					const msg = await message.reply({
 						allowedMentions: {},
 						...execution,
 					});
+					if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
+						setTimeout(async () => {
+							await Promise.all([
+								msg.delete(),
+								message.delete()
+							]);
+						}, 3000)
+					}
 				} catch (e) {
-					await message.channel.send(execution);
+					try {
+						const msg = await message.reply({
+							allowedMentions: {},
+							...execution,
+						});
+						if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
+							setTimeout(async () => {
+								await Promise.all([
+									await msg.delete(),
+									await message.delete()
+								]);
+							}, 3000)
+						}
+					} catch (error) {
+
+					}
 				}
 			}
 		});

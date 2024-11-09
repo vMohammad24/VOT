@@ -9,7 +9,7 @@ export default {
 		await interaction?.reply({ content: 'Closing ticket...' });
 		const ticket = await closeTicket(channel as GuildTextBasedChannel, member);
 		if (!ticket) {
-			const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('Red');
+			const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('DarkRed');
 			return { embeds: [embed] };
 		}
 		if (ticket.error) {
