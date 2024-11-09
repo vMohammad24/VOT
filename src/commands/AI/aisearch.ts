@@ -31,7 +31,7 @@ export default {
 			}
 			const summary = queryResponse.chatllm.summary_og;
 			const llm = await chatllm(queryResponse.chatllm);
-			const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == `enrichments_${rMsg.id}` })
+			const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == `enrichments_${rMsg.id}`, time: 60_000 * 60 })
 			collector.on('collect', async i => {
 				const embed = new EmbedBuilder()
 					.setTitle('Sources')
@@ -60,7 +60,7 @@ export default {
 					)],
 				files: llm.images.map(v => ({ attachment: v.src, name: 'image.png' })),
 			}, rMsg)
-			const collector2 = rMsg.createMessageComponentCollector({ filter: i => (i.customId == 'followup' && i.user.id == user.id) })
+			const collector2 = rMsg.createMessageComponentCollector({ filter: i => (i.customId == 'followup' && i.user.id == user.id), time: 60_000 * 60 })
 			collector2.on('collect', async i => {
 				if (!i.isStringSelectMenu()) return;
 				const page = parseInt(i.values[0]);

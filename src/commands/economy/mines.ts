@@ -61,7 +61,7 @@ export default {
                 const index = i * 5 + j;
                 row.addComponents(new ButtonBuilder()
                     .setCustomId(`mines-${index}`)
-                    .setLabel('᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌')
+                    .setLabel('᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌')
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false)
                 )

@@ -67,23 +67,31 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 						page = 0;
 					}
 				}
-				const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-					new ButtonBuilder()
-						.setCustomId(`${id}_${page - 1}`)
-						.setEmoji(arrowLeft.id)
-						.setStyle(ButtonStyle.Secondary)
-						.setDisabled(page === 0),
-					new ButtonBuilder()
-						.setCustomId(`${id}_${page + 1}`)
-						.setEmoji(arrowRight.id)
-						.setStyle(ButtonStyle.Secondary)
-						.setDisabled(page === pages.length - 1),
-				);
-				if (e instanceof EmbedBuilder) {
-					messages.set(page, { embeds: [e as EmbedBuilder], components: [row] });
+				if (pages.length > 1) {
+					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+						new ButtonBuilder()
+							.setCustomId(`${id}_${page - 1}`)
+							.setEmoji(arrowLeft.id)
+							.setStyle(ButtonStyle.Secondary)
+							.setDisabled(page === 0),
+						new ButtonBuilder()
+							.setCustomId(`${id}_${page + 1}`)
+							.setEmoji(arrowRight.id)
+							.setStyle(ButtonStyle.Secondary)
+							.setDisabled(page === pages.length - 1),
+					);
+					if (e instanceof EmbedBuilder) {
+						messages.set(page, { embeds: [e as EmbedBuilder], components: [row] });
+					} else {
+						e.components ? (e.components = [row, ...e.components]) : (e.components = [row]);
+						messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+					}
 				} else {
-					e.components ? (e.components = [row, ...e.components]) : (e.components = [row]);
-					messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+					if (e instanceof EmbedBuilder) {
+						messages.set(page, { embeds: [e as EmbedBuilder] });
+					} else {
+						messages.set(page, e as InteractionReplyOptions | MessageReplyOptions);
+					}
 				}
 				oldPage = page;
 			}
@@ -94,7 +102,8 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
-				filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId
+				filter: (i) => i.isButton() && i.customId.startsWith(id) && i.user.id == userId,
+				time: 60_000 * 60,
 			});
 
 			collector?.on('collect', async (i) => {
@@ -155,6 +164,7 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) => i.isStringSelectMenu() && i.customId === id && i.user.id == userId,
+				time: 60_000 * 60
 			});
 
 			collector?.on('collect', async (i) => {
@@ -225,6 +235,7 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 			const userId = message ? message.author.id : interaction?.user.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) => i.isStringSelectMenu() && i.customId.startsWith(id) && i.user.id == userId,
+				time: 60_000 * 60
 			});
 
 			collector?.on('collect', async (i) => {

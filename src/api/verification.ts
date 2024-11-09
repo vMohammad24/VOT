@@ -168,7 +168,7 @@ export default (server: Elysia<"guilds">) => {
                                     )
                             ]
                         })
-                        const col = msg.createMessageComponentCollector();
+                        const col = msg.createMessageComponentCollector({ max: 1 });
                         col.on('collect', async i => {
                             i.deferReply();
                             const ver = await verifyMember();

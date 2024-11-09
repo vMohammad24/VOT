@@ -139,6 +139,7 @@ model Guild {
   WelcomeSettings      WelcomeSettings?
   stickyMessage        StickyMessage?
   VerificationSettings VerificationSettings?
+  ModerationSettings   ModerationSettings?
 }
 
 model Ticket {
@@ -245,6 +246,21 @@ model Economy {
   userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ModerationSettings {
+  id               String   @id @default(uuid())
+  notifySuspesion  Boolean  @default(false)
+  AntiInvites      Boolean  @default(false)
+  AntiSpam         Boolean  @default(true)
+  AntiEmojiSpam    Boolean  @default(true)
+  AntiMassMention  Boolean  @default(true)
+  AntiMassSpoilers Boolean  @default(true)
+  BypassRoles      String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  guild            Guild    @relation(fields: [guildId], references: [id])
+  guildId          String   @unique
 }
 
 enum PanelType {
