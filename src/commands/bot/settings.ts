@@ -62,7 +62,7 @@ export default {
                     embeds: [new EmbedBuilder()
                         .setTitle('Invalid value')
                         .setDescription(`The value must be less than 4 characters`)
-                        .setColor('Red')
+                        .setColor('DarkRed')
                     ],
                     ephemeral: true
                 }

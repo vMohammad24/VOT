@@ -20,7 +20,6 @@ export default {
     execute: async ({ args, interaction, message, handler: { client } }) => {
         const query = args.get('query') as string | undefined;
         if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
-        interaction?.deferReply();
         const b = await searchBrave(query)
         if (!b.data.body.response.discussions) return { ephemeral: true, content: 'No results found' }
         const results = b.data.body.response.discussions.results
@@ -39,7 +38,7 @@ export default {
                                 .setDescription(turndownService.turndown(result.description.slice(0, 2048)))
                                 .setURL(result.url)
                                 .setColor('Random')
-                                .setFooter({ text: `👍 ${result.data.score.split(' ')[0]} | 💬 ${result.data.num_answers}` })
+                                .setFooter({ text: `👍 ${result.data.score.split(' ')[0] ?? '🤷‍♂️'} | 💬 ${result.data.num_answers ?? '🤷‍♂️'}` })
                         ]
                     },
                     name: result.title.slice(0, 99),

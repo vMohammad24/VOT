@@ -3,6 +3,7 @@ import ICommand from "../../handler/interfaces/ICommand";
 export default {
     description: "Work for money",
     cooldown: 60_000 * 5,
+    type: 'all',
     execute: async ({ user, handler: { prisma } }) => {
         const money = Math.floor(Math.random() * 500) + 1;
         const eco = await prisma.economy.findFirst({

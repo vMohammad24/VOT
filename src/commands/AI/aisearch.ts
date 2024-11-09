@@ -26,7 +26,6 @@ export default {
 		let rMsg = message ? await message.reply('Thinking...') : await inter!.deferReply();
 		const func = async (query: string, params?: string) => {
 			const queryResponse = (await searchBrave(query, params)).data.body.response;
-			console.log(queryResponse.chatllm);
 			if (!queryResponse || !queryResponse.chatllm) {
 				return editReply({ content: 'No results found.', components: [] });
 			}

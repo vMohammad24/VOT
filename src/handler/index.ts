@@ -289,7 +289,7 @@ export default class CommandHandler {
 				const vStart = Date.now();
 				const validationResults = await Promise.all(this.validations.map(async (validation) => validation(command, commandContext)));
 				const invalidResult = validationResults.find(result => result !== true);
-				if (invalidResult) {
+				if (invalidResult || invalidResult === false) {
 					return invalidResult;
 				}
 				validationTime = Date.now() - vStart;
@@ -303,7 +303,6 @@ export default class CommandHandler {
 				setTimeout(() => {
 					if (ctx instanceof CommandInteraction) {
 						if (!ctx.deferred && !ctx.replied) {
-							console.log('deferred');
 							ctx.deferReply();
 						}
 					}

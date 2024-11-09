@@ -84,7 +84,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -100,7 +100,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -116,7 +116,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -132,7 +132,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required user argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -148,7 +148,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required channel argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -164,7 +164,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required role argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -180,7 +180,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required mentionable argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -198,7 +198,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -214,7 +214,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -229,7 +229,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							new EmbedBuilder()
 								.setTitle('Error')
 								.setDescription(`Unknown option type \`${(option as any).type}\` for command \`${command.name}\`.\n\nPlease contact the bot developer to fix this issue.`)
-								.setColor('Red')
+								.setColor('DarkRed')
 								.setTimestamp(),
 						],
 					};
@@ -264,7 +264,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -288,7 +288,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -315,7 +315,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -348,7 +348,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -381,7 +381,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -414,7 +414,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -455,7 +455,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -480,7 +480,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -496,7 +496,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -522,7 +522,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								new EmbedBuilder()
 									.setTitle('Error')
 									.setDescription(`Required argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-									.setColor('Red')
+									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
@@ -537,7 +537,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required string argument \`${option.name}\` is missing or empty for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -553,7 +553,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -580,7 +580,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -610,7 +610,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -639,7 +639,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -668,7 +668,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -705,7 +705,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -721,7 +721,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};
@@ -737,7 +737,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 										new EmbedBuilder()
 											.setTitle('Error')
 											.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
-											.setColor('Red')
+											.setColor('DarkRed')
 											.setTimestamp(),
 									],
 								};

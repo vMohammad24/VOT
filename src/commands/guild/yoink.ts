@@ -43,7 +43,6 @@ export default {
             let yoined = '';
             for (const sticker of stickers) {
                 try {
-                    console.log(sticker.url);
                     const buffer = (await axios.get(sticker.url, { responseType: 'arraybuffer' })).data;
                     const e = await guild.stickers.create({
                         name: sticker.name,

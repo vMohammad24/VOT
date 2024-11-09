@@ -210,7 +210,6 @@ export default {
         if (sData.voice && sData.voice.length > 0) {   // create a new activity from voice data
             const voice = sData.voice[0];
             if (!voice.channel) return;
-            // console.log(voice);
             sData.activities.push({
                 name: 'Voice',
                 type: ActivityType.Listening,
@@ -355,7 +354,6 @@ export default {
         if (avatar) {
             // const listening = sData.activities.find(a => a.type === ActivityType.Listening);
             // const image = listening?.assets?.large_image;
-            // console.log(listening)
             // const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
             const imagew = await loadImage(avatar);
             const dColor = getTwoMostUsedColors(imagew);

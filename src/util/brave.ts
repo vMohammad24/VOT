@@ -708,9 +708,11 @@ export async function searchBraveGoggles(query: string) {
 export async function chatllm(result: BraveSearchResult['data']['body']['response']['chatllm']) {
     const cache = await redis.get(`braveChatllm:${result.query}`);
     if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
-    const res = await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
-    const enrichments = await axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`);
-    const followUps = await axios.get(`https://search.brave.com/api/chatllm/followups?key=${result.key}`);
+    await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
+    const [enrichments, followUps] = await Promise.all([
+        axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`),
+        axios.get(`https://search.brave.com/api/chatllm/followups?key=${result.key}`)
+    ]);
     enrichments.data.followups = followUps.data;
     await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60 * 24 * 7);
     return enrichments.data as BraveEnrichments;

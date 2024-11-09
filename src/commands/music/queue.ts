@@ -25,7 +25,7 @@ export default {
 					page: new EmbedBuilder()
 						.setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
 						.setDescription('No track found')
-						.setColor('Red')
+						.setColor('DarkRed')
 						.setFooter({
 							text: 'Unknown',
 							iconURL: member.displayAvatarURL(),

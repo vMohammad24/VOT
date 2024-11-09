@@ -81,7 +81,7 @@ export async function getUserByID(id: string, select?: Prisma.UserSelect<Default
 		select,
 	});
 
-	await redis.set(cacheKey, JSON.stringify(user), 'EX', 10); // Expires in 1 hour
+	await redis.set(cacheKey, JSON.stringify(user), 'EX', 2); // Expires in 1 hour
 	return user;
 }
 

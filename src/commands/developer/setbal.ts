@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
+import { getUserByID } from '../../util/database';
 
 export default {
     name: 'setbal',
@@ -24,9 +25,10 @@ export default {
     execute: async ({ user: author, args, handler: { prisma } }) => {
         const userId = args.get('user').id;
         const amount = args.get('amount');
+        const p = await getUserByID(userId, { id: true });
         const pUser = await prisma.economy.findFirst({
             where: {
-                userId: userId
+                userId: p.id
             },
         })
         if (!pUser) return {
