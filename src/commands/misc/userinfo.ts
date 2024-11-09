@@ -257,7 +257,7 @@ export default {
         let description = '';
 
         if (badges && badges.length > 0) {
-            description += `${badges.map(badge => badge.emoji).join(' ')}\n`;
+            description += `### ${badges.map(badge => badge.emoji).join(' ')}\n`;
         }
 
         if (bio) {
