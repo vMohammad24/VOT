@@ -1,6 +1,6 @@
 import { loadImage } from "@napi-rs/canvas";
 import axios from "axios";
-import { ApplicationCommandOptionType, ColorResolvable, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, ColorResolvable, EmbedBuilder } from "discord.js";
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { addEmojiByURL, getEmoji } from "../../util/emojis";
@@ -317,7 +317,12 @@ export interface Premium {
     monochrome_badges: boolean;
     layout: string;
     second_tab: Second_tab;
-    buttons: string[];
+    buttons: {
+        button_title: string;
+        button_url: string;
+        button_icon: string;
+        id: string;
+    }[];
     show_url: boolean;
     text_align: string;
     button_shadow: boolean;
@@ -348,7 +353,10 @@ export interface Config {
     animated_title: boolean;
     custom_cursor: string;
     page_views: number;
-    user_badges: string[];
+    user_badges: string[] | {
+        enabled: boolean;
+        name: string;
+    }[];
     custom_badges: string[][];
     display_name: string;
     profile_gradient: boolean;
@@ -699,8 +707,15 @@ ${deathUser.description}`)
                 let gEmojis: string = ''
                 if (gData.config.user_badges && gData.config.user_badges.length != 0) {
                     for (const badge of gData.config.user_badges) {
-                        const emoji = getEmoji(`guns_${badge}_badge`);
-                        if (emoji) gEmojis += emoji.toString();
+                        if (typeof badge === 'string') {
+                            const emoji = getEmoji(`guns_${badge}_badge`);
+                            if (emoji) gEmojis += emoji.toString();
+                            continue;
+                        }
+                        if (badge.enabled) {
+                            const emoji = getEmoji(`guns_${badge.name}_badge`);
+                            if (emoji) gEmojis += emoji.toString();
+                        }
                     }
                 }
                 if (gData.config.custom_badges) {
@@ -708,6 +723,26 @@ ${deathUser.description}`)
                         const emoji = await addEmojiByURL(`guns_${badge[0]}`, badge[1], ems);
                         gEmojis += emoji?.toString()!;
                     }
+                }
+                const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+                if (gData.config.premium.buttons.length > 0) {
+                    const buttons = gData.config.premium.buttons;
+                    for (let i = 0; i < buttons.length; i += 5) {
+                        const row = new ActionRowBuilder<ButtonBuilder>();
+                        for (let j = i; j < i + 5; j++) {
+                            const button = buttons[j];
+                            if (!button) break;
+                            const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+                            if (!urlRegex.test(button.button_url)) continue;
+                            row.addComponents(new ButtonBuilder()
+                                .setLabel(button.button_title)
+                                .setStyle(ButtonStyle.Link)
+                                .setURL(button.button_url)
+                            );
+                        }
+                        if (row.components.length > 0) rows.push(row);
+                    }
+                    console.log(rows.length);
                 }
                 return {
                     embeds: [
@@ -723,7 +758,8 @@ ${deathUser.description}`)
                             .setColor(gColor)
                             .setFooter({ text: `UID: ${gData.uid} • Views: ${numeral(gData.config.page_views).format("0,0")} • Created` })
                             .setTimestamp(new Date(gData.account_created * 1000))
-                    ]
+                    ],
+                    components: rows
                 }
             default:
                 return { ephemeral: true, content: `I'm sorry, but the service "${service}" is not yet supported.\n-# If you want it added, feel free to contact the developer of the service and the bot.` };
