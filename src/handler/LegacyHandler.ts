@@ -34,7 +34,8 @@ export default class LegacyCommandHandler {
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 			const prefix = (await getPrefix(message)) ?? gPrefix;
-			let commandName = message.content.slice(prefix.length).split(' ')[0];
+			let commandName = message.content.startsWith(prefix) ? message.content.slice(prefix.length).split(' ')[0] : null;
+			console.log(prefix);
 			if (!message.content.startsWith(prefix)) {
 				if (message.mentions.users.has(client.user!.id)) {
 					if (!message.content.includes(' ')) {
