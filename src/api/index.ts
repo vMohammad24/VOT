@@ -1,10 +1,11 @@
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { loadImage } from '@napi-rs/canvas';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, Collection } from 'discord.js';
 import { Elysia, t } from 'elysia';
+import { nanoid } from 'nanoid/non-secure';
 import commandHandler, { redis, upSince } from '..';
-import { askDDG } from '../util/ddg';
+import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
 import discord from './discord';
@@ -101,19 +102,30 @@ elysia.post('/googleLens', async ({ body }) => {
 	})
 })
 const bAPIKEy = 'VOT-MSSWAKANGHYUK-ELY-KEY';
+const col = new Collection<string, DuckDuckGoChat>();
 elysia.post('/askDDG', async ({ body, headers, set }) => {
 	const { query, model } = body;
+	let { sessionId } = body;
 	const { authorization } = headers;
 	if (authorization !== bAPIKEy) {
 		set.status = 401;
 		return { error: 'Unauthorized' };
 	};
-	const res = await askDDG(query, model as "gpt-4o-mini" | "claude-3-haiku-20240307" | "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo" | "mistralai/Mixtral-8x7B-Instruct-v0.1");
-	return res;
+	if (!sessionId) sessionId = nanoid(20);
+	if (!col.has(sessionId)) {
+		col.set(sessionId, new DuckDuckGoChat(model as "gpt-4o-mini" | "claude-3-haiku-20240307" | "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo" | "mistralai/Mixtral-8x7B-Instruct-v0.1"));
+	}
+	const chat = col.get(sessionId)!;
+	const res = await chat.chat(query);
+	return {
+		response: res,
+		sessionId
+	};
 }, {
 	body: t.Object({
 		query: t.String(),
 		model: t.String(),
+		sessionId: t.Optional(t.String()),
 	}),
 	headers: t.Object({
 		authorization: t.String(),
