@@ -1,5 +1,6 @@
+import { GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { getPanel } from '../../util/music';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	description: 'Shows the current song',
@@ -7,15 +8,31 @@ export default {
 	guildOnly: true,
 	aliases: ['np'],
 	execute: async ({ interaction, guild, player, handler }) => {
-		const msg = await getPanel(handler.kazagumo, guild);
-		if (!msg)
-			return {
-				content: 'There is no player in this guild.',
-				ephemeral: true,
-			};
+		if (!player) return {
+			content: 'I am not connected to any voice channel!',
+			ephemeral: true
+		}
+		if (!player.queue.current) return {
+			content: 'Nothing is currently getting played.',
+			ephemeral: true
+		}
+		const { current } = player.queue;
+		const { title, uri } = current;
 		return {
-			content: `you can go to ${msg.url} to manage the player.`,
-			ephemeral: true,
-		};
+			embeds: [
+				await new VOTEmbed()
+					.setTitle('Now Playing')
+					.setDescription(`[${title}](${uri})`)
+					.setThumbnail(current.thumbnail ?? null)
+					.setFooter({
+						text: `Requested by ${(current.requester as GuildMember).displayName}`,
+						iconURL: (current.requester as GuildMember).displayAvatarURL()
+					})
+					.setTimestamp()
+					.dominant()
+			],
+			ephemeral: true
+		}
+
 	},
 } as ICommand;
