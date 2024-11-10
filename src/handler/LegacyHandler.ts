@@ -1,10 +1,26 @@
-import { Events, type Client } from 'discord.js';
+import { EmbedBuilder, Events, Message, type Client } from 'discord.js';
 import type { Kazagumo } from 'kazagumo';
 import CommandHandler from '.';
 import { getGuild, getUserByID } from '../util/database';
 import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
+
+const getPrefix = async (message: Message<boolean>) => {
+	let prefix = null;
+	const pUser = await getUserByID(message.author.id, { prefix: true });
+	if (pUser && pUser.prefix) {
+		prefix = pUser.prefix;
+	} else {
+		if (message.guild) {
+			const guild = await getGuild(message.guild, { prefix: true });
+			if (guild) {
+				prefix = guild.prefix;
+			}
+		}
+	}
+	return prefix;
+}
 export default class LegacyCommandHandler {
 	public commands: ICommand[] = [];
 	private handler: CommandHandler;
@@ -17,21 +33,22 @@ export default class LegacyCommandHandler {
 	public initListener(client: Client, kazagumo: Kazagumo, gPrefix: string) {
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
-			let prefix = gPrefix;
-			const pUser = await getUserByID(message.author.id, { prefix: true });
-			if (pUser && pUser.prefix) {
-				prefix = pUser.prefix;
-			} else {
-				if (message.guild) {
-					const guild = await getGuild(message.guild, { prefix: true });
-					if (guild) {
-						prefix = guild.prefix;
+			const prefix = (await getPrefix(message)) ?? gPrefix;
+			let commandName = message.content.slice(prefix.length).split(' ')[0];
+			if (!message.content.startsWith(prefix)) {
+				if (message.mentions.users.has(client.user!.id)) {
+					if (!message.content.includes(' ')) {
+						message.reply({
+							embeds: [
+								new EmbedBuilder()
+									.setDescription(`Your prefix is \`${prefix}\``)
+							]
+						})
+						return;
 					}
+					commandName = 'ask';
 				}
 			}
-
-			if (!message.content.startsWith(prefix)) return;
-			const commandName = message.content.slice(prefix.length).split(' ')[0];
 			if (!commandName) return;
 			const command = this.commands.find(
 				(cmd) =>

@@ -43,6 +43,7 @@ export default class SlashCommandHandler {
 	public async initCommands(client: Client) {
 		const commands = this.commands.filter(isICommand).filter(a => (a.category != null && !a.disabled)).map((cmd: ICommand) => {
 			let perms: bigint | null = 0n;
+			if (cmd.type == 'legacy') return;
 			if (!cmd.options) cmd.options = [];
 			if (cmd.perms && cmd.perms != 'dev') {
 				for (const perm of cmd.perms) {
@@ -61,7 +62,6 @@ export default class SlashCommandHandler {
 			};
 
 			if (!cmd.type) cmd.type = 'guildOnly';
-
 			if (cmd.type == 'installable' || cmd.type == 'all') {
 				uInstall.contexts.push(2);
 				uInstall.integration_types.push(1);
@@ -207,6 +207,7 @@ export default class SlashCommandHandler {
 						ephemeral: true,
 					});
 				}
+				if (command.type == 'legacy') return;
 				let result = {};
 				let err;
 				let errorId;

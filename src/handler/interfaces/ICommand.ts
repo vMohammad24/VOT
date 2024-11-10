@@ -31,7 +31,7 @@ export default interface ICommand {
 	slashOnly?: boolean;
 	shouldCache?: boolean;
 	needsPlayer?: boolean;
-	type?: 'dmOnly' | 'guildOnly' | 'installable' | 'all';
+	type?: 'dmOnly' | 'guildOnly' | 'installable' | 'all' | 'legacy';
 	options?: ApplicationCommandOption[];
 	init?: (handler: CommandHandler) => Promise<void> | void | null | undefined;
 	execute: (ctx: CommandContext) => Promise<MessagePayload | string | InteractionReplyOptions | null | undefined>;
