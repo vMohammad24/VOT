@@ -4,7 +4,7 @@ import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonSt
 import numeral from "numeral";
 import ICommand from "../../handler/interfaces/ICommand";
 import { addEmojiByURL, getEmoji } from "../../util/emojis";
-import { getTwoMostUsedColors, isNullish } from "../../util/util";
+import { getTwoMostUsedColors, isNullish, isURL } from "../../util/util";
 
 interface User {
     avatar: string;
@@ -396,7 +396,7 @@ export default {
             description: 'The service to lookup the user in',
             type: ApplicationCommandOptionType.String,
             required: true,
-            choices: ['nest.rip', 'guns.lol', 'inject.bio', 'death.ovh', 'socl.gg', 'biography', 'tiktok'].map((service) => ({ name: service, value: service }))
+            choices: ['nest.rip', 'guns.lol', 'inject.bio', 'death.ovh', 'socl.gg', 'ammo.lol', 'biography', 'tiktok'].map((service) => ({ name: service, value: service }))
         },
         {
             name: 'query',
@@ -648,42 +648,42 @@ ${deathUser.description}`)
                         sEmbed
                     ]
                 }
-            // case 'ammo.lol':
-            //     const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
-            //         params: {
-            //             username: query
-            //         },
-            //         headers: {
-            //             'API-KEY': import.meta.env.AMMO_LOL_API_KEY
-            //         }
-            //     });
-            //     const aData = aRes.data as AmmoUser;
-            //     if (!aData) return {
-            //         ephemeral: true,
-            //         content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
-            //     }
-            //     const hasBackground = aData.background_url && isURL(aData.background_url);
-            //     const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
-            //     const hasURL = aData.url && isURL(aData.url);
-            //     const aColor: ColorResolvable = hasAvatar ? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0] : 'Random';
-            //     const [day, month, year] = aData.created.split('/').map(Number);
-            //     const date = new Date(year, month - 1, day);
-            //     return {
-            //         embeds: [
-            //             new EmbedBuilder()
-            //                 .setAuthor({ name: aData.username, iconURL: hasAvatar ? aData.avatar_url : undefined, url: hasURL ? aData.url : undefined })
-            //                 .setDescription(aData.description)
-            //                 .setThumbnail(hasAvatar ? aData.avatar_url : null)
-            //                 .setImage(hasBackground ? aData.background_url : null)
-            //                 .addFields([
-            //                     { name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
-            //                     { name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true }
-            //                 ])
-            //                 .setColor(aColor)
-            //                 .setFooter({ text: `UID: ${aData.uid} • Created` })
-            //                 .setTimestamp(date)
-            //         ]
-            //     }
+            case 'ammo.lol':
+                const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
+                    params: {
+                        username: query
+                    },
+                    headers: {
+                        'API-KEY': import.meta.env.AMMO_LOL_API_KEY
+                    }
+                });
+                const aData = aRes.data as AmmoUser;
+                if (!aData) return {
+                    ephemeral: true,
+                    content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``
+                }
+                const hasBackground = aData.background_url && isURL(aData.background_url);
+                const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
+                const hasURL = aData.url && isURL(aData.url);
+                const aColor: ColorResolvable = hasAvatar ? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0] : 'Random';
+                const [day, month, year] = aData.created.split('/').map(Number);
+                const date = new Date(year, month - 1, day);
+                return {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({ name: aData.username, iconURL: hasAvatar ? aData.avatar_url : undefined, url: hasURL ? aData.url : undefined })
+                            .setDescription(aData.description)
+                            .setThumbnail(hasAvatar ? aData.avatar_url : null)
+                            .setImage(hasBackground ? aData.background_url : null)
+                            .addFields([
+                                { name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
+                                { name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true }
+                            ])
+                            .setColor(aColor)
+                            .setFooter({ text: `UID: ${aData.uid} • Created` })
+                            .setTimestamp(date)
+                    ]
+                }
             case 'guns.lol':
                 const gRes = await axios.post(`https://guns.lol/api/user/lookup?type=username`, {
                     key: import.meta.env.GUNS_API_KEY!,
