@@ -8,21 +8,25 @@ import commandHandler, { redis, upSince } from '..';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
+import brave from './brave';
 import discord from './discord';
 import spotify from './spotify';
 import verification from './verification';
 const discordElysia = new Elysia({ prefix: 'discord' })
 const spotifyElysia = new Elysia({ prefix: 'spotify' })
 const guildsElysia = new Elysia({ prefix: 'guilds' })
+const braveElysia = new Elysia({ prefix: 'brave' })
 discord(discordElysia);
 spotify(spotifyElysia);
+brave(braveElysia);
 verification(guildsElysia);
 const elysia = new Elysia()
 	.use(cors())
 	.use(swagger())
 	.use(discordElysia)
 	.use(spotifyElysia)
-	.use(guildsElysia);
+	.use(guildsElysia)
+	.use(braveElysia);
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
 elysia.get('/', function () {
@@ -101,13 +105,13 @@ elysia.post('/googleLens', async ({ body }) => {
 		file: t.File(),
 	})
 })
-const bAPIKEy = 'VOT-MSSWAKANGHYUK-ELY-KEY';
+export const apiKeys = ['VOT-MSSWAKANGHYUK-ELY-KEY'];
 const col = new Collection<string, DuckDuckGoChat>();
 elysia.post('/askDDG', async ({ body, headers, set }) => {
 	const { query, model } = body;
 	let { sessionId } = body;
 	const { authorization } = headers;
-	if (authorization !== bAPIKEy) {
+	if (!apiKeys.includes(authorization)) {
 		set.status = 401;
 		return { error: 'Unauthorized' };
 	};
@@ -131,5 +135,7 @@ elysia.post('/askDDG', async ({ body, headers, set }) => {
 		authorization: t.String(),
 	})
 })
+
+
 
 export default elysia;
