@@ -2,7 +2,7 @@ import axios from "axios";
 import { ApplicationCommandOptionType, Attachment } from "discord.js";
 import sharp from "sharp";
 import ICommand from "../../handler/interfaces/ICommand";
-const choices = ['png', 'jpg', 'webp'];
+const choices = ['png', 'jpg', 'webp', 'gif'];
 export default {
     description: 'Convert files',
     options: [{
@@ -24,25 +24,32 @@ export default {
         const format = (args.get('format') as string | undefined) || 'png';
         if (!attachment) return { ephemeral: true, content: 'Please provide a file to convert.' };
         if (!choices.includes(format)) return { ephemeral: true, content: 'Invalid format' };
-        const file = Buffer.from(await axios.get(attachment.url, { responseType: 'arraybuffer' }).then((res) => res.data));
+        let file = Buffer.from(await axios.get(attachment.url, { responseType: 'arraybuffer' }).then((res) => res.data));
+        const fileName = attachment.name.split('.')[0];
         switch (format) {
             case 'png':
-                return {
-                    files: [await sharp(file).toFormat('png').toBuffer()]
-                }
+                file = await sharp(file).toFormat('png').toBuffer();
+                break;
             case 'jpg':
-                return {
-                    files: [await sharp(file).toFormat('jpeg').toBuffer()]
-                }
+                file = await sharp(file).toFormat('jpeg').toBuffer();
+                break;
             case 'webp':
-                return {
-                    files: [await sharp(file).toFormat('webp').toBuffer()]
-                }
+                file = await sharp(file).toFormat('webp').toBuffer();
+                break;
+            case 'gif':
+                file = await sharp(file).toFormat('gif').toBuffer();
+                break;
             default:
                 return {
                     ephemeral: true,
                     content: 'Invalid format'
                 }
+        }
+        return {
+            files: [{
+                attachment: file,
+                name: `VOT_CONVERTED_${fileName}.${format}`
+            }]
         }
     }
 } as ICommand
