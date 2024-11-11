@@ -9,7 +9,7 @@ import {
 	type Interaction,
 	type Message,
 } from 'discord.js';
-import { watch } from "fs/promises";
+import { watch } from 'fs/promises';
 import { nanoid } from 'nanoid/non-secure';
 import path from 'path';
 import PinoLogger, { Logger } from 'pino';
@@ -37,7 +37,6 @@ type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
 interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
-
 const createCommand = async (commandContext: CommandContext, command: ICommand) => {
 	const cId = commandContext.cID || nanoid(10);
 	return await commandContext.handler.prisma.user.upsert({
@@ -57,7 +56,7 @@ const createCommand = async (commandContext: CommandContext, command: ICommand) 
 						message: commandContext?.message?.id || null,
 						interaction: commandContext?.interaction?.id || null,
 					},
-					id: `cmd_${cId}`
+					id: `cmd_${cId}`,
 				},
 			},
 		},
@@ -75,15 +74,15 @@ const createCommand = async (commandContext: CommandContext, command: ICommand) 
 						message: commandContext?.message?.id || null,
 						interaction: commandContext?.interaction?.id || null,
 					},
-					id: `cmd_${cId}`
+					id: `cmd_${cId}`,
 				},
 			},
 		},
 		select: {
 			commands: { orderBy: { createdAt: 'desc' } },
 		},
-	})
-}
+	});
+};
 export default class CommandHandler {
 	public prisma: ICommandHandler['prisma'];
 	public kazagumo: ICommandHandler['kazagumo'];
@@ -111,11 +110,13 @@ export default class CommandHandler {
 		handler.commands = [];
 		handler.client.on(Events.ClientReady, async () => {
 			const time = Date.now();
-			this.logger.debug('Fetching guilds...')
-			await Promise.all((await this.client.guilds.fetch()).map(async (guild) => {
-				const fetchedGuild = await guild.fetch();
-				return fetchedGuild.members.fetch();
-			}));
+			this.logger.debug('Fetching guilds...');
+			await Promise.all(
+				(await this.client.guilds.fetch()).map(async (guild) => {
+					const fetchedGuild = await guild.fetch();
+					return fetchedGuild.members.fetch();
+				}),
+			);
 			this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
 			this.validations = await (async () => {
 				const validationDir = path.join(import.meta.dir, 'validations');
@@ -124,10 +125,12 @@ export default class CommandHandler {
 				for await (const vFile of glob) {
 					validationFiles.push(vFile);
 				}
-				const validations = await Promise.all(validationFiles.map(async (vFile) => {
-					const validation = await import(path.join(validationDir, vFile));
-					return validation.default;
-				}));
+				const validations = await Promise.all(
+					validationFiles.map(async (vFile) => {
+						const validation = await import(path.join(validationDir, vFile));
+						return validation.default;
+					}),
+				);
 				return validations;
 			})();
 
@@ -146,7 +149,8 @@ export default class CommandHandler {
 				cwd: contextCommandsDir,
 			})) {
 				contextCommandPaths.push(file);
-			} const loadCommand = async (file: string) => {
+			}
+			const loadCommand = async (file: string) => {
 				const start = Date.now();
 				const categoryName = file.split('/').slice(-2, -1)[0];
 				const fileName = file.split('/').pop()!.split('.')[0];
@@ -174,30 +178,37 @@ export default class CommandHandler {
 					commandInits.push(modifiedData.init);
 				}
 				if (mHandler.verbose) {
-					this.logger.info(`Initialized command ${modifiedData.name} in ${modifiedData.category} in ${Date.now() - start}ms`);
+					this.logger.info(
+						`Initialized command ${modifiedData.name} in ${modifiedData.category} in ${Date.now() - start}ms`,
+					);
 				}
 				if (old === modifiedData) {
 					this.logger.info(`Command ${commandName} is the same as the old one`);
 				}
 			};
 
-			await Promise.all(commandPaths.map(async (file) => {
-				return loadCommand(file);
-			}));
-			await Promise.all(contextCommandPaths.map(async (file) => {
-				const commandName = file.split('/').pop()!.split('.')[0];
-				const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
-				if (command.disabled) return;
-				const modifiedData: IContextCommand = Object.assign({}, command, {
-					name: command.name || commandName,
-				});
-				handler.commands.push(modifiedData);
-				if (mHandler.verbose)
-					this.logger.info(`Initialized Context Command ${modifiedData.name}`);
-			}));
-			Promise.all(commandInits.map((init) => {
-				init(handler);
-			}));
+			await Promise.all(
+				commandPaths.map(async (file) => {
+					return loadCommand(file);
+				}),
+			);
+			await Promise.all(
+				contextCommandPaths.map(async (file) => {
+					const commandName = file.split('/').pop()!.split('.')[0];
+					const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
+					if (command.disabled) return;
+					const modifiedData: IContextCommand = Object.assign({}, command, {
+						name: command.name || commandName,
+					});
+					handler.commands.push(modifiedData);
+					if (mHandler.verbose) this.logger.info(`Initialized Context Command ${modifiedData.name}`);
+				}),
+			);
+			Promise.all(
+				commandInits.map((init) => {
+					init(handler);
+				}),
+			);
 			const total = Date.now() - start;
 			this.logger.info(`Initialized ${handler.commands.length} commands in ${total}ms`);
 			const Ilegacy = handler as LegacyHandler;
@@ -263,7 +274,7 @@ export default class CommandHandler {
 						editReply: async (content) => {
 							await interaction.editReply(content);
 						},
-						cID: cId
+						cID: cId,
 					};
 					contextTime = Date.now() - start;
 				} else {
@@ -283,13 +294,15 @@ export default class CommandHandler {
 							if (!rMsg) return;
 							await rMsg.edit(content as string | MessageEditOptions);
 						},
-						cID: cId
+						cID: cId,
 					};
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const validationResults = await Promise.all(this.validations.map(async (validation) => validation(command, commandContext)));
-				const invalidResult = validationResults.find(result => result !== true);
+				const validationResults = await Promise.all(
+					this.validations.map(async (validation) => validation(command, commandContext)),
+				);
+				const invalidResult = validationResults.find((result) => result !== true);
 				if (invalidResult || invalidResult === false) {
 					return invalidResult;
 				}
@@ -318,7 +331,9 @@ export default class CommandHandler {
 				const cacheTime = Date.now() - executionTime - eStart;
 				const total = Date.now() - start;
 				if (commandHandler.verbose) {
-					commandHandler.logger.info(`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms) || cache: ${cacheTime}ms`);
+					commandHandler.logger.info(
+						`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms) || cache: ${cacheTime}ms`,
+					);
 				}
 				return result;
 			} else {
@@ -330,11 +345,12 @@ export default class CommandHandler {
 				const executionTime = Date.now() - startExecution;
 				const total = Date.now() - start;
 				if (commandHandler.verbose) {
-					commandHandler.logger.info(`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`)
+					commandHandler.logger.info(
+						`Executed Context Command ${command.name} in ${total}ms (execution: ${executionTime}ms)`,
+					);
 				}
 				return result;
 			}
-
 		} catch (e) {
 			if ((e as any).code == 50013) {
 				return {
@@ -343,10 +359,10 @@ export default class CommandHandler {
 							.setTitle('Missing Permissions')
 							.setDescription('I am missing permissions to execute this command')
 							.setColor('DarkRed')
-							.setTimestamp()
+							.setTimestamp(),
 					],
 					ephemeral: true,
-				}
+				};
 			}
 			this.logger.error(e);
 			await this.prisma.error.create({
@@ -358,16 +374,19 @@ export default class CommandHandler {
 					command: {
 						connect: {
 							id: `cmd_${cId}`,
-						}
-					}
+						},
+					},
 				},
 			});
 			return {
-				embeds: [new EmbedBuilder()
-					.setTitle(`${getEmoji('warn').toString()} Error`)
-					.setDescription(`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${cId}`)
-					.setColor('Red')
-					.setTimestamp()
+				embeds: [
+					new EmbedBuilder()
+						.setTitle(`${getEmoji('warn').toString()} Error`)
+						.setDescription(
+							`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${cId}`,
+						)
+						.setColor('Red')
+						.setTimestamp(),
 				],
 				ephemeral: true,
 			};

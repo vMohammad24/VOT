@@ -5,7 +5,6 @@ import { getGuild, getUserByID } from '../util/database';
 import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
-
 const getPrefix = async (message: Message<boolean>) => {
 	let prefix = null;
 	const pUser = await getUserByID(message.author.id, { prefix: true });
@@ -20,7 +19,7 @@ const getPrefix = async (message: Message<boolean>) => {
 		}
 	}
 	return prefix;
-}
+};
 export default class LegacyCommandHandler {
 	public commands: ICommand[] = [];
 	private handler: CommandHandler;
@@ -35,16 +34,12 @@ export default class LegacyCommandHandler {
 			if (message.author.bot) return;
 			const prefix = (await getPrefix(message)) ?? gPrefix;
 			let commandName = message.content.startsWith(prefix) ? message.content.slice(prefix.length).split(' ')[0] : null;
-			console.log(prefix);
 			if (!message.content.startsWith(prefix)) {
 				if (message.mentions.users.has(client.user!.id)) {
 					if (!message.content.includes(' ')) {
 						message.reply({
-							embeds: [
-								new EmbedBuilder()
-									.setDescription(`Your prefix is \`${prefix}\``)
-							]
-						})
+							embeds: [new EmbedBuilder().setDescription(`Your prefix is \`${prefix}\``)],
+						});
 						return;
 					}
 					commandName = 'ask';
@@ -73,11 +68,8 @@ export default class LegacyCommandHandler {
 					});
 					if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
 						setTimeout(async () => {
-							await Promise.all([
-								msg.delete(),
-								message.delete()
-							]);
-						}, 3000)
+							await Promise.all([msg.delete(), message.delete()]);
+						}, 3000);
 					}
 				} catch (e) {
 					try {
@@ -87,15 +79,10 @@ export default class LegacyCommandHandler {
 						});
 						if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
 							setTimeout(async () => {
-								await Promise.all([
-									await msg.delete(),
-									await message.delete()
-								]);
-							}, 3000)
+								await Promise.all([await msg.delete(), await message.delete()]);
+							}, 3000);
 						}
-					} catch (error) {
-
-					}
+					} catch (error) {}
 				}
 			}
 		});

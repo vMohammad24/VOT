@@ -26,12 +26,12 @@ export default {
 		const json = await searchBrave(query);
 		const { web, infobox } = json.data.body.response;
 		const results = web.results;
-		let pages = results.map(result => {
+		let pages = results.map((result) => {
 			const emojiName = (() => {
-				let r = result.profile.name.toLowerCase().split(' ')[0].trim()
-				if (r == 'x') r = 'twitter'
-				return r
-			})()
+				let r = result.profile.name.toLowerCase().split(' ')[0].trim();
+				if (r == 'x') r = 'twitter';
+				return r;
+			})();
 			return {
 				page: {
 					embeds: [
@@ -39,7 +39,7 @@ export default {
 							.setTitle(result.title)
 							.setAuthor({ name: result.profile.name, iconURL: result.meta_url.favicon, url: result.profile.url })
 							.setDescription(turndownService.turndown(result.description))
-							.setURL(result.url)
+							.setURL(result.url),
 					],
 				},
 				name: result.profile.name,
@@ -59,7 +59,11 @@ export default {
 								.setDescription(turndownService.turndown(ib.long_desc))
 								.setThumbnail(ib.images[0].original)
 								.setURL(ib.url)
-								.setAuthor({ name: ib.providers[0].name || 'No title', iconURL: ib.providers[0].img || undefined, url: ib.providers[0].url || undefined })
+								.setAuthor({
+									name: ib.providers[0].name || 'No title',
+									iconURL: ib.providers[0].img || undefined,
+									url: ib.providers[0].url || undefined,
+								}),
 						],
 					},
 					name: ib.title.slice(0, 99),

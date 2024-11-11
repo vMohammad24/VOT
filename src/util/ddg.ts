@@ -1,162 +1,186 @@
-import axios from "axios";
-import UserAgent from "user-agents";
+import axios from 'axios';
+import UserAgent from 'user-agents';
 
 const API_URL = `https://duckduckgo-ai.vmohammad.workers.dev/`;
 export interface Message {
-    role: string;
-    content: string;
+	role: string;
+	content: string;
 }
 
 export interface Choices {
-    index: number;
-    message: Message;
-    logprobs: string;
-    finish_reason: string;
+	index: number;
+	message: Message;
+	logprobs: string;
+	finish_reason: string;
 }
 
 export interface Usage {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
+	prompt_tokens: number;
+	completion_tokens: number;
+	total_tokens: number;
 }
 
 export interface DDGAIRes {
-    id: string;
-    object: string;
-    created: number;
-    model: string;
-    system_fingerprint: string;
-    choices: Choices[];
-    usage: Usage;
+	id: string;
+	object: string;
+	created: number;
+	model: string;
+	system_fingerprint: string;
+	choices: Choices[];
+	usage: Usage;
 }
 
-
-
 export const ddgModels = {
-    "gpt-4o-mini": "GPT-4o Mini",
-    "claude-3-haiku-20240307": "Claude 3 Haiku",
-    "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": "Llama 3.1 70B",
-    "mistralai/Mixtral-8x7B-Instruct-v0.1": "Mixtral"
+	'gpt-4o-mini': 'GPT-4o Mini',
+	'claude-3-haiku-20240307': 'Claude 3 Haiku',
+	'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo': 'Llama 3.1 70B',
+	'mistralai/Mixtral-8x7B-Instruct-v0.1': 'Mixtral',
 };
 
-export async function askDDG(message: string, model: keyof typeof ddgModels = "gpt-4o-mini"): Promise<DDGAIRes | { error: string }> {
-    if (!ddgModels[model]) {
-        return { error: "Invalid model" };
-    }
-    return (await axios.post(
-        `${API_URL}v1/chat/completions`,
-        {
-            model,
-            messages: [
-                {
-                    role: "user",
-                    content: message
-                }
-            ]
-        },
-        {
-            headers: {
-                "Authorization": `Bearer NOWAYTHISFUCKINGWORKSLMAO`,
-                "Content-Type": "application/json"
-            }
-        }
-    )).data as DDGAIRes;
+export async function askDDG(
+	message: string,
+	model: keyof typeof ddgModels = 'gpt-4o-mini',
+): Promise<DDGAIRes | { error: string }> {
+	if (!ddgModels[model]) {
+		return { error: 'Invalid model' };
+	}
+	return (
+		await axios.post(
+			`${API_URL}v1/chat/completions`,
+			{
+				model,
+				messages: [
+					{
+						role: 'user',
+						content: message,
+					},
+				],
+			},
+			{
+				headers: {
+					Authorization: `Bearer NOWAYTHISFUCKINGWORKSLMAO`,
+					'Content-Type': 'application/json',
+				},
+			},
+		)
+	).data as DDGAIRes;
 }
 
 interface ResMessage {
-    created: number;
-    id: string;
-    action: string;
-    model: string;
-    message?: string;
+	created: number;
+	id: string;
+	action: string;
+	model: string;
+	message?: string;
 }
 
-
-
 export class DuckDuckGoChat {
-    private model: string;
-    private vqd: string | undefined;
-    private messages: { content: string; role: string; }[] = [];
-    private userAgent = new UserAgent();
-    constructor(model: string) {
-        if (!Object.keys(ddgModels).includes(model)) {
-            throw new Error("Invalid model");
-        }
-        this.model = model;
-    }
+	private model: string;
+	private vqd: string | undefined;
+	private messages: { content: string; role: string }[] = [];
+	private userAgent = new UserAgent();
+	constructor(model: string) {
+		if (!Object.keys(ddgModels).includes(model)) {
+			throw new Error('Invalid model');
+		}
+		this.model = model;
+	}
 
-    public getModel() {
-        return this.model;
-    }
+	public getModel() {
+		return this.model;
+	}
 
-    private async generateVQD() {
-        const response = await axios.get('https://duckduckgo.com/duckchat/v1/status', {
-            headers: {
-                'cache-control': 'no-store',
-                'user-agent': this.userAgent.toString(),
-                'x-vqd-accept': '1',
-                'sec-fetch-site': 'same-origin',
-                'referer': 'https://duckduckgo.com/',
-            }
-        });
-        this.vqd = response.headers['x-vqd-4'];
-    }
+	public setModel(model: string) {
+		if (!Object.keys(ddgModels).includes(model)) {
+			throw new Error('Invalid model');
+		}
+		this.model = model;
+	}
 
-    public async chat(query: string) {
-        if (!this.vqd) {
-            await this.generateVQD();
-        }
-        this.messages.push({
-            role: 'user',
-            content: query
-        })
-        const res = await axios.post('https://duckduckgo.com/duckchat/v1/chat', {
-            messages: this.messages,
-            model: this.model
-        }, {
-            headers: {
-                'cache-control': 'no-store',
-                'user-agent': this.userAgent.toString(),
-                'x-vqd-accept': '1',
-                'referer': 'https://duckduckgo.com/',
-                'x-vqd-4': this.vqd
-            },
-            responseType: 'stream'
-        });
-        res.headers['x-vqd-4'] && (this.vqd = res.headers['x-vqd-4']);
-        const responses: ResMessage[] = [];
-        let response = '';
-        await new Promise<void>((resolve, reject) => {
-            res.data.on('data', (data: Buffer) => {
-                try {
-                    const lines = data.toString().split('\n');
-                    lines.forEach(line => {
-                        if (line.startsWith('data: ')) {
-                            const jsonStr = line.substring(6);
-                            if (jsonStr !== '[DONE]') {
-                                const parsed = JSON.parse(jsonStr);
-                                responses.push(parsed);
-                            }
-                        }
-                    });
-                } catch (e) {
+	private async generateVQD() {
+		const response = await axios.get('https://duckduckgo.com/duckchat/v1/status', {
+			headers: {
+				'cache-control': 'no-store',
+				'user-agent': this.userAgent.toString(),
+				'x-vqd-accept': '1',
+				'sec-fetch-site': 'same-origin',
+				referer: 'https://duckduckgo.com/',
+			},
+		});
+		this.vqd = response.headers['x-vqd-4'];
+	}
 
-                }
-            });
-            res.data.on('end', () => {
-                response = responses.map(response => {
-                    return response.message || '';
-                }).join('')
-                resolve();
-                this.messages.push({
-                    role: 'assistant',
-                    content: response
-                })
-            });
-            res.data.on('error', (err: Error) => {
-                reject(err);
-            });
-        });
-        return response;
-    }
+	public async chat(query: string) {
+		if (!this.vqd) {
+			await this.generateVQD();
+		}
+		this.messages.push({
+			role: 'user',
+			content: query,
+		});
+		const res = await axios.post(
+			'https://duckduckgo.com/duckchat/v1/chat',
+			{
+				messages: this.messages,
+				model: this.model,
+			},
+			{
+				headers: {
+					'cache-control': 'no-store',
+					'user-agent': this.userAgent.toString(),
+					'x-vqd-accept': '1',
+					referer: 'https://duckduckgo.com/',
+					'x-vqd-4': this.vqd,
+				},
+				responseType: 'stream',
+			},
+		);
+		res.headers['x-vqd-4'] && (this.vqd = res.headers['x-vqd-4']);
+		const responses: ResMessage[] = [];
+		let response = '';
+		await new Promise<void>((resolve, reject) => {
+			res.data.on('data', (data: Buffer) => {
+				try {
+					const lines = data.toString().split('\n');
+					lines.forEach((line) => {
+						if (line.startsWith('data: ')) {
+							const jsonStr = line.substring(6);
+							if (jsonStr !== '[DONE]') {
+								const parsed = JSON.parse(jsonStr);
+								responses.push(parsed);
+							}
+						}
+					});
+				} catch (e) {}
+			});
+			res.data.on('end', () => {
+				response = responses
+					.map((response) => {
+						return response.message || '';
+					})
+					.join('');
+				resolve();
+				this.messages.push({
+					role: 'assistant',
+					content: response,
+				});
+			});
+			res.data.on('error', (err: Error) => {
+				reject(err);
+			});
+		});
+		return response;
+	}
+
+	public export() {
+		return {
+			model: this.model,
+			messages: this.messages,
+		};
+	}
+
+	public import(data: { model: string; messages: { content: string; role: string }[] }) {
+		this.model = data.model;
+		this.messages = data.messages;
+	}
 }

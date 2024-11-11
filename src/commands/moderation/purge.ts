@@ -43,7 +43,7 @@ export default {
 	],
 	perms: ['ManageMessages'],
 	execute: async ({ channel, args, message }) => {
-		const amount = args.get('amount') as number || 200;
+		const amount = (args.get('amount') as number) || 200;
 		const bots = args.get('bots') as boolean | undefined;
 		const user = args.get('user') as string | undefined;
 		const before = args.get('before') as string | undefined;
@@ -62,24 +62,24 @@ export default {
 			let messages = await (channel as GuildTextBasedChannel).messages.fetch({ limit: amount });
 
 			if (bots) {
-				messages = messages.filter(msg => msg.author.bot);
+				messages = messages.filter((msg) => msg.author.bot);
 			}
 
 			if (user) {
-				messages = messages.filter(msg => msg.author.id === user);
+				messages = messages.filter((msg) => msg.author.id === user);
 			}
 
 			if (before) {
-				messages = messages.filter(msg => msg.createdTimestamp < msg.createdTimestamp);
+				messages = messages.filter((msg) => msg.createdTimestamp < msg.createdTimestamp);
 			}
 
 			if (after) {
 				const msg = await (channel as GuildTextBasedChannel).messages.fetch(after);
-				messages = messages.filter(msg => msg.createdTimestamp > msg.createdTimestamp);
+				messages = messages.filter((msg) => msg.createdTimestamp > msg.createdTimestamp);
 			}
 
 			if (contains) {
-				messages = messages.filter(msg => msg.content.includes(contains));
+				messages = messages.filter((msg) => msg.content.includes(contains));
 			}
 
 			const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(messages, true);

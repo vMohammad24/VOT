@@ -22,7 +22,7 @@ export default {
 	],
 	type: 'all',
 	execute: async ({ args, interaction: inter, message, editReply, user }) => {
-		const q = args.get('question') as string || 'test';
+		const q = (args.get('question') as string) || 'test';
 		let rMsg = message ? await message.reply('Thinking...') : await inter!.deferReply();
 		const func = async (query: string, params?: string) => {
 			const queryResponse = (await searchBrave(query, params)).data.body.response;
@@ -31,45 +31,58 @@ export default {
 			}
 			const summary = queryResponse.chatllm.summary_og;
 			const llm = await chatllm(queryResponse.chatllm);
-			const collector = rMsg.createMessageComponentCollector({ filter: i => i.customId == `enrichments_${rMsg.id}`, time: 60_000 * 60 })
-			collector.on('collect', async i => {
+			const collector = rMsg.createMessageComponentCollector({
+				filter: (i) => i.customId == `enrichments_${rMsg.id}`,
+				time: 60_000 * 60,
+			});
+			collector.on('collect', async (i) => {
 				const embed = new EmbedBuilder()
 					.setTitle('Sources')
-					.setDescription(llm.context_results.map(v => `- [${v.title}](${v.url})`).join('\n'))
+					.setDescription(llm.context_results.map((v) => `- [${v.title}](${v.url})`).join('\n'));
 				await i.reply({
 					embeds: [embed],
-					ephemeral: true
-				})
-			})
+					ephemeral: true,
+				});
+			});
 			const embed = new EmbedBuilder()
 				.setTitle('Search results')
 				.setDescription(llm.raw_response || 'No results found')
-				.setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() })
-			editReply({
-				embeds: [embed],
-				content: `> ${query}`,
-				components: [
-					new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(new StringSelectMenuBuilder()
-						.setCustomId('followup')
-						.setPlaceholder('Select a follow up')
-						.addOptions(llm.followups!.map((v, i) => ({ label: v.slice(0, 99), value: i.toString() })))
-					),
-					new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder()
-						.setLabel('View sources').setStyle(ButtonStyle.Primary)
-						.setCustomId(`enrichments_${rMsg.id}`)
-					)],
-				files: llm.images.map(v => ({ attachment: v.src, name: 'image.png' })),
-			}, rMsg)
-			const collector2 = rMsg.createMessageComponentCollector({ filter: i => (i.customId == 'followup' && i.user.id == user.id), time: 60_000 * 60 })
-			collector2.on('collect', async i => {
+				.setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() });
+			editReply(
+				{
+					embeds: [embed],
+					content: `> ${query}`,
+					components: [
+						new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+							new StringSelectMenuBuilder()
+								.setCustomId('followup')
+								.setPlaceholder('Select a follow up')
+								.addOptions(llm.followups!.map((v, i) => ({ label: v.slice(0, 99), value: i.toString() }))),
+						),
+						new ActionRowBuilder<ButtonBuilder>().addComponents(
+							new ButtonBuilder()
+								.setLabel('View sources')
+								.setStyle(ButtonStyle.Primary)
+								.setCustomId(`enrichments_${rMsg.id}`),
+						),
+					],
+					files: llm.images.map((v) => ({ attachment: v.src, name: 'image.png' })),
+				},
+				rMsg,
+			);
+			const collector2 = rMsg.createMessageComponentCollector({
+				filter: (i) => i.customId == 'followup' && i.user.id == user.id,
+				time: 60_000 * 60,
+			});
+			collector2.on('collect', async (i) => {
 				if (!i.isStringSelectMenu()) return;
 				const page = parseInt(i.values[0]);
 				const followUp = llm.followups![page];
 				if (!followUp) return;
 				rMsg = await i.deferReply();
 				await func(followUp, `&summary=${queryResponse.chatllm.key}&summary_og=${summary}&source=llmFollowup`);
-			})
-		}
+			});
+		};
 		await func(q, `&source=llm`);
 	},
 } as ICommand;

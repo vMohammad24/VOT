@@ -4,7 +4,8 @@ import { KazagumoTrack } from 'kazagumo';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
-
+import { getTrackFeatures } from '../../util/spotify';
+import VOTEmbed from '../../util/VOTEmbed';
 
 interface UserStatus {
 	online: string[];
@@ -58,8 +59,8 @@ export default {
 		const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
 			headers: {
 				Authorization: import.meta.env.OTHER_EVADE_API_KEY,
-			}
-		})
+			},
+		});
 		if (!res.data.activities) {
 			return {
 				content: 'No activity found',
@@ -148,9 +149,9 @@ export default {
 				.setTitle('Added to queue')
 				.setColor('Green')
 				.setDescription(`Added [${cTrack.title || 'Error getting title'}](${cTrack.uri}) to the queue`)
-				.setThumbnail(cTrack.thumbnail || null)
+				.setThumbnail(cTrack.thumbnail || null);
 			if (player.queue.current?.realUri == cTrack.realUri && spotify.timestamps?.start) {
-				const progress = Math.floor((Date.now() - spotify.timestamps.start));
+				const progress = Math.floor(Date.now() - spotify.timestamps.start);
 				await player.seek(progress);
 				// minute:second
 				embed.setDescription(embed.data.description + ` and seeked to ${numeral(progress / 1000).format('00:00')}`);
@@ -162,18 +163,32 @@ export default {
 			const info = track.getRaw()._raw.pluginInfo as {
 				artistUrl: string;
 				artistArtworkUrl: string;
+			};
+			const embed = await new VOTEmbed()
+				.setTitle(getEmoji('spotify').toString() + ' Spotify')
+				.setDescription(`### [${track.title || 'Error getting title'}](${track.uri})`)
+				.setThumbnail(track.thumbnail || null)
+				.setAuthor({
+					name: track.author || 'Error getting author',
+					iconURL: info.artistArtworkUrl,
+					url: info.artistUrl,
+				})
+				.dominant();
+			const trackId = track.identifier;
+			const features = await getTrackFeatures(trackId);
+			console.log(features);
+			if (typeof features != 'string') {
+				if (features.analysis_url) {
+					embed.addFields([
+						{ name: 'Danceability', value: `${(features.danceability * 100).toFixed(1)}%`, inline: true },
+						{ name: 'Energy', value: `${(features.energy * 100).toFixed(1)}%`, inline: true },
+						{ name: 'Mode', value: `${(features.mode * 100).toFixed(1)}%`, inline: true },
+					]);
+				}
 			}
 			return {
-				embeds: [
-					new EmbedBuilder()
-						.setTitle(getEmoji('spotify').toString() + ' Spotify')
-						.setColor('Green')
-						.setDescription(`### [${track.title || 'Error getting title'}](${track.uri})`)
-						.setThumbnail(track.thumbnail || null)
-						.setAuthor({ name: track.author || 'Error getting author', iconURL: info.artistArtworkUrl, url: info.artistUrl })
-				]
-			}
+				embeds: [embed],
+			};
 		}
-
 	},
 } as ICommand;

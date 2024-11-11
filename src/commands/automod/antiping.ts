@@ -27,7 +27,7 @@ export default {
 			await eRule.delete();
 			return {
 				content: `${eRule.name} has been deleted`,
-			}
+			};
 		}
 		const rule = await guild.autoModerationRules.create({
 			actions: [

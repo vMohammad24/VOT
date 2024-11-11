@@ -51,11 +51,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-					{
-						id: ticketSettings.roleId!,
-						allow: [PermissionFlagsBits.ViewChannel],
-					},
-				]
+						{
+							id: ticketSettings.roleId!,
+							allow: [PermissionFlagsBits.ViewChannel],
+						},
+					]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -156,7 +156,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	logChannel?.send({ embeds: [logEmbed], components: [actionRow] });
 	try {
 		await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
-	} catch (e) { }
+	} catch (e) {}
 	return { content: 'Ticked closed. ' };
 }
 
@@ -182,15 +182,17 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 			content: message.content,
 			username: message.author.username,
 			roleColor: message.member?.displayHexColor,
-			attachments: await Promise.all(message.attachments.map(async (attachment) => {
-				const file = new File(
-					[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
-					attachment.name,
-					{ type: attachment.contentType || undefined },
-				);
-				const uploadedData = await uploadFile(file);
-				return uploadedData.cdnFileName;
-			})),
+			attachments: await Promise.all(
+				message.attachments.map(async (attachment) => {
+					const file = new File(
+						[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
+						attachment.name,
+						{ type: attachment.contentType || undefined },
+					);
+					const uploadedData = await uploadFile(file);
+					return uploadedData.cdnFileName;
+				}),
+			),
 		});
 	}
 	const file = new File([JSON.stringify(json)], `${ticketData.id}.json`, {

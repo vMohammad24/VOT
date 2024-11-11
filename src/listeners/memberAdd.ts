@@ -10,11 +10,11 @@ export default {
 	description: 'Welcome message and auto role',
 	execute: ({ client }) => {
 		client.on(Events.GuildMemberAdd, async (user) => {
-			const guild = await getGuild(user.guild, {
+			const guild = (await getGuild(user.guild, {
 				WelcomeSettings: true,
 				autoRole: true,
 				VerificationSettings: true,
-			}) as any;
+			})) as any;
 			if (!guild) return;
 			const vSettings = guild.VerificationSettings as VerificationSettings;
 			const wSettings = guild.WelcomeSettings as WelcomeSettings;
@@ -30,7 +30,7 @@ export default {
 						const message = wSettings.message?.replaceAll('{{user}}', userMention);
 						if (wSettings.embedTitle) embed.setTitle(embedTitle!);
 						if (wSettings.embedDesc) embed.setDescription(embedDescription!);
-						embed.setColor('Random')
+						embed.setColor('Random');
 						if (embed.data.title || embed.data.description) {
 							if (wSettings.message) {
 								channel.send({ embeds: [embed], content: message! });
@@ -59,19 +59,17 @@ export default {
 						dmChannel.send({
 							embeds: [embed],
 							components: [
-								new ActionRowBuilder<ButtonBuilder>()
-									.addComponents(new ButtonBuilder()
+								new ActionRowBuilder<ButtonBuilder>().addComponents(
+									new ButtonBuilder()
 										.setURL(`${getFrontEndURL()}/verify/${user.guild.id}?token=${pUser.token}`)
 										.setLabel('Verify')
 										.setStyle(ButtonStyle.Link)
-										.setEmoji('🔗')
-									)
-							]
-						})
+										.setEmoji('🔗'),
+								),
+							],
+						});
 					}
-				} catch (e) {
-
-				}
+				} catch (e) {}
 			}
 
 			// Auto role logic

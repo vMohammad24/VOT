@@ -21,13 +21,13 @@ export default {
 			choices: Object.values(UserTier).map((tier) => ({
 				name: tier,
 				value: tier,
-			}))
+			})),
 		},
 	],
 	execute: async ({ handler, args }) => {
 		const { prisma } = handler;
 		const user = args.get('user') as User | undefined;
-		const tier = args.get('tier') as UserTier || 'Normal';
+		const tier = (args.get('tier') as UserTier) || 'Normal';
 		if (!user) return { content: 'User not found', ephemeral: true };
 		const pUser = await prisma.user.update({
 			where: {

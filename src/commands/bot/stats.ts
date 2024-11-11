@@ -25,7 +25,7 @@ async function getLines() {
 			} catch {
 				return 0;
 			}
-		})
+		}),
 	);
 
 	const totalLines = lineCounts.reduce((acc, curr) => acc + curr, 0);
@@ -43,7 +43,7 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 		headers,
 	});
 	const commit = data[0].commit;
-	const message = (commit.message as string).replace("[silent]", "").trim();
+	const message = (commit.message as string).replace('[silent]', '').trim();
 	const date = new Date(commit.committer.date);
 	return { message, date };
 }
@@ -110,14 +110,16 @@ export default {
 			.setTimestamp(commit.date)
 			.setFooter({ text: commit.message })
 			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
-			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
+			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!);
 		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
 				.setEmoji('🔗')
 				.setLabel('Invite')
 				.setStyle(ButtonStyle.Link)
-				.setURL(`discord://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=8&scope=bot%20applications.commands`),
-		)
+				.setURL(
+					`discord://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=8&scope=bot%20applications.commands`,
+				),
+		);
 		return { embeds: [embed], components: [row] };
 	},
 } as ICommand;

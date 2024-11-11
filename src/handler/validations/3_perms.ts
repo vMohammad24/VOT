@@ -35,12 +35,11 @@ export default function (command: ICommand, ctx: CommandContext) {
 					.setDescription(
 						`You're missing the following permissions: ${missingPerms
 							.map((a) => '``' + camelToTitleCase(a.toString()) + '``')
-							.join(', ')}`
-					)
+							.join(', ')}`,
+					),
 			],
 			ephemeral: true,
 		};
 	}
 	return true;
 }
-

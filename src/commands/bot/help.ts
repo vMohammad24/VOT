@@ -2,10 +2,10 @@ import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
-
+import VOTEmbed from '../../util/VOTEmbed';
 
 function getOptionName(value: number): string | undefined {
-	return Object.keys(ApplicationCommandOptionType).find(key => (ApplicationCommandOptionType as any)[key] === value);
+	return Object.keys(ApplicationCommandOptionType).find((key) => (ApplicationCommandOptionType as any)[key] === value);
 }
 
 export default {
@@ -22,7 +22,8 @@ export default {
 	type: 'all',
 	execute: async ({ message, interaction, handler, args, member }) => {
 		const categories = handler
-			.commands!.filter(a => a.category).map((cmd) => cmd.category)
+			.commands!.filter((a) => a.category)
+			.map((cmd) => cmd.category)
 			.filter((value, index, self) => self.indexOf(value) === index)
 			.filter((cat) => cat != 'Developer')
 			.sort() as string[];
@@ -51,12 +52,12 @@ export default {
 				message: message || undefined,
 				type: 'select',
 				pages: embeds,
-				name: 'Select a category'
+				name: 'Select a category',
 			});
 		} else {
 			const cmd = handler.commands!.find((cmd) => cmd.name === command);
 			if (!cmd) return { content: `Command \`${command}\` not found`, ephemeral: true };
-			const embed = new EmbedBuilder();
+			const embed = new VOTEmbed();
 			embed.setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp();
 			for (const option of cmd.options || []) {
 				embed.addFields({
@@ -65,14 +66,14 @@ export default {
 				});
 			}
 
-			cmd.aliases && cmd.aliases.length > 0 && embed.addFields({
-				name: 'Aliases',
-				value: cmd.aliases.join(', '),
-			})
+			cmd.aliases &&
+				cmd.aliases.length > 0 &&
+				embed.addFields({
+					name: 'Aliases',
+					value: cmd.aliases.join(', '),
+				});
 			return {
-				embeds: [
-					embed
-				],
+				embeds: [embed],
 				ephemeral: true,
 			};
 		}

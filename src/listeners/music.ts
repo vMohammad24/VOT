@@ -1,4 +1,4 @@
-import { Events, type GuildTextBasedChannel } from 'discord.js';
+import { Events, GuildMember, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getRows, sendPanel } from '../util/music';
 
@@ -7,17 +7,20 @@ export default {
 	description: 'Music related events',
 	execute: async (handler) => {
 		const { client, kazagumo, logger, executeCommand, commands } = handler;
-		kazagumo.shoukaku.on('ready', (name) => { if (handler.verbose) logger.info(`Lavalink ${name}: Ready!`) });
-		kazagumo.shoukaku.on('error', (name, error) => { if (handler.verbose) logger.error(`Lavalink ${name}: Error Caught: ${error}`) });
+		kazagumo.shoukaku.on('ready', (name) => {
+			if (handler.verbose) logger.info(`Lavalink ${name}: Ready!`);
+		});
+		kazagumo.shoukaku.on('error', (name, error) => {
+			if (handler.verbose) logger.error(`Lavalink ${name}: Error Caught: ${error}`);
+		});
 		kazagumo.shoukaku.on('close', (name, code, reason) => {
-			if (handler.verbose)
-				logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`)
-		}
-		);
-		kazagumo.shoukaku.on('debug', (name, info) => { if (handler.verbose) logger.debug(`Lavalink ${name}: Debug: ${info}`) });
+			if (handler.verbose) logger.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`);
+		});
+		kazagumo.shoukaku.on('debug', (name, info) => {
+			if (handler.verbose) logger.debug(`Lavalink ${name}: Debug: ${info}`);
+		});
 		kazagumo.shoukaku.on('disconnect', (name, players) => {
-			if (handler.verbose)
-				logger.warn(`Lavalink ${name}: Disconnected, Players: ${players}}`)
+			if (handler.verbose) logger.warn(`Lavalink ${name}: Disconnected, Players: ${players}}`);
 		});
 		kazagumo.on('playerMoved', (player, status, channelData) => {
 			if (handler.verbose) logger.info(`Player ${player.guildId} moved to ${channelData.newChannelId}`);
@@ -35,31 +38,49 @@ export default {
 
 		kazagumo.on('playerStart', (player, track) => {
 			if (handler.verbose) logger.info(`Player ${player.guildId} started playing ${track.title}`);
-			const member = player.queue.current?.requester;
+			const member = player.queue.current?.requester as GuildMember;
 			if (member) {
 				const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
+				channel.guild.client.rest.put(`/channels/${channel.id}/voice-status`, {
+					body: {
+						status: `Playing ${track.title} requested by ${member.displayName}`,
+					}
+				})
 				if (channel) {
 					sendPanel(kazagumo, channel.guild);
 				}
 			}
 		});
 
+		kazagumo.on('playerDestroy', async (player) => {
+			console.log('destroyed')
+			if (!player.textId)
+				return;
+
+			const channel = (await (await client.guilds.fetch(player.guildId)).channels.fetch(player.textId)) as GuildTextBasedChannel;
+			await channel.guild.client.rest.put(`/channels/${channel.id}/voice-status`, {
+				body: {
+					status: "",
+				}
+			});
+		})
+
 		kazagumo.on('playerEnd', async (player) => {
 			if (handler.verbose) logger.info(`Player ${player.guildId} ended`);
 			const channelId = player.voiceId;
 			const messageId = player.data.get('messageId');
 			const guildId = player.guildId;
-			if (messageId && channelId && guildId) {
-				const msg = await (
-					(await (await client.guilds.fetch(guildId)).channels.fetch(channelId)) as GuildTextBasedChannel
-				).messages.fetch(messageId);
+			if (player.queue.size === 0 && !player.playing) {
+				await player.destroy();
+			}
+			if (channelId && guildId && messageId) {
+				const channel = (await (await client.guilds.fetch(guildId)).channels.fetch(channelId)) as GuildTextBasedChannel;
+				const msg = await channel.messages.fetch(messageId);
 				if (msg) {
 					await msg.delete();
 				}
 			}
 		});
-
-
 
 		client.on(Events.InteractionCreate, async (inter) => {
 			const ids = ['pause', 'resume', 'skip', 'queue', 'stop', 'loop', 'shuffle', 'volume'];
