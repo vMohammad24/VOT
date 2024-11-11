@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, Routes } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -9,7 +9,6 @@ import { DuckDuckGoChat } from '../../util/ddg';
 const turndownService = new TurnDownService();
 // Mocking the DDG object to mimic the input function's behavior in TypeScript
 
-
 type DynamicDataItem = any[];
 
 // Example data parsing function using index numbers
@@ -17,14 +16,14 @@ function parseDynamicDataWithRegex(data: Array<DynamicDataItem>) {
 	data.forEach((item, index) => {
 		console.log(`Item ${index + 1}:`);
 
-		let description = "No description available";
-		let url = "";
-		let domain = "";
-		let title = "";
-		let link = "";
+		let description = 'No description available';
+		let url = '';
+		let domain = '';
+		let title = '';
+		let link = '';
 
 		item.forEach((value) => {
-			if (typeof value === "string") {
+			if (typeof value === 'string') {
 				// Use regex patterns to identify fields based on common structures
 
 				// Check for description (assume it has a substantial amount of text and no URL pattern)
@@ -73,53 +72,64 @@ const parseDDG = async (query: string) => {
 	const json = res2.substring(index3 + lookFor2.length, index4);
 	const data = JSON.parse(json);
 	parseDynamicDataWithRegex(data);
-	return ['cool']
+	return ['cool'];
 	// const urlRegex = /(?:http[s]?:\/\/.)(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
 	// const urls = res2.match(urlRegex);
 	// console.log(urls)
-}
+};
 
 const larp = async (person: string, query: string) => {
-	const brave = await searchBrave(query)
+	const brave = await searchBrave(query);
 	const { infobox, web } = brave.data.body.response;
-	const systemPrompt = `You Are ${person} and have to act like them all the time never forget that, you have to talk like them and talk to the user as of they were your friend even if you dont know them, ${infobox?.results.map(result => `
-			${result.title} is ${result.long_desc}. Some of your pictures are ${(result.images || []).map(image => `
+	const systemPrompt = `You Are ${person} and have to act like them all the time never forget that, you have to talk like them and talk to the user as of they were your friend even if you dont know them, ${infobox?.results
+		.map(
+			(result) => `
+			${result.title} is ${result.long_desc}. Some of your pictures are ${(result.images || [])
+				.map(
+					(image) => `
 				${image.src} (${image.alt}) 
-				`).join(' ')}, just say that you are ${person} and act like them, some more data about you (${person}) are: ${web.results.map(result => `
-					${result.title} - ${result.description} - ${result.faq} - ${result.article}`).join(' ')}
-				`).join('\n\n')}`
-	const res = await axios.post('https://www.blackbox.ai/api/chat',
-		{
-			"agentMode": {},
-			"clickedAnswer2": false,
-			"clickedAnswer3": false,
-			"clickedForceWebSearch": true,
-			"codeModelMode": true,
-			"githubToken": null,
-			"id": "dwadwa",
-			"isChromeExt": false,
-			"isMicMode": true,
-			"maxTokens": 8048,
-			"messages": [
-				{
-					"content": query,
-					"role": "user"
-				}
-			],
-			"mobileClient": true,
-			"playgroundTemperature": 0.1,
-			"playgroundTopP": 0.9,
-			"previewToken": null,
-			"trendingAgentMode": {},
-			"userId": null,
-			"userSelectedModel": null,
-			"userSystemPrompt": systemPrompt,
-			"visitFromDelta": false
-		}
-	)
+				`,
+				)
+				.join(
+					' ',
+				)}, just say that you are ${person} and act like them, some more data about you (${person}) are: ${web.results
+				.map(
+					(result) => `
+					${result.title} - ${result.description} - ${result.faq} - ${result.article}`,
+				)
+				.join(' ')}
+				`,
+		)
+		.join('\n\n')}`;
+	const res = await axios.post('https://www.blackbox.ai/api/chat', {
+		agentMode: {},
+		clickedAnswer2: false,
+		clickedAnswer3: false,
+		clickedForceWebSearch: true,
+		codeModelMode: true,
+		githubToken: null,
+		id: 'dwadwa',
+		isChromeExt: false,
+		isMicMode: true,
+		maxTokens: 8048,
+		messages: [
+			{
+				content: query,
+				role: 'user',
+			},
+		],
+		mobileClient: true,
+		playgroundTemperature: 0.1,
+		playgroundTopP: 0.9,
+		previewToken: null,
+		trendingAgentMode: {},
+		userId: null,
+		userSelectedModel: null,
+		userSystemPrompt: systemPrompt,
+		visitFromDelta: false,
+	});
 	return res.data;
-}
-
+};
 
 interface MediaCandidate {
 	height: number;
@@ -263,37 +273,46 @@ export default {
 			name: 'query',
 			description: 'The search query',
 			type: ApplicationCommandOptionType.String,
-			required: false
-		}],
+			required: false,
+		},
+	],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
 		const channelId = channel.id;
-		await handler.client.rest.post(Routes.channelMessages(channelId), {
-			body: {
-				embeds: [
-					{
-						"id": "embed_480",
-						"url": "https://open.spotify.com/track/5OYLUabPBep5tKWkpvoBcH?si=df42eea139ea4a23",
-						"type": "link",
-						"title": "Cold World",
-						"description": "Eric Reprid · Cold World · Song · 2020",
-						"contentScanVersion": 1,
-						"provider": {
-							"name": "Spotify",
-							"url": "https://spotify.com/"
-						},
-						"thumbnail": {
-							"url": "https://i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
-							"proxyURL": "https://images-ext-1.discordapp.net/external/YkDkl_EblqcuQXoOAgM5Os1H3HaaDXhux1IlEP2l2G0/https/i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
-							"width": 128,
-							"height": 640,
-							"placeholder": "lcYNJwT0dXh3lYeIdrh3Z3h4eEBrB7QG",
-							"placeholderVersion": 1,
-							"srcIsAnimated": false
-						},
-						"fields": []
-					}
-				],
-			},
-		});
-	}
+		try {
+			throw new Error('test');
+		} catch (e) {
+			return {
+				content: e,
+				ephemeral: true,
+			};
+		}
+		// await handler.client.rest.post(Routes.channelMessages(channelId), {
+		// 	body: {
+		// 		embeds: [
+		// 			{
+		// 				"id": "embed_480",
+		// 				"url": "https://open.spotify.com/track/5OYLUabPBep5tKWkpvoBcH?si=df42eea139ea4a23",
+		// 				"type": "link",
+		// 				"title": "Cold World",
+		// 				"description": "Eric Reprid · Cold World · Song · 2020",
+		// 				"contentScanVersion": 1,
+		// 				"provider": {
+		// 					"name": "Spotify",
+		// 					"url": "https://spotify.com/"
+		// 				},
+		// 				"thumbnail": {
+		// 					"url": "https://i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
+		// 					"proxyURL": "https://images-ext-1.discordapp.net/external/YkDkl_EblqcuQXoOAgM5Os1H3HaaDXhux1IlEP2l2G0/https/i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
+		// 					"width": 128,
+		// 					"height": 640,
+		// 					"placeholder": "lcYNJwT0dXh3lYeIdrh3Z3h4eEBrB7QG",
+		// 					"placeholderVersion": 1,
+		// 					"srcIsAnimated": false
+		// 				},
+		// 				"fields": []
+		// 			}
+		// 		],
+		// 	},
+		// });
+	},
 } as ICommand;

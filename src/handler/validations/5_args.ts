@@ -1,18 +1,11 @@
-import {
-	ApplicationCommandOptionType,
-	Channel,
-	EmbedBuilder,
-	GuildMember,
-	Role,
-	User,
-} from 'discord.js';
+import { ApplicationCommandOptionType, Channel, EmbedBuilder, GuildMember, Role, User } from 'discord.js';
 import minimist from 'minimist';
 import { getUser } from '../../util/database';
 import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 export class Argument<T> {
-	constructor(public value: T) { }
+	constructor(public value: T) {}
 }
 
 export class ArgumentMap<T> {
@@ -65,11 +58,12 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 	if (!options) return true;
 	if (options.length === 0) return true;
 	const pUser = await getUser(user, {
-		ArgumentMode: true
+		ArgumentMode: true,
 	});
 	const messageArgs = message ? parseMessageArgs(message.content).slice(1) : [];
 
-	let argIndex = 0; for (let i = 0; i < options.length; i++) {
+	let argIndex = 0;
+	for (let i = 0; i < options.length; i++) {
 		const option = options[i];
 		if (!option) continue;
 		let argument: Argument<any> = new Argument(null);
@@ -83,7 +77,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -99,7 +95,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+									.setDescription(
+										`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -115,7 +113,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+									.setDescription(
+										`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -131,7 +131,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required user argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required user argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -147,7 +149,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required channel argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required channel argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -163,7 +167,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required role argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required role argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -179,15 +185,15 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required mentionable argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required mentionable argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
 						};
 					}
 					break;
-
-
 
 				case ApplicationCommandOptionType.Number:
 					const numberValue = interaction.options.getNumber(option.name, option.required);
@@ -197,7 +203,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+									.setDescription(
+										`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -213,7 +221,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							embeds: [
 								new EmbedBuilder()
 									.setTitle('Error')
-									.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+									.setDescription(
+										`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+									)
 									.setColor('DarkRed')
 									.setTimestamp(),
 							],
@@ -228,7 +238,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 						embeds: [
 							new EmbedBuilder()
 								.setTitle('Error')
-								.setDescription(`Unknown option type \`${(option as any).type}\` for command \`${command.name}\`.\n\nPlease contact the bot developer to fix this issue.`)
+								.setDescription(
+									`Unknown option type \`${(option as any).type}\` for command \`${command.name}\`.\n\nPlease contact the bot developer to fix this issue.`,
+								)
 								.setColor('DarkRed')
 								.setTimestamp(),
 						],
@@ -247,7 +259,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 						case ApplicationCommandOptionType.String:
 							let st: string | null = null;
 							let remainingOptions = options.slice(i + 1);
-							let hasRequiredOptionsAfter = remainingOptions.some(opt => (opt as any).required);
+							let hasRequiredOptionsAfter = remainingOptions.some((opt) => (opt as any).required);
 
 							if (!hasRequiredOptionsAfter) {
 								st = messageArgs.slice(argIndex).join(' ') || null;
@@ -263,7 +275,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+											.setDescription(
+												`Required string argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -287,7 +301,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -314,7 +330,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -347,7 +365,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -368,7 +388,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								} else if (/^\d+$/.test(channelArg)) {
 									channelVal = message.guild?.channels.cache.get(channelArg) || null;
 								} else {
-									channelVal = message.guild?.channels.cache.find(ch => ch.name === channelArg) || null;
+									channelVal = message.guild?.channels.cache.find((ch) => ch.name === channelArg) || null;
 								}
 							} else if (message.mentions.channels.size > 0) {
 								channelVal = message.mentions.channels.first() || null;
@@ -380,7 +400,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -401,7 +423,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								} else if (/^\d+$/.test(roleArg)) {
 									roleVal = message.guild?.roles.cache.get(roleArg) || null;
 								} else {
-									roleVal = message.guild?.roles.cache.find(role => role.name === roleArg) || null;
+									roleVal = message.guild?.roles.cache.find((role) => role.name === roleArg) || null;
 								}
 							} else if (message.mentions.roles.size > 0) {
 								roleVal = message.mentions.roles.first() || null;
@@ -413,7 +435,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -436,13 +460,17 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									const roleId = roleIdMatch[1];
 									mentionableVal = message.guild?.roles.cache.get(roleId) || null;
 								} else if (/^\d+$/.test(mentionableArg)) {
-									mentionableVal = (await message.guild?.members.fetch(mentionableArg).catch(() => null)) ||
-										message.guild?.roles.cache.get(mentionableArg) || null;
+									mentionableVal =
+										(await message.guild?.members.fetch(mentionableArg).catch(() => null)) ||
+										message.guild?.roles.cache.get(mentionableArg) ||
+										null;
 								} else {
-									mentionableVal = message.guild?.members.cache.find(member =>
-										member.displayName === mentionableArg ||
-										member.user.username === mentionableArg) ||
-										message.guild?.roles.cache.find(role => role.name === mentionableArg) || null;
+									mentionableVal =
+										message.guild?.members.cache.find(
+											(member) => member.displayName === mentionableArg || member.user.username === mentionableArg,
+										) ||
+										message.guild?.roles.cache.find((role) => role.name === mentionableArg) ||
+										null;
 								}
 							} else if (message.mentions.members?.size || message.mentions.roles.size) {
 								mentionableVal = message.mentions.members?.first() || message.mentions.roles.first() || null;
@@ -454,7 +482,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -479,7 +509,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -495,7 +527,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+											.setDescription(
+												`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -536,7 +570,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required string argument \`${option.name}\` is missing or empty for command \`${command.name}\`.`)
+											.setDescription(
+												`Required string argument \`${option.name}\` is missing or empty for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -552,7 +588,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required integer argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -579,7 +617,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required boolean argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -609,7 +649,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required user argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -628,7 +670,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								} else if (/^\d+$/.test(channelArg)) {
 									channelVal = message.guild?.channels.cache.get(channelArg) || null;
 								} else {
-									channelVal = message.guild?.channels.cache.find(ch => ch.name === channelArg) || null;
+									channelVal = message.guild?.channels.cache.find((ch) => ch.name === channelArg) || null;
 								}
 							}
 
@@ -638,7 +680,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required channel argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -657,7 +701,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								} else if (/^\d+$/.test(roleArg)) {
 									roleVal = message.guild?.roles.cache.get(roleArg) || null;
 								} else {
-									roleVal = message.guild?.roles.cache.find(role => role.name === roleArg) || null;
+									roleVal = message.guild?.roles.cache.find((role) => role.name === roleArg) || null;
 								}
 							}
 
@@ -667,7 +711,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required role argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -688,13 +734,17 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									const roleId = roleIdMatch[1];
 									mentionableVal = message.guild?.roles.cache.get(roleId) || null;
 								} else if (/^\d+$/.test(mentionableArg)) {
-									mentionableVal = (await message.guild?.members.fetch(mentionableArg).catch(() => null)) ||
-										message.guild?.roles.cache.get(mentionableArg) || null;
+									mentionableVal =
+										(await message.guild?.members.fetch(mentionableArg).catch(() => null)) ||
+										message.guild?.roles.cache.get(mentionableArg) ||
+										null;
 								} else {
-									mentionableVal = message.guild?.members.cache.find(member =>
-										member.displayName === mentionableArg ||
-										member.user.username === mentionableArg) ||
-										message.guild?.roles.cache.find(role => role.name === mentionableArg) || null;
+									mentionableVal =
+										message.guild?.members.cache.find(
+											(member) => member.displayName === mentionableArg || member.user.username === mentionableArg,
+										) ||
+										message.guild?.roles.cache.find((role) => role.name === mentionableArg) ||
+										null;
 								}
 							}
 
@@ -704,7 +754,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required mentionable argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -720,7 +772,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`)
+											.setDescription(
+												`Required number argument \`${option.name}\` is missing or invalid for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],
@@ -736,7 +790,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									embeds: [
 										new EmbedBuilder()
 											.setTitle('Error')
-											.setDescription(`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`)
+											.setDescription(
+												`Required attachment argument \`${option.name}\` is missing for command \`${command.name}\`.`,
+											)
 											.setColor('DarkRed')
 											.setTimestamp(),
 									],

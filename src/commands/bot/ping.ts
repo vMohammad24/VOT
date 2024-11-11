@@ -2,8 +2,6 @@ import { EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 
-
-
 export default {
 	description: 'Pong!',
 	shouldCache: true,
@@ -35,20 +33,20 @@ export default {
 			)
 			.setTimestamp();
 		if (llStats) {
-			embed.addFields({
-				name: 'Playing players',
-				value: '```' + llStats.playingPlayers + '```',
-				inline: true
-			},
+			embed.addFields(
+				{
+					name: 'Playing players',
+					value: '```' + llStats.playingPlayers + '```',
+					inline: true,
+				},
 				{
 					name: 'Players CPU',
 					value: '```' + numeral(llStats.cpu.lavalinkLoad).format('0,0') + '%' + '```',
-				})
+				},
+			);
 		}
 		return {
-			embeds: [
-				embed
-			],
+			embeds: [embed],
 		};
 	},
 } as ICommand;

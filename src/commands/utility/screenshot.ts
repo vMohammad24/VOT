@@ -7,15 +7,13 @@ import { cacheSite, getCachedSite } from '../../util/database';
 import { launchPuppeteer, newPage } from '../../util/puppeteer';
 const browser = await launchPuppeteer();
 const blacklist = await (async () => {
-	if (commandHandler.verbose)
-		commandHandler.logger.info('Loading domain blacklist');
+	if (commandHandler.verbose) commandHandler.logger.info('Loading domain blacklist');
 	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'domain_blacklist.txt');
 	const text = await Bun.file(path).text();
 	const domainRegex = /(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
-	if (commandHandler.verbose)
-		commandHandler.logger.info('Loaded domain blacklist');
+	if (commandHandler.verbose) commandHandler.logger.info('Loaded domain blacklist');
 	return text.split('\n').map((a) => a.match(domainRegex)?.[0]);
-})()
+})();
 export default {
 	description: 'Takes a screenshot of a website',
 	aliases: ['ss'],
@@ -31,12 +29,12 @@ export default {
 			description: 'Whether to wait for the page to finish loading',
 			type: ApplicationCommandOptionType.Boolean,
 			required: false,
-		}
+		},
 	],
 	type: 'all',
 	execute: async ({ interaction, args }) => {
 		let url = args.get('url') as string;
-		const wait = args.get('wait') as boolean || false;
+		const wait = (args.get('wait') as boolean) || false;
 		if (!url) {
 			return {
 				content: 'Please provide a URL',
@@ -50,42 +48,44 @@ export default {
 		} catch {
 			return {
 				content: 'Please provide a valid URL',
-				ephemeral: true
+				ephemeral: true,
 			};
 		}
 		if (!urlObject.hostname) {
 			return {
 				content: 'Please provide a valid URL',
-				ephemeral: true
+				ephemeral: true,
 			};
 		}
-		if (blacklist.includes(urlObject.hostname)) return {
-			ephemeral: true,
-			content: `This site is blacklisted.`
-		}
+		if (blacklist.includes(urlObject.hostname))
+			return {
+				ephemeral: true,
+				content: `This site is blacklisted.`,
+			};
 		const time = Date.now();
 		const cached = await getCachedSite(url, wait);
-		if (cached) return {
-			files: [
-				{
-					attachment: cached,
-					name: 'screenshot.png',
-				},
-			],
-			content: `-# Took ${Date.now() - time}ms`
-		}
+		if (cached)
+			return {
+				files: [
+					{
+						attachment: cached,
+						name: 'screenshot.png',
+					},
+				],
+				content: `-# Took ${Date.now() - time}ms`,
+			};
 		await interaction?.deferReply();
 		const page = await newPage();
 		try {
 			await page.goto(url, {
-				timeout: 3000
+				timeout: 3000,
 			});
 		} catch (e) {
-			console.error(e)
+			console.error(e);
 			return {
 				ephemeral: true,
-				content: `This site is not reachable.`
-			}
+				content: `This site is not reachable.`,
+			};
 		}
 		const b = await page.$('body');
 		try {
@@ -96,13 +96,14 @@ export default {
 		} catch (e) {
 			return {
 				ephemeral: true,
-				content: `This site has screenshotting disabled.`
-			}
+				content: `This site has screenshotting disabled.`,
+			};
 		}
-		if (wait) await page.waitForNetworkIdle({
-			timeout: 3000,
-			idleTime: 100,
-		});
+		if (wait)
+			await page.waitForNetworkIdle({
+				timeout: 3000,
+				idleTime: 100,
+			});
 		// if (wait) await page.waitForNavigation();
 		const screenshot = await page.screenshot({
 			// quality: 50,

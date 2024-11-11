@@ -3,7 +3,7 @@ import type { Guild, GuildTextBasedChannel } from 'discord.js';
 import commandHandler from '..';
 import { getGuild } from './database';
 export const getLogChannel = async (guild: Guild) => {
-	const g = await getGuild(guild, { loggingChannel: true })
+	const g = await getGuild(guild, { loggingChannel: true });
 	if (!g) return null;
 	if (!g.loggingChannel) return null;
 	return guild.channels.cache.get(g.loggingChannel) as GuildTextBasedChannel;
@@ -95,12 +95,12 @@ export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
 	const clusters = assignClusters(colors, centroids);
 
 	const counts = [0, 0];
-	clusters.forEach(cluster => counts[cluster]++);
+	clusters.forEach((cluster) => counts[cluster]++);
 
 	const sortedCentroids = centroids
 		.map((centroid, index) => ({ centroid, count: counts[index] }))
 		.sort((a, b) => b.count - a.count)
-		.map(item => item.centroid);
+		.map((item) => item.centroid);
 	const result = sortedCentroids.map((centroid) => centroid.map(Math.round) as RGB);
 	if (commandHandler.verbose) commandHandler.logger.info(`Took ${Date.now() - time}ms to get two most used colors`);
 	return result;
@@ -133,7 +133,7 @@ export function parseTime(timestr: string): number {
 			}
 			time += num;
 		}
-	} catch (ignored) { }
+	} catch (ignored) {}
 	return time;
 }
 
@@ -164,8 +164,6 @@ export function timeUntil(timestamp: Date | number): string {
 	}
 }
 
-
-
 export function isURL(url: string): boolean {
 	return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(url);
 }
@@ -175,7 +173,8 @@ export function isNullish(value: any): boolean {
 }
 
 export function camelToTitleCase(str: string): string {
-	return str.replace(/([a-z])([A-Z])/g, '$1 $2')
+	return str
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
 		.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
 		.trim();
 }

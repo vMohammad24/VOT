@@ -45,7 +45,7 @@ export default {
 			},
 			include: {
 				members: true,
-			}
+			},
 		});
 		if (!ticket) {
 			return {
@@ -53,11 +53,12 @@ export default {
 				ephemeral: true,
 			};
 		}
-		const ticketSettings = await prisma.ticketSettings.findUnique({ where: { guildId: guild!.id } })
-		if (!ticketSettings) return {
-			content: 'Please setup ticket settings first',
-			ephemeral: true
-		}
+		const ticketSettings = await prisma.ticketSettings.findUnique({ where: { guildId: guild!.id } });
+		if (!ticketSettings)
+			return {
+				content: 'Please setup ticket settings first',
+				ephemeral: true,
+			};
 		const ticketsRole = ticketSettings.roleId ? await guild!.roles.fetch(ticketSettings.roleId) : null;
 		const subCommand = interaction.options.getSubcommand(true);
 		if (!subCommand)
@@ -71,24 +72,24 @@ export default {
 				content: 'Invalid user',
 				ephemeral: true,
 			};
-		if ((ticket.ownerId !== executer.id) && !executer.roles.cache.has(ticketsRole!.id)) {
+		if (ticket.ownerId !== executer.id && !executer.roles.cache.has(ticketsRole!.id)) {
 			return {
 				content: 'You are not the owner of this ticket',
 				ephemeral: true,
 			};
 		}
 		const pMember = await getMember(member, {
-			id: true
+			id: true,
 		});
 		if (!pMember) {
 			return {
 				content: `Member ${member.user.tag} not found.`,
 				ephemeral: true,
-			}
+			};
 		}
 		switch (subCommand) {
 			case 'add': {
-				if (ticket.members.map(a => a.id).includes(pMember?.id!)) {
+				if (ticket.members.map((a) => a.id).includes(pMember?.id!)) {
 					return {
 						content: `${member.user.tag} is already in this ticket`,
 						ephemeral: true,
@@ -109,14 +110,14 @@ export default {
 				if (channel.isTextBased() && 'permissionOverwrites' in channel) {
 					await channel.permissionOverwrites.create(member.id, {
 						ViewChannel: true,
-					})
+					});
 				}
 				return {
 					content: `${member.user.tag} has been added to the ticket`,
 				};
 			}
 			case 'remove': {
-				if (!ticket.members.map(a => a.id).includes(pMember?.id!)) {
+				if (!ticket.members.map((a) => a.id).includes(pMember?.id!)) {
 					return {
 						content: `${member.user.tag} is not in this ticket`,
 						ephemeral: true,
@@ -135,7 +136,7 @@ export default {
 					},
 				});
 				if (channel.isTextBased() && 'permissionOverwrites' in channel) {
-					await channel.permissionOverwrites.delete(member.id)
+					await channel.permissionOverwrites.delete(member.id);
 				}
 				return {
 					content: `${member.user.tag} has been removed from the ticket`,

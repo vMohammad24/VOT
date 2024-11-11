@@ -21,8 +21,7 @@ export default class ListenerHandler {
 			const listener = await import(join(listenersDir, file));
 			this.listeners.push(listener.default as IListener);
 			listener.default.execute(this.handler);
-			if (this.handler.verbose)
-				this.handler.logger.info(`Initialized listener ${listener.default.name}`);
+			if (this.handler.verbose) this.handler.logger.info(`Initialized listener ${listener.default.name}`);
 		}
 	}
 }

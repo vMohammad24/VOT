@@ -31,7 +31,6 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 	return user;
 }
 
-
 export async function getCachedCommand(commandId: string, args: string, user: string, guild: string) {
 	const cachedCommand = await redis.get(`command:${commandId}:${args}:${user}:${guild}`);
 
@@ -67,16 +66,14 @@ export async function getUserByID(id: string, select?: Prisma.UserSelect<Default
 						userId: id,
 					},
 					create: {},
-				}
-			}
+				},
+			},
 		},
 		create: {
 			id,
 			economy: {
-				create: {
-
-				}
-			}
+				create: {},
+			},
 		},
 		select,
 	});
@@ -139,7 +136,6 @@ export async function getGuild(guild: Guild, select?: Prisma.GuildSelect<Default
 	await redis.set(cacheKey, JSON.stringify(guildData), 'EX', 10); // Expires in 1 hour
 	return guildData;
 }
-
 
 export async function getCachedSite(site: string, wait: boolean = false) {
 	const cachedSite = await redis.get(`site:${wait}:${site}`);

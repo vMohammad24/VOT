@@ -5,7 +5,7 @@ import queryString from 'query-string';
 import commandHandler from '..';
 import { getFrontEndURL, getRedirectURL } from '../util/urls';
 import { discordClientId, discordClientSecret, updateGuilds } from './apiUtils';
-export default (elysia: Elysia<"discord">) => {
+export default (elysia: Elysia<'discord'>) => {
 	elysia.get(
 		'/guilds',
 		async ({ headers, set }) => {
@@ -289,31 +289,31 @@ export default (elysia: Elysia<"discord">) => {
 		if (!code && !refresh_token)
 			return redirect(
 				'https://discord.com/api/oauth2/authorize?' +
-				queryString.stringify({
-					client_id: discordClientId,
-					response_type: 'code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: 'identify guilds',
-				}),
+					queryString.stringify({
+						client_id: discordClientId,
+						response_type: 'code',
+						redirect_uri: getRedirectURL('discord'),
+						scope: 'identify guilds',
+					}),
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
 			'https://discord.com/api/oauth2/token',
 			isRefresh
 				? {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					refresh_token,
-					grant_type: 'refresh_token',
-				}
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						refresh_token,
+						grant_type: 'refresh_token',
+					}
 				: {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					code,
-					grant_type: 'authorization_code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: encodeURI('identify guilds'),
-				},
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						code,
+						grant_type: 'authorization_code',
+						redirect_uri: getRedirectURL('discord'),
+						scope: encodeURI('identify guilds'),
+					},
 			{
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',

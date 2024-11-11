@@ -34,11 +34,7 @@ export default {
 		const eRule2 = rules.find((r) => r.name === `discord's profanity filter (VOT)`);
 		const eRule3 = rules.find((r) => r.name === `discord's anti mention spam (VOT)`);
 		if (eRule && eRule2 && eRule3) {
-			await Promise.all([
-				await eRule.delete(),
-				await eRule2.delete(),
-				await eRule3.delete()
-			])
+			await Promise.all([await eRule.delete(), await eRule2.delete(), await eRule3.delete()]);
 			return {
 				content: `${eRule.name}, ${eRule2.name}, ${eRule3.name} have been deleted`,
 			};
@@ -103,7 +99,7 @@ export default {
 		]);
 
 		return {
-			content: `${newRules.map(r => r.name).join()} were created`,
+			content: `${newRules.map((r) => r.name).join()} were created`,
 			ephemeral: true,
 		};
 	},

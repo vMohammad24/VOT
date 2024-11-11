@@ -55,13 +55,16 @@ const kazagumo = new Kazagumo(
 	},
 	new Connectors.DiscordJS(client),
 	nodes,
+	{
+		resumeByLibrary: true,
+		resumeTimeout: 5_000,
+	}
 );
 
 const prisma = new PrismaClient();
 export const redis = new Redis({
 	host: process.env.NODE_ENV === 'production' ? 'redis' : 'localhost',
 });
-
 
 const commandHandler = new CommandHandler({
 	client,
@@ -85,7 +88,7 @@ client.on(Events.ClientReady, async (c) => {
 		name: 'vot.wtf',
 		type: ActivityType.Watching,
 		url: 'https://vot.wtf',
-	})
+	});
 	const giveaways = await prisma.giveaway.findMany();
 	for (const giveaway of giveaways) {
 		if (!giveaway.ended) {
@@ -115,17 +118,19 @@ client.on(Events.ClientReady, async (c) => {
 	axios.defaults.validateStatus = () => true;
 
 	app.listen(process.env.PORT || 8080, () => {
-		if (commandHandler.verbose)
-			commandHandler.logger.info(`API listening on port ${app.server?.port}`);
+		if (commandHandler.verbose) commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
 
 	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
 	if (clwb && ghToken) {
-		const webhook = new WebhookClient({
-			url: clwb,
-		}, {
-			allowedMentions: {},
-		});
+		const webhook = new WebhookClient(
+			{
+				url: clwb,
+			},
+			{
+				allowedMentions: {},
+			},
+		);
 		const headers = {
 			Authorization: `Bearer ${ghToken}`,
 			Accept: 'application/vnd.github+json',
@@ -274,10 +279,10 @@ const shutdown = async () => {
 		redis.quit(),
 		gracefulShutdown(),
 		(await launchPuppeteer()).close(),
-	])
+	]);
 	commandHandler.logger.info(`Shut down in ${Date.now() - start}ms`);
 	process.exit(0);
-}
+};
 process.on('SIGINT', async () => {
 	await shutdown();
 });

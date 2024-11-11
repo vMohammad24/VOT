@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { expNeededForLevel } from '../../listeners/_leveling.ts.old';
+// import { expNeededForLevel }
 
 export default {
 	description: 'Displays your current level or the level of a selected user',
@@ -25,7 +25,7 @@ export default {
 			.setAuthor({ name: user.displayName, iconURL: user.displayAvatarURL() })
 			.setColor('Random')
 			.setDescription(
-				`**Level**: ${prismaUser.level}\n**EXP**: ${prismaUser.exp}/${expNeededForLevel(prismaUser.level + 1)}`,
+				`**Level**: ${prismaUser.level}\n**EXP**: ${prismaUser.exp}/${''}`,
 			)
 			.setTimestamp()
 			.setColor('Green');

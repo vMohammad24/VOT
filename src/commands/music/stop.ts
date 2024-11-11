@@ -17,8 +17,7 @@ export default {
 				ephemeral: true,
 			};
 		}
-		player.queue.clear();
-		player.destroy();
+		await player.destroy();
 		return {
 			content: 'Disconnected',
 			ephemeral: true,

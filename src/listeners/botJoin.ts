@@ -23,17 +23,20 @@ export default {
 					members: {
 						createMany: {
 							skipDuplicates: true,
-							data: guildMembers.map((member) => ({
-								userId: member.id,
-							})).concat(bans.map((ban) => ({
-								userId: ban.user.id,
-								banned: true,
-							}))),
+							data: guildMembers
+								.map((member) => ({
+									userId: member.id,
+								}))
+								.concat(
+									bans.map((ban) => ({
+										userId: ban.user.id,
+										banned: true,
+									})),
+								),
 						},
 					},
 				},
 			});
-
 		});
 	},
 } as IListener;

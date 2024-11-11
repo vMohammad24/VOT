@@ -5,22 +5,15 @@ import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 const cooldowns = new Collection<string, Collection<string, number>>();
-const embed = new EmbedBuilder()
-	.setTitle('Cooldown')
-	.setColor('DarkRed');
+const embed = new EmbedBuilder().setTitle('Cooldown').setColor('DarkRed');
 
 const makeEmbed = (time: number, name: string, avatar?: string) =>
 	embed
-		.setDescription(
-			`You can use this command again ${timeUntil(time * 1000)} (<t:${time}:R>)`
-		)
+		.setDescription(`You can use this command again ${timeUntil(time * 1000)} (<t:${time}:R>)`)
 		.setAuthor({ name, iconURL: avatar })
 		.setColor('Red');
 
-export default async function (
-	command: ICommand,
-	ctx: CommandContext
-): Promise<true | InteractionReplyOptions> {
+export default async function (command: ICommand, ctx: CommandContext): Promise<true | InteractionReplyOptions> {
 	const { cooldown } = command;
 	const {
 		user,
@@ -46,9 +39,7 @@ export default async function (
 		if (now < expirationTime) {
 			const expiredTimestamp = Math.round(expirationTime / 1000);
 			return {
-				embeds: [
-					makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined),
-				],
+				embeds: [makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined)],
 			};
 		} else {
 			// Remove expired entry for the user

@@ -44,34 +44,38 @@ export default {
 					content: 'No results found',
 					ephemeral: true,
 				};
-			const urbanEmbeds: PaginationOptions['pages'] = (urbanData.list as {
-				definition: string;
-				example: string;
-				thumbs_up: number;
-			}[]).sort((a, b) => (b.thumbs_up - a.thumbs_up)).map((urban) => (
-				{
+			const urbanEmbeds: PaginationOptions['pages'] = (
+				urbanData.list as {
+					definition: string;
+					example: string;
+					thumbs_up: number;
+				}[]
+			)
+				.sort((a, b) => b.thumbs_up - a.thumbs_up)
+				.map((urban) => ({
 					page: {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle(word)
-								.setDescription(`
+								.setDescription(
+									`
 									**Definition:** ${urban.definition}\n\n
 									${urban.example ? `**Example:** ${urban.example}` : ''}
-									`)
+									`,
+								)
 								.setColor('Random')
 								.setTimestamp()
 								.setFooter({ text: 'Powered by UrbanDictionary' }),
-						]
-					}
-				}
-			))
+						],
+					},
+				}));
 			await pagination({
 				pages: urbanEmbeds,
 				type: 'select',
 				message,
 				interaction,
 				name: 'Select a definition',
-			})
+			});
 			return;
 		}
 		const { data } = res;

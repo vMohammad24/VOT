@@ -34,7 +34,14 @@ export interface PaginationOptions {
 	name?: string;
 }
 
-export async function pagination({ interaction, pages, type, message, rMsg, name }: PaginationOptions): Promise<Message> {
+export async function pagination({
+	interaction,
+	pages,
+	type,
+	message,
+	rMsg,
+	name,
+}: PaginationOptions): Promise<Message> {
 	if (!interaction && !message) {
 		throw new Error('No interaction or message provided for pagination');
 	}
@@ -96,7 +103,9 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 				oldPage = page;
 			}
 			const sentMessage = message
-				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				? await (rMsg
+					? rMsg.edit(messages.get(0) as MessageEditOptions)
+					: message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
@@ -131,15 +140,16 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 				throw new Error('Select type supports up to 25 pages. Use multipleSelect for more pages.');
 			}
 			const messages = new Map<number, InteractionReplyOptions | MessageReplyOptions>();
-			const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] = pages.map((e, index) => ({
-				label: e.name || `Page ${index + 1}`,
-				value: index.toString(),
-				emoji: e.emoji,
-				description: e.description,
-			}));
+			const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] =
+				pages.map((e, index) => ({
+					label: e.name || `Page ${index + 1}`,
+					value: index.toString(),
+					emoji: e.emoji,
+					description: e.description,
+				}));
 			const selectMenu = new StringSelectMenuBuilder()
 				.setCustomId(`${id}`)
-				.setPlaceholder(name ?? 'Select a page')
+				.setPlaceholder(pages[0].name ?? 'Select a page')
 				.addOptions(options);
 
 			const actionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
@@ -157,14 +167,16 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 			});
 
 			const sentMessage = message
-				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				? await (rMsg
+					? rMsg.edit(messages.get(0) as MessageEditOptions)
+					: message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) => i.isStringSelectMenu() && i.customId === id && i.user.id == userId,
-				time: 60_000 * 60
+				time: 60_000 * 60,
 			});
 
 			collector?.on('collect', async (i) => {
@@ -173,6 +185,8 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 				const msg = messages.get(page);
 				if (!msg) return;
 				await i.update({});
+				const newPlaceholder = pages[page].name ?? `Page ${page + 1}`;
+				selectMenu.setPlaceholder(newPlaceholder);
 				interaction ? interaction.editReply(msg as InteractionEditReplyOptions) : sentMessage?.edit(msg as any);
 			});
 
@@ -200,12 +214,13 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 			for (let i = 0; i < selectMenuCount; i++) {
 				const start = i * 25;
 				const end = Math.min(start + 25, pages.length);
-				const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] = pages.map((e, index) => ({
-					label: e.name || `Page ${index + 1}`,
-					value: index.toString(),
-					emoji: e.emoji,
-					description: e.description,
-				}));
+				const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] =
+					pages.map((e, index) => ({
+						label: e.name || `Page ${index + 1}`,
+						value: index.toString(),
+						emoji: e.emoji,
+						description: e.description,
+					}));
 				const selectMenu = new StringSelectMenuBuilder()
 					.setCustomId(`${id}_${i}`)
 					.setPlaceholder(name ?? 'Select a page')
@@ -213,7 +228,9 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 				selectMenus.push(selectMenu);
 			}
 
-			const actionRows = selectMenus.map((selectMenu) => new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu));
+			const actionRows = selectMenus.map((selectMenu) =>
+				new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu),
+			);
 
 			pages.forEach((embed, index) => {
 				const { page: e } = embed;
@@ -228,14 +245,16 @@ export async function pagination({ interaction, pages, type, message, rMsg, name
 			});
 
 			const sentMessage = message
-				? await (rMsg ? rMsg.edit(messages.get(0) as MessageEditOptions) : message?.reply(messages.get(0) as MessageReplyOptions))
+				? await (rMsg
+					? rMsg.edit(messages.get(0) as MessageEditOptions)
+					: message?.reply(messages.get(0) as MessageReplyOptions))
 				: interaction?.deferred
 					? await interaction?.editReply(messages.get(0) as InteractionReplyOptions)
 					: await interaction?.reply(messages.get(0) as InteractionReplyOptions);
 			const userId = message ? message.author.id : interaction?.user.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) => i.isStringSelectMenu() && i.customId.startsWith(id) && i.user.id == userId,
-				time: 60_000 * 60
+				time: 60_000 * 60,
 			});
 
 			collector?.on('collect', async (i) => {

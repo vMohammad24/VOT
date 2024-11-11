@@ -38,10 +38,11 @@ export default {
 			.setAuthor({ name: 'Scan', url: res.data.permalink })
 			.setColor('Random')
 			.setDescription(`${res.data.positives} positive result(s) out of ${res.data.total}.`);
-		if (!res.data.scans) return {
-			ephemeral: true,
-			content: `Invalid site.`
-		}
+		if (!res.data.scans)
+			return {
+				ephemeral: true,
+				content: `Invalid site.`,
+			};
 		for (const [name, s] of Object.entries(res.data.scans)) {
 			const scan = s as any;
 			if ((scan as any).detected) {
