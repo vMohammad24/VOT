@@ -1,8 +1,9 @@
-import { createCanvas, GlobalFonts, loadImage, SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, SKRSContext2D } from '@napi-rs/canvas';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
 import { join } from 'path';
 import commandHandler from '..';
 import { IContextCommand } from '../handler/interfaces/IContextCommand';
+import { loadImg } from '../util/database';
 
 const AVATAR_SIZE = 40;
 const PADDING = 15;
@@ -66,7 +67,7 @@ export async function drawDiscordMessage({
 	ctx.fillRect(0, 0, dynamicWidth, dynamicHeight);
 
 	// Load and draw the avatar
-	const avatar = await loadImage(avatarUrl);
+	const avatar = await loadImg(avatarUrl);
 	ctx.save();
 	ctx.beginPath();
 	ctx.arc(PADDING + AVATAR_SIZE / 2, PADDING + AVATAR_SIZE / 2, AVATAR_SIZE / 2, 0, Math.PI * 2);

@@ -51,11 +51,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-						{
-							id: ticketSettings.roleId!,
-							allow: [PermissionFlagsBits.ViewChannel],
-						},
-					]
+					{
+						id: ticketSettings.roleId!,
+						allow: [PermissionFlagsBits.ViewChannel],
+					},
+				]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -156,7 +156,7 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	logChannel?.send({ embeds: [logEmbed], components: [actionRow] });
 	try {
 		await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
-	} catch (e) {}
+	} catch (e) { }
 	return { content: 'Ticked closed. ' };
 }
 
@@ -172,29 +172,70 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 		return undefined;
 	}
 	const messages = await channel.messages.fetch();
-	const json = [];
-	for (const message of messages.values()) {
-		if (!message) continue;
-		if (message.author.bot) continue;
-		json.push({
+	// const json = await Promise.all(messages.values().map(async (message) => ({
+	// 	message: {
+	// 		attachments: await Promise.all(
+	// 			message.attachments.map(async (attachment) => {
+	// 				const file = new File(
+	// 					[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
+	// 					attachment.name,
+	// 					{ type: attachment.contentType || undefined },
+	// 				);
+	// 				const uploadedData = await uploadFile(file);
+	// 				return uploadedData.cdnFileName;
+	// 			}),
+	// 		),
+	// 		content: message.content,
+	// 		embeds: message.embeds,
+	// 	},
+	// 	user: {
+	// 		tag: message.author.tag,
+	// 		avatar: message.author.displayAvatarURL(),
+	// 		color: message.member?.displayHexColor,
+	// 		icon: message.member?.roles.cache.filter((role) => role.icon).sort((a, b) => b.position - a.position).first()?.iconURL(),
+	// 		bot: message.author.bot
+	// 	},
+	// 	timestamp: message.createdTimestamp,
+	// 	edited: message.editedTimestamp !== null,
+	// 	id: message.id,
+	// })))
+	const users: Record<string, any> = {};
+	const messagesArray = await Promise.all(messages.values().map(async (message) => {
+		const userId = message.author.id;
+		if (!users[userId]) {
+			const pUser = await getUser(message.author, { clan: { select: { id: true } } });
+			users[userId] = {
+				tag: message.author.tag,
+				avatar: message.author.displayAvatarURL(),
+				color: message.member?.displayHexColor,
+				icon: message.member?.roles.cache.filter((role) => role.icon).sort((a, b) => b.position - a.position).first()?.iconURL(),
+				bot: message.author.bot,
+				clan: pUser?.clan ? pUser.clan.id : null,
+			};
+		}
+		return {
+			message: {
+				attachments: await Promise.all(
+					message.attachments.map(async (attachment) => {
+						const file = new File(
+							[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
+							attachment.name,
+							{ type: attachment.contentType || undefined },
+						);
+						const uploadedData = await uploadFile(file);
+						return uploadedData.cdnFileName;
+					}),
+				),
+				content: message.content,
+				embeds: message.embeds,
+			},
+			userId,
 			timestamp: message.createdTimestamp,
-			avatar: message.author.displayAvatarURL({ size: 4096 }),
-			content: message.content,
-			username: message.author.username,
-			roleColor: message.member?.displayHexColor,
-			attachments: await Promise.all(
-				message.attachments.map(async (attachment) => {
-					const file = new File(
-						[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
-						attachment.name,
-						{ type: attachment.contentType || undefined },
-					);
-					const uploadedData = await uploadFile(file);
-					return uploadedData.cdnFileName;
-				}),
-			),
-		});
-	}
+			edited: message.editedTimestamp !== null,
+			id: message.id,
+		};
+	}));
+	const json = { users, messages: messagesArray };
 	const file = new File([JSON.stringify(json)], `${ticketData.id}.json`, {
 		type: 'application/json',
 	});

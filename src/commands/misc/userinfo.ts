@@ -1,7 +1,5 @@
-import { loadImage } from '@napi-rs/canvas';
 import { UserTier } from '@prisma/client';
 import axios from 'axios';
-import { write } from 'bun';
 import {
 	ActionRowBuilder,
 	ActivityType,
@@ -15,12 +13,11 @@ import {
 	User,
 } from 'discord.js';
 import { nanoid } from 'nanoid/non-secure';
-import { join } from 'path';
+import { redis } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
-import { getUserByID } from '../../util/database';
-import { addEmoji, addEmojiByURL, getEmoji } from '../../util/emojis';
+import { getUserByID, loadImg } from '../../util/database';
+import { addEmojiByURL, getEmoji } from '../../util/emojis';
 import { camelToTitleCase, getTwoMostUsedColors, isNullish } from '../../util/util';
-
 interface Decoration {
 	id: string;
 	name: string;
@@ -136,7 +133,7 @@ const notablePerms = [
 	PermissionsBitField.Flags.BanMembers,
 	PermissionsBitField.Flags.KickMembers,
 ];
-
+const apiKey = import.meta.env.OTHER_EVADE_API_KEY;
 export default {
 	name: 'userinfo',
 	aliases: ['user', 'whois', 'ui'],
@@ -161,17 +158,30 @@ export default {
 			[UserTier.Staff, getEmoji('t_staff').toString()],
 			[UserTier.Beta, getEmoji('t_beta').toString()],
 		]);
-		const [pUser, res, statusRes] = await Promise.all([
+		const cacheKeyUser = `user:info:${user.id}`;
+		const cacheKeyStatus = `user:status:${user.id}`;
+
+		let [pUser, res, statusRes] = await Promise.all([
 			getUserByID(user.id, { tier: true, commands: true }),
-			axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id, {
-				headers: {
-					Authorization: import.meta.env.OTHER_EVADE_API_KEY,
-				},
+			redis.get(cacheKeyUser).then(async (cached) => {
+				if (cached) return { data: JSON.parse(cached) } as { data: UserInfo };
+				const response = await axios.get<UserInfo>('https://us-atlanta2.evade.rest/users/' + user.id, {
+					headers: {
+						Authorization: apiKey,
+					},
+				});
+				await redis.set(cacheKeyUser, JSON.stringify(response.data), 'EX', 120);
+				return response;
 			}),
-			axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
-				headers: {
-					Authorization: import.meta.env.OTHER_EVADE_API_KEY,
-				},
+			redis.get(cacheKeyStatus).then(async (cached) => {
+				if (cached) return { data: JSON.parse(cached) } as { data: UserStatus };
+				const response = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
+					headers: {
+						Authorization: apiKey,
+					},
+				});
+				await redis.set(cacheKeyStatus, JSON.stringify(response.data), 'EX', 30);
+				return response;
 			}),
 		]);
 		const { data: sData } = statusRes;
@@ -181,9 +191,6 @@ export default {
 		if (badges && badges.length > 0) {
 			await Promise.all(
 				badges.map(async (badge) => {
-					// const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
-					// const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${badge.name}.png`);
-					// await write(path, res.data);
 					badge.emoji = (await addEmojiByURL(badge.name, badge.url, ems))?.toString()!;
 				}),
 			);
@@ -194,21 +201,7 @@ export default {
 		const u = user instanceof GuildMember ? user.user : user;
 		if (!u) return { content: 'User not found', ephemeral: true };
 		if (clan && clan.identity_guild_id && clan.tag && clan.badge) {
-			const res = await axios.get(
-				`https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`,
-				{ responseType: 'arraybuffer' },
-			);
-			const path = join(
-				import.meta.dir,
-				'..',
-				'..',
-				'..',
-				'assets',
-				'emojis',
-				`${clan.identity_guild_id}_${clan.tag.trim().replace('樂', '')}.png`,
-			);
-			await write(path, res.data);
-			clan.emoji = (await addEmoji(path, ems))?.toString()!;
+			clan.emoji = (await addEmojiByURL(`${clan.identity_guild_id}_${clan.tag.trim().replace('樂', '')}`, `https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`, ems))?.toString()!;
 		}
 		if (sData.activities.length > 0) {
 			sData.activities = sData.activities.filter((a) => a.type !== ActivityType.Custom);
@@ -222,8 +215,8 @@ export default {
 					)
 						activity.type = ActivityType.Listening;
 					if (!activity.type) activity.type = ActivityType.Playing;
-					const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `activity_${activity.type}.svg`);
-					activity.emoji = (await addEmoji(path, ems))?.toString() || '❓';
+					// const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `activity_${activity.type}.svg`);
+					activity.emoji = getEmoji(`activity_${activity.type}`)?.toString() || '❓';
 				}),
 			);
 		}
@@ -277,9 +270,9 @@ export default {
 		const roles =
 			user instanceof GuildMember
 				? user.roles.cache
-						.filter((role) => !role.managed && role.id != user.guild.roles.everyone.id)
-						.map((role) => role.toString())
-						.join(' ')
+					.filter((role) => !role.managed && role.id != user.guild.roles.everyone.id)
+					.map((role) => role.toString())
+					.join(' ')
 				: undefined;
 		const embed = new EmbedBuilder()
 			.setThumbnail(u.displayAvatarURL())
@@ -317,6 +310,32 @@ export default {
 			const sortedCommands = Array.from(commandMap).sort((a, b) => b[1] - a[1]);
 			const mostUsedCommand = sortedCommands[0];
 			description += `**Most used command**: ${mostUsedCommand[0]} (${mostUsedCommand[1]} times)\n`;
+		}
+		if (clan) {
+			await handler.prisma.clan.upsert({
+				where: {
+					guild: clan.identity_guild_id,
+				},
+				create: {
+					guild: clan.identity_guild_id,
+					tag: clan.tag,
+					icon: clan.badge,
+					users: pUser ? {
+						connect: {
+							id: user.id,
+						}
+					} : undefined,
+				},
+				update: {
+					tag: clan.tag,
+					icon: clan.badge,
+					users: pUser ? {
+						connect: {
+							id: user.id,
+						}
+					} : undefined,
+				},
+			});
 		}
 
 		if (clan && clan.emoji && clan.tag && clan.identity_guild_id) {
@@ -376,7 +395,7 @@ export default {
 			if (n && n.length > 0) {
 				fields.push({
 					name: 'Notable Permissions',
-					value: n.join(', '),
+					value: n.reverse().join(', '),
 				});
 			}
 		}
@@ -395,7 +414,7 @@ export default {
 			// const listening = sData.activities.find(a => a.type === ActivityType.Listening);
 			// const image = listening?.assets?.large_image;
 			// const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
-			const imagew = await loadImage(avatar);
+			const imagew = await loadImg(avatar);
 			const dColor = getTwoMostUsedColors(imagew);
 			embedColor = dColor[0];
 			embed.setColor(dColor[0]);
@@ -421,20 +440,34 @@ export default {
 		});
 		collector?.on('collect', async (i) => {
 			if (i.customId === buttonId) {
-				const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
-				const reviews: any[] = reviewsRes.data.reviews;
+				const cacheKeyReviews = `userreviews:${user.id}`;
+				const cachedReviews = await redis.get(cacheKeyReviews);
+				let reviews: any[] = [];
+
+				if (cachedReviews) {
+					reviews = JSON.parse(cachedReviews);
+				} else {
+					const reviewsRes = await axios.get(`https://manti.vendicated.dev/api/reviewdb/users/${user.id}/reviews`);
+					reviews = reviewsRes.data.reviews;
+					await redis.set(cacheKeyReviews, JSON.stringify(reviews), 'EX', 180); // Cache for 3 minutes
+				}
+
 				const embed = new EmbedBuilder()
 					.setTitle('Reviews')
 					.setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
 					.setColor(embedColor)
 					.setTimestamp();
-				if (reviews) {
+
+				if (reviews.length > 0) {
 					reviews.shift();
 					if (reviews.length <= 0) return i.reply({ content: 'No reviews found', ephemeral: true });
 					embed.setDescription(
 						reviews.map((review) => `- **${review.sender.username}** - ${review.comment}`).join('\n'),
 					);
+				} else {
+					embed.setDescription('No reviews found');
 				}
+
 				i.reply({
 					embeds: [embed],
 					ephemeral: true,

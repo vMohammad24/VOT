@@ -1,7 +1,8 @@
-import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
 import { join } from 'path';
 import { IContextCommand } from '../handler/interfaces/IContextCommand';
+import { loadImg } from '../util/database';
 import { getTwoMostUsedColors } from '../util/util';
 
 GlobalFonts.registerFromPath(join(import.meta.dir, '..', '..', 'assets', 'fonts', 'VarelaRound-Regular.ttf'));
@@ -11,7 +12,7 @@ export const makeQuote = async (content: string, userName: string, avatar: strin
 	const height = 600;
 	const canvas = createCanvas(width, height);
 	const ctx = canvas.getContext('2d');
-	const loadedAvatar = await loadImage(avatar);
+	const loadedAvatar = await loadImg(avatar);
 	ctx.fillStyle = 'black';
 	ctx.fillRect(width / 2, 0, width / 2, height);
 	ctx.shadowBlur = 50;

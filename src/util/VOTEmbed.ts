@@ -1,6 +1,6 @@
-import { loadImage } from '@napi-rs/canvas';
 import { EmbedBuilder, EmbedData } from 'discord.js';
 import commandHandler from '..';
+import { loadImg } from './database';
 import { getTwoMostUsedColors } from './util';
 let votIcon: string | undefined = undefined;
 class VOTEmbed extends EmbedBuilder {
@@ -11,9 +11,14 @@ class VOTEmbed extends EmbedBuilder {
 
 	async dominant() {
 		const json = this.toJSON();
-		if (!json.color && json.thumbnail) {
-			const image = await loadImage(json.thumbnail.url);
-			this.setColor(getTwoMostUsedColors(image)[0]);
+		if (!json.color) {
+			if (json.thumbnail) {
+
+				const image = await loadImg(json.thumbnail.url);
+				this.setColor(getTwoMostUsedColors(image)[0]);
+			} else {
+				this.setColor('#313338')
+			}
 		}
 		return this;
 	}
@@ -24,9 +29,6 @@ class VOTEmbed extends EmbedBuilder {
 
 	toJSON() {
 		const json = super.toJSON();
-		if (!json.color && json.thumbnail) {
-			json.color = 0x424549;
-		}
 		if (!json.footer) {
 			json.footer = {
 				text: 'VOT',

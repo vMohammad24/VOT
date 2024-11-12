@@ -31,6 +31,7 @@ export default {
 						.setComponents(actionRowBuilder.addComponents(textInput));
 					await interaction.showModal(modal);
 					const modalSubmit = await interaction.awaitModalSubmit({ time: 60000 });
+					await modalSubmit.deferReply();
 					const reason = modalSubmit.fields.getTextInputValue('reason');
 					const tick = await createTicket(interaction.member as GuildMember, reason);
 					if (tick.error) {

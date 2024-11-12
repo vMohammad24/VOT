@@ -36,7 +36,7 @@ export default {
 		// const height = 256;
 		// const canvas = createCanvas(width, height);
 		// const ctx = canvas.getContext('2d');
-		// const pfp = await loadImage(user.displayAvatarURL({ extension: 'png', size: 256 }));
+		// const pfp = await loadImg(user.displayAvatarURL({ extension: 'png', size: 256 }));
 		// const mostUsedColors = getTwoMostUsedColors(pfp)
 		// const grad = ctx.createLinearGradient(0, 0, width, height);
 		// for (const [i, color] of mostUsedColors.entries()) {
