@@ -51,6 +51,8 @@ model User {
   ArgumentMode     ArgumentMode   @default(Normal)
   hashedIp         String?
   previousIps      String[]
+  clan             Clan?          @relation(fields: [clanId], references: [id])
+  clanId           String?
 }
 
 model Member {
@@ -261,6 +263,14 @@ model ModerationSettings {
   updatedAt        DateTime @updatedAt
   guild            Guild    @relation(fields: [guildId], references: [id])
   guildId          String   @unique
+}
+
+model Clan {
+  id    String @id @default(uuid())
+  guild String @unique
+  tag   String
+  icon  String
+  users User[]
 }
 
 enum PanelType {

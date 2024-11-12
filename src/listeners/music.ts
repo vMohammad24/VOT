@@ -53,7 +53,6 @@ export default {
 		});
 
 		kazagumo.on('playerDestroy', async (player) => {
-			console.log('destroyed')
 			if (!player.textId)
 				return;
 

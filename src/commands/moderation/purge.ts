@@ -6,7 +6,7 @@ export default {
 	options: [
 		{
 			name: 'amount',
-			description: 'The amount of messages to purge',
+			description: 'The amount of messages to purge (default: 100)',
 			type: ApplicationCommandOptionType.Integer,
 			required: false,
 		},
@@ -43,7 +43,7 @@ export default {
 	],
 	perms: ['ManageMessages'],
 	execute: async ({ channel, args, message }) => {
-		const amount = (args.get('amount') as number) || 200;
+		const amount = (args.get('amount') as number) || 100;
 		const bots = args.get('bots') as boolean | undefined;
 		const user = args.get('user') as string | undefined;
 		const before = args.get('before') as string | undefined;

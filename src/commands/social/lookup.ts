@@ -1,4 +1,3 @@
-import { loadImage } from '@napi-rs/canvas';
 import axios from 'axios';
 import {
 	ActionRowBuilder,
@@ -10,6 +9,7 @@ import {
 } from 'discord.js';
 import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
+import { loadImg } from '../../util/database';
 import { addEmojiByURL, getEmoji } from '../../util/emojis';
 import { getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
 
@@ -355,11 +355,11 @@ export interface Config {
 	custom_cursor: string;
 	page_views: number;
 	user_badges:
-		| string[]
-		| {
-				enabled: boolean;
-				name: string;
-		  }[];
+	| string[]
+	| {
+		enabled: boolean;
+		name: string;
+	}[];
 	custom_badges: string[][];
 	display_name: string;
 	profile_gradient: boolean;
@@ -464,7 +464,7 @@ export default {
 							})
 							.setColor(
 								nUser.avatar
-									? getTwoMostUsedColors(await loadImage(`https://cdn.nest.rip/avatars/${nUser.avatar}`))[0]
+									? getTwoMostUsedColors(await loadImg(`https://cdn.nest.rip/avatars/${nUser.avatar}`))[0]
 									: 'Random',
 							)
 							.setTimestamp(new Date(nUser.created_at)),
@@ -507,7 +507,7 @@ export default {
 					.setDescription(tData.userInfo.user.signature || 'No bio')
 					.setColor(
 						tData.userInfo.user.avatarLarger
-							? getTwoMostUsedColors(await loadImage(tData.userInfo.user.avatarLarger))[0]
+							? getTwoMostUsedColors(await loadImg(tData.userInfo.user.avatarLarger))[0]
 							: 'Random',
 					)
 					.setTimestamp(new Date(tData.userInfo.user.createTime * 1000))
@@ -525,7 +525,7 @@ export default {
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
 				const rUser = rData.data as RangeUser;
-				// const avatarImg = user.avatar ? await loadImage(user.avatar, {
+				// const avatarImg = user.avatar ? await loadImg(user.avatar, {
 				//     requestOptions: {
 				//         headers: {
 				//             'User-Agent': userAgent.random().toString(),
@@ -571,9 +571,9 @@ export default {
 				let color: ColorResolvable = 'Random';
 				if (bUser.avatar) {
 					try {
-						const image = await loadImage(`https://cdn.nest.rip/uploads/${bUser.avatar}`);
+						const image = await loadImg(`https://cdn.nest.rip/uploads/${bUser.avatar}`);
 						color = getTwoMostUsedColors(image)[0];
-					} catch (error) {}
+					} catch (error) { }
 				}
 				return {
 					embeds: [
@@ -624,7 +624,7 @@ export default {
 					);
 				}
 				const ucolor: ColorResolvable = deathUser.backgroundUrl
-					? getTwoMostUsedColors(await loadImage(deathUser.avatarUrl))[0]
+					? getTwoMostUsedColors(await loadImg(deathUser.avatarUrl))[0]
 					: 'Random';
 				return {
 					embeds: [
@@ -713,7 +713,7 @@ ${deathUser.description}`,
 				const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
 				const hasURL = aData.url && isURL(aData.url);
 				const aColor: ColorResolvable = hasAvatar
-					? getTwoMostUsedColors(await loadImage(aData.avatar_url))[0]
+					? getTwoMostUsedColors(await loadImg(aData.avatar_url))[0]
 					: 'Random';
 				const [day, month, year] = aData.created.split('/').map(Number);
 				const date = new Date(year, month - 1, day);
@@ -753,8 +753,8 @@ ${deathUser.description}`,
 					gColor = gData.config.color as ColorResolvable;
 				} else {
 					try {
-						gColor = gData.config.avatar ? getTwoMostUsedColors(await loadImage(gData.config.avatar))[0] : 'Random';
-					} catch (error) {}
+						gColor = gData.config.avatar ? getTwoMostUsedColors(await loadImg(gData.config.avatar))[0] : 'Random';
+					} catch (error) { }
 				}
 				let gEmojis: string = '';
 				if (gData.config.user_badges && gData.config.user_badges.length != 0) {
@@ -792,7 +792,6 @@ ${deathUser.description}`,
 						}
 						if (row.components.length > 0) rows.push(row);
 					}
-					console.log(rows.length);
 				}
 				return {
 					embeds: [

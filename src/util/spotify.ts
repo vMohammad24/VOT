@@ -1,6 +1,6 @@
 import type { Spotify } from '@prisma/client';
 import axios from 'axios';
-import commandHandler from '..';
+import commandHandler, { redis } from '..';
 const spotifyToken = `Basic ${Buffer.from(
 	`${import.meta.env.SPOTIFY_CLIENT_ID}:${import.meta.env.SPOTIFY_CLIENT_SECRET}`,
 ).toString('base64')}`;
@@ -24,7 +24,7 @@ export async function getCurrentlyPlaying(userId: string) {
 	const { error } = res.data;
 	if (res.status == 401 || error) {
 		await refreshToken(spotify);
-		await setTimeout(() => {}, 500);
+		await setTimeout(() => { }, 500);
 		return await getCurrentlyPlaying(userId);
 	}
 	return res.data;
@@ -104,21 +104,27 @@ export interface SpotifyFeatures {
 }
 
 export async function getTrackFeatures(trackId: string): Promise<SpotifyFeatures | string> {
-	const url = `https://api.spotify.com/v1/audio-features/${trackId}`;
-	const spotify = await commandHandler.prisma.spotify.findFirst({
-		where: {
-			userId: '921098159348924457',
-		},
-	});
-	if (!spotify || !spotify.expiresAt) return 'Spotify account not linked.';
-	if (spotify.expiresAt.getTime() < new Date().getTime()) {
-		await refreshToken(spotify);
-		return await getTrackFeatures(trackId);
-	}
-	const res = await axios.get(url, {
-		headers: {
-			Authorization: 'Bearer ' + spotify.token,
-		},
-	});
-	return res.data as SpotifyFeatures;
+	const key = 'spotify:features:' + trackId;
+	return redis.get(key).then(async (cache) => {
+		if (cache) return JSON.parse(cache) as SpotifyFeatures;
+		const url = `https://api.spotify.com/v1/audio-features/${trackId}`;
+		const spotify = await commandHandler.prisma.spotify.findFirst({
+			where: {
+				userId: '921098159348924457',
+			},
+		});
+		if (!spotify || !spotify.expiresAt) return 'Spotify account not linked.';
+		if (spotify.expiresAt.getTime() < new Date().getTime()) {
+			await refreshToken(spotify);
+			return await getTrackFeatures(trackId);
+		}
+		const res = await axios.get(url, {
+			headers: {
+				Authorization: 'Bearer ' + spotify.token,
+			},
+		});
+		await redis.set(key, JSON.stringify(res.data), 'EX', 60 * 60 * 24 * 30);
+		return res.data as SpotifyFeatures;
+	})
+
 }

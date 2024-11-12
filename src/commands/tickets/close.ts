@@ -23,6 +23,5 @@ export default {
 		if (ticket.embeds) {
 			return { embeds: ticket.embeds };
 		}
-		return { content: 'Ticket closed' };
 	},
 } as ICommand;

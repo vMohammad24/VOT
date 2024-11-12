@@ -1,3 +1,4 @@
+import { Image, loadImage } from '@napi-rs/canvas';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { Guild, GuildMember, User } from 'discord.js';
@@ -145,6 +146,23 @@ export async function getCachedSite(site: string, wait: boolean = false) {
 	}
 
 	return null;
+}
+
+export async function loadImg(source: string): Promise<Image> {
+	const cacheKey = `image:${source.toString()}`;
+	const cached = await redis.getBuffer(cacheKey);
+	if (cached) {
+		console.time('loadImageC');
+		const c = await loadImage(cached);
+		console.timeEnd('loadImageC');
+		return c;
+	}
+	console.time('loadImage');
+	const image = await loadImage(source);
+	console.timeEnd('loadImage');
+	await redis.setBuffer(cacheKey, image.src, 'GET');
+	return image;
+
 }
 
 export async function cacheSite(site: string, wait: boolean, data: Buffer) {

@@ -81,6 +81,7 @@ export async function initEmojis() {
 }
 
 export async function addEmojiByURL(name: string, url: string, ems: Collection<string, ApplicationEmoji> | undefined) {
+	if (emojis.has(name)) return emojis.get(name)!;
 	const res = await axios.get(url, { responseType: 'arraybuffer' });
 	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `${name}.png`);
 	await write(path, res.data);

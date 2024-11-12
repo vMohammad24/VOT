@@ -1,8 +1,8 @@
-import { loadImage } from '@napi-rs/canvas';
 import axios from 'axios';
 import { ApplicationCommandOptionType, AttachmentBuilder, ColorResolvable, EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
+import { loadImg } from '../../util/database';
 import { getTwoMostUsedColors } from '../../util/util';
 
 interface Video {
@@ -277,7 +277,7 @@ export default {
 					responseType: 'arraybuffer',
 				});
 				const color: ColorResolvable = video.video.cover
-					? getTwoMostUsedColors(await loadImage(video.video.cover))[0]
+					? getTwoMostUsedColors(await loadImg(video.video.cover))[0]
 					: 'Random';
 				return {
 					ephemeral: true,

@@ -1,10 +1,10 @@
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
-import { loadImage } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType, Collection } from 'discord.js';
 import { Elysia, t } from 'elysia';
 import { nanoid } from 'nanoid/non-secure';
 import commandHandler, { redis, upSince } from '..';
+import { loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
@@ -22,7 +22,18 @@ brave(braveElysia);
 verification(guildsElysia);
 const elysia = new Elysia()
 	.use(cors())
-	.use(swagger())
+	.use(swagger({
+		autoDarkMode: true,
+		documentation: {
+			info: {
+				title: 'VOT API',
+				version: '1.0.0',
+				description: 'API for VOT',
+				termsOfService: 'https://vot.wtf/tos',
+			},
+		},
+		exclude: [/^\/discord\/.*/, /^\/spotify\/.*/]
+	}))
 	.use(discordElysia)
 	.use(spotifyElysia)
 	.use(guildsElysia)
@@ -78,7 +89,7 @@ elysia.get(
 		// if (!file.type.startsWith('image')) return { error: 'Invalid file type' };
 		const cached = await redis.get(`colors:${url}`);
 		if (cached) return JSON.parse(cached);
-		const image = await loadImage(url);
+		const image = await loadImg(url);
 		const mostUsed = getTwoMostUsedColors(image);
 		const colors = mostUsed.map((color) => ({
 			r: color[0],
@@ -134,10 +145,10 @@ elysia.post(
 				sessionId,
 				new DuckDuckGoChat(
 					model as
-						| 'gpt-4o-mini'
-						| 'claude-3-haiku-20240307'
-						| 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo'
-						| 'mistralai/Mixtral-8x7B-Instruct-v0.1',
+					| 'gpt-4o-mini'
+					| 'claude-3-haiku-20240307'
+					| 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo'
+					| 'mistralai/Mixtral-8x7B-Instruct-v0.1',
 				),
 			);
 		}
