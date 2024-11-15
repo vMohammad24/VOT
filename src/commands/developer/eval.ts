@@ -69,7 +69,10 @@ export default {
 					evaluatedResult = await eval(code);
 					break;
 				default:
-					evaluatedResult = new Function(`return ${code}`)();
+					evaluatedResult = await new Function(`
+						return (async () => { 
+						const { handler, args, channel, guild, interaction, member, message, player } = arguments[0];return ${code} })();
+					`).call(null, { handler, args, channel, guild, interaction, member, message, player });
 					break;
 			}
 			embed.setDescription(`\`\`\`js\n${evaluatedResult}\`\`\``);

@@ -1,8 +1,9 @@
-import { ApplicationCommandOptionType, EmbedBuilder, Events } from 'discord.js';
+import { ApplicationCommandOptionType, Events } from 'discord.js';
 import { Client } from 'genius-lyrics';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
-
+import { getSpotifyRPC } from '../../util/spotify';
+import VOTEmbed from '../../util/VOTEmbed';
 const genius = new Client();
 export default {
 	description: 'Get the lyrics of the current song',
@@ -34,9 +35,16 @@ export default {
 			);
 		});
 	},
-	execute: async ({ player, args, interaction, message }) => {
-		const query = args.get('song') || (player ? player.queue.current?.title : null);
-		if (!query) return { content: "Couldn't retrive song", ephemeral: true };
+	execute: async ({ player, args, interaction, message, user }) => {
+		let query = args.get('song') || (player ? player.queue.current?.title : null);
+		if (!query) {
+			const r = await getSpotifyRPC(user.id)
+			if (r.error) return {
+				content: 'Please provide a query to continue',
+				ephemeral: true,
+			}
+			query = `${r.raw?.details}|${r.raw?.state}`;
+		};
 		await interaction?.deferReply();
 		const songs = await genius.songs.search(query, { sanitizeQuery: true });
 		const song = songs[0];
@@ -44,8 +52,16 @@ export default {
 		const lyrics = await song.lyrics();
 		if (!lyrics) return { content: 'Lyrics not found! Sorry.', ephemeral: true };
 		const splitText = lyrics.match(/[\s\S]{1,2048}/g)!;
-		const embeds = splitText.map((text, i) => ({
-			page: new EmbedBuilder().setTitle(song.title).setURL(song.url).setThumbnail(song.thumbnail).setDescription(text),
+		const embeds = splitText.map(async (text, i) => ({
+			page: await new VOTEmbed()
+				.setTitle(`${song.title}`)
+				.setAuthor({ name: song.artist.name, iconURL: song.artist.image })
+				.setURL(song.url)
+				.setThumbnail(song.thumbnail)
+				.setDescription(text)
+				.setTimestamp(song.releasedAt)
+				.setFooter(song.releasedAt ? { text: `Released` } : null)
+				.dominant(),
 		}));
 		const pag = await pagination({
 			interaction,

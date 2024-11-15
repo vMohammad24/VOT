@@ -69,15 +69,13 @@ export async function createGiveaway(
 			end: endsAt,
 		},
 	});
-	const editedComp = message.components;
-	const comp = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		new ButtonBuilder()
-			.setURL(getFrontEndURL() + `/giveaway/${data.id}`)
-			.setLabel('Summary')
-			.setStyle(ButtonStyle.Link),
-	);
-	editedComp.push(comp as any);
-	await message.edit({ embeds: [embed], components: editedComp });
+	// const comp = new ActionRowBuilder<ButtonBuilder>().addComponents(
+	// 	new ButtonBuilder()
+	// 		.setURL(getFrontEndURL() + `/giveaway/${data.id}`)
+	// 		.setLabel('Summary')
+	// 		.setStyle(ButtonStyle.Link),
+	// );
+	// editedComp.push(comp as any);
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
 		if (interaction.customId === 'enter_giveaway') {
@@ -162,13 +160,13 @@ export async function endGiveaway(giveawayId: string) {
 		components: [],
 	});
 	const url = `${getFrontEndURL()}/giveaway/${giveaway.id}`;
-	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		new ButtonBuilder().setURL(url).setLabel('Summary').setStyle(ButtonStyle.Link),
-	);
+	// const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+	// new ButtonBuilder().setURL(url).setLabel('Summary').setStyle(ButtonStyle.Link),
+	// );
 	message.edit({
 		embeds: [embed],
 		content: `🎉 🎉 🎉 [Giveaway Ended](${congrats.url}) 🎉 🎉 🎉`,
-		components: [row],
+		components: [],
 	});
 }
 

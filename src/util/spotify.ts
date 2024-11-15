@@ -128,3 +128,67 @@ export async function getTrackFeatures(trackId: string): Promise<SpotifyFeatures
 	})
 
 }
+
+interface Activity {
+	type: number;
+	state: string;
+	name: string;
+	flags?: number;
+	assets?: Assets;
+	party?: Party;
+	sync_id?: string;
+	session_id?: string;
+	timestamps?: Timestamps;
+	details?: string;
+	application_id?: number;
+	buttons?: string[];
+}
+
+interface Assets {
+	large_text: string;
+	large_image: string;
+	small_text?: string;
+	small_image?: string;
+}
+
+interface Party {
+	id: string;
+}
+
+interface Timestamps {
+	start: number;
+	end?: number;
+}
+
+interface UserStatus {
+	online: string[];
+	idle: string[];
+	dnd: string[];
+	status: string;
+	activities: Activity[];
+	messages: Record<string, unknown>;
+	voice: unknown[];
+}
+export async function getSpotifyRPC(userId: string) {
+	const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${userId}/status`, {
+		headers: {
+			Authorization: import.meta.env.OTHER_EVADE_API_KEY,
+		},
+	});
+	if (!res.data.activities) {
+		return { error: "No activity found" };
+	}
+	const activities = res.data.activities || [];
+	const spotify = activities.find((activity) => activity.assets?.large_image?.startsWith('spotify:') || activity.name == 'Spotify');
+	if (!spotify) {
+		return { error: "No spotify activity found" };
+	}
+	const trackURI = `https://open.spotify.com/track/${spotify.sync_id}`;
+	if (!trackURI) {
+		return { error: "No track playing" };
+	}
+	return {
+		trackURI,
+		raw: spotify,
+	}
+}

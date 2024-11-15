@@ -1,52 +1,14 @@
-import axios from 'axios';
 import { EmbedBuilder, GuildMember } from 'discord.js';
 import { KazagumoTrack } from 'kazagumo';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
-import { getTrackFeatures } from '../../util/spotify';
+import { getSpotifyRPC, getTrackFeatures } from '../../util/spotify';
 import VOTEmbed from '../../util/VOTEmbed';
 
-interface UserStatus {
-	online: string[];
-	idle: string[];
-	dnd: string[];
-	status: string;
-	activities: Activity[];
-	messages: Record<string, unknown>;
-	voice: unknown[];
-}
 
-interface Activity {
-	type: number;
-	state: string;
-	name: string;
-	flags?: number;
-	assets?: Assets;
-	party?: Party;
-	sync_id?: string;
-	session_id?: string;
-	timestamps?: Timestamps;
-	details?: string;
-	application_id?: number;
-	buttons?: string[];
-}
 
-interface Assets {
-	large_text: string;
-	large_image: string;
-	small_text?: string;
-	small_image?: string;
-}
 
-interface Party {
-	id: string;
-}
-
-interface Timestamps {
-	start: number;
-	end?: number;
-}
 
 export default {
 	description: 'Gets your current playing song from spotify and adds it to the queue',
@@ -56,25 +18,14 @@ export default {
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
 		await interaction?.deferReply();
 
-		const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${user.id}/status`, {
-			headers: {
-				Authorization: import.meta.env.OTHER_EVADE_API_KEY,
-			},
-		});
-		if (!res.data.activities) {
+		const res = await getSpotifyRPC(user.id);
+		if (res.error) {
 			return {
-				content: 'No activity found',
+				content: res.error,
 				ephemeral: true,
 			};
 		}
-		const spotify = res.data.activities.find((activity) => activity.assets?.large_image.startsWith('spotify:'));
-		if (!spotify) {
-			return {
-				content: 'No spotify activity found',
-				ephemeral: true,
-			};
-		}
-		const trackURI = `https://open.spotify.com/track/${spotify.sync_id}`;
+		const { trackURI, raw: spotify } = res;
 		if (!trackURI) {
 			return {
 				content: 'No track playing',
