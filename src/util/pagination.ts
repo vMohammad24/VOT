@@ -82,6 +82,11 @@ export async function pagination({
 							.setStyle(ButtonStyle.Secondary)
 							.setDisabled(page === 0),
 						new ButtonBuilder()
+							.setCustomId(`${id}_coolahhbutton`)
+							.setStyle(ButtonStyle.Primary)
+							.setDisabled(true)
+							.setLabel(`${page + 1}/${pages.length}`),
+						new ButtonBuilder()
 							.setCustomId(`${id}_${page + 1}`)
 							.setEmoji(arrowRight.id)
 							.setStyle(ButtonStyle.Secondary)

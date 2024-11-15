@@ -31,7 +31,7 @@ export default {
 						.setComponents(actionRowBuilder.addComponents(textInput));
 					await interaction.showModal(modal);
 					const modalSubmit = await interaction.awaitModalSubmit({ time: 60000 });
-					await modalSubmit.deferReply();
+					await modalSubmit.deferReply({ ephemeral: true });
 					const reason = modalSubmit.fields.getTextInputValue('reason');
 					const tick = await createTicket(interaction.member as GuildMember, reason);
 					if (tick.error) {
@@ -39,9 +39,8 @@ export default {
 						modalSubmit.reply({ embeds: [embed], ephemeral: true });
 						return;
 					}
-					modalSubmit.reply({
+					await modalSubmit.editReply({
 						content: `Ticket created <#${tick.channel?.id}>`,
-						ephemeral: true,
 					});
 					break;
 				case 'close_ticket':
@@ -59,7 +58,7 @@ export default {
 						await interaction.reply({ embeds: ticket.embeds, ephemeral: true });
 						return;
 					}
-					await interaction.reply({ content: `Ticket closed`, ephemeral: true });
+					// await interaction.reply({ content: `Ticket closed`, ephemeral: true });
 					break;
 			}
 		});

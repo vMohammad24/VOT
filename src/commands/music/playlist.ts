@@ -32,16 +32,26 @@ const transferTracksFDB = (tracks: Track[], requester: any, kazagumo: Kazagumo):
 const getPlaylists = async (prisma: PrismaClient, guildId: string, userId: string) => {
 	return (await prisma.playlist.findMany({
 		where: {
-			OR: [{ guildId }, { userId: null, guildId: null }, { userId }],
+			OR: [
+				{ guildId },
+				{ userId: null, guildId: null },
+				{ userId },
+			],
 		},
 		select: {
 			id: true,
 			name: true,
+			userId: true,
+			guildId: true,
 		},
 		orderBy: {
 			name: 'asc',
 		},
-	})) as Playlist[];
+	})).filter(playlist => {
+		if (playlist.guildId && playlist.guildId !== guildId) return false;
+		if (playlist.userId && !playlist.guildId && playlist.userId !== userId) return false;
+		return true;
+	}) as Playlist[];
 };
 
 export default {
@@ -88,11 +98,11 @@ export default {
 				let choices =
 					action === 'remove'
 						? tracks.map((track) => {
-								return {
-									name: track.title,
-									value: track.uri,
-								};
-							})
+							return {
+								name: track.title,
+								value: track.uri,
+							};
+						})
 						: [];
 				if (choices.length === 0 || action === 'add') {
 					const kazTracks = (

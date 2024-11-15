@@ -1,8 +1,8 @@
 import type Elysia from 'elysia';
 import { t } from 'elysia';
 import TurndownService from 'turndown';
-import { apiKeys } from '.';
 import { chatllm, searchBrave } from '../util/brave';
+import { checkKey } from './apiUtils';
 const turndown = new TurndownService();
 export default (server: Elysia<'brave'>) => {
 	server.post(
@@ -10,7 +10,7 @@ export default (server: Elysia<'brave'>) => {
 		async ({ body, headers, set }) => {
 			const { query } = body;
 			const { authorization } = headers;
-			if (!apiKeys.includes(authorization)) {
+			if (!(await checkKey(authorization))) {
 				set.status = 401;
 				return { error: 'Unauthorized' };
 			}
@@ -33,7 +33,7 @@ export default (server: Elysia<'brave'>) => {
 		async ({ query: s, headers, set }) => {
 			const { query } = s;
 			const { authorization } = headers;
-			if (!apiKeys.includes(authorization)) {
+			if (!(await checkKey(authorization))) {
 				set.status = 401;
 				return { error: 'Unauthorized' };
 			}

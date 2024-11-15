@@ -1,4 +1,4 @@
-import { Events, GuildMember, type GuildTextBasedChannel } from 'discord.js';
+import { Events, GuildBasedChannel, GuildMember, VoiceBasedChannel, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getRows, sendPanel } from '../util/music';
 
@@ -43,7 +43,7 @@ export default {
 				const channel = client.channels.cache.get(player.voiceId!) as GuildTextBasedChannel;
 				channel.guild.client.rest.put(`/channels/${channel.id}/voice-status`, {
 					body: {
-						status: `Playing ${track.title} requested by ${member.displayName}`,
+						status: `Playing ${track.title}`,
 					}
 				})
 				if (channel) {
@@ -72,14 +72,29 @@ export default {
 			if (player.queue.size === 0 && !player.playing) {
 				await player.destroy();
 			}
-			if (channelId && guildId && messageId) {
-				const channel = (await (await client.guilds.fetch(guildId)).channels.fetch(channelId)) as GuildTextBasedChannel;
-				const msg = await channel.messages.fetch(messageId);
+			if (!channelId || !guildId) return;
+			const channel = (await (await client.guilds.fetch(guildId)).channels.fetch(channelId)) as GuildBasedChannel;
+			if (messageId) {
+				const tChannel = channel as GuildTextBasedChannel;
+				const msg = await tChannel.messages.fetch(messageId);
 				if (msg) {
 					await msg.delete();
 				}
 			}
+			const vChannel = channel as VoiceBasedChannel;
+			if (vChannel.members.filter((m) => !m.user.bot).size === 0) {
+				player.destroy();
+			}
 		});
+
+		client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+			if (!oldState.guild) return;
+			const player = kazagumo.getPlayer(oldState.guild.id);
+			if (!player) return;
+			if (oldState.channelId && oldState.channel?.members.filter((m) => !m.user.bot).size === 0) {
+				player.destroy();
+			}
+		})
 
 		client.on(Events.InteractionCreate, async (inter) => {
 			const ids = ['pause', 'resume', 'skip', 'queue', 'stop', 'loop', 'shuffle', 'volume'];

@@ -8,6 +8,7 @@ import { loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
+import { checkKey } from './apiUtils';
 import brave from './brave';
 import discord from './discord';
 import spotify from './spotify';
@@ -37,7 +38,25 @@ const elysia = new Elysia()
 	.use(discordElysia)
 	.use(spotifyElysia)
 	.use(guildsElysia)
-	.use(braveElysia);
+	.use(braveElysia)
+	.onParse(async ({ request, contentType }) => {
+		try {
+			if (contentType === 'application/json') {
+				return await request.json()
+			}
+		} catch (error) {
+			return request.text()
+		}
+	})
+	.onRequest(async ({ set, error, request }) => {
+		const endpoint = new URL(request.url).pathname;
+		const auth = request.headers.get('authorization');
+		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave');
+		if (needsAPIKey && !(await checkKey(auth))) {
+			return error(401, 'Unauthorized');
+		}
+
+	});
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
 elysia.get('/', function () {
@@ -127,18 +146,12 @@ elysia.post(
 		}),
 	},
 );
-export const apiKeys = ['VOT-MSSWAKANGHYUK-ELY-KEY'];
 const col = new Collection<string, DuckDuckGoChat>();
 elysia.post(
 	'/askDDG',
 	async ({ body, headers, set }) => {
 		const { query, model } = body;
 		let { sessionId } = body;
-		const { authorization } = headers;
-		if (!apiKeys.includes(authorization)) {
-			set.status = 401;
-			return { error: 'Unauthorized' };
-		}
 		if (!sessionId) sessionId = nanoid(20);
 		if (!col.has(sessionId)) {
 			col.set(

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { file, write } from 'bun';
 import { ApplicationEmoji, Collection } from 'discord.js';
-import { join } from 'path';
+import { basename, extname, join } from 'path';
 import sharp from 'sharp';
 import commandHandler from '..';
 
@@ -15,9 +15,11 @@ export function getEmoji(name: string) {
 }
 
 export async function addEmoji(emojiPath: string, ems: Collection<string, ApplicationEmoji> | undefined) {
-	if (!ems) return;
+	if (!ems) {
+		throw new Error('Emojis collection is undefined');
+	};
 	const { verbose, logger, client } = commandHandler;
-	const emojiName = emojiPath.split('/').pop()!.split('.')[0];
+	const emojiName = basename(emojiPath, extname(emojiPath));
 	if (emojis.has(emojiName)) return emojis.get(emojiName)!;
 
 	let emoji = ems?.find((e) => e.name === emojiName);
@@ -38,12 +40,16 @@ export async function addEmoji(emojiPath: string, ems: Collection<string, Applic
 				);
 				emojiData = await sharp(Buffer.from(svg)).png().resize(dims, dims).toBuffer();
 			}
-			emoji = await client.application?.emojis.create({
-				attachment: emojiData,
-				name: emojiName,
-			})!;
-			if (verbose) logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
-			emojis.set(emojiName, emoji);
+			try {
+				emoji = await client.application?.emojis.create({
+					attachment: emojiData,
+					name: emojiName,
+				})!;
+				if (verbose) logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
+				emojis.set(emojiName, emoji);
+			} catch (error) {
+				commandHandler.logger.error(`Failed to create emoji ${emojiName}: ${error}`);
+			}
 		}
 		return emoji;
 	} catch (e) {

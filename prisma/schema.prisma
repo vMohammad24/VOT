@@ -265,6 +265,14 @@ model ModerationSettings {
   guildId          String   @unique
 }
 
+model apiKey {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  requests  Int      @default(0)
+}
+
 model Clan {
   id    String @id @default(uuid())
   guild String @unique

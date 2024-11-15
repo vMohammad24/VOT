@@ -1,6 +1,7 @@
 import { UserTier } from '@prisma/client';
 import { ApplicationCommandOptionType, User } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	description: "Update a user's tier",
@@ -37,6 +38,16 @@ export default {
 				tier,
 			},
 		});
-		return `Updated ${pUser.name} to ${pUser.tier}`;
+		// return `Updated ${pUser.name} to ${pUser.tier}`;
+		return {
+			embeds: [
+				new VOTEmbed()
+					.setTitle('Tier Updated')
+					.setDescription(`Updated ${pUser.name} to ${pUser.tier}`)
+					.setAuthor({ name: pUser.name!, iconURL: pUser.avatar || undefined })
+				// .setColor('GREEN'),
+			],
+			ephemeral: true,
+		};
 	},
 } as ICommand;
