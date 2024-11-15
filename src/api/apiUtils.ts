@@ -233,6 +233,8 @@ export const refreshToken = async (refreshToken: string) => {
 		`);
 	const tokenResponse = (await tokenResponseData.data) as any;
 	if (tokenResponse.error === 'invalid_grant') {
+		const u = await commandHandler.prisma.discord.findFirst({ where: { refreshToken } });
+		if (u) await commandHandler.prisma.discord.delete({ where: { id: u.id } });
 		return {
 			error: 'Invalid refresh token, please reauthorize (2)',
 			code: 401,
