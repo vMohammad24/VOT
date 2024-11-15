@@ -6,19 +6,16 @@ let votIcon: string | undefined = undefined;
 class VOTEmbed extends EmbedBuilder {
 	constructor(data?: EmbedData) {
 		super(data);
-		if (!votIcon) commandHandler.client.user?.displayAvatarURL({ size: 1024 });
+		if (!votIcon) votIcon = commandHandler.client.user?.displayAvatarURL({ size: 1024 });
 	}
 
 	async dominant() {
 		const json = this.toJSON();
-		if (!json.color) {
-			if (json.thumbnail) {
-
-				const image = await loadImg(json.thumbnail.url);
-				this.setColor(getTwoMostUsedColors(image)[0]);
-			} else {
-				this.setColor('#313338')
-			}
+		if (json.thumbnail) {
+			const image = await loadImg(json.thumbnail.url);
+			this.setColor(getTwoMostUsedColors(image)[0]);
+		} else {
+			this.setColor('#313338')
 		}
 		return this;
 	}

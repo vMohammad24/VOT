@@ -15,9 +15,10 @@ import {
 import { nanoid } from 'nanoid/non-secure';
 import { redis } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
-import { getUserByID, loadImg } from '../../util/database';
+import { getUserByID } from '../../util/database';
 import { addEmojiByURL, getEmoji } from '../../util/emojis';
-import { camelToTitleCase, getTwoMostUsedColors, isNullish } from '../../util/util';
+import { camelToTitleCase, isNullish } from '../../util/util';
+import VOTEmbed from '../../util/VOTEmbed';
 interface Decoration {
 	id: string;
 	name: string;
@@ -274,7 +275,7 @@ export default {
 					.map((role) => role.toString())
 					.join(' ')
 				: undefined;
-		const embed = new EmbedBuilder()
+		const embed = new VOTEmbed()
 			.setThumbnail(u.displayAvatarURL())
 			.setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` });
 
@@ -410,15 +411,16 @@ export default {
 			.setFooter({ text: 'Created at' });
 		const avatar = u.displayAvatarURL();
 		let embedColor: ColorResolvable = 'Random';
-		if (avatar) {
-			// const listening = sData.activities.find(a => a.type === ActivityType.Listening);
-			// const image = listening?.assets?.large_image;
-			// const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
-			const imagew = await loadImg(avatar);
-			const dColor = getTwoMostUsedColors(imagew);
-			embedColor = dColor[0];
-			embed.setColor(dColor[0]);
-		}
+		// if (avatar) {
+		// 	// const listening = sData.activities.find(a => a.type === ActivityType.Listening);
+		// 	// const image = listening?.assets?.large_image;
+		// 	// const url = `https://i.scdn.co/image/${image.split(':')[1]}`;
+		// 	const imagew = await loadImg(avatar);
+		// 	const dColor = getTwoMostUsedColors(imagew);
+		// 	embedColor = dColor[0];
+		// 	embed.setColor(dColor[0]);
+		// }
+		await embed.dominant();
 		const content = {
 			embeds: [embed],
 			content: `<@${u.id}>`,

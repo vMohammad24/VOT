@@ -1,3 +1,4 @@
+import { apiKey } from '@prisma/client';
 import axios from 'axios';
 import { inspect } from 'bun';
 import { PermissionFlagsBits, type APIGuild, type APIUser } from 'discord.js';
@@ -10,6 +11,36 @@ export const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID!;
 export const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET!;
 
 const lastUpdateForUser = new Map<string, Date>();
+
+
+export const addAPIKey = async (name: string): Promise<apiKey> => {
+	const key = await commandHandler.prisma.apiKey.create({
+		data: {
+			name
+		},
+	});
+	return key;
+}
+
+export const deleteAPIKey = async (id: string): Promise<apiKey> => {
+	const key = await commandHandler.prisma.apiKey.delete({
+		where: {
+			id
+		}
+	});
+	return key;
+}
+
+export const checkKey = async (key?: string | null) => {
+	if (!key) return null;
+	const apiKey = await commandHandler.prisma.apiKey.findUnique({
+		where: {
+			id: key
+		}
+	});
+	return !!apiKey;
+}
+
 export const updateGuilds = async (userId: string): Promise<any> => {
 	const { prisma } = commandHandler;
 	if (!prisma) {

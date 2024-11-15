@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { getUserByID } from '../../util/database';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	name: 'setbal',
@@ -51,6 +52,14 @@ export default {
 				},
 			},
 		});
-		return `Set balance of <@${userId}> (${up.user.name}) to ${up.balance}`;
+		// return `Set balance of <@${userId}> (${up.user.name}) to ${up.balance}`;
+		return {
+			embeds: [
+				new VOTEmbed()
+					.setTitle('Balance Set')
+					.setAuthor({ name: author.tag, iconURL: author.displayAvatarURL() })
+					.setDescription(`Set balance of <@${userId}> (${up.user.name}) to ${up.balance}`)
+			]
+		}
 	},
 } as ICommand;

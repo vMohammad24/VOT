@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	description: 'Shows the queue',
@@ -19,7 +20,7 @@ export default {
 				ephemeral: true,
 			};
 		const queueWithCurrent = [queue.current, ...queue];
-		const pages = queueWithCurrent.map((track, i) => {
+		const pages = await Promise.all(queueWithCurrent.map(async (track, i) => {
 			if (!track) {
 				return {
 					page: new EmbedBuilder()
@@ -35,7 +36,7 @@ export default {
 			}
 
 			return {
-				page: new EmbedBuilder()
+				page: await new VOTEmbed()
 					.setTitle(`Queue ${i + 1}/${queueWithCurrent.length}`)
 					.setDescription(`[${track.title}](${track.uri})`)
 					.setColor('Green')
@@ -43,10 +44,10 @@ export default {
 					.setFooter({
 						text: `Requested by ${track.requester ? (track.requester as any).displayName : 'Unknown'}`,
 						iconURL: ((track.requester as any) || member).displayAvatarURL(),
-					}),
+					}).dominant(),
 				name: track.title,
 			};
-		});
+		}));
 		await pagination({
 			pages,
 			type: 'select',

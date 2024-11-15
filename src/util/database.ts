@@ -12,21 +12,39 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 		return JSON.parse(cachedUser);
 	}
 
-	const user = await commandHandler.prisma.user.upsert({
-		where: {
-			id: member.id,
-		},
-		update: {
-			avatar: member.avatarURL(),
-			name: member.tag,
-		},
-		create: {
-			id: member.id,
-			avatar: member.avatarURL(),
-			name: member.tag,
-		},
-		select,
-	});
+	let user;
+	try {
+		user = await commandHandler.prisma.user.upsert({
+			where: {
+				id: member.id,
+			},
+			update: {
+				avatar: member.avatarURL(),
+				name: member.tag,
+			},
+			create: {
+				id: member.id,
+				avatar: member.avatarURL(),
+				name: member.tag,
+			},
+			select,
+		});
+	} catch (e) {
+		user = await commandHandler.prisma.user.upsert({
+			where: {
+				id: member.id,
+			},
+			update: {
+				name: member.tag,
+			},
+			create: {
+				id: member.id,
+				name: member.tag,
+			},
+			select,
+		});
+
+	}
 
 	redis.set(cacheKey, JSON.stringify(user), 'EX', 2); // Expires in 1 hour
 	return user;

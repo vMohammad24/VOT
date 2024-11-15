@@ -193,5 +193,27 @@ export default {
 			if (!embed.data.fields) return;
 			logChannel.send({ embeds: [embed] });
 		});
+
+		client.on('guildMemberUpdate', async (oldMember, newMember) => {
+			if (!oldMember.premiumSince && newMember.premiumSince) {
+				const logChannel = await getLogChannel(newMember.guild!);
+				if (!logChannel) return;
+				const embed = new EmbedBuilder()
+					.setTitle('Server Boosted')
+					.setDescription(`${newMember.user.tag} has boosted the server!`)
+					.setColor('Purple')
+					.setTimestamp();
+				logChannel.send({ embeds: [embed] });
+			} else if (oldMember.premiumSince && !newMember.premiumSince) {
+				const logChannel = await getLogChannel(newMember.guild!);
+				if (!logChannel) return;
+				const embed = new EmbedBuilder()
+					.setTitle('Server Boost Revoked')
+					.setDescription(`${newMember.user.tag} has removed their boost`)
+					.setColor('DarkRed')
+					.setTimestamp();
+				logChannel.send({ embeds: [embed] });
+			}
+		});
 	},
 } as IListener;

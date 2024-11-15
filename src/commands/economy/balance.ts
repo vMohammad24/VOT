@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { getUserByID } from '../../util/database';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	name: 'balance',
@@ -21,6 +22,12 @@ export default {
 			economy: true,
 			name: true,
 		});
-		return `**${pUser.name}** has $${pUser.economy.balance}`;
+		return {
+			embeds: [new VOTEmbed()
+				.setAuthor({ name: pUser.name!, iconURL: pUser.avatar || undefined })
+				.setDescription(`<@${pUser.id}> has $${pUser.economy.balance}`)
+				.setTimestamp()
+			]
+		}
 	},
 } as ICommand;

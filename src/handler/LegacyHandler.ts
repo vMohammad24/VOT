@@ -5,7 +5,7 @@ import { getGuild, getUserByID } from '../util/database';
 import type ICommand from './interfaces/ICommand';
 import type LegacyHandler from './interfaces/ILegacyHandler';
 
-const getPrefix = async (message: Message<boolean>) => {
+export const getPrefix = async (message: Message<boolean>) => {
 	let prefix = null;
 	const pUser = await getUserByID(message.author.id, { prefix: true });
 	if (pUser && pUser.prefix) {
@@ -82,7 +82,7 @@ export default class LegacyCommandHandler {
 								await Promise.all([await msg.delete(), await message.delete()]);
 							}, 3000);
 						}
-					} catch (error) {}
+					} catch (error) { }
 				}
 			}
 		});

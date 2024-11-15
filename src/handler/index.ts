@@ -99,7 +99,7 @@ export default class CommandHandler {
 		const { commandsDir, listenersDir, contextCommandsDir } = handler;
 		this.prodMode = handler.prodMode;
 		this.logger = PinoLogger({
-			name: import.meta.dirname.split('/')[import.meta.dirname.split('/').length - 3],
+			name: path.basename(path.resolve(import.meta.dir, '../../')),
 			level: this.prodMode ? 'info' : 'debug',
 		});
 		this.prisma = handler.prisma;
@@ -152,8 +152,8 @@ export default class CommandHandler {
 			}
 			const loadCommand = async (file: string) => {
 				const start = Date.now();
-				const categoryName = file.split('/').slice(-2, -1)[0];
-				const fileName = file.split('/').pop()!.split('.')[0];
+				const categoryName = file.split(path.sep).slice(-2, -1)[0].replace(/\\/g, '/');
+				const fileName = file.split(path.sep).pop()!.split('.')[0];
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
 
 				// Clear the require cache for the module
@@ -194,7 +194,7 @@ export default class CommandHandler {
 			);
 			await Promise.all(
 				contextCommandPaths.map(async (file) => {
-					const commandName = file.split('/').pop()!.split('.')[0];
+					const commandName = path.basename(file, path.extname(file));
 					const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
 					if (command.disabled) return;
 					const modifiedData: IContextCommand = Object.assign({}, command, {

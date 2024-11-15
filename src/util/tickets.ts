@@ -8,6 +8,7 @@ import {
 	EmbedBuilder,
 	GuildMember,
 	PermissionFlagsBits,
+	User,
 	type GuildTextBasedChannel,
 } from 'discord.js';
 import commandHandler from '..';
@@ -199,37 +200,60 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 	// 	edited: message.editedTimestamp !== null,
 	// 	id: message.id,
 	// })))
-	const users: Record<string, any> = {};
+	const users: {
+		tag: string,
+		avatar: string,
+		color?: string,
+		icon?: string,
+		bot: boolean,
+		clan: string | null;
+		id: string;
+	}[] = [];
 	const messagesArray = await Promise.all(messages.values().map(async (message) => {
-		const userId = message.author.id;
-		if (!users[userId]) {
-			const pUser = await getUser(message.author, { clan: { select: { id: true } } });
-			users[userId] = {
-				tag: message.author.tag,
-				avatar: message.author.displayAvatarURL(),
-				color: message.member?.displayHexColor,
-				icon: message.member?.roles.cache.filter((role) => role.icon).sort((a, b) => b.position - a.position).first()?.iconURL(),
-				bot: message.author.bot,
-				clan: pUser?.clan ? pUser.clan.id : null,
-			};
+		const aUI = message.interaction?.user;
+		const addUser = async (user: User) => {
+			if (!users.some((u) => u.id === user.id)) {
+				const pUser = await getUser(user, { clan: { select: { id: true } } });
+				users.push({
+					tag: user.tag,
+					avatar: user.displayAvatarURL(),
+					color: message.member?.displayHexColor,
+					icon: message.member?.roles.cache.filter((role) => role.icon).sort((a, b) => b.position - a.position).first()?.iconURL() || undefined,
+					bot: user.bot,
+					clan: pUser?.clan ? pUser.clan.id : null,
+					id: user.id,
+				});
+			}
+		};
+
+		if (message.author.bot && aUI) {
+			await addUser(aUI);
 		}
+		await addUser(message.author);
+		users.filter((user, index, self) => self.findIndex((u) => u.id === user.id) === index);
 		return {
 			message: {
 				attachments: await Promise.all(
 					message.attachments.map(async (attachment) => {
 						const file = new File(
-							[(await axios.get(attachment.proxyURL, { responseType: 'blob' })).data],
+							[new Blob([new Uint8Array((await axios.get(attachment.url, { responseType: 'arraybuffer' })).data)])],
 							attachment.name,
 							{ type: attachment.contentType || undefined },
 						);
 						const uploadedData = await uploadFile(file);
-						return uploadedData.cdnFileName;
+						return {
+							id: uploadedData.cdnFileName,
+							name: attachment.name,
+							contentType: attachment.contentType,
+							size: attachment.size,
+						};
 					}),
 				),
 				content: message.content,
 				embeds: message.embeds,
+				interaction: message.interaction || undefined
 			},
-			userId,
+			userId: message.author.id,
 			timestamp: message.createdTimestamp,
 			edited: message.editedTimestamp !== null,
 			id: message.id,

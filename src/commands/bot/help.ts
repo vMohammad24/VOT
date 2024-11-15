@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { getPrefix } from '../../handler/LegacyHandler';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import VOTEmbed from '../../util/VOTEmbed';
@@ -65,6 +66,15 @@ export default {
 					value: `**Type**: ${getOptionName(option.type)}\n**Required**: ${'required' in option ? (option.required ? 'Yes' : 'No') : 'Yes'}`,
 				});
 			}
+			const prefix = message ? await getPrefix(message) : '/';
+			embed.addFields({
+				name: "Syntax",
+				value: `\`\`\`${prefix}${cmd.name} ${cmd.options?.map((opt) => (('required' in opt ? opt.required : true) ? `<${opt.name}>` : `[${opt.name}]`)).join(' ')}\`\`\``,
+			},
+				{
+					name: 'Example',
+					value: `\`\`\`${prefix}${cmd.name} ${cmd.options?.map((opt) => (('required' in opt ? opt.required : true) ? `<${opt.name}>` : `[${opt.name}]`)).join(' ')}\`\`\``,
+				})
 
 			cmd.aliases &&
 				cmd.aliases.length > 0 &&
