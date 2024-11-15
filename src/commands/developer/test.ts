@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, GuildTextBasedChannel } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -85,19 +85,19 @@ const larp = async (person: string, query: string) => {
 		.map(
 			(result) => `
 			${result.title} is ${result.long_desc}. Some of your pictures are ${(result.images || [])
-				.map(
-					(image) => `
+					.map(
+						(image) => `
 				${image.src} (${image.alt}) 
 				`,
-				)
-				.join(
-					' ',
-				)}, just say that you are ${person} and act like them, some more data about you (${person}) are: ${web.results
-				.map(
-					(result) => `
+					)
+					.join(
+						' ',
+					)}, just say that you are ${person} and act like them, some more data about you (${person}) are: ${web.results
+						.map(
+							(result) => `
 					${result.title} - ${result.description} - ${result.faq} - ${result.article}`,
-				)
-				.join(' ')}
+						)
+						.join(' ')}
 				`,
 		)
 		.join('\n\n')}`;
@@ -286,6 +286,7 @@ export default {
 				ephemeral: true,
 			};
 		}
+		(await guild.channels.fetch('943953728837410838') as GuildTextBasedChannel).messages.cache.get('1306657458873303101')?.mentions
 		// await handler.client.rest.post(Routes.channelMessages(channelId), {
 		// 	body: {
 		// 		embeds: [
