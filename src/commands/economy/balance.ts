@@ -21,6 +21,7 @@ export default {
 		const pUser = await getUserByID(userId, {
 			economy: true,
 			name: true,
+			id: true,
 		});
 		return {
 			embeds: [new VOTEmbed()
