@@ -204,7 +204,7 @@ export default {
 		if (clan && clan.identity_guild_id && clan.tag && clan.badge) {
 			clan.emoji = (await addEmojiByURL(`${clan.identity_guild_id}_${clan.tag.trim().replace('樂', '')}`, `https://cdn.discordapp.com/clan-badges/${clan.identity_guild_id}/${clan.badge}.png?size=128`, ems))?.toString()!;
 		}
-		if (sData.activities.length > 0) {
+		if (badges && sData.activities.length > 0) {
 			sData.activities = sData.activities.filter((a) => a.type !== ActivityType.Custom);
 			await Promise.all(
 				sData.activities.map(async (activity) => {
@@ -221,7 +221,7 @@ export default {
 				}),
 			);
 		}
-		if (sData.voice && sData.voice.length > 0) {
+		if (badges && sData.voice && sData.voice.length > 0) {
 			// create a new activity from voice data
 			const voice = sData.voice[0];
 			if (!voice.channel) return;
@@ -244,7 +244,7 @@ export default {
 			};
 		}
 
-		if (sData.dnd.length > 0) {
+		if (badges && sData.dnd.length > 0) {
 			badges.unshift({
 				name: 'Do Not Disturb',
 				description: 'User is in Do Not Disturb mode',
@@ -252,7 +252,7 @@ export default {
 				emoji: getEmoji('dnd_' + sData.dnd[0]).toString(),
 			});
 		}
-		if (sData.online.length > 0) {
+		if (badges && sData.online.length > 0) {
 			badges.unshift({
 				name: 'Online',
 				description: 'User is online',
@@ -260,7 +260,7 @@ export default {
 				emoji: getEmoji('online_' + sData.online[0]).toString(),
 			});
 		}
-		if (sData.idle.length > 0) {
+		if (badges && sData.idle.length > 0) {
 			badges.unshift({
 				name: 'Idle',
 				description: 'User is idle',
