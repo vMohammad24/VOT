@@ -1,11 +1,13 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, GuildTextBasedChannel } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
 import { DuckDuckGoChat } from '../../util/ddg';
+import { getEmoji } from '../../util/emojis';
+import VOTEmbed from '../../util/VOTEmbed';
 const turndownService = new TurnDownService();
 // Mocking the DDG object to mimic the input function's behavior in TypeScript
 
@@ -277,43 +279,70 @@ export default {
 		},
 	],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
-		const channelId = channel.id;
-		try {
-			throw new Error('test');
-		} catch (e) {
-			return {
-				content: e,
-				ephemeral: true,
-			};
-		}
-		(await guild.channels.fetch('943953728837410838') as GuildTextBasedChannel).messages.cache.get('1306657458873303101')?.mentions
-		// await handler.client.rest.post(Routes.channelMessages(channelId), {
-		// 	body: {
-		// 		embeds: [
-		// 			{
-		// 				"id": "embed_480",
-		// 				"url": "https://open.spotify.com/track/5OYLUabPBep5tKWkpvoBcH?si=df42eea139ea4a23",
-		// 				"type": "link",
-		// 				"title": "Cold World",
-		// 				"description": "Eric Reprid · Cold World · Song · 2020",
-		// 				"contentScanVersion": 1,
-		// 				"provider": {
-		// 					"name": "Spotify",
-		// 					"url": "https://spotify.com/"
-		// 				},
-		// 				"thumbnail": {
-		// 					"url": "https://i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
-		// 					"proxyURL": "https://images-ext-1.discordapp.net/external/YkDkl_EblqcuQXoOAgM5Os1H3HaaDXhux1IlEP2l2G0/https/i.scdn.co/image/ab67616d0000b2737f9451b18923b31d8e181183",
-		// 					"width": 128,
-		// 					"height": 640,
-		// 					"placeholder": "lcYNJwT0dXh3lYeIdrh3Z3h4eEBrB7QG",
-		// 					"placeholderVersion": 1,
-		// 					"srcIsAnimated": false
-		// 				},
-		// 				"fields": []
-		// 			}
-		// 		],
-		// 	},
-		// });
+
+		const voiceMaster = await handler.prisma.voiceMaster.upsert({
+			where: { guildId: guild.id },
+			update: {},
+			create: {
+				guildId: guild.id,
+				voiceChannel: '1307054705331142716',
+				textChannel: '1307054672787411005'
+			},
+		})
+		const vmChannel = guild.channels.cache.get(voiceMaster.textChannel!);
+		if (!vmChannel) return;
+		if (vmChannel.type != ChannelType.GuildText) return;
+		const lockEmoji = getEmoji('lock').toString()
+		const hideEmoji = getEmoji('eye').toString()
+		const infoEmoji = getEmoji('info').toString()
+		const kickEmoji = getEmoji('ban').toString()
+		const claimEmoji = getEmoji('claim').toString()
+		await vmChannel.send({
+			embeds: [
+				await new VOTEmbed()
+					.setTitle('VoiceMaster')
+					.setDescription(`
+Join <#${voiceMaster.voiceChannel}> to create a voice channel
+
+### ${lockEmoji} Lock/Unlock the voice channel
+### ${hideEmoji} Hides/Reveals the voice channel
+### ${infoEmoji} Information about the voice channel
+### ${kickEmoji} Kick a member from your voice channel
+### ${claimEmoji} Claim a voice channel
+					`)
+					.setAuthor({ name: guild.name, iconURL: guild.iconURL({}) || undefined })
+					.dominant()
+			],
+			components: [
+				new ActionRowBuilder<ButtonBuilder>()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('lock')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji(lockEmoji)
+						,
+						new ButtonBuilder()
+							.setCustomId('hide')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji(hideEmoji)
+						,
+						new ButtonBuilder()
+							.setCustomId('info')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji(infoEmoji)
+						,
+						new ButtonBuilder()
+							.setCustomId('kick')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji(kickEmoji)
+						,
+						new ButtonBuilder()
+							.setCustomId('claim')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji(claimEmoji)
+					)
+			]
+		});
+		return { content: JSON.stringify(voiceMaster) }
 	},
 } as ICommand;

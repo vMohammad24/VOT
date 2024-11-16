@@ -1,0 +1,193 @@
+import {
+    ActionRowBuilder,
+    ChannelType,
+    GuildMember,
+    StringSelectMenuBuilder,
+    VoiceChannel,
+} from "discord.js";
+import { IListener } from "../handler/ListenerHandler";
+import { getVoiceMaster } from "../util/database";
+import VOTEmbed from "../util/VOTEmbed";
+
+
+
+export default {
+    name: 'voicemaster',
+    description: 'VoiceMaster listener',
+    execute: async ({ client, prisma }) => {
+        client.on('voiceStateUpdate', async (oldState, newState) => {
+            const vm = await getVoiceMaster(newState.guild.id);
+            if (!vm || !newState.member) return;
+            if (vm && vm.blacklistRole && newState.member.roles.cache.has(vm.blacklistRole)) return;
+            const vc = newState.guild.channels.cache.get(vm.voiceChannel)
+            if (!vc) return;
+            if (vc.type != ChannelType.GuildVoice) return;
+            const channelId = newState.channelId;
+            if (channelId == vm.voiceChannel) {
+                const eChannel = vm.openChannels.find(c => c.owner.userId == newState.member!.id)
+                if (eChannel) {
+                    const channel = newState.guild.channels.cache.get(eChannel.id) as VoiceChannel;
+                    if (!channel) return;
+                    await newState.setChannel(channel)
+                } else {
+                    const channel = await newState.guild.channels.create({
+                        type: ChannelType.GuildVoice,
+                        parent: vc.parent,
+                        name: `${newState.member.user.username}'s Channel`,
+                    });
+                    await newState.setChannel(channel)
+                    await prisma.voiceMaster.update({
+                        where: { id: vm.id },
+                        data: {
+                            openChannels: {
+                                create: {
+                                    id: channel.id,
+                                    owner: {
+                                        connectOrCreate: {
+                                            create: {
+                                                guildId: newState.guild.id,
+                                                userId: newState.member.id,
+                                            },
+                                            where: {
+                                                userId_guildId: {
+                                                    userId: newState.member.id,
+                                                    guildId: newState.guild.id
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+                }
+            }
+            setTimeout(async () => {
+                vm.openChannels.forEach(async c => {
+                    const channel = newState.guild.channels.cache.get(c.id) as VoiceChannel;
+                    if (!channel) return;
+                    if (channel.members.size == 0) {
+                        await channel.delete();
+                        await prisma.voiceMaster.update({
+                            where: { id: vm.id },
+                            data: {
+                                openChannels: {
+                                    delete: {
+                                        id: c.id
+                                    }
+                                }
+                            }
+                        })
+                    }
+                });
+            }, 2000);
+        })
+
+        client.on('interactionCreate', async (interaction) => {
+            // if (!interaction.isButton()) return;
+            if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
+
+            const vm = await getVoiceMaster(interaction.guildId!);
+            if (!vm) return;
+            const ciD = (interaction.member as GuildMember).voice.channelId;
+            if (!ciD) return;
+            const channel = interaction.guild!.channels.cache.get(ciD) as VoiceChannel;
+            if (!channel) return;
+            const vc = vm.openChannels.find(c => c.id == channel.id);
+            if (!vc) return await interaction.reply({ content: 'This channel is not open.', ephemeral: true });
+            const auth = vc && vc.owner && vc.owner.userId == interaction.user.id
+            switch (interaction.customId) {
+                case 'lock':
+                    if (!auth) return await interaction.reply({ content: 'You are not the owner of this channel.', ephemeral: true });
+                    const locked = !channel.permissionOverwrites.cache.get(interaction.guild!.roles.everyone.id)?.allow.has('Connect');
+                    await channel.permissionOverwrites.edit(interaction.guild!.roles.everyone, { Connect: locked });
+                    await interaction.reply({ content: `${locked ? 'Unlocked' : 'Locked'} channel`, ephemeral: true });
+                    break;
+                case 'hide':
+                    if (!auth) return await interaction.reply({ content: 'You are not the owner of this channel.', ephemeral: true });
+                    const visible = !channel.permissionOverwrites.cache.get(interaction.guild!.roles.everyone.id)?.allow.has('ViewChannel');
+                    await channel.permissionOverwrites.edit(interaction.guild!.roles.everyone, { ViewChannel: visible });
+                    await interaction.reply({ content: `Made the channel ${visible ? 'visible' : 'hidden'}`, ephemeral: true });
+                    break;
+                case 'info':
+                    if (!auth) return await interaction.reply({ content: 'You are not the owner of this channel.', ephemeral: true });
+                    await interaction.reply({
+                        embeds: [
+                            await new VOTEmbed()
+                                .setTitle('Channel Information')
+                                .setDescription(`
+**Owner:** <@${vc.owner.userId}>
+**Members:** ${channel.members.size}
+                                `)
+                                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ size: 1024 }) })
+                                .dominant()
+                        ], ephemeral: true
+                    });
+                    break;
+                case 'kick':
+                    if (!auth) return await interaction.reply({ content: 'You are not the owner of this channel.', ephemeral: true });
+                    const members = channel.members.filter(m => m.id != interaction.user.id);
+                    if (members.size == 0) return await interaction.reply({ content: 'No members to kick.', ephemeral: true });
+                    const i = await interaction.reply({
+                        components: [
+                            new ActionRowBuilder<StringSelectMenuBuilder>()
+                                .addComponents(
+                                    new StringSelectMenuBuilder()
+                                        .setCustomId('kick_members')
+                                        .setPlaceholder('Select a member to kick')
+                                        .setMaxValues(members.size)
+                                        .setMinValues(1)
+                                        .setOptions(members.map(m => ({ label: m.user.username, value: m.id })))
+                                )
+                        ],
+                        ephemeral: true
+                    })
+                    break;
+                case 'kick_members':
+                    if (!interaction.isStringSelectMenu()) return;
+                    const { values } = interaction;
+                    const membersKicked = await Promise.all(values.map(async v => {
+                        const member = channel.members.find(a => a.id == v);
+                        if (!member) return;
+                        return await member.voice.disconnect(`Kicked by ${interaction.user.tag}`);
+                    }))
+                    await interaction.reply({ content: `Kicked ${membersKicked.map(a => a?.toString()).join(', ')}`, ephemeral: true });
+                    break;
+                case 'claim':
+                    if (channel.members.some(m => m.id == vc.owner.userId)) {
+                        return await interaction.reply({ content: "You can't claim a channel while the owner is still inside it.", ephemeral: true });
+                    }
+                    await prisma.voiceMaster.update({
+                        where: { id: vm.id },
+                        data: {
+                            openChannels: {
+                                update: {
+                                    where: { id: channel.id },
+                                    data: {
+                                        owner: {
+                                            connectOrCreate: {
+                                                create: {
+                                                    guildId: interaction.guildId!,
+                                                    userId: interaction.user.id
+                                                },
+                                                where: {
+                                                    userId_guildId: {
+                                                        userId: interaction.user.id, guildId: interaction.guildId!
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    await interaction.reply({ content: 'Channel claimed.', ephemeral: true });
+                    break;
+                default:
+                    break;
+            }
+        })
+
+    }
+} as IListener

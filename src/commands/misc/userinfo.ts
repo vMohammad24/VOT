@@ -142,12 +142,31 @@ export default {
 	cooldown: 5000,
 	options: [
 		{
-			type: ApplicationCommandOptionType.User,
+			type: ApplicationCommandOptionType.String,
 			name: 'user',
 			description: 'User to get information about',
 			required: false,
+			autocomplete: true
 		},
 	],
+	init: (handler) => {
+		handler.client.on('interactionCreate', async (interaction) => {
+			if (!interaction.isAutocomplete()) return;
+			if (interaction.commandName !== 'userinfo') return;
+			const user = interaction.options.getString('user')!;
+			const res = await axios.get('https://us-atlanta2.evade.rest/search/users?displayname=' + encodeURIComponent(user), {
+				headers: {
+					Authorization: apiKey,
+				}
+			})
+			const { users } = res.data;
+			console.log(users);
+			await interaction.respond(users.map((u: any) => ({
+				name: `${u.display_name} (@${u.name})`,
+				value: u.id,
+			})).slice(0, 25));
+		})
+	},
 	type: 'all',
 	shouldCache: true,
 	execute: async ({ args, user: usr, member, interaction, handler, message, guild }) => {
