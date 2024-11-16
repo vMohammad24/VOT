@@ -187,3 +187,18 @@ export async function cacheSite(site: string, wait: boolean, data: Buffer) {
 	await redis.set(`site:${wait}:${site}`, data.toString('base64'), 'EX', 600);
 	return data;
 }
+
+
+export async function getVoiceMaster(guildId: string) {
+
+	return await commandHandler.prisma.voiceMaster.findFirst({
+		where: { guildId },
+		include: {
+			openChannels: {
+				include: {
+					owner: true
+				}
+			}
+		}
+	})
+}

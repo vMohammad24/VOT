@@ -11,8 +11,9 @@ class VOTEmbed extends EmbedBuilder {
 
 	async dominant() {
 		const json = this.toJSON();
-		if (json.thumbnail) {
-			const image = await loadImg(json.thumbnail.url);
+		const img = json.thumbnail?.url || json.image?.url || json.author?.icon_url || json.footer?.icon_url;
+		if (img) {
+			const image = await loadImg(img);
 			this.setColor(getTwoMostUsedColors(image)[0]);
 		} else {
 			this.setColor('#313338')

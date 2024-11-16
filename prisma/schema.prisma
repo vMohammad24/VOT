@@ -56,19 +56,20 @@ model User {
 }
 
 model Member {
-  id                    String    @id @default(uuid())
-  user                  User      @relation(fields: [userId], references: [id])
+  id                    String               @id @default(uuid())
+  user                  User                 @relation(fields: [userId], references: [id])
   userId                String
-  guild                 Guild     @relation(fields: [guildId], references: [id])
+  guild                 Guild                @relation(fields: [guildId], references: [id])
   guildId               String
-  exp                   Int       @default(0)
-  level                 Int       @default(0)
-  messagesToday         Int       @default(0)
+  exp                   Int                  @default(0)
+  level                 Int                  @default(0)
+  messagesToday         Int                  @default(0)
   lastMessage           DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
   ticketsParticipatedIn Ticket[]
-  banned                Boolean   @default(false)
+  banned                Boolean              @default(false)
+  ownedChannels         VoiceMasterChannel[]
 
   @@unique([userId, guildId])
 }
@@ -142,6 +143,7 @@ model Guild {
   stickyMessage        StickyMessage?
   VerificationSettings VerificationSettings?
   ModerationSettings   ModerationSettings?
+  voiceMaster          VoiceMaster?
 }
 
 model Ticket {
@@ -279,6 +281,26 @@ model Clan {
   tag   String
   icon  String
   users User[]
+}
+
+model VoiceMaster {
+  id            String               @id @default(uuid())
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  guild         Guild                @relation(fields: [guildId], references: [id])
+  guildId       String               @unique
+  textChannel   String?
+  voiceChannel  String
+  blacklistRole String?
+  openChannels  VoiceMasterChannel[]
+}
+
+model VoiceMasterChannel {
+  id            String      @id
+  voiceMaster   VoiceMaster @relation(fields: [voiceMasterId], references: [id])
+  voiceMasterId String
+  owner         Member      @relation(fields: [ownerId], references: [id])
+  ownerId       String
 }
 
 enum PanelType {
