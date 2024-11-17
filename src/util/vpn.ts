@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { redis } from '..';
 
-interface VPNCheckResponse {
+export interface VPNCheckResponse {
 	service_type: string;
 	reported_spam: boolean;
 	vpn_service: boolean;
