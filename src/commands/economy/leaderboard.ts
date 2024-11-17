@@ -52,7 +52,6 @@ export default {
 			case 'Commands':
 				const commands = await prisma.command.findMany({
 					select: { commandId: true },
-					take: 10
 				});
 				const map = new Map<string, number>();
 				commands.forEach((c) => {
@@ -66,6 +65,7 @@ export default {
 								Array.from(map)
 									.sort((a, b) => b[1] - a[1])
 									.map((c, i) => `${i + 1}. **${c[0]}** - ${c[1]}`)
+									.slice(0, 10)
 									.join('\n'),
 							)
 							.setColor('Random')
