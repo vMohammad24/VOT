@@ -21,7 +21,7 @@ export default {
 	],
 	type: 'all',
 	execute: async ({ handler: { prisma }, args }) => {
-		const f = args.get('for') as string || 'Balance';
+		const f = args.get('type') as string || 'Balance';
 		switch (f) {
 			case 'Balance':
 				const users = await prisma.economy.findMany({
