@@ -313,30 +313,32 @@ export default {
 			description += `**Most used command**: ${mostUsedCommand[0]} (${mostUsedCommand[1]} times)\n`;
 		}
 		if (clan) {
-			await handler.prisma.clan.upsert({
-				where: {
-					guild: clan.identity_guild_id,
-				},
-				create: {
-					guild: clan.identity_guild_id,
-					tag: clan.tag,
-					icon: clan.badge,
-					users: pUser ? {
-						connect: {
-							id: user.id,
-						}
-					} : undefined,
-				},
-				update: {
-					tag: clan.tag,
-					icon: clan.badge,
-					users: pUser ? {
-						connect: {
-							id: user.id,
-						}
-					} : undefined,
-				},
-			});
+			try {
+				await handler.prisma.clan.upsert({
+					where: {
+						guild: clan.identity_guild_id,
+					},
+					create: {
+						guild: clan.identity_guild_id,
+						tag: clan.tag,
+						icon: clan.badge,
+						users: pUser ? {
+							connect: {
+								id: user.id,
+							}
+						} : undefined,
+					},
+					update: {
+						tag: clan.tag,
+						icon: clan.badge,
+						users: pUser ? {
+							connect: {
+								id: user.id,
+							}
+						} : undefined,
+					},
+				});
+			} catch (e) { }
 		}
 
 		if (clan && clan.emoji && clan.tag && clan.identity_guild_id) {
