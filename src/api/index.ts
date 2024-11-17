@@ -8,6 +8,7 @@ import { loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { getTwoMostUsedColors, rgbToHex } from '../util/util';
+import { getIpInfo } from '../util/vpn';
 import { checkKey } from './apiUtils';
 import brave from './brave';
 import discord from './discord';
@@ -32,8 +33,10 @@ const elysia = new Elysia()
 				description: 'API for VOT',
 				termsOfService: 'https://vot.wtf/tos',
 			},
+
 		},
-		exclude: [/^\/discord\/.*/, /^\/spotify\/.*/]
+		path: '/docs',
+		exclude: [/^\/discord\/.*/, /^\/spotify\/.*/],
 	}))
 	.use(discordElysia)
 	.use(spotifyElysia)
@@ -51,7 +54,7 @@ const elysia = new Elysia()
 	.onRequest(async ({ set, error, request }) => {
 		const endpoint = new URL(request.url).pathname;
 		const auth = request.headers.get('authorization');
-		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave');
+		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || endpoint.startsWith('/ipinfo');
 		if (needsAPIKey && !(await checkKey(auth))) {
 			return error(401, 'Unauthorized');
 		}
@@ -88,6 +91,15 @@ elysia.get('/commands', () => {
 		commands.push({ name: command.name!, description: command.description });
 	}
 	return commands;
+}, {
+	response: t.Array(t.Object({
+		name: t.String(),
+		description: t.String(),
+	})),
+	detail: {
+		description: 'Get all commands',
+
+	}
 });
 
 elysia.get('/commands/:name', ({ params: { name }, set }) => {
@@ -123,6 +135,15 @@ elysia.get(
 		query: t.Object({
 			url: t.String(),
 		}),
+		response: t.Array(t.Object({
+			r: t.Number(),
+			g: t.Number(),
+			b: t.Number(),
+			hex: t.String(),
+		})),
+		detail: {
+			description: 'Get the two most used colors in an image',
+		},
 	},
 );
 
@@ -144,6 +165,14 @@ elysia.post(
 		body: t.Object({
 			file: t.File(),
 		}),
+		response: t.Array(t.Object({
+			pageURL: t.String(),
+			sourceWebsite: t.String(),
+			thumbnail: t.String(),
+		})),
+		detail: {
+			description: 'Search an image using Google Lens',
+		},
 	},
 );
 const col = new Collection<string, DuckDuckGoChat>();
@@ -181,7 +210,30 @@ elysia.post(
 		headers: t.Object({
 			authorization: t.String(),
 		}),
+		response: t.Object({
+			response: t.String(),
+			sessionId: t.String(),
+		}),
+		detail: {
+			description: 'Ask a question using DuckDuckGo Chat',
+		},
 	},
 );
+
+elysia.get('/ipinfo', async ({ query }) => {
+	const { ip } = query;
+	const ipRegex =
+		/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+	if (!ipRegex.test(ip)) return { error: 'Invalid IP address' };
+	return await getIpInfo(ip);
+}, {
+	query: t.Object({
+		ip: t.String(),
+	}),
+	response: t.Object({}),
+	detail: {
+		description: 'Get information about an IP address',
+	},
+})
 
 export default elysia;
