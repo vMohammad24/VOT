@@ -6,6 +6,7 @@ import {
 	Events,
 	GuildMember,
 	MessageEditOptions,
+	RESTJSONErrorCodes,
 	type Interaction,
 	type Message,
 } from 'discord.js';
@@ -308,12 +309,6 @@ export default class CommandHandler {
 				}
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
-				// if (commandHandler.prodMode && command.shouldCache && commandContext.guild && commandContext.user) {
-				// 	const cachedCommand = await getCachedCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id);
-				// 	if (cachedCommand) {
-				// 		return cachedCommand;
-				// 	}
-				// }
 				setTimeout(() => {
 					if (ctx instanceof CommandInteraction) {
 						if (!ctx.deferred && !ctx.replied) {
@@ -325,14 +320,10 @@ export default class CommandHandler {
 				await createCommand(commandContext, command);
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
-				// if (command.shouldCache && commandContext.guild && commandContext.user && result) {
-				// 	await cacheCommand(command.id!, JSON.stringify(commandContext.args), commandContext.user.id, commandContext.guild.id, JSON.stringify(result));
-				// }
-				const cacheTime = Date.now() - executionTime - eStart;
 				const total = Date.now() - start;
 				if (commandHandler.verbose) {
 					commandHandler.logger.info(
-						`Executed command ${command.name} in ${total}ms (execuntion: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms) || cache: ${cacheTime}ms`,
+						`Executed command ${command.name} in ${total}ms (execution: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`,
 					);
 				}
 				return result;
@@ -352,12 +343,12 @@ export default class CommandHandler {
 				return result;
 			}
 		} catch (e) {
-			if ((e as any).code == 50013) {
+			if ((e as any).code in RESTJSONErrorCodes) {
 				return {
 					embeds: [
 						new VOTEmbed()
-							.setTitle('Missing Permissions')
-							.setDescription('I am missing permissions to execute this command')
+							.setTitle('Error')
+							.setDescription(`An error occurred: ${(e as any).message}`)
 							.setColor('DarkRed')
 							.setTimestamp(),
 					],

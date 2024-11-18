@@ -712,3 +712,13 @@ export async function chatllm(result: BraveSearchResult['data']['body']['respons
 	await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60 * 24 * 7);
 	return enrichments.data as BraveEnrichments;
 }
+
+
+export async function searchBraveSuggest(query: string): Promise<string[]> {
+	const cache = await redis.get(`braveSuggest:${query}`);
+	if (cache && commandHandler.prodMode) return JSON.parse(cache);
+	const res = await axios.get(`https://search.brave.com/api/suggest?q=${encodeURIComponent(query)}`);
+	const suggestions = res.data[1];
+	await redis.set(`braveSuggest:${query}`, JSON.stringify(suggestions), 'EX', 60 * 60);
+	return suggestions;
+}

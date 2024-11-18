@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import TurnDownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
-import { searchBrave } from '../../util/brave';
+import { searchBrave, searchBraveSuggest } from '../../util/brave';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { isNullish } from '../../util/util';
@@ -16,12 +16,22 @@ export default {
 			name: 'query',
 			description: 'The query you want to search for',
 			required: true,
+			autocomplete: true,
 		},
 	],
+	init: ({ client }) => {
+		client.on('interactionCreate', async (interaction) => {
+			if (!interaction.isAutocomplete()) return;
+			const query = interaction.options.getString('query');
+			if (!query) return interaction.respond([{ name: 'No query provided', value: '' }]);
+			const json = await searchBraveSuggest(query);
+			return interaction.respond(json.map(r => ({ name: r, value: r })));
+		})
+	},
 	type: 'all',
 	execute: async ({ args, interaction, message, handler: { client } }) => {
 		const query = args.get('query') as string | undefined;
-		if (!query) return { ephemeral: true, content: 'Please provide a query to search for' };
+		if (isNullish(query) || !query) return { ephemeral: true, content: 'Please provide a query to search for' };
 		interaction?.deferReply();
 		const json = await searchBrave(query);
 		const { web, infobox } = json.data.body.response;
