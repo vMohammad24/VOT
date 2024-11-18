@@ -1,5 +1,6 @@
 import { inspect } from 'bun';
 import { ApplicationCommandOptionType, Colors, EmbedBuilder } from 'discord.js';
+import numeral from 'numeral';
 import commandHandler, { redis } from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 export default {
@@ -51,7 +52,7 @@ export default {
 			embed.setDescription('``nuh uh``');
 			return { embeds: [embed] };
 		}
-		const startTime = new Date();
+		const startTime = process.hrtime();
 		// return code;
 		try {
 			if (code.startsWith('```')) {
@@ -79,8 +80,11 @@ export default {
 		} catch (e) {
 			embed.setDescription(`\`\`\`js\n${e}\`\`\``).setColor('DarkRed');
 		}
+		const diff = process.hrtime(startTime);
+		const microseconds = (diff[0] * 1e6) + (diff[1] / 1e3);
+		const timeTaken = microseconds > 2000 ? `${numeral(microseconds / 1000).format('0,0.0')}ms` : `${numeral(microseconds).format('0,0.0')}µs`;
 		embed.setFooter({
-			text: `Took ${new Date().getTime() - startTime.getTime()}ms`,
+			text: `Took ${timeTaken}`,
 		});
 		return { embeds: [embed] };
 	},
