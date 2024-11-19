@@ -52,7 +52,7 @@ class ChessGame {
             ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         ];
-        this.canvas = createCanvas(400, 400);
+        this.canvas = createCanvas(430, 430);
         this.ctx = this.canvas.getContext('2d');
         this.tileSize = 50;
         this.channel = channel;
@@ -69,11 +69,11 @@ class ChessGame {
         }
 
         // Draw row and column labels
-        this.ctx.fillStyle = '#000000';
-        this.ctx.font = '20px Arial';
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = '30px Arial';
         for (let i = 0; i < 8; i++) {
-            this.ctx.fillText(String.fromCharCode(65 + i), i * this.tileSize + this.tileSize / 2 - 5, 8 * this.tileSize + 20);
-            this.ctx.fillText((8 - i).toString(), 8 * this.tileSize + 5, i * this.tileSize + this.tileSize / 2 + 5);
+            this.ctx.fillText(String.fromCharCode(65 + i), i * this.tileSize + this.tileSize / 2 - 10, 8 * this.tileSize + 30);
+            this.ctx.fillText((8 - i).toString(), 8 * this.tileSize + 10, i * this.tileSize + this.tileSize / 2 + 10);
         }
 
         // Load and draw the pieces

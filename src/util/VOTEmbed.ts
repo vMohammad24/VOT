@@ -1,4 +1,4 @@
-import { EmbedBuilder, EmbedData } from 'discord.js';
+import { ColorResolvable, EmbedBuilder, EmbedData } from 'discord.js';
 import commandHandler from '..';
 import { loadImg } from './database';
 import { getTwoMostUsedColors } from './util';
@@ -12,13 +12,22 @@ class VOTEmbed extends EmbedBuilder {
 	async dominant() {
 		const json = this.toJSON();
 		const img = json.thumbnail?.url || json.image?.url || json.author?.icon_url || json.footer?.icon_url;
+		let color: ColorResolvable = '#313338';
 		if (img) {
 			const image = await loadImg(img);
-			this.setColor(getTwoMostUsedColors(image)[0]);
-		} else {
-			this.setColor('#313338')
+			color = getTwoMostUsedColors(image)[0];
 		}
-		return this;
+		return super.setColor(color);
+	}
+
+	public setColor(color: ColorResolvable | null): this {
+		if (color == 'Random') {
+			const r = Math.floor(Math.random() * 256);
+			const g = Math.floor(Math.random() * 256);
+			const b = Math.floor(Math.random() * 256);
+			color = `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+		}
+		return super.setColor(color);
 	}
 
 	addDescription(description: string) {
