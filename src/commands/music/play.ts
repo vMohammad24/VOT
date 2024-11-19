@@ -47,7 +47,7 @@ export default {
 			};
 		}
 		const embed = new EmbedBuilder().setTitle('Added to queue').setColor('Green');
-		await kazagumo.search(query, { requester: member as GuildMember, source: 'ytmsearch:' }).then(async (res) => {
+		await kazagumo.search(query, { requester: member as GuildMember }).then(async (res) => {
 			switch (res.type) {
 				case 'TRACK':
 					const track = res.tracks[0];

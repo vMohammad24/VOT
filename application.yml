@@ -5,7 +5,7 @@ plugins:
       #      - "dzsearch:%QUERY%" # Deezer search provider
       - 'ytsearch:"%ISRC%"' # Will be ignored if track does not have an ISRC. See https://en.wikipedia.org/wiki/International_Standard_Recording_Code
       - 'spsearch:"%ISRC%"' # Spotify search provider
-      - 'ytsearch:%QUERY%' # Will be used if track has no ISRC or no track could be found for the ISRC
+      - 'ytmsearch:%QUERY%' # Will be used if track has no ISRC or no track could be found for the ISRC
       - 'spsearch:%QUERY%' # Spotify search provider
     #        you can add multiple other fallback sources here
     sources:
@@ -42,9 +42,9 @@ plugins:
     allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
     allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
     allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
-    oauth:
-      enabled: true
-      refreshToken: '1//056lcUHKh4BsbCgYIARAAGAUSNwF-L9Irz81fcdUhOMHz3iNEyP7gq8NQAwrleoLPFh7eNTkQVmGFrIRdYMlD1uWVrlm5TiT_P-g'
+    # oauth:
+    #   enabled: true
+    #   refreshToken: '1//056lcUHKh4BsbCgYIARAAGAUSNwF-L9Irz81fcdUhOMHz3iNEyP7gq8NQAwrleoLPFh7eNTkQVmGFrIRdYMlD1uWVrlm5TiT_P-g'
     # The clients to use for track loading. See below for a list of valid clients.
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     clients:
