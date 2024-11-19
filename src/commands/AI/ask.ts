@@ -3,6 +3,7 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { searchBrave } from '../../util/brave';
 import { ddgModels, DuckDuckGoChat } from '../../util/ddg';
 import { pagination } from '../../util/pagination';
+import { isNullish } from '../../util/util';
 const collection = new Collection<string, DuckDuckGoChat>();
 export default {
 	name: 'ask',
@@ -69,7 +70,10 @@ export default {
 		if (message) (channel as GuildTextBasedChannel).sendTyping();
 		const time = Date.now();
 		const res = await ddg.chat(`Here's some context for you:\n${context}\n\n${question}`);
-
+		if (isNullish(res)) {
+			collection.delete(user.id);
+			collection.set(user.id, new DuckDuckGoChat('gpt-4o-mini'));
+		}
 		const response = ((res as string) || '') + `\n\n-# Took ${Date.now() - time}ms using ${ddg.getModel()} model`;
 		await pagination({
 			interaction,
