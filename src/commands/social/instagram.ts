@@ -5,6 +5,7 @@ import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer, newPage } from '../../util/puppeteer';
+import { isNullish } from '../../util/util';
 
 interface IUser {
 	pk: string;
@@ -271,7 +272,7 @@ export default {
 	slashOnly: true,
 	execute: async ({ interaction }) => {
 		if (!interaction) return;
-		interaction?.deferReply();
+		await interaction?.deferReply();
 		switch (interaction.options.getSubcommand()) {
 			case 'repost': {
 				const url = interaction.options.getString('url', true);
@@ -287,26 +288,23 @@ export default {
 				const embed = new EmbedBuilder()
 					.setTitle(media.caption?.text.substring(0, 256) || 'No Caption')
 					.setURL(`https://www.instagram.com/p/${media.code}`)
-					.setAuthor({ name: media.user.username, iconURL: media.user.profile_pic_url })
+					.setAuthor(isNullish(media.user.username) ? null : { name: media.user.username, iconURL: media.user.profile_pic_url ?? undefined })
 					.setThumbnail(media.image_versions2.candidates[0].url)
-					// .addFields(
-					//     { name: 'Likes', value: numeral(data.like_count).format('0,0'), inline: true },
-					//     { name: 'Comments', value: numeral(data.comment_count).format('0,0'), inline: true },
-					//     { name: 'Views', value: numeral(data.view_count!).format('0,0') || 'N/A', inline: true },
-					// )
-					.setDescription(
-						`## ${getEmoji('like').toString()} ${numeral(media.like_count).format('0,0')}\n## ${getEmoji('chat').toString()} ${numeral(media.comment_count).format('0,0')}`,
+					.addFields(
+						{ name: 'Likes', value: numeral(media.like_count).format('0,0'), inline: true },
+						{ name: 'Comments', value: numeral(media.comment_count).format('0,0'), inline: true },
 					)
 					.setTimestamp(new Date(media.taken_at * 1000))
-					.setFooter({ text: 'Uploaded' });
+					.setFooter({ text: `${numeral(media.view_count).format('0,0')} views • Uploaded` });
 
 				const videoUrl = media.video_versions[0]?.url;
 				if (videoUrl) {
 					const attachment = new AttachmentBuilder(videoUrl, { name: `VOT_Instagram_Repost.mp4` });
-					return { embeds: [embed], files: [attachment] };
+					interaction.editReply({ embeds: [embed], files: [attachment] });
 				} else {
-					return { embeds: [embed] };
+					interaction.editReply({ embeds: [embed] });
 				}
+				break;
 			}
 			case 'trending': {
 				const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":';

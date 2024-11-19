@@ -279,6 +279,9 @@ export default {
 		},
 	],
 	execute: async ({ user, interaction, handler, args, guild, channel, message, editReply }) => {
+		console.log(`https://discord.com/api/v10/webhooks/${handler.client.application!.id}/${interaction!.token}/messages/@original`);
+		// return { content: 'hi' };
+
 
 		const voiceMaster = await handler.prisma.voiceMaster.upsert({
 			where: { guildId: guild.id },

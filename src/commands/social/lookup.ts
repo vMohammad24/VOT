@@ -538,14 +538,14 @@ export default {
 						new EmbedBuilder()
 							.setAuthor({
 								name: rUser.username,
-								iconURL: rUser.avatar ? rUser.avatar : undefined,
+								iconURL: isURL(rUser.avatar) ? rUser.avatar : undefined,
 								url: `https://inject.bio/${rUser.username}`,
 							})
 							.setTitle(isNullish(rUser.display_name) ? rUser.username : rUser.display_name)
 							.setURL(`https://inject.bio/${rUser.username}`)
 							.setDescription(isNullish(rUser.description) ? 'No description' : rUser.description)
-							.setThumbnail(rUser.avatar)
-							.setImage(rUser.background)
+							.setThumbnail(isURL(rUser.avatar) ? rUser.avatar : null)
+							.setImage(isURL(rUser.background) ? rUser.background : null)
 							.addFields([
 								{ name: 'View Count', value: numeral(rUser.view_count).format('0,0'), inline: true },
 								{ name: 'Discord', value: rUser.discord_id ? `<@${rUser.discord_id}>` : 'Not linked', inline: true },
