@@ -323,7 +323,7 @@ elysia.get('/uploads/raw/:id', async ({ query, params }) => {
 	})
 });
 
-elysia.get('/uploads/:id', async ({ params, query }) => {
+elysia.get('/uploads/:id', async ({ params, query, request }) => {
 	const { id } = params;
 	const { key } = query;
 	const data = await redis.get(`uploads:${id}`);
@@ -331,7 +331,7 @@ elysia.get('/uploads/:id', async ({ params, query }) => {
 	const { data: f, type, name, date } = JSON.parse(data);
 	const buffer = Buffer.from(f, 'base64');
 	const fileSize = numeral(buffer.byteLength).format('0,0b');
-	const rawURL = `https://dev.vmohammad.dev/uploads/raw/${id}?key=${key}`;
+	const rawURL = `${new URL(request.url).origin}/uploads/raw/${id}?key=${key}`;
 	const domColor = rgbToHex(getTwoMostUsedColors(await loadImg(rawURL))[0]);
 	return `
 <!DOCTYPE html>
