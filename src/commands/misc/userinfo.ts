@@ -156,8 +156,9 @@ export default {
 		const emojiTierMap: Map<UserTier, string> = new Map([
 			// [UserTier.Normal, null],
 			[UserTier.Premium, getEmoji('t_premium').toString()],
-			[UserTier.Staff, getEmoji('t_staff').toString()],
 			[UserTier.Beta, getEmoji('t_beta').toString()],
+			[UserTier.Staff, getEmoji('t_staff').toString()],
+			[UserTier.Manager, getEmoji('t_staff').toString()],
 		]);
 		const cacheKeyUser = `user:info:${user.id}`;
 		const cacheKeyStatus = `user:status:${user.id}`;
