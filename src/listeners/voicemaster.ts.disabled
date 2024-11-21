@@ -16,6 +16,7 @@ export default {
     description: 'VoiceMaster listener',
     execute: async ({ client, prisma }) => {
         client.on('voiceStateUpdate', async (oldState, newState) => {
+            if (!newState || !newState.guild) return;
             const vm = await getVoiceMaster(newState.guild.id);
             if (!vm || !newState.member) return;
             if (vm && vm.blacklistRole && newState.member.roles.cache.has(vm.blacklistRole)) return;
