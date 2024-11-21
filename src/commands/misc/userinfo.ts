@@ -218,6 +218,11 @@ export default {
 						activity.type = ActivityType.Listening;
 					if (!activity.type) activity.type = ActivityType.Playing;
 					// const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `activity_${activity.type}.svg`);
+					if (activity.type === ActivityType.Custom && activity.emoji && (activity.emoji as any).id) {
+						const e = activity.emoji as any;
+						const emoji = await addEmojiByURL(`${e.name}_${e.id}`, `https://cdn.discordapp.com/emojis/${e.id}.${e.animated ? 'gif' : 'png'}?size=128`, ems);
+						sData.status = emoji?.toString() + ' ' + sData.status;
+					}
 					activity.emoji = getEmoji(`activity_${activity.type}`)?.toString() || '❓';
 				}),
 			);
@@ -355,7 +360,7 @@ export default {
 		}
 
 		if (sData.activities && sData.activities.length > 0) {
-			description += `### **Activities**:\n${sData.activities
+			description += `### **Activities**:\n${sData.activities.filter((a) => a.type !== ActivityType.Custom)
 				.map(
 					(activity) =>
 						`${activity.emoji ?? ''} **${activity.name}** ${activity.details ? `\`${activity.details}\`` : ''} ${activity.state ? `- \`${activity.state}\`` : ''}`,
