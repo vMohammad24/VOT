@@ -1,8 +1,11 @@
 import { cors } from '@elysiajs/cors';
+import { html } from '@elysiajs/html';
 import { swagger } from '@elysiajs/swagger';
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { ApplicationCommandOptionType, Collection } from 'discord.js';
 import { Elysia, t } from 'elysia';
 import { nanoid } from 'nanoid/non-secure';
+import numeral from 'numeral';
 import commandHandler, { redis, upSince } from '..';
 import { loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
@@ -23,6 +26,7 @@ spotify(spotifyElysia);
 brave(braveElysia);
 verification(guildsElysia);
 const elysia = new Elysia()
+	.use(html())
 	.use(cors())
 	.use(swagger({
 		autoDarkMode: true,
@@ -54,11 +58,13 @@ const elysia = new Elysia()
 	.onRequest(async ({ set, error, request }) => {
 		const endpoint = new URL(request.url).pathname;
 		const auth = request.headers.get('authorization');
-		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || endpoint.startsWith('/ipinfo');
+		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || endpoint.startsWith('/ipinfo') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
 		if (needsAPIKey && !(await checkKey(auth))) {
 			return error(401, 'Unauthorized');
 		}
 
+	}).onError(({ error }) => {
+		commandHandler.logger.error(error);
 	});
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
@@ -236,4 +242,152 @@ elysia.get('/ipinfo', async ({ query }) => {
 	},
 })
 
+function encrypt(text: string, secretKey: string) {
+	const iv = randomBytes(12); // Generate a 12-byte IV
+	const cipher = createCipheriv(
+		'aes-256-gcm',
+		Uint8Array.from(Buffer.from(secretKey, 'hex')), // Ensure Uint8Array
+		Uint8Array.from(iv) // Ensure Uint8Array
+	);
+	let encrypted = cipher.update(text, 'utf-8', 'hex');
+	encrypted += cipher.final('hex');
+	const authTag = cipher.getAuthTag(); // Get the authentication tag
+
+	return {
+		iv: iv.toString('hex'),
+		encryptedData: encrypted,
+		authTag: authTag.toString('hex')
+	};
+}
+
+function decrypt(encryptedData: string, secretKey: string, iv: string, authTag: string) {
+	const decipher = createDecipheriv(
+		'aes-256-gcm',
+		new Uint8Array(Buffer.from(secretKey, 'hex')),
+		new Uint8Array(Buffer.from(iv, 'hex'))
+	);
+	decipher.setAuthTag(new Uint8Array(Buffer.from(authTag, 'hex'))); // Set the authentication tag
+
+	let decrypted = decipher.update(encryptedData, 'hex', 'utf-8');
+	decrypted += decipher.final('utf-8');
+	return decrypted;
+}
+
+// Generate a 32-byte (256-bit) key
+elysia.post('/upload', async ({ body, request }) => {
+	const { file, deleteAfter } = body;
+	const id = nanoid(10);
+	const key = randomBytes(32).toString('hex');
+	try {
+		const d = encrypt(Buffer.from(await file.arrayBuffer()).toString('base64'), key);
+		redis.set(`uploads:${id}`, JSON.stringify(
+			{
+				data: d.encryptedData,
+				type: file.type,
+				name: file.name,
+				date: Date.now(),
+				iv: d.iv,
+				authTag: d.authTag
+			}
+		), 'EX', (deleteAfter ?? 24 * 60) * 60);
+		const u = new URL(request.url);
+		return {
+			fileURL: `${u.href}s/${id}?key=${key}`,
+		}
+	} catch (e) {
+		return e;
+	}
+}, {
+	body: t.Object({
+		file: t.File(),
+		deleteAfter: t.Optional(t.Number())
+	}),
+});
+
+elysia.get('/uploads/raw/:id', async ({ query, params }) => {
+	const { id } = params;
+	const { key } = query;
+	const data = await redis.get(`uploads:${id}`);
+	if (!data) return { message: 'File not found' };
+	const { data: f, type, name, iv, authTag } = JSON.parse(data);
+	const buffer = Buffer.from(decrypt(f, key, iv, authTag), 'base64');
+	const blob = new Blob([new Uint8Array(buffer)])
+	const file = new File([blob], name, { type });
+	return file;
+}, {
+	detail: {
+		description: 'Get an uploaded file',
+	},
+	query: t.Object({
+		key: t.String(),
+	})
+});
+
+elysia.get('/uploads/:id', async ({ params, query }) => {
+	const { id } = params;
+	const { key } = query;
+	const data = await redis.get(`uploads:${id}`);
+	if (!data) return { message: 'File not found' };
+	const { data: f, type, name, date } = JSON.parse(data);
+	const buffer = Buffer.from(f, 'base64');
+	const fileSize = numeral(buffer.byteLength).format('0,0b');
+	const rawURL = `https://dev.vmohammad.dev/uploads/raw/${id}?key=${key}`;
+	const domColor = rgbToHex(getTwoMostUsedColors(await loadImg(rawURL))[0]);
+	return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>${name} | vot.wtf</title>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <meta name="viewport" content="width=device-width">
+    <meta name="robots" content="noindex">
+            <meta name="twitter:card" content="summary_large_image"/>
+            <meta name="twitter:image" content="${rawURL}">
+
+    <meta property="og:type" content="link">
+    <meta property="og:version" content="1.0">
+    <meta property="og:title" content="Cool ahh">
+    <meta property="og:author_name" content="VOT Uploading">
+    <meta property="og:author_url" content="https://vot.wtf">
+    <meta property="og:provider_name" content="VOT">
+    <meta property="og:provider_url" content="https://vot.wtf">
+        <meta name="theme-color" content="${domColor}"/>
+            <meta name="pubdate" content="${new Date(date).toString()}"/>
+	
+
+</head>
+<body style="background-color: #121212; font-family: 'Arial', sans-serif; margin: 0; padding: 0; color: #ffffff;">
+
+    <main style="display: flex; min-height: 100vh; justify-content: center; align-items: center; padding: 20px;overflow-y:hidden;">
+
+        <div style="background-color: #1e1e1e; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);">
+
+            <h1 style="font-size: 1.8rem; font-weight: bold; margin-bottom: 10px;">
+                ${name} <span style="color: #bbbbbb;">(${fileSize})</span>
+            </h1>
+            <p style="color: #a0a0a0; font-size: 0.9rem; margin-bottom: 20px;">
+                Uploaded at: ${new Date(date).toUTCString()}
+            </p>
+
+            <img src="${rawURL}" alt="${name}"
+                style="border-radius: 12px; max-width: 100%; max-height: 60vh; object-fit: cover; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;"
+                onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 30px ${domColor}';"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+        </div>
+
+    </main>
+
+</body>
+
+
+</html>`
+}, {
+	detail: {
+		description: 'Get an uploaded file',
+	},
+	query: t.Object({
+		key: t.String()
+	})
+});
 export default elysia;
