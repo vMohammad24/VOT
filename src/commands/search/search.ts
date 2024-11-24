@@ -22,6 +22,7 @@ export default {
 	init: ({ client }) => {
 		client.on('interactionCreate', async (interaction) => {
 			if (!interaction.isAutocomplete()) return;
+			if (interaction.commandName !== 'search') return;
 			const query = interaction.options.getString('query');
 			if (!query) return interaction.respond([{ name: 'No query provided', value: '' }]);
 			const json = await searchBraveSuggest(query);
