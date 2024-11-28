@@ -1,4 +1,4 @@
-import { ChannelType, Guild, type GuildTextBasedChannel } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Guild, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getGuild } from '../util/database';
 import VOTEmbed from '../util/VOTEmbed';
@@ -30,7 +30,15 @@ export default {
 				.setColor('DarkRed')
 				.setFooter({ text: `Message ID: ${message.id}` })
 				.setTimestamp();
-			logChannel.send({ embeds: [embed] });
+			const messageBefore = (await message.channel.messages.fetch({ before: message.id, limit: 1 }))?.first();
+			logChannel.send({
+				embeds: [embed],
+				components: messageBefore ? [
+					new ActionRowBuilder<ButtonBuilder>().addComponents([
+						new ButtonBuilder().setLabel('Jump to Surrounding').setStyle(ButtonStyle.Link).setEmoji('🔍').setURL(messageBefore.url)
+					])
+				] : []
+			});
 		});
 		client.on('messageUpdate', async (oldMessage, newMessage) => {
 			if (oldMessage.author!.bot) return;
@@ -39,7 +47,6 @@ export default {
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
 				.setTitle('✏️ Message Updated')
-				.setDescription(`[Jump to message](${oldMessage.url})`)
 				.setAuthor({
 					name: oldMessage.author!.tag,
 					iconURL: oldMessage.author!.displayAvatarURL(),
@@ -52,7 +59,13 @@ export default {
 				.setColor('Orange')
 				.setFooter({ text: `Message ID: ${oldMessage.id}` })
 				.setTimestamp();
-			logChannel.send({ embeds: [embed] });
+			logChannel.send({
+				embeds: [embed], components: [
+					new ActionRowBuilder<ButtonBuilder>().addComponents([
+						new ButtonBuilder().setLabel('Jump to Message').setStyle(ButtonStyle.Link).setEmoji('🔍').setURL(newMessage.url)
+					])
+				]
+			});
 		});
 
 		client.on('channelDelete', async (channel) => {
@@ -184,5 +197,25 @@ export default {
 				logChannel.send({ embeds: [embed] });
 			}
 		});
+		client.on('messageDeleteBulk', async (messages) => {
+			const logChannel = await getLogChannel(messages.first()!.guild!);
+			if (!logChannel) return;
+			const embed = new VOTEmbed()
+				.setTitle('🗑️ Bulk Message Deleted')
+				.setDescription(`Bulk messages have been deleted`)
+				.setColor('DarkRed')
+				.setFooter({ text: `Bulk delete` })
+				.setFields([{ name: 'Channel', value: `<#${messages.first()!.channel!.id}>`, inline: true }])
+				.setTimestamp();
+			const file = messages.map((message) => `${message.author!.tag}: ${message.content} ${message.attachments.size > 0 ? `(attachments: ${message.attachments.map(a => a.url).join(' , ')})` : ''}`).join('\n');
+			const messageBefore = (await messages.find(m => m)?.channel.messages.fetch({ before: messages.first()?.id, limit: 1 }))?.first();
+			logChannel.send({
+				embeds: [embed], files: [{ attachment: Buffer.from(file), name: 'bulk-delete.txt' }], components: messageBefore ? [
+					new ActionRowBuilder<ButtonBuilder>().addComponents([
+						new ButtonBuilder().setLabel('Jump to Surronding').setStyle(ButtonStyle.Link).setEmoji('🔍').setURL(messageBefore.url)
+					])
+				] : []
+			});
+		})
 	},
 } as IListener;

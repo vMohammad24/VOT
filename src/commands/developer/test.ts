@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, Routes } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -277,8 +277,15 @@ export default {
 		},
 	],
 	execute: async ({ user, interaction, member, handler, args, guild, channel, message, editReply }) => {
-		const res = await handler.client.rest.post(`/guilds/${guild.id}/members-search`, {
-			body: { "or_query": {}, "and_query": {}, "limit": 250 }
+		// const res = await handler.client.rest.post(`/guilds/${guild.id}/members-search`, {
+		// 	body: { "or_query": {}, "and_query": {}, "limit": 250 }
+		// })
+		const res = await handler.client.rest.post(Routes.channelMessages(channel.id), {
+			body: {
+				'components': [
+					{ 'type': 16, 'content_inventory_entry': { 'id': '1', 'author_id': handler.client.user!.id, 'author_type': 1, 'content_type': 5, 'traits': [], 'extra': { 'type': 'played_game_extra', 'game_name': 'Minecraft', 'application_id': '1218910356341264445' } } }
+				]
+			}
 		})
 		console.log(JSON.stringify(res))
 		// console.log(await guild.members.search({ query: 'very' }))
