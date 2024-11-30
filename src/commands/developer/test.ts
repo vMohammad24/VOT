@@ -282,9 +282,102 @@ export default {
 		// })
 		const res = await handler.client.rest.post(Routes.channelMessages(channel.id), {
 			body: {
-				'components': [
-					{ 'type': 16, 'content_inventory_entry': { 'id': '1', 'author_id': handler.client.user!.id, 'author_type': 1, 'content_type': 5, 'traits': [], 'extra': { 'type': 'played_game_extra', 'game_name': 'Minecraft', 'application_id': '1218910356341264445' } } }
-				]
+				content: "HI",
+				"attachments": [
+					{
+						"application": null,
+						"clip_created_at": "2024-08-15T22:03:05.738000+00:00",
+						"clip_participants": [
+							{
+								"avatar": "cc700cef80063bc742c3da2a81b5fb57",
+								"clan": null,
+								"discriminator": "0",
+								"id": "442626774841556992",
+								"primary_guild": null,
+								"username": "femeie",
+								"publicFlags": 128,
+								"avatarDecorationData": {
+									"asset": "a_8552f9857793aed0cf816f370e2df3be",
+									"skuId": "1232071712695386162"
+								},
+								"globalName": "b"
+							},
+							{
+								"avatar": "1c352551105bf63bd8f748a113b4f0e0",
+								"clan": null,
+								"discriminator": "0",
+								"id": "919239894327521361",
+								"primary_guild": null,
+								"username": "e29s",
+								"publicFlags": 0,
+								"avatarDecorationData": {
+									"asset": "a_aa2e1c2b3cf05b24f6ec7b8b4141f5fc",
+									"skuId": "1144056631374647458"
+								},
+								"globalName": "woosh >_<"
+							},
+							{
+								"avatar": "f96d06f1fa6daebc62f3945bc230a8c6",
+								"clan": {
+									"identityGuildId": null,
+									"identityEnabled": null,
+									"tag": null,
+									"badge": null
+								},
+								"discriminator": "0",
+								"id": "658592832596082688",
+								"primary_guild": {
+									"badge": null,
+									"identity_enabled": null,
+									"identity_guild_id": null,
+									"tag": null
+								},
+								"username": "crxaw.",
+								"publicFlags": 64,
+								"avatarDecorationData": null,
+								"globalName": "Crxa"
+							},
+							{
+								"avatar": "98ebd1fd1f5d1e428a0dd0ce4f6dc6f6",
+								"clan": {
+									"identityGuildId": null,
+									"identityEnabled": null,
+									"tag": null,
+									"badge": null
+								},
+								"discriminator": "0",
+								"id": "328165170536775680",
+								"primary_guild": {
+									"badge": null,
+									"identity_enabled": null,
+									"identity_guild_id": null,
+									"tag": null
+								},
+								"username": "verticalsync",
+								"publicFlags": 4194432,
+								"avatarDecorationData": {
+									"asset": "a_89cd445201a0c6c64d46876503d0e90e",
+									"skuId": "1226939756617793606"
+								},
+								"globalName": "nyx"
+							}
+						],
+						"content_scan_version": 1,
+						"content_type": "video/mp4",
+						"filename": "THEY_GOT_INTO_YOU_PHONE.mp4",
+						"flags": 1,
+						"height": 1070,
+						"id": "1312042647753457734",
+						"placeholder": "0PcJE4KwqZaYh5hXLNDzQTs=",
+						"placeholder_version": 1,
+						"proxy_url": "https://media.discordapp.net/attachments/1308176432849096734/1312042647753457734/THEY_GOT_INTO_YOU_PHONE.mp4?ex=674b0e6f&is=6749bcef&hm=c95fb0c847bfe711f58ee317ff9a4f01324d4b79f04ca629a39a48172dace23e&",
+						"size": 5284564,
+						"title": "THEY GOT INTO YOU PHONE?",
+						"url": "https://cdn.discordapp.com/attachments/1308176432849096734/1312042647753457734/THEY_GOT_INTO_YOU_PHONE.mp4?ex=674b0e6f&is=6749bcef&hm=c95fb0c847bfe711f58ee317ff9a4f01324d4b79f04ca629a39a48172dace23e&",
+						"width": 2560,
+						"spoiler": false
+					}
+				],
 			}
 		})
 		console.log(JSON.stringify(res))
