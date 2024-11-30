@@ -162,6 +162,7 @@ async function getGameInfo(appId: number) {
 const turndown = new TurndownService();
 export default {
     description: "Search for a game on Steam",
+    type: 'all',
     aliases: ["game", 'games'],
     options: [{
         type: ApplicationCommandOptionType.String,
