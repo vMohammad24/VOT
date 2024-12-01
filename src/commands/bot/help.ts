@@ -1,8 +1,9 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getPrefix } from '../../handler/LegacyHandler';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
+import { getFrontEndURL } from '../../util/urls';
 import VOTEmbed from '../../util/VOTEmbed';
 
 function getOptionName(value: number): string | undefined {
@@ -35,17 +36,22 @@ export default {
 				return {
 					name: category,
 					emoji: (getEmoji(`c_${category.toLowerCase()}`) || '❔').toString(),
-					page: new EmbedBuilder()
-						.setTitle(category)
-						.setDescription(
-							commands
-								.filter((cmd) => cmd.category === category)
-								.sort()
-								.map((cmd) => `**${cmd.name}** - ${cmd.description}`)
-								.join('\n'),
-						)
-						.setColor('Green')
-						.setTimestamp(),
+					page: {
+						embeds: [
+							new VOTEmbed()
+								.setTitle(category)
+								.setDescription(
+									commands
+										.filter((cmd) => cmd.category === category)
+										.sort()
+										.map((cmd) => `**${cmd.name}** - ${cmd.description}`)
+										.join('\n'),
+								)
+								.setColor('Green')
+								.setTimestamp()
+						],
+						content: `Go to ${getFrontEndURL()}/commands for all commands.`,
+					},
 				};
 			});
 			const msg = await pagination({
@@ -84,6 +90,7 @@ export default {
 				});
 			return {
 				embeds: [embed],
+				content: `Go to ${getFrontEndURL()}/commands for all commands.`,
 				ephemeral: true,
 			};
 		}

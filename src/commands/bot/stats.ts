@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { ActionRowBuilder, APIApplication, ButtonBuilder, ButtonStyle, EmbedBuilder, Routes } from 'discord.js';
+import { ActionRowBuilder, APIApplication, ButtonBuilder, ButtonStyle, Client, EmbedBuilder, Routes } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
-import { upSince } from '../..';
+import { redis, upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
@@ -29,10 +29,12 @@ async function getLines() {
 	);
 
 	const totalLines = lineCounts.reduce((acc, curr) => acc + curr, 0);
+	globalLines = totalLines.toString();
 	return totalLines;
 }
 
-const globalLines = await getLines();
+let globalLines = '';
+getLines();
 async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	const headers = {
 		Authorization: `Bearer ${import.meta.env.GITHUB_TOKEN}`,
@@ -48,20 +50,29 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	return { message, date };
 }
 const commit = await getCurrentCommit();
+async function getInstallCounts(client: Client): Promise<{ approximate_guild_count: number; approximate_user_install_count: number }> {
+	const cache = await redis.get('installCounts');
+	if (cache) return JSON.parse(cache);
+	const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
+	const { approximate_guild_count, approximate_user_install_count } = res;
+	redis.set('installCounts', JSON.stringify({ approximate_guild_count, approximate_user_install_count }), 'EX', 60 * 5);
+	return {
+		approximate_guild_count: approximate_guild_count ?? 0,
+		approximate_user_install_count: approximate_user_install_count ?? 0,
+	}
+}
 export default {
 	name: 'stats',
 	description: 'Shows the bot stats',
 	type: 'all',
-	execute: async ({ handler, interaction }) => {
+	execute: async ({ handler }) => {
 		const { client } = handler;
 		const { memoryUsage } = process;
 		const { heapUsed } = memoryUsage();
 		const { users, guilds } = client;
 		const { size } = guilds.cache;
 		const { size: usersSize } = users.cache;
-		await interaction?.deferReply();
-		const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
-		const { approximate_guild_count, approximate_user_install_count } = res;
+		const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(client);
 		// if (globalLines === 0) globalLines = await getLines();
 		const embed = new EmbedBuilder()
 			.setTitle('Bot Stats')

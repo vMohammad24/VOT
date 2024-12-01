@@ -10,7 +10,7 @@ import commandHandler, { redis, upSince } from '..';
 import { loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
-import { getTwoMostUsedColors, rgbToHex } from '../util/util';
+import { camelToTitleCase, getTwoMostUsedColors, rgbToHex } from '../util/util';
 import { getIpInfo } from '../util/vpn';
 import { checkKey } from './apiUtils';
 import brave from './brave';
@@ -80,27 +80,34 @@ elysia.get('/commands', () => {
 	const commands: {
 		name: string;
 		description: string;
+		category: string;
+		perms?: string[];
 	}[] = [];
 	const cmds = commandHandler.commands!;
 	for (const command of cmds) {
 		if (command.perms == 'dev' || command.disabled) continue;
+		const perms = (command.perms || []).map(a => camelToTitleCase(a.toString()));
 		if (command.options) {
 			for (const option of command.options!) {
 				if (option.type == ApplicationCommandOptionType.Subcommand) {
 					commands.push({
 						name: `${command.name} ${option.name}`,
 						description: option.description,
+						category: command.category || 'all',
+						perms,
 					});
 				}
 			}
 		}
-		commands.push({ name: command.name!, description: command.description });
+		commands.push({ name: command.name!, description: command.description, category: command.category || 'all', perms });
 	}
 	return commands;
 }, {
 	response: t.Array(t.Object({
 		name: t.String(),
 		description: t.String(),
+		category: t.String(),
+		perms: t.Optional(t.Array(t.String())),
 	})),
 	detail: {
 		description: 'Get all commands',
