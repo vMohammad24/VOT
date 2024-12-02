@@ -16,23 +16,20 @@ export default {
     aliases: ['ri'],
     execute: async ({ handler, interaction, args, channel }) => {
         const role = args.get('role') as Role | undefined;
+        if (!role) return { content: 'Role not found.', ephemeral: true };
 
-        if (!role) {
-            return { content: 'Role not found.', ephemeral: true };
-        }
         const roleIcon = role.iconURL({ size: 1024 });
         const embed = new VOTEmbed()
-            .setTitle(`Role Info: ${role.name}`)
+            .setDescription(`Role information for ${role.name}`)
             .setColor(role.color)
             .addFields(
-                { name: 'ID', value: role.id, inline: true },
-                { name: 'Name', value: role.name, inline: true },
-                { name: 'Color', value: role.hexColor, inline: true },
-                { name: 'Mentionable', value: role.mentionable ? 'Yes' : 'No', inline: true },
                 { name: 'Position', value: role.position.toString(), inline: true },
+                { name: 'Members', value: role.members.size.toString(), inline: true },
                 { name: 'Permissions', value: role.permissions.toArray().map(a => camelToTitleCase(a.toString())).join(', '), inline: false }
             )
-            .setTimestamp();
+            .setFooter({ text: `ID: ${role.id} • ${role.mentionable ? 'Mentionable' : 'Not Mentionable'} • Color: ${role.hexColor}` })
+            .setTimestamp(role.createdTimestamp);
+
         if (roleIcon) {
             await embed.setThumbnail(roleIcon).dominant()
         }

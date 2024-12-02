@@ -35,14 +35,13 @@ export default class LegacyCommandHandler {
 			const prefix = (await getPrefix(message)) ?? gPrefix;
 			let commandName = message.content.startsWith(prefix) ? message.content.slice(prefix.length).split(' ')[0] : null;
 			if (!message.content.startsWith(prefix)) {
-				if (message.mentions.users.has(client.user!.id)) {
-					if (!message.content.includes(' ')) {
+				if (message.mentions.users.has(client.user!.id) && !message.mentions.everyone && !message.mentions.roles.size && !message.mentions.repliedUser) {
+					if (message.content.trim() === `<@${client.user!.id}>`) {
 						message.reply({
 							embeds: [new EmbedBuilder().setDescription(`Your prefix is \`${prefix}\``)],
 						});
 						return;
 					}
-					commandName = 'ask';
 				}
 			}
 			if (!commandName) return;

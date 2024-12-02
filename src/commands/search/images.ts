@@ -1,10 +1,11 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import TurnDownService from 'turndown';
 import ICommand from '../../handler/interfaces/ICommand';
 import { searchBraveImages } from '../../util/brave';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { isNullish } from '../../util/util';
+import VOTEmbed from '../../util/VOTEmbed';
 const turndownService = new TurnDownService();
 
 export default {
@@ -45,8 +46,7 @@ export default {
 						name: v.title.slice(0, 99) || 'No title',
 						description: description.slice(0, 99) || 'No description',
 						emoji: (getEmoji(v.meta_url.netloc.split('.')[0]) || '🔗').toString(),
-						page: new EmbedBuilder()
-							.setTitle(v.title.substring(0, 256))
+						page: new VOTEmbed()
 							.setDescription(isNullish(description) ? null : description)
 							.setURL(v.url)
 							.setAuthor({ iconURL: v.meta_url.favicon, name: v.meta_url.netloc })

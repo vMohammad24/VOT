@@ -1,11 +1,12 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer, newPage } from '../../util/puppeteer';
 import { isNullish } from '../../util/util';
+import VOTEmbed from '../../util/VOTEmbed';
 
 interface IUser {
 	pk: string;
@@ -285,17 +286,18 @@ export default {
 				});
 				const media = res.data as IJsonResponse;
 				if (!media) return { content: 'No data found', ephemeral: true };
-				const embed = new EmbedBuilder()
-					.setTitle(media.caption?.text.substring(0, 256) || 'No Caption')
+				const embed = new VOTEmbed()
+					.setDescription(media.caption?.text || 'No Caption')
 					.setURL(`https://www.instagram.com/p/${media.code}`)
-					.setAuthor(isNullish(media.user.username) ? null : { name: media.user.username, iconURL: media.user.profile_pic_url ?? undefined })
+					.setAuthor(isNullish(media.user.username) ? null : {
+						name: media.user.username,
+						iconURL: media.user.profile_pic_url ?? undefined
+					})
 					.setThumbnail(media.image_versions2.candidates[0].url)
-					.addFields(
-						{ name: 'Likes', value: numeral(media.like_count).format('0,0'), inline: true },
-						{ name: 'Comments', value: numeral(media.comment_count).format('0,0'), inline: true },
-					)
 					.setTimestamp(new Date(media.taken_at * 1000))
-					.setFooter({ text: `${numeral(media.view_count).format('0,0')} views • Uploaded` });
+					.setFooter({
+						text: `❤️ ${numeral(media.like_count).format('0,0')} • 💬 ${numeral(media.comment_count).format('0,0')} • 👀 ${numeral(media.view_count).format('0,0')} • Uploaded`
+					});
 
 				const videoUrl = media.video_versions[0]?.url;
 				if (videoUrl) {
@@ -332,29 +334,18 @@ export default {
 						name: vid.caption.text.slice(0, 100),
 						page: {
 							embeds: [
-								new EmbedBuilder()
-									// .setTitle(vid.caption.text.slice(0, 256))
-									// .setImage(vid.image_versions2.candidates[0].url)
+								new VOTEmbed()
+									.setDescription(vid.caption.text)
 									.setURL(`https://www.instagram.com/reels/${vid.code}`)
 									.setAuthor({
 										name: vid.user.username,
 										iconURL: vid.user.profile_pic_url,
 										url: `https://www.instagram.com/${vid.owner.username}`,
 									})
-									.addFields([
-										{
-											name: 'Likes',
-											value: numeral(vid.like_count).format('0,0'),
-											inline: true,
-										},
-										{
-											name: 'Comments',
-											value: numeral(vid.comment_count).format('0,0'),
-											inline: true,
-										},
-									])
-									.setFooter({ text: 'Uploaded' })
-									.setTimestamp(new Date(vid.taken_at * 1000)),
+									.setTimestamp(new Date(vid.taken_at * 1000))
+									.setFooter({
+										text: `❤️ ${numeral(vid.like_count).format('0,0')} • 💬 ${numeral(vid.comment_count).format('0,0')} • Uploaded`
+									}),
 							],
 							files: [new AttachmentBuilder(vid.video_versions[0].url, { name: 'VOT-IG-Trending.mp4' })],
 						},

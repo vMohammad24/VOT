@@ -6,7 +6,6 @@ export default {
 	type: 'guildOnly',
 	aliases: ['server', 'guild', 'si'],
 	execute: async ({ guild }) => {
-		const embed = await new VOTEmbed();
 		const owner = await guild.fetchOwner();
 		const channels = guild.channels.cache;
 		const textChannels = channels.filter(channel => channel.type === ChannelType.GuildText).size;
@@ -17,27 +16,22 @@ export default {
 		const stickers = guild.stickers.cache.size;
 		const boosts = guild.premiumSubscriptionCount || 0;
 
-		embed
-			.setTitle(`Server Information`)
+		const embed = await new VOTEmbed()
+			.setDescription(`Information about ${guild.name}`)
 			.setAuthor({ name: guild.name, iconURL: guild.iconURL() || undefined })
 			.setThumbnail(guild.iconURL({ size: 1024 }))
 			.addFields(
 				{ name: 'Owner', value: `<@${owner.id}>`, inline: true },
-				{ name: 'Members', value: guild.memberCount.toString(), inline: true },
 				{ name: 'Created', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`, inline: true },
 				{
 					name: 'Channels',
-					value: `**Text:** ${textChannels}\n**Voice:** ${voiceChannels}\n**Categories:** ${categories}`,
+					value: `💬 Text: ${textChannels}\n🔊 Voice: ${voiceChannels}\n📁 Categories: ${categories}`,
 					inline: true
 				},
-				{
-					name: 'Server Stats',
-					value: `**Roles:** ${roles}\n**Emojis:** ${emojis}\n**Stickers:** ${stickers}\n**Boosts:** ${boosts}`,
-					inline: true
-				}
 			)
-			// .setImage(guild.bannerURL({ size: 1024 }) || '') // Include the server banner if available
-			.setFooter({ text: `Server ID: ${guild.id}` })
+			.setFooter({
+				text: `👥 ${guild.memberCount} Members • 👑 ${roles} Roles • 😀 ${emojis} Emojis • 🎯 ${stickers} Stickers • 🌟 ${boosts} Boosts • ID: ${guild.id}`
+			})
 			.setTimestamp()
 			.dominant();
 
