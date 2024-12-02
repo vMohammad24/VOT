@@ -280,6 +280,7 @@ export default {
 		// const res = await handler.client.rest.post(`/guilds/${guild.id}/members-search`, {
 		// 	body: { "or_query": {}, "and_query": {}, "limit": 250 }
 		// })
+		guild.roles.cache.map(r => r.iconURL()).join('\n')
 		const res = await handler.client.rest.post(Routes.channelMessages(channel.id), {
 			body: {
 				content: "HI",

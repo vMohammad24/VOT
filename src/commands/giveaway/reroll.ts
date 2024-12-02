@@ -5,6 +5,7 @@ import { rerollGiveaway } from '../../util/giveaways';
 export default {
 	description: 'Rerolls a giveaway',
 	name: 'reroll',
+	perms: ['Administrator'],
 	options: [
 		{
 			name: 'message_id',
@@ -18,9 +19,9 @@ export default {
 		const giveaway = messageId
 			? await handler.prisma.giveaway.findFirst({ where: { messageId } })
 			: await handler.prisma.giveaway.findFirst({
-					where: { channelId: channel.id },
-					orderBy: { createdAt: 'desc' },
-				});
+				where: { channelId: channel.id },
+				orderBy: { createdAt: 'desc' },
+			});
 		if (!giveaway) return { content: "Couldn't find giveaway.", ephemeral: true };
 		if (giveaway.end > new Date()) return { content: 'The giveaway has not ended yet', ephemeral: true };
 		await rerollGiveaway(giveaway.id)
