@@ -160,6 +160,7 @@ model Ticket {
   ownedBy      User     @relation(fields: [ownerId], references: [id])
   ownerId      String
   members      Member[]
+  closeReqId   String?
 }
 
 model TicketSettings {

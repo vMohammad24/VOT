@@ -11,6 +11,8 @@ import {
 	User,
 	type GuildTextBasedChannel,
 } from 'discord.js';
+import { randomUUID } from 'node:crypto';
+import { setTimeout } from 'node:timers';
 import commandHandler from '..';
 import { getUser } from './database';
 import { uploadFile } from './nest';
@@ -265,4 +267,54 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 	});
 	const uploadedData = await uploadFile(file);
 	return uploadedData.cdnFileName;
+}
+const map = new Map<string, Timer>();
+export async function startCloseTimer(channel: GuildTextBasedChannel, timeout: number) {
+	const ticket = await commandHandler.prisma.ticket.findFirst({
+		where: {
+			channelId: channel.id,
+		},
+	})
+	if (!ticket) return;
+	const to = setTimeout(async () => {
+		await closeTicket(channel, await channel.guild.members.fetchMe());
+	}, timeout);
+	const id = randomUUID();
+	map.set(id, to);
+	await commandHandler.prisma.ticket.update({
+		where: {
+			id: ticket.id
+		},
+		data: {
+			closeReqId: id,
+		}
+	})
+}
+
+export async function cancelCloseTimer(channel: GuildTextBasedChannel) {
+	const ticket = await commandHandler.prisma.ticket.findFirst({
+		where: {
+			channelId: channel.id,
+		},
+	})
+	if (!ticket) return;
+	const id = ticket.closeReqId;
+	if (!id) {
+		return {
+			error: 'No close request id found for ticket ' + ticket.id
+		}
+	}
+	const timer = map.get(id);
+	if (timer) {
+		clearTimeout(timer);
+		map.delete(id);
+	}
+	await commandHandler.prisma.ticket.update({
+		where: {
+			id: ticket.id
+		},
+		data: {
+			closeReqId: null,
+		}
+	})
 }
