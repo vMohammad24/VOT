@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { ActionRowBuilder, APIApplication, ButtonBuilder, ButtonStyle, Client, EmbedBuilder, Routes } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
-import { redis, upSince } from '../..';
+import { upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
+import { getInstallCounts } from '../../util/database';
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
 	const results = glob.scanSync({
@@ -50,17 +51,7 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	return { message, date };
 }
 const commit = await getCurrentCommit();
-async function getInstallCounts(client: Client): Promise<{ approximate_guild_count: number; approximate_user_install_count: number }> {
-	const cache = await redis.get('installCounts');
-	if (cache) return JSON.parse(cache);
-	const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
-	const { approximate_guild_count, approximate_user_install_count } = res;
-	redis.set('installCounts', JSON.stringify({ approximate_guild_count, approximate_user_install_count }), 'EX', 60 * 5);
-	return {
-		approximate_guild_count: approximate_guild_count ?? 0,
-		approximate_user_install_count: approximate_user_install_count ?? 0,
-	}
-}
+
 export default {
 	name: 'stats',
 	description: 'Shows the bot stats',

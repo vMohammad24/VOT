@@ -1,9 +1,92 @@
 import axios from 'axios';
 import { ApplicationCommandOptionType } from "discord.js";
+import numeral from 'numeral';
 import TurndownService from "turndown";
 import commandHandler, { redis } from '../..';
 import ICommand from "../../handler/interfaces/ICommand";
 import VOTEmbed from '../../util/VOTEmbed';
+
+
+
+async function searchSteamDB(query: string) {
+    const apiKey = 'MzQ1ZjdkNzVjM2I0YjFkYmFlZDViYTgwNDY5MjNlNGY4NzY1NDEzNmIzMmY3YzIzZjVjYmQ2NjJlMzMxN2YxM3ZhbGlkVW50aWw9MTczMzU5MzI0MiZ1c2VyVG9rZW49YTQzOThiNGZiYzQwOTc1NDkzMGRhOTkyNDU3MjI4YTk='
+    const response = await axios.request({
+        method: 'POST',
+        url: 'https://94he6yatei-dsn.algolia.net/1/indexes/*/queries',
+        params: {
+            'x-algolia-agent': 'Algolia for JavaScript (5.14.0); Lite (5.14.0); Browser; instantsearch.js (4.75.5); JS Helper (3.22.5)',
+            'x-algolia-api-key': apiKey,
+            'x-algolia-application-id': '94HE6YATEI'
+        },
+        headers: {
+            'Accept-Language': 'en-US,en;q=0.9,ar-JO;q=0.8,ar;q=0.7',
+            Connection: 'keep-alive',
+            DNT: '1',
+            Origin: 'https://steamdb.info',
+            Referer: 'https://steamdb.info/',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'cross-site',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+            accept: 'application/json',
+            'content-type': 'text/plain',
+            'sec-ch-ua': '"Not;A=Brand";v="24", "Chromium";v="128"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
+        },
+        data: {
+            "requests": [
+                {
+                    "indexName": "steamdb",
+                    "attributesToHighlight": [
+                        "name"
+                    ],
+                    "attributesToRetrieve": [
+                        "lastUpdated",
+                        "small_capsule",
+                        "name",
+                        "oslist",
+                        "price_us",
+                        "releaseYear",
+                        "userScore"
+                    ],
+                    "facets": [
+                        "appType",
+                        "categories",
+                        "developer",
+                        "followers",
+                        "hardwareCategories",
+                        "languages",
+                        "languagesAudio",
+                        "languagesSubtitles",
+                        "multiplayerCategories",
+                        "oslist",
+                        "price_us",
+                        "publisher",
+                        "releaseYear",
+                        "reviews",
+                        "tags",
+                        "technologies",
+                        "userScore"
+                    ],
+                    // "highlightPostTag": "__/ais-highlight__",
+                    // "highlightPreTag": "__ais-highlight__",
+                    "hitsPerPage": 20,
+                    "maxValuesPerFacet": 200,
+                    "page": 0,
+                    "query": query
+                }
+            ]
+        }
+    })
+    try {
+        return response.data.results[0].hits as {
+            name: string;
+            userScore: number;
+            objectID: string;
+        }[];
+    } catch (e) { return null; }
+}
 
 
 interface HighlightResult {
@@ -91,48 +174,6 @@ async function searchGames(query: string) {
     }
 }
 
-async function search(query: string) {
-    const response = await axios.post(
-        'https://94he6yatei-dsn.algolia.net/1/indexes/all_names/query?x-algolia-agent=SteamDB%20Autocompletion',
-        {
-            hitsPerPage: 20,
-            attributesToSnippet: null,
-            attributesToHighlight: 'name',
-            attributesToRetrieve: 'type,id,lastUpdated,small_capsule',
-            query: query
-        },
-        {
-            headers: {
-                'accept': 'application/json',
-                'accept-language': 'en-US,en;q=0.9,ar-JO;q=0.8,ar;q=0.7',
-                'content-type': 'text/plain;charset=UTF-8',
-                'sec-ch-ua': '"Not;A=Brand";v="24", "Chromium";v="128"',
-                'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"Windows"',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'cross-site',
-                'x-algolia-api-key': 'OTdiYzdhZTRjMmRhOWQ4M2Q5MDgzYTI4YmIxMDE0MmZjM2E0MDk4NTA1NmUxNzJlOWJkNTE1OWVhZjU3ODc3OHZhbGlkVW50aWw9MTczMzU2ODk0NiZ1c2VyVG9rZW49ODM0YjhlMjkyODQ4Njk3ZTJkMmY3YjFkZWU5NTgxN2Y=',
-                'x-algolia-application-id': '94HE6YATEI',
-                'Referer': 'https://steamdb.info/',
-                'Referrer-Policy': 'strict-origin-when-cross-origin'
-            }
-        }
-    );
-
-    return response.data.hits as SearchResult[];
-}
-
-async function getAppDetails(appId: string) {
-    const response = await axios.get(`https://steamdb.info/api/ExtensionApp/?appid=${appId}`, {
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'SteamDB'
-        }
-    });
-    return response.data;
-}
-
 async function getGameInfo(appId: number) {
     const response = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${appId}`);
     const data = response.data[appId].data;
@@ -144,18 +185,43 @@ async function getGameInfo(appId: number) {
         about: turndown.turndown(data.about_the_game),
         short_description: turndown.turndown(data.short_description),
         headerImage: data.header_image,
-        price: data.price_overview ? data.price_overview.final_formatted : 'Free',
+        price: data.price_overview as {
+            currency: string;
+            initial: number;
+            final: number;
+            discount_percent: number;
+            initial_formatted: string;
+            final_formatted: string;
+        } | null,
         platforms: Object.keys(data.platforms).filter(platform => data.platforms[platform as keyof typeof data.platforms] === true),
         developers: data.developers,
         publishers: data.publishers,
         releaseDate: data.release_date.date,
         genres: data.genres.map((genre: any) => genre.description),
-        screenshots: data.screenshots.map((screenshot: any) => screenshot.path_full),
+        screenshots: (data.screenshots || []).map((screenshot: any) => screenshot.path_full) as string[],
         movies: (data.movies || []).map((movie: any) => movie.webm.max),
-        achievements: data.achievements ? data.achievements.highlighted.map((achievement: any) => ({
-            name: achievement.name,
-            path: achievement.path
-        })) : []
+        achievements: data.achievements ? {
+            total: data.achievements.total as number,
+            highlighted: data.achievements.highlighted.map((achievement: any) => ({
+                name: achievement.name,
+                path: achievement.path
+            }))
+        } : null,
+        pc_requirements: data.pc_requirements as {
+            minimum: string;
+            recommended: string;
+        } | null,
+        recommendations: data.recommendations as {
+            total: number;
+        } | null,
+        requiredAge: data.required_age,
+        categories: data.categories.map((category: any) => category.description),
+        rating: data.ratings.pegi as {
+            rating: string;
+            descriptors: string;
+            use_age_gate: string;
+            required_age: string;
+        } | null,
     };
 }
 
@@ -179,8 +245,7 @@ export default {
             if (!game) return interaction.respond([{ name: 'Please provide a game to search for', value: '' }]);
             const response = await searchGames(game);
             if (!response) return interaction.respond([{ name: 'No games found', value: '' }]);
-            // console.log(response)
-            await interaction.respond(response.map((hit) => ({ name: hit.name, value: hit.appid.toString() })));
+            await interaction.respond(response/*.sort((a, b) => b.userScore - a.userScore)*/.map((hit) => ({ name: hit.name, value: hit.appid })));
         })
     },
     execute: async ({ args, channel }) => {
@@ -211,15 +276,25 @@ export default {
         const embed = await new VOTEmbed().setTitle(game.name ?? "N/A")
             .setDescription(game.short_description ?? "N/A")
             .addFields(
+                { name: 'Price', value: game.price?.discount_percent ? `~~${game.price.initial_formatted}~~ → ${game.price.final_formatted}` : game.price?.final_formatted ?? "N/A", inline: true },
+                { name: 'Achievements', value: game.achievements ? game.achievements.total.toString() : 'N/A', inline: true },
+                { name: 'Recommendations', value: game.recommendations ? numeral(game.recommendations.total).format('0,0') : 'N/A', inline: true },
                 { name: 'Developers', value: game.developers.join(', ') ?? "N/A", inline: true },
                 { name: 'Publishers', value: game.publishers.join(', ') ?? "N/A", inline: true },
                 { name: 'Genres', value: game.genres.join(', ') ?? "N/A", inline: true },
+                { name: 'Rating', value: game.rating ? `${game.rating.rating}+` : "N/A", inline: true },
                 { name: 'Platforms', value: game.platforms.join(', ') ?? "N/A", inline: true },
                 { name: 'Release Date', value: game.releaseDate ?? "N/A", inline: true },
             )
             .setImage(game.headerImage ?? null)
             .dominant()
 
+        // if (game.pc_requirements) {
+        //     embed.addFields(
+        //         { name: 'Minimum Requirements', value: turndown.turndown(game.pc_requirements.minimum) ?? "N/A", inline: true },
+        //         { name: 'Recommended Requirements', value: turndown.turndown(game.pc_requirements.recommended) ?? "N/A", inline: true },
+        //     );
+        // }
         // if (prices) {
         //     embed.addFields(
         //         { name: 'Price', value: prices.currentPrice ?? "N/A", inline: true },
@@ -228,7 +303,7 @@ export default {
         // }
 
         return {
-            embeds: [embed]
+            embeds: [embed],
         }
     }
 } as ICommand

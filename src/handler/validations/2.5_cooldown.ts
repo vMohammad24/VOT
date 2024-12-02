@@ -9,7 +9,7 @@ const embed = new EmbedBuilder().setTitle('Cooldown').setColor('DarkRed');
 
 const makeEmbed = (time: number, name: string, avatar?: string) =>
 	embed
-		.setDescription(`You can use this command again ${timeUntil(time * 1000)} (<t:${time}:R>)`)
+		.setDescription(`You can use this command again in ${timeUntil(time * 1000)} (<t:${time}:R>)`)
 		.setAuthor({ name, iconURL: avatar })
 		.setColor('Red');
 
@@ -42,12 +42,10 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 				embeds: [makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined)],
 			};
 		} else {
-			// Remove expired entry for the user
 			timestamps.delete(user.id);
 		}
 	}
 
-	// Set new expiration time for the user
 	timestamps.set(user.id, now + cooldown);
 	return true;
 }
