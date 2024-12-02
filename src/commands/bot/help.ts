@@ -4,6 +4,7 @@ import { getPrefix } from '../../handler/LegacyHandler';
 import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { getFrontEndURL } from '../../util/urls';
+import { camelToTitleCase } from '../../util/util';
 import VOTEmbed from '../../util/VOTEmbed';
 
 function getOptionName(value: number): string | undefined {
@@ -70,17 +71,18 @@ export default {
 				embed.addFields({
 					name: option.name,
 					value: `**Type**: ${getOptionName(option.type)}\n**Required**: ${'required' in option ? (option.required ? 'Yes' : 'No') : 'Yes'}`,
+					inline: true,
 				});
 			}
 			const prefix = message ? await getPrefix(message) : '/';
+			cmd.perms && cmd.perms != 'dev' && embed.addFields({
+				name: 'Permissions',
+				value: cmd.perms.map(a => camelToTitleCase(a.toString())).join(', ') || 'None',
+			})
 			embed.addFields({
 				name: "Syntax",
 				value: `\`\`\`${prefix}${cmd.name} ${cmd.options?.map((opt) => (('required' in opt ? opt.required : true) ? `<${opt.name}>` : `[${opt.name}]`)).join(' ')}\`\`\``,
-			},
-				{
-					name: 'Example',
-					value: `\`\`\`${prefix}${cmd.name} ${cmd.options?.map((opt) => (('required' in opt ? opt.required : true) ? `<${opt.name}>` : `[${opt.name}]`)).join(' ')}\`\`\``,
-				})
+			});
 
 			cmd.aliases &&
 				cmd.aliases.length > 0 &&

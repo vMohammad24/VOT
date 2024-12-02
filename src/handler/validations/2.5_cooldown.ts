@@ -40,6 +40,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 			const expiredTimestamp = Math.round(expirationTime / 1000);
 			return {
 				embeds: [makeEmbed(expiredTimestamp, user.username, user.avatarURL() || undefined)],
+				ephemeral: true
 			};
 		} else {
 			timestamps.delete(user.id);

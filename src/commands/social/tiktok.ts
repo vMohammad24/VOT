@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder, ColorResolvable, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandOptionType, AttachmentBuilder, ColorResolvable } from 'discord.js';
 import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
 import { getTwoMostUsedColors } from '../../util/util';
+import VOTEmbed from '../../util/VOTEmbed';
 
 interface Video {
 	id: string;
@@ -282,7 +283,7 @@ export default {
 				return {
 					ephemeral: true,
 					embeds: [
-						new EmbedBuilder()
+						new VOTEmbed()
 							.setAuthor({
 								name: video.author.nickname,
 								iconURL: video.author.avatarLarger,
@@ -290,7 +291,7 @@ export default {
 							})
 							.setDescription(video.desc)
 							.setFooter({
-								text: `Likes: ${numeral(video.statsV2.diggCount).format('0,0')} | Comments: ${numeral(video.statsV2.commentCount).format('0,0')} | Shares: ${numeral(video.statsV2.shareCount).format('0,0')}`,
+								text: `❤️ ${numeral(video.statsV2.diggCount).format('0,0')} • 💬 ${numeral(video.statsV2.commentCount).format('0,0')} • 🔁 ${numeral(video.statsV2.shareCount).format('0,0')}`
 							})
 							.setColor(color)
 							.setTimestamp(parseInt(video.createTime) * 1000),
