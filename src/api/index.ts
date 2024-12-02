@@ -7,7 +7,7 @@ import { Elysia, t } from 'elysia';
 import { nanoid } from 'nanoid/non-secure';
 import numeral from 'numeral';
 import commandHandler, { redis, upSince } from '..';
-import { loadImg } from '../util/database';
+import { getInstallCounts, loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
 import { camelToTitleCase, getTwoMostUsedColors, rgbToHex } from '../util/util';
@@ -68,12 +68,13 @@ const elysia = new Elysia()
 	});
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
-elysia.get('/', function () {
+elysia.get('/', async () => {
 	if (totalCommands == -1) totalCommands = commandHandler.commands!.length;
 	const actualPing = commandHandler.client.ws.ping;
 	const ping = (actualPing == -1 ? lastPing : actualPing) == -1 ? 'N/A' : lastPing;
 	lastPing = ping;
-	return { ping, upSince, totalCommands };
+	const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(commandHandler.client);
+	return { ping, upSince, totalCommands, guilds: numeral(approximate_guild_count).format('0,0'), users: numeral(approximate_user_install_count).format('0,0') };
 });
 
 elysia.get('/commands', () => {
@@ -93,13 +94,13 @@ elysia.get('/commands', () => {
 					commands.push({
 						name: `${command.name} ${option.name}`,
 						description: option.description,
-						category: command.category || 'all',
+						category: command.category || 'All',
 						perms,
 					});
 				}
 			}
 		}
-		commands.push({ name: command.name!, description: command.description, category: command.category || 'all', perms });
+		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms });
 	}
 	return commands;
 }, {

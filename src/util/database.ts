@@ -1,7 +1,7 @@
 import { Image, loadImage } from '@napi-rs/canvas';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
-import { Guild, GuildMember, User } from 'discord.js';
+import { APIApplication, Client, Guild, GuildMember, Routes, User } from 'discord.js';
 import commandHandler, { redis } from '..';
 
 export async function getUser(member: User, select?: Prisma.UserSelect<DefaultArgs>) {
@@ -201,4 +201,15 @@ export async function getVoiceMaster(guildId: string) {
 			}
 		}
 	})
+}
+export async function getInstallCounts(client: Client): Promise<{ approximate_guild_count: number; approximate_user_install_count: number }> {
+	const cache = await redis.get('installCounts');
+	if (cache) return JSON.parse(cache);
+	const res = (await client.rest.get(Routes.currentApplication())) as APIApplication;
+	const { approximate_guild_count, approximate_user_install_count } = res;
+	redis.set('installCounts', JSON.stringify({ approximate_guild_count, approximate_user_install_count }), 'EX', 60 * 5);
+	return {
+		approximate_guild_count: approximate_guild_count ?? 0,
+		approximate_user_install_count: approximate_user_install_count ?? 0,
+	}
 }
