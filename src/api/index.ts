@@ -83,6 +83,7 @@ elysia.get('/commands', () => {
 		description: string;
 		category: string;
 		perms?: string[];
+		type?: string;
 	}[] = [];
 	const cmds = commandHandler.commands!;
 	for (const command of cmds) {
@@ -96,11 +97,12 @@ elysia.get('/commands', () => {
 						description: option.description,
 						category: command.category || 'All',
 						perms,
+						type: command.type
 					});
 				}
 			}
 		}
-		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms });
+		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined) });
 	}
 	return commands;
 }, {
@@ -109,6 +111,7 @@ elysia.get('/commands', () => {
 		description: t.String(),
 		category: t.String(),
 		perms: t.Optional(t.Array(t.String())),
+		type: t.Optional(t.String())
 	})),
 	detail: {
 		description: 'Get all commands',

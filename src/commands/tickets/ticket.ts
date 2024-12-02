@@ -1,6 +1,7 @@
-import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember, GuildTextBasedChannel } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { getMember } from '../../util/database';
+import { startCloseTimer } from '../../util/tickets';
 
 export default {
 	name: 'ticket',
@@ -32,6 +33,21 @@ export default {
 				},
 			],
 		},
+		{
+			name: 'closerequest',
+			description: 'Request to close a ticket',
+			type: ApplicationCommandOptionType.Subcommand,
+			options: [
+				{
+					name: 'hours',
+					description: 'Hours until ticket closes',
+					type: ApplicationCommandOptionType.Integer,
+					required: true,
+					minValue: 1,
+					maxValue: 72
+				}
+			]
+		}
 	],
 	slashOnly: true,
 	// disabled: true,
@@ -66,29 +82,31 @@ export default {
 				content: 'Invalid subcommand',
 				ephemeral: true,
 			};
-		const member = interaction.options.getMember('member') as GuildMember;
-		if (!member)
-			return {
-				content: 'Invalid user',
-				ephemeral: true,
-			};
+
 		if (ticket.ownerId !== executer.id && !executer.roles.cache.has(ticketsRole!.id)) {
 			return {
 				content: 'You are not the owner of this ticket',
 				ephemeral: true,
 			};
 		}
-		const pMember = await getMember(member, {
-			id: true,
-		});
-		if (!pMember) {
-			return {
-				content: `Member ${member.user.tag} not found.`,
-				ephemeral: true,
-			};
-		}
+
 		switch (subCommand) {
 			case 'add': {
+				const member = interaction.options.getMember('member') as GuildMember;
+				if (!member)
+					return {
+						content: 'Invalid user',
+						ephemeral: true,
+					};
+				const pMember = await getMember(member, {
+					id: true,
+				});
+				if (!pMember) {
+					return {
+						content: `Member ${member.user.tag} not found.`,
+						ephemeral: true,
+					};
+				}
 				if (ticket.members.map((a) => a.id).includes(pMember?.id!)) {
 					return {
 						content: `${member.user.tag} is already in this ticket`,
@@ -117,6 +135,21 @@ export default {
 				};
 			}
 			case 'remove': {
+				const member = interaction.options.getMember('member') as GuildMember;
+				if (!member)
+					return {
+						content: 'Invalid user',
+						ephemeral: true,
+					};
+				const pMember = await getMember(member, {
+					id: true,
+				});
+				if (!pMember) {
+					return {
+						content: `Member ${member.user.tag} not found.`,
+						ephemeral: true,
+					};
+				}
 				if (!ticket.members.map((a) => a.id).includes(pMember?.id!)) {
 					return {
 						content: `${member.user.tag} is not in this ticket`,
@@ -140,6 +173,41 @@ export default {
 				}
 				return {
 					content: `${member.user.tag} has been removed from the ticket`,
+				};
+			}
+			case 'closerequest': {
+				const hours = interaction.options.getInteger('hours', true);
+				const closeTime = new Date(Date.now() + hours * 1000/*3600000*/);
+
+				const embed = new EmbedBuilder()
+					.setTitle('🔔 Ticket Close Request')
+					.setDescription(`This ticket has been requested to be closed by ${executer.user.tag}`)
+					.addFields(
+						{ name: 'Scheduled Close Time', value: `<t:${Math.floor(closeTime.getTime() / 1000)}:R>` }
+					)
+					.setColor('#FFA500')
+					.setTimestamp();
+				const timeout = closeTime.getTime() - Date.now();
+				startCloseTimer(channel as GuildTextBasedChannel, timeout);
+				const row = new ActionRowBuilder<ButtonBuilder>()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('close_ticket')
+							.setLabel('Close Now')
+							.setStyle(ButtonStyle.Danger)
+							.setEmoji('🔒'),
+						new ButtonBuilder()
+							.setCustomId(`cancel_close_req`)
+							.setLabel('Cancel Close')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('❌')
+					);
+
+				return {
+					content: `<@${ticket.ownerId}>`,
+					embeds: [embed],
+					components: [row],
+					allowedMentions: { users: [ticket.ownerId] }
 				};
 			}
 		}
