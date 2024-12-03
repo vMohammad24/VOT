@@ -409,39 +409,40 @@ elysia.get('/uploads/:id', async ({ params, query, request }) => {
 
 
 
-if (!commandHandler.prodMode)
-	elysia.get('/hypixel', async ({ query }) => {
-		const { name: playerName } = query;
-		const cached = await redis.get(`hypixel:${playerName}`);
-		let data: string;
-		if (cached) {
-			data = cached;
-		} else {
-			const res = await axios.get(`https://plancke.io/hypixel/player/stats/${playerName}`);
-			if (res.status == 404) return { error: 'Player not found' };
-			data = res.data;
-			redis.set(`hypixel:${playerName}`, data, 'EX', 60 * 60);
-		}
-		const $ = cheerio.load(data);
-		const stats: { [key: string]: string | undefined | null } = {};
-		const playerInfoDiv = $('.card-box.m-b-10');
-		const firstSpan = playerInfoDiv.find('span');
-		const rank = firstSpan.first().text().match(/\[(.*?)\]/)?.[1];
-		const name = firstSpan.first().text().split('] ')[1].split(' [')[0];
-		const guild = firstSpan.first().text().split(' [')[1].replace(']', '');
-		stats.rank = rank;
-		stats.name = name;
-		stats.guild = guild;
-		function getData(label: string) {
-			return $(`b:contains(${label})`).next().text().trim();
-		}
-		stats.multiplier = getData("Multiplier:");
-		console.log($('/html/body/div/div[3]/div/div/div[2]/div[1]/div[1]/div/b[5]').text())
-		return stats;
-	}, {
-		query: t.Object({
-			name: t.String()
-		})
+
+elysia.get('/hypixel', async ({ query }) => {
+	if (commandHandler.prodMode) return { error: 'This endpoint is disabled in production mode' };
+	const { name: playerName } = query;
+	const cached = await redis.get(`hypixel:${playerName}`);
+	let data: string;
+	if (cached) {
+		data = cached;
+	} else {
+		const res = await axios.get(`https://plancke.io/hypixel/player/stats/${playerName}`);
+		if (res.status == 404) return { error: 'Player not found' };
+		data = res.data;
+		redis.set(`hypixel:${playerName}`, data, 'EX', 60 * 60);
+	}
+	const $ = cheerio.load(data);
+	const stats: { [key: string]: string | undefined | null } = {};
+	const playerInfoDiv = $('.card-box.m-b-10');
+	const firstSpan = playerInfoDiv.find('span');
+	const rank = firstSpan.first().text().match(/\[(.*?)\]/)?.[1];
+	const name = firstSpan.first().text().split('] ')[1].split(' [')[0];
+	const guild = firstSpan.first().text().split(' [')[1].replace(']', '');
+	stats.rank = rank;
+	stats.name = name;
+	stats.guild = guild;
+	function getData(label: string) {
+		return $(`b:contains(${label})`).next().text().trim();
+	}
+	stats.multiplier = getData("Multiplier:");
+	console.log($('/html/body/div/div[3]/div/div/div[2]/div[1]/div[1]/div/b[5]').text())
+	return stats;
+}, {
+	query: t.Object({
+		name: t.String()
 	})
+})
 
 export default elysia;
