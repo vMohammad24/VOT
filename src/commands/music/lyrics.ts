@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, Events } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import { Client } from 'genius-lyrics';
 import ICommand from '../../handler/interfaces/ICommand';
 import { pagination } from '../../util/pagination';
@@ -18,22 +18,18 @@ export default {
 			autocomplete: true,
 		},
 	],
-	init: async ({ client }) => {
-		client.on(Events.InteractionCreate, async (interaction) => {
-			if (!interaction.isAutocomplete()) return;
-			if (interaction.commandName !== 'lyrics') return;
-			const query = await interaction.options.getFocused();
-			if (!query) return await interaction.respond([{ name: 'Provide a query to continue', value: '' }]);
-			const songs = await genius.songs.search(query, { sanitizeQuery: false });
-			await interaction.respond(
-				songs
-					.map((song) => ({
-						name: song.title.substring(0, 99),
-						value: song.fullTitle.substring(0, 99),
-					}))
-					.slice(0, 20),
-			);
-		});
+	autocomplete: async (interaction) => {
+		const query = await interaction.options.getFocused();
+		if (!query) return await interaction.respond([{ name: 'Provide a query to continue', value: '' }]);
+		const songs = await genius.songs.search(query, { sanitizeQuery: false });
+		await interaction.respond(
+			songs
+				.map((song) => ({
+					name: song.title.substring(0, 99),
+					value: song.fullTitle.substring(0, 99),
+				}))
+				.slice(0, 20),
+		);
 	},
 	execute: async ({ player, args, interaction, message, user }) => {
 		let query = args.get('song') || (player ? player.queue.current?.title : null);

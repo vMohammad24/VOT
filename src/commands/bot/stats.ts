@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
 import ICommand from '../../handler/interfaces/ICommand';
 import { getInstallCounts } from '../../util/database';
+import VOTEmbed from '../../util/VOTEmbed';
 async function getLines() {
 	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
 	const results = glob.scanSync({
@@ -65,7 +66,7 @@ export default {
 		const { size: usersSize } = users.cache;
 		const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(client);
 		// if (globalLines === 0) globalLines = await getLines();
-		const embed = new EmbedBuilder()
+		const embed = await new VOTEmbed()
 			.setTitle('Bot Stats')
 			.addFields(
 				{
@@ -112,14 +113,15 @@ export default {
 			.setTimestamp(commit.date)
 			.setFooter({ text: commit.message })
 			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
-			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!);
+			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
+			.dominant();
 		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
 				.setEmoji('🔗')
 				.setLabel('Invite')
 				.setStyle(ButtonStyle.Link)
 				.setURL(
-					`discord://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=8&scope=bot%20applications.commands`,
+					`https://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=8&scope=bot%20applications.commands`,
 				),
 		);
 		return { embeds: [embed], components: [row] };

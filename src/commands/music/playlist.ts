@@ -1,6 +1,7 @@
 import type { Playlist, PrismaClient, Track } from '@prisma/client';
-import { ApplicationCommandOptionType, Events, GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
 import { Kazagumo, KazagumoTrack } from 'kazagumo';
+import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 const transferTracksTDB = (tracks: KazagumoTrack[], prisma: PrismaClient): Promise<Track[]> => {
@@ -57,69 +58,66 @@ const getPlaylists = async (prisma: PrismaClient, guildId: string, userId: strin
 export default {
 	description: 'Playlist manager',
 	slashOnly: true,
-	init: async ({ client, prisma, kazagumo }) => {
-		client.on(Events.InteractionCreate, async (interaction) => {
-			if (!interaction.isAutocomplete()) return;
-			if (interaction.commandName !== 'playlist') return;
-			if (interaction.options.getSubcommand() == 'play') {
-				const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
-				const choices = playlists.map((playlist) => {
-					return {
-						name: playlist.name,
-						value: playlist.id,
-					};
-				});
-				interaction.respond(choices);
-			} else if (interaction.options.getSubcommand() == 'update') {
-				const playlistName = interaction.options.getString('name', true);
-				const trackName = interaction.options.getString('track', true);
-				const action = interaction.options.getString('action', true);
-				const playlist = await prisma.playlist.findFirst({
-					where: {
-						OR: [
-							{ id: playlistName },
-							{
-								AND: [{ name: playlistName }, { guildId: interaction.guildId }],
-							},
-							{
-								AND: [{ name: playlistName }, { userId: interaction.user.id }],
-							},
-						],
-					},
-					include: {
-						tracks: true,
-					},
-				});
-				if (!playlist) {
-					interaction.respond([{ name: 'Playlist not found', value: '' }]);
-					return;
-				}
-				const tracks = playlist.tracks as Track[];
-				let choices =
-					action === 'remove'
-						? tracks.map((track) => {
-							return {
-								name: track.title,
-								value: track.uri,
-							};
-						})
-						: [];
-				if (choices.length === 0 || action === 'add') {
-					const kazTracks = (
-						await kazagumo.search(trackName, {
-							requester: interaction.member as GuildMember,
-						})
-					).tracks;
-					choices = kazTracks.map((track) => {
+	autocomplete: async (interaction) => {
+		const { prisma, kazagumo } = commandHandler;
+		if (interaction.options.getSubcommand() == 'play') {
+			const playlists = await getPlaylists(prisma, interaction.guildId!, interaction.user.id);
+			const choices = playlists.map((playlist) => {
+				return {
+					name: playlist.name,
+					value: playlist.id,
+				};
+			});
+			interaction.respond(choices);
+		} else if (interaction.options.getSubcommand() == 'update') {
+			const playlistName = interaction.options.getString('name', true);
+			const trackName = interaction.options.getString('track', true);
+			const action = interaction.options.getString('action', true);
+			const playlist = await prisma.playlist.findFirst({
+				where: {
+					OR: [
+						{ id: playlistName },
+						{
+							AND: [{ name: playlistName }, { guildId: interaction.guildId }],
+						},
+						{
+							AND: [{ name: playlistName }, { userId: interaction.user.id }],
+						},
+					],
+				},
+				include: {
+					tracks: true,
+				},
+			});
+			if (!playlist) {
+				interaction.respond([{ name: 'Playlist not found', value: '' }]);
+				return;
+			}
+			const tracks = playlist.tracks as Track[];
+			let choices =
+				action === 'remove'
+					? tracks.map((track) => {
 						return {
 							name: track.title,
-							value: track.uri!,
+							value: track.uri,
 						};
-					});
-				}
-				interaction.respond(choices);
+					})
+					: [];
+			if (choices.length === 0 || action === 'add') {
+				const kazTracks = (
+					await kazagumo.search(trackName, {
+						requester: interaction.member as GuildMember,
+					})
+				).tracks;
+				choices = kazTracks.map((track) => {
+					return {
+						name: track.title,
+						value: track.uri!,
+					};
+				});
 			}
-		});
+			interaction.respond(choices);
+		}
 	},
 	options: [
 		{

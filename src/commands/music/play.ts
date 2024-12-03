@@ -1,28 +1,24 @@
-import { ApplicationCommandOptionType, EmbedBuilder, Events, GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
+import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
 	description: 'Adds a song to the queue',
-	init: async ({ client, kazagumo }) => {
-		client.on(Events.InteractionCreate, async (inter) => {
-			if (inter.isAutocomplete()) {
-				if (inter.commandName !== 'play') return;
-				const query = inter.options.getString('query');
-				if (!query) return inter.respond([{ name: 'Provide a query to continue', value: '' }]);
-				const results = await kazagumo.search(query, {
-					requester: inter.member as GuildMember,
-				});
-				const options = results.tracks.map((track, index) => ({
-					name: track.title,
-					value: track.uri!,
-				}));
-				try {
-					if (!inter.responded) inter.respond(options);
-				} catch (error) {
-					inter.respond([{ name: 'An error has occured', value: '' }]);
-				}
-			}
+	autocomplete: async (inter) => {
+		const query = inter.options.getString('query');
+		if (!query) return inter.respond([{ name: 'Provide a query to continue', value: '' }]);
+		const results = await commandHandler.kazagumo.search(query, {
+			requester: inter.member as GuildMember,
 		});
+		const options = results.tracks.map((track, index) => ({
+			name: track.title,
+			value: track.uri!,
+		}));
+		try {
+			if (!inter.responded) inter.respond(options);
+		} catch (error) {
+			inter.respond([{ name: 'An error has occured', value: '' }]);
+		}
 	},
 	options: [
 		{
