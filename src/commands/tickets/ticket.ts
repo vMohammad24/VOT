@@ -177,7 +177,7 @@ export default {
 			}
 			case 'closerequest': {
 				const hours = interaction.options.getInteger('hours', true);
-				const closeTime = new Date(Date.now() + hours * 1000/*3600000*/);
+				const closeTime = new Date(Date.now() + hours * 3600000);
 
 				const embed = new EmbedBuilder()
 					.setTitle('🔔 Ticket Close Request')
