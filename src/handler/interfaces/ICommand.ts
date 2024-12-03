@@ -1,6 +1,7 @@
 import { UserTier } from '@prisma/client';
 import type {
 	ApplicationCommandOption,
+	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	Guild,
 	GuildMember,
@@ -34,6 +35,7 @@ export default interface ICommand {
 	type?: 'dmOnly' | 'guildOnly' | 'installable' | 'all' | 'legacy';
 	options?: ApplicationCommandOption[];
 	init?: (handler: CommandHandler) => Promise<void> | void | null | undefined;
+	autocomplete?: (interaction: AutocompleteInteraction) => Promise<void> | void | null | undefined;
 	execute: (ctx: CommandContext) => Promise<MessagePayload | string | InteractionReplyOptions | null | undefined>;
 }
 
