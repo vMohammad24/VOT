@@ -5,6 +5,7 @@ import TurndownService from "turndown";
 import commandHandler, { redis } from '../..';
 import ICommand from "../../handler/interfaces/ICommand";
 import VOTEmbed from '../../util/VOTEmbed';
+import { isNullish } from '../../util/util';
 
 
 
@@ -180,10 +181,10 @@ async function getGameInfo(appId: number) {
     // console.log(appId, response.data)
     if (!data) return null;
     return {
-        name: data.name,
+        name: isNullish(data.name) ? null : data.name,
         description: turndown.turndown(data.detailed_description),
         about: turndown.turndown(data.about_the_game),
-        short_description: turndown.turndown(data.short_description),
+        short_description: isNullish(data.short_description) ? null : turndown.turndown(data.short_description),
         headerImage: data.header_image,
         price: data.price_overview as {
             currency: string;
@@ -194,10 +195,10 @@ async function getGameInfo(appId: number) {
             final_formatted: string;
         } | null,
         platforms: Object.keys(data.platforms).filter(platform => data.platforms[platform as keyof typeof data.platforms] === true),
-        developers: data.developers,
-        publishers: data.publishers,
+        developers: data.developers || [],
+        publishers: data.publishers || [],
         releaseDate: data.release_date.date,
-        genres: data.genres.map((genre: any) => genre.description),
+        genres: (data.genres || []).map((genre: any) => genre.description),
         screenshots: (data.screenshots || []).map((screenshot: any) => screenshot.path_full) as string[],
         movies: (data.movies || []).map((movie: any) => movie.webm.max),
         achievements: data.achievements ? {
@@ -216,12 +217,12 @@ async function getGameInfo(appId: number) {
         } | null,
         requiredAge: data.required_age,
         categories: data.categories.map((category: any) => category.description),
-        rating: data.ratings.pegi as {
+        rating: (data.ratings && data.ratings.pegi) ? data.ratings.pegi as {
             rating: string;
             descriptors: string;
             use_age_gate: string;
             required_age: string;
-        } | null,
+        } | null : null,
     };
 }
 
@@ -237,16 +238,12 @@ export default {
         required: true,
         autocomplete: true
     }],
-    init: async (handler) => {
-        handler.client.on('interactionCreate', async (interaction) => {
-            if (!interaction.isAutocomplete()) return;
-            if (interaction.commandName !== 'steam') return;
-            const game = interaction.options.getString('game');
-            if (!game) return interaction.respond([{ name: 'Please provide a game to search for', value: '' }]);
-            const response = await searchGames(game);
-            if (!response) return interaction.respond([{ name: 'No games found', value: '' }]);
-            await interaction.respond(response/*.sort((a, b) => b.userScore - a.userScore)*/.map((hit) => ({ name: hit.name, value: hit.appid })));
-        })
+    autocomplete: async (interaction) => {
+        const game = interaction.options.getString('game');
+        if (!game) return interaction.respond([{ name: 'Please provide a game to search for', value: '' }]);
+        const response = await searchGames(game);
+        if (!response) return interaction.respond([{ name: 'No games found', value: '' }]);
+        await interaction.respond(response/*.sort((a, b) => b.userScore - a.userScore)*/.map((hit) => ({ name: hit.name, value: hit.appid })));
     },
     execute: async ({ args, channel }) => {
         let query = args.get('game')
@@ -262,6 +259,7 @@ export default {
                     ephemeral: true
                 }
             }
+            console.log(results[0])
             query = results[0].appid;
         }
         const [game] = await Promise.all([

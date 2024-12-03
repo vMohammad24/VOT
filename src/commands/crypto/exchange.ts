@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, Events } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -28,6 +28,43 @@ const loadExchangeRates = async () => {
 	return exchangeRates;
 };
 
+const parseAbbreviatedNumber = (input: string): number => {
+	const match = input.toLowerCase().match(/^([\d.]+)\s*([tkbm])?$/);
+	if (!match) return parseFloat(input);
+
+	const [_, num, modifier] = match;
+	const value = parseFloat(num);
+	if (isNaN(value)) return NaN;
+
+	const multipliers: Record<string, number> = {
+		't': 1e12,
+		'b': 1e9,
+		'm': 1e6,
+		'k': 1e3
+	};
+
+	return value * (multipliers[modifier] || 1);
+};
+
+const findCurrency = (query: string, rates: typeof exchangeRates) => {
+	query = query.toLowerCase();
+	return rates.find(x =>
+		x.key.toLowerCase() === query ||
+		x.name.toLowerCase() === query ||
+		x.key.toLowerCase().includes(query) ||
+		x.name.toLowerCase().includes(query)
+	);
+};
+
+const isValidCurrency = (query: string, rates: typeof exchangeRates) => {
+	if (!query || query.length < 2) return false;
+	query = query.toLowerCase();
+	return rates.some(x =>
+		x.key.toLowerCase() === query ||
+		x.name.toLowerCase() === query
+	);
+};
+
 export default {
 	description: 'Convert currencies',
 	type: 'all',
@@ -35,7 +72,7 @@ export default {
 		{
 			name: 'amount',
 			description: 'amount of currency',
-			type: ApplicationCommandOptionType.Integer,
+			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
 		{
@@ -53,57 +90,56 @@ export default {
 			autocomplete: true,
 		},
 	],
-	init: async (handler) => {
-		handler.client.on(Events.InteractionCreate, async (interaction) => {
-			if (!interaction.isAutocomplete()) return;
-			if (interaction.commandName != 'exchange') return;
-			if (exchangeRates.length == 0) await loadExchangeRates();
-			const from = interaction.options.getFocused();
-			interaction.respond(
-				exchangeRates
-					.map((x) => ({ name: x.name, value: x.key }))
-					.filter((x) => x.name.toLowerCase().includes(from.toLowerCase()))
-					.slice(0, 25),
-			);
-		});
+	autocomplete: async (interaction) => {
+		if (exchangeRates.length == 0) await loadExchangeRates();
+		const from = interaction.options.getFocused();
+		interaction.respond(
+			exchangeRates
+				.map((x) => ({ name: x.name, value: x.key }))
+				.filter((x) => x.name.toLowerCase().includes(from.toLowerCase()))
+				.slice(0, 25),
+		);
 	},
-	aliases: ['con', 'conv', 'currency'],
+	aliases: ['con', 'conv', 'currency', 'exch'],
 	execute: async ({ args }) => {
 		const a = args.get('amount');
-		let from = args.get('from');
-		let to = args.get('to');
+		let fromQuery = args.get('from') as string;
+		let toQuery = args.get('to') as string;
 
-		if (!a || !from || !to)
+		if (!a || !fromQuery || !toQuery)
 			return {
-				content: 'Invalid input',
+				content: 'Please provide amount, from currency, and to currency',
 				ephemeral: true,
 			};
+
 		const eR = await loadExchangeRates();
-		const amount = parseFloat(a);
+
+		// Validate currencies first
+		if (!isValidCurrency(fromQuery, eR))
+			return {
+				content: `Invalid source currency "${fromQuery}". Use the autocomplete to select a valid currency.`,
+				ephemeral: true,
+			};
+
+		if (!isValidCurrency(toQuery, eR))
+			return {
+				content: `Invalid target currency "${toQuery}". Use the autocomplete to select a valid currency.`,
+				ephemeral: true,
+			};
+
+		const amount = parseAbbreviatedNumber(a as string);
 		if (isNaN(amount))
 			return {
-				content: 'Invalid amount',
+				content: 'Invalid amount format. Examples: 100, 1k, 1m, 1b, 1t',
 				ephemeral: true,
 			};
-		for (const x of eR) {
-			if (x.name.toLowerCase() == from.toLowerCase()) from = x.key;
-			if (x.name.toLowerCase() == to.toLowerCase()) to = x.key;
-		}
-		if (!eR.find((x) => x.key == from))
-			return {
-				content: 'Invalid from currency',
-				ephemeral: true,
-			};
-		if (!eR.find((x) => x.key == to))
-			return {
-				content: 'Invalid to currency',
-				ephemeral: true,
-			};
-		const fromValue = eR.find((x) => x.key == from)!;
-		const toValue = eR.find((x) => x.key == to)!;
-		const res = amount * (toValue.value / fromValue.value);
+
+		const fromCurrency = findCurrency(fromQuery, eR)!; // Safe because we validated
+		const toCurrency = findCurrency(toQuery, eR)!;   // Safe because we validated
+
+		const res = amount * (toCurrency.value / fromCurrency.value);
 		return {
-			content: `${numeral(amount).format('0,0')}${fromValue.unit} is ${numeral(res).format('0,0')}${toValue.unit}`,
+			content: `${numeral(amount).format('0,0')}${fromCurrency.unit} is ${numeral(res).format('0,0.0000')}${toCurrency.unit}`,
 		};
 	},
 } as ICommand;

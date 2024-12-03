@@ -23,6 +23,7 @@ function isICommand(cmd: ICommand | IContextCommand): cmd is ICommand {
 export default class SlashCommandHandler {
 	public commands: (ICommand | IContextCommand)[] = [];
 	private handler: CommandHandler;
+	private autocompletes: ICommand[] = [];
 	constructor({ client, commands }: SlashHandler, handler: CommandHandler) {
 		this.commands = commands;
 		this.handler = handler;
@@ -99,6 +100,7 @@ export default class SlashCommandHandler {
 					'dmPermission',
 				]);
 				command.name = cmd.name?.toLowerCase();
+				if (cmd.autocomplete && !cmd.disabled) this.autocompletes.push(cmd);
 				return command;
 			});
 		const contextCommands = this.commands!.filter((a) => (a as IContextCommand).context != null)
@@ -262,6 +264,14 @@ export default class SlashCommandHandler {
 						fullJson: inspect(err) as any,
 					},
 				});
+			} else if (interaction.isAutocomplete()) {
+				const cmd = this.autocompletes.find((a) => a.id === interaction.commandId);
+				if (!cmd) return;
+				try {
+					await cmd.autocomplete!(interaction);
+				} catch (error) {
+					if (this.handler.verbose) this.handler.logger.error(error, 'Got an error while executing autocomplete for ' + cmd.name);
+				}
 			}
 		});
 	}

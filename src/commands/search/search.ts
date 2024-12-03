@@ -19,15 +19,11 @@ export default {
 			autocomplete: true,
 		},
 	],
-	init: ({ client }) => {
-		client.on('interactionCreate', async (interaction) => {
-			if (!interaction.isAutocomplete()) return;
-			if (interaction.commandName !== 'search') return;
-			const query = interaction.options.getString('query');
-			if (!query) return interaction.respond([{ name: 'No query provided', value: '' }]);
-			const json = await searchBraveSuggest(query);
-			return interaction.respond(json.map(r => ({ name: r, value: r })));
-		})
+	autocomplete: async (interaction) => {
+		const query = interaction.options.getString('query');
+		if (!query) return interaction.respond([{ name: 'No query provided', value: '' }]);
+		const json = await searchBraveSuggest(query);
+		return interaction.respond(json.map(r => ({ name: r, value: r })));
 	},
 	type: 'all',
 	execute: async ({ args, interaction, message, handler: { client } }) => {

@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, EmbedBuilder, Events } from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { redis } from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
 export default {
@@ -14,26 +15,26 @@ export default {
 			autocomplete: true,
 		},
 	],
-	init: async ({ client }) => {
-		client.on(Events.InteractionCreate, async (inter) => {
-			if (!inter.isAutocomplete()) return;
-			if (inter.commandName !== 'cat') return;
+	autocomplete: async (inter) => {
+		const cached = await redis.get('catTags');
+		const data = cached ? JSON.parse(cached) : await (async () => {
 			const res = await axios.get('https://cataas.com/api/tags', {
 				headers: {
 					'Content-Type': 'application/json',
 				},
 			});
-			const search = inter.options.getString('tag');
-			const tags = (res.data as string[])
-				.filter((tag) => tag.length > 0)
-				.filter((tag) => (search ? tag.includes(search) : true))
-				.slice(0, 25);
-			const options = tags.map((tag: string) => ({
-				name: tag,
-				value: tag,
-			}));
-			inter.respond(options);
-		});
+			return res.data;
+		})();
+		const search = inter.options.getString('tag');
+		const tags = (data as string[])
+			.filter((tag) => tag.length > 0)
+			.filter((tag) => (search ? tag.includes(search) : true))
+			.slice(0, 25);
+		const options = tags.map((tag: string) => ({
+			name: tag,
+			value: tag,
+		}));
+		inter.respond(options);
 	},
 	type: 'all',
 	execute: async ({ args, interaction }) => {
