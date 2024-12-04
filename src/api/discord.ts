@@ -289,31 +289,31 @@ export default (elysia: Elysia<'discord'>) => {
 		if (!code && !refresh_token)
 			return redirect(
 				'https://discord.com/api/oauth2/authorize?' +
-					queryString.stringify({
-						client_id: discordClientId,
-						response_type: 'code',
-						redirect_uri: getRedirectURL('discord'),
-						scope: 'identify guilds',
-					}),
+				queryString.stringify({
+					client_id: discordClientId,
+					response_type: 'code',
+					redirect_uri: getRedirectURL('discord'),
+					scope: 'identify guilds',
+				}),
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
 			'https://discord.com/api/oauth2/token',
 			isRefresh
 				? {
-						client_id: discordClientId,
-						client_secret: discordClientSecret,
-						refresh_token,
-						grant_type: 'refresh_token',
-					}
+					client_id: discordClientId,
+					client_secret: discordClientSecret,
+					refresh_token,
+					grant_type: 'refresh_token',
+				}
 				: {
-						client_id: discordClientId,
-						client_secret: discordClientSecret,
-						code,
-						grant_type: 'authorization_code',
-						redirect_uri: getRedirectURL('discord'),
-						scope: encodeURI('identify guilds'),
-					},
+					client_id: discordClientId,
+					client_secret: discordClientSecret,
+					code,
+					grant_type: 'authorization_code',
+					redirect_uri: getRedirectURL('discord'),
+					scope: encodeURI('identify guilds'),
+				},
 			{
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
@@ -391,4 +391,10 @@ export default (elysia: Elysia<'discord'>) => {
 	elysia.get('/invite', ({ redirect }) => {
 		return redirect('https://discord.com/api/oauth2/authorize?client_id=' + import.meta.env.DISCORD_CLIENT_ID!);
 	});
+
+	elysia.get('/guilds/:id/graphs', ({ params: { id } }) => {
+		const guild = commandHandler.client.guilds.cache.get(id)
+		if (!guild) return { error: 'notInGuild' }
+		return guild.members.cache.map(a => a.joinedTimestamp).filter(a => a != null).sort((a, b) => a - b);
+	})
 };

@@ -23,9 +23,11 @@ const discordElysia = new Elysia({ prefix: 'discord' });
 const spotifyElysia = new Elysia({ prefix: 'spotify' });
 const guildsElysia = new Elysia({ prefix: 'guilds' });
 const braveElysia = new Elysia({ prefix: 'brave' });
+// const oxapayElysia = new Elysia({ prefix: 'oxapay' });
 discord(discordElysia);
 spotify(spotifyElysia);
 brave(braveElysia);
+// oxapay(oxapayElysia);
 verification(guildsElysia);
 const elysia = new Elysia()
 	.use(html())
@@ -86,6 +88,7 @@ elysia.get('/commands', () => {
 		category: string;
 		perms?: string[];
 		type?: string;
+		context: boolean;
 	}[] = [];
 	const cmds = commandHandler.commands!;
 	for (const command of cmds) {
@@ -99,12 +102,13 @@ elysia.get('/commands', () => {
 						description: option.description,
 						category: command.category || 'All',
 						perms,
-						type: command.type
+						type: command.type,
+						context: false
 					});
 				}
 			}
 		}
-		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined) });
+		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined), context: 'context' in command });
 	}
 	return commands;
 }, {
@@ -113,7 +117,8 @@ elysia.get('/commands', () => {
 		description: t.String(),
 		category: t.String(),
 		perms: t.Optional(t.Array(t.String())),
-		type: t.Optional(t.String())
+		type: t.Optional(t.String()),
+		context: t.Boolean(),
 	})),
 	detail: {
 		description: 'Get all commands',
