@@ -78,7 +78,8 @@ elysia.get('/', async () => {
 	const ping = (actualPing == -1 ? lastPing : actualPing) == -1 ? 'N/A' : lastPing;
 	lastPing = ping;
 	const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(commandHandler.client);
-	return { ping, upSince, totalCommands, guilds: numeral(approximate_guild_count).format('0,0'), users: numeral(approximate_user_install_count).format('0,0') };
+	const featuredServers = commandHandler.client.guilds.cache.map(g => ({ name: g.name, id: g.id, memberCount: g.memberCount, vanityURL: g.vanityURLCode, iconURL: g.iconURL() })).sort((a, b) => b.memberCount - a.memberCount)
+	return { ping, upSince, totalCommands, guilds: numeral(approximate_guild_count).format('0,0'), users: numeral(approximate_user_install_count).format('0,0'), featuredServers };
 });
 
 elysia.get('/commands', () => {
