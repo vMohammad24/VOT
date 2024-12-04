@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationCommandOptionType, Routes } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, Routes } from 'discord.js';
 import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 
@@ -280,6 +280,14 @@ export default {
 		// const res = await handler.client.rest.post(`/guilds/${guild.id}/members-search`, {
 		// 	body: { "or_query": {}, "and_query": {}, "limit": 250 }
 		// })
+		return {
+			components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+				new ButtonBuilder()
+					.setURL(`discord://-/snowsgiving`)
+					.setStyle(ButtonStyle.Link)
+					.setLabel('Settings')
+			)], content: 'hi'
+		}
 		guild.roles.cache.map(r => r.iconURL()).join('\n')
 		const res = await handler.client.rest.post(Routes.channelMessages(channel.id), {
 			body: {
