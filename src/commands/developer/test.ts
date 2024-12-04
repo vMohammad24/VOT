@@ -283,7 +283,7 @@ export default {
 		return {
 			components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
 				new ButtonBuilder()
-					.setURL(`discord://-/snowsgiving`)
+					.setURL(`discord://-/developers`)
 					.setStyle(ButtonStyle.Link)
 					.setLabel('Settings')
 			)], content: 'hi'
