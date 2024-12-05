@@ -155,6 +155,11 @@ interface BiographyUser {
 	invited_by: string;
 	avatar?: string;
 	banner?: string;
+	github?: string;
+	twitter?: string;
+	instagram?: string;
+	youtube?: string;
+	ranks?: string[];
 }
 
 interface DeathUser {
@@ -556,7 +561,7 @@ export default {
 					],
 				};
 			case 'biography':
-				const res = await axios.get(`https://bio.polardev.net/api/${query}`);
+				const res = await axios.get(`https://biographyon.top/api/${query}`);
 				if (res.status != 200)
 					return {
 						ephemeral: true,
@@ -575,6 +580,13 @@ export default {
 						color = getTwoMostUsedColors(image)[0];
 					} catch (error) { }
 				}
+
+				const socialFields = [];
+				if (bUser.github) socialFields.push({ name: 'GitHub', value: bUser.github, inline: true });
+				if (bUser.twitter) socialFields.push({ name: 'Twitter', value: bUser.twitter, inline: true });
+				if (bUser.instagram) socialFields.push({ name: 'Instagram', value: bUser.instagram, inline: true });
+				if (bUser.youtube) socialFields.push({ name: 'YouTube', value: bUser.youtube, inline: true });
+
 				return {
 					embeds: [
 						new EmbedBuilder()
@@ -584,12 +596,15 @@ export default {
 								url: `https://bio.polardev.net/${bUser.username}`,
 							})
 							.setTitle(bUser.username || 'No username')
-							.setDescription(bUser.bio || 'No bio')
-							.addFields([{ name: 'About Me', value: bUser.aboutme || 'No about me' }])
+							.setDescription(`${bUser.bio || 'No bio'}${bUser.ranks?.length ? `\n\n**Ranks:** ${bUser.ranks.join(', ')}` : ''}`)
+							.addFields([
+								{ name: 'About Me', value: bUser.aboutme || 'No about me' },
+								...socialFields
+							])
 							.setThumbnail(bUser.avatar ? `https://cdn.nest.rip/uploads/${bUser.avatar}` : null)
 							.setColor(color)
 							.setFooter({ text: `Invited by ${bUser.invited_by} • ID: ${bUser.id}` })
-							// .setImage(`https://cdn.nest.rip/uploads/${bUser.banner}`)
+							.setImage(bUser.banner ? `https://cdn.nest.rip/uploads/${bUser.banner}` : null)
 							.setTimestamp(new Date(bUser.created_at)),
 					],
 				};

@@ -47,7 +47,7 @@ export default {
                 ephemeral: true
             }
         }
-        const url = routes.find((r) => r.label === route)?.url;
+        const url = routes.find((r) => r.label.toLowerCase() === route.toLowerCase())?.url;
         if (!url) {
             return {
                 content: 'Invalid route',
