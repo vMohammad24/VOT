@@ -72,13 +72,15 @@ const elysia = new Elysia()
 	});
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
+const blacklistedServers = ['1283542021231087728'];
 elysia.get('/', async () => {
 	if (totalCommands == -1) totalCommands = commandHandler.commands!.length;
 	const actualPing = commandHandler.client.ws.ping;
 	const ping = (actualPing == -1 ? lastPing : actualPing) == -1 ? 'N/A' : lastPing;
 	lastPing = ping;
 	const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(commandHandler.client);
-	const featuredServers = commandHandler.client.guilds.cache.map(g => ({ name: g.name, id: g.id, memberCount: g.memberCount, vanityURL: g.vanityURLCode, iconURL: g.iconURL() })).sort((a, b) => b.memberCount - a.memberCount)
+	const featuredServers = commandHandler.client.guilds.cache.filter(g => commandHandler.prodMode ? g.memberCount >= 100 && (g.nsfwLevel != 1 && g.nsfwLevel != 3) && !blacklistedServers.includes(g.id) : true).map(g => ({ name: g.name, id: g.id, memberCount: g.memberCount, vanityURL: g.vanityURLCode, iconURL: g.iconURL() })).sort((a, b) => b.memberCount - a.memberCount)
+	// await new Promise(resolve => setTimeout(resolve, 5000));
 	return { ping, upSince, totalCommands, guilds: numeral(approximate_guild_count).format('0,0'), users: numeral(approximate_user_install_count).format('0,0'), featuredServers };
 });
 
