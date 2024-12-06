@@ -72,7 +72,7 @@ const elysia = new Elysia()
 	});
 let totalCommands = -1;
 let lastPing: number | 'N/A' = -1;
-const blacklistedServers = ['1283542021231087728'];
+const blacklistedServers = ['1283542021231087728', '1199089040734035969']; // vimnet, goreguild
 elysia.get('/', async () => {
 	if (totalCommands == -1) totalCommands = commandHandler.commands!.length;
 	const actualPing = commandHandler.client.ws.ping;
