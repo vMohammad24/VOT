@@ -421,7 +421,7 @@ export default (elysia: Elysia<'discord'>) => {
 		mostUsedCommands.forEach(command => {
 			mostUsedCommandsMap.set(command.commandId, (mostUsedCommandsMap.get(command.commandId) || 0) + 1);
 		});
-		const mostUsedCommandsArray = Array.from(mostUsedCommandsMap.entries()).sort((a, b) => b[1] - a[1]);
+		const mostUsedCommandsArray = Array.from(mostUsedCommandsMap.entries()).slice(mostUsedCommands.length - 5, mostUsedCommands.length).sort((a, b) => b[1] - a[1]);
 		return { members, activityInTheLastHour, activeMembers: uniqueActiveMembers.size, mostUsedCommands: mostUsedCommandsArray.map(a => ({ command: a[0], count: a[1] })) };
 	})
 };
