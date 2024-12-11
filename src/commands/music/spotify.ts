@@ -116,7 +116,6 @@ export default {
 				artistArtworkUrl: string;
 			};
 			const embed = await new VOTEmbed()
-				.setTitle(getEmoji('spotify').toString() + ' Spotify')
 				.setDescription(`### [${track.title || 'Error getting title'}](${track.uri})`)
 				.setThumbnail(track.thumbnail || null)
 				.setAuthor({
@@ -124,9 +123,10 @@ export default {
 					iconURL: info.artistArtworkUrl,
 					url: info.artistUrl,
 				})
+				.setFooter({ text: 'Spotify', iconURL: getEmoji('spotify').imageURL() ?? undefined })
 				.dominant();
 			const trackId = track.identifier;
-			const features = await getTrackFeatures(trackId);
+			const features = await getTrackFeatures(trackId, user.id);
 			if (typeof features != 'string') {
 				if (features.analysis_url) {
 					embed.addFields([
