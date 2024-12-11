@@ -6,7 +6,6 @@ import { pagination, PaginationPage } from '../../util/pagination';
 
 export default {
 	description: 'Search an image using google lens',
-	category: 'misc',
 	aliases: ['googlelens', 'imagesearch'],
 	options: [
 		{

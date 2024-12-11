@@ -257,7 +257,6 @@ client.on(Events.Error, (err) => {
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle('Discord API Error')
-		.setURL('https://discordjs.guide/popular-topics/errors.html#api-errors')
 		.setDescription(
 			`\`\`\`${inspect(err)
 				.split('\n')

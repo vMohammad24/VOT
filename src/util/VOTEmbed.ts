@@ -1,4 +1,4 @@
-import { ColorResolvable, EmbedBuilder, EmbedData } from 'discord.js';
+import { ColorResolvable, EmbedBuilder, EmbedData, User } from 'discord.js';
 import commandHandler from '..';
 import { loadImg } from './database';
 import { getTwoMostUsedColors, isNullish } from './util';
@@ -44,6 +44,10 @@ class VOTEmbed extends EmbedBuilder {
 		return super.setTitle(title);
 	}
 
+
+	author(user: User) {
+		return this.setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() });
+	}
 	toJSON() {
 		const json = super.toJSON();
 		if (!json.footer) {
