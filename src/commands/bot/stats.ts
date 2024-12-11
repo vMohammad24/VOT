@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
 import numeral from 'numeral';
 import { join } from 'path';
 import { upSince } from '../..';
@@ -47,7 +47,7 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 		headers,
 	});
 	const commit = data[0].commit;
-	const message = (commit.message as string).replace('[silent]', '').trim();
+	const message = commit.message;
 	const date = new Date(commit.committer.date);
 	return { message, date };
 }
@@ -66,6 +66,11 @@ export default {
 		const { size: usersSize } = users.cache;
 		const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(client);
 		// if (globalLines === 0) globalLines = await getLines();
+		const listenerCount = Object.entries(Events).map(([key, value]) => {
+			const count = handler.client.listenerCount(value);
+			if (count != 0) return count;
+		}).filter(a => a != undefined).reduce((acc, curr) => acc + curr, 0);
+		const commitMessage = (commit.message.includes('---') ? commit.message.split('---')[0] : commit.message).trim().replace('[silent]', '');
 		const embed = await new VOTEmbed()
 			.setTitle('Bot Stats')
 			.addFields(
@@ -82,6 +87,11 @@ export default {
 				{
 					name: 'Guilds',
 					value: `${size}`,
+					inline: true,
+				},
+				{
+					name: 'Listeners',
+					value: `${listenerCount}`,
 					inline: true,
 				},
 				{

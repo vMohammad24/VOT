@@ -274,6 +274,7 @@ export const refreshToken = async (refreshToken: string) => {
 					},
 				},
 				avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
+				name: resUser.username
 			},
 		});
 	}

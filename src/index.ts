@@ -117,12 +117,12 @@ client.on(Events.ClientReady, async (c) => {
 
 	axios.defaults.validateStatus = () => true;
 
-	app.listen(process.env.PORT || 8080, () => {
+	app.listen(process.env.PORT ?? 8080, () => {
 		if (commandHandler.verbose) commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
 
 	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
-	if (clwb && ghToken) {
+	if (clwb && ghToken && commandHandler.prodMode) {
 		const webhook = new WebhookClient(
 			{
 				url: clwb,
@@ -140,7 +140,7 @@ client.on(Events.ClientReady, async (c) => {
 			headers,
 		});
 		const latestVOTCommit = data[0].commit;
-		const VOTcommitMessage = latestVOTCommit.message;
+		const VOTcommitMessage = (latestVOTCommit.message as string).includes('---') ? latestVOTCommit.message.split('---')[1] : latestVOTCommit.message;
 		const VOTcommitAuthor = latestVOTCommit.author.name;
 		const embed = new EmbedBuilder()
 			.setTitle(`Changelog - VOT`)

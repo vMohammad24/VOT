@@ -392,9 +392,40 @@ export default (elysia: Elysia<'discord'>) => {
 		return redirect('https://discord.com/api/oauth2/authorize?client_id=' + import.meta.env.DISCORD_CLIENT_ID!);
 	});
 
-	elysia.get('/guilds/:id/graphs', ({ params: { id } }) => {
+	elysia.get('/guilds/:id/graphs', async ({ params: { id } }) => {
 		const guild = commandHandler.client.guilds.cache.get(id)
 		if (!guild) return { error: 'notInGuild' }
-		return guild.members.cache.map(a => a.joinedTimestamp).filter(a => a != null).sort((a, b) => a - b);
+		const members = guild.members.cache.map(a => a.joinedTimestamp).filter(a => a != null).sort((a, b) => a - b);
+		const activityInTheLastHour = guild.channels.cache.filter(c => c.isTextBased()).map(c => c.messages.cache.filter(m => m.createdTimestamp > Date.now() - 3600000).size).reduce((a, b) => a + b, 0);
+		const activeInTheLastHour = guild.channels.cache.filter(c => c.isTextBased()).map(c => c.messages.cache.filter(m => m.member));
+		const uniqueActiveMembers = new Set();
+		activeInTheLastHour.forEach(messages => {
+			messages.forEach(message => {
+				if (message.member) {
+					uniqueActiveMembers.add(message.member.id);
+				}
+			});
+		});
+		const mostUsedCommands = await commandHandler.prisma.command.findMany({
+			where: {
+				guildId: id,
+				// createdAt: {
+				// 	gte: new Date(Date.now() - 3600000),
+				// },
+			},
+			orderBy: {
+				createdAt: 'desc',
+			},
+			take: 5,
+			select: {
+				commandId: true,
+			},
+		})
+		const mostUsedCommandsMap = new Map<string, number>();
+		mostUsedCommands.forEach(command => {
+			mostUsedCommandsMap.set(command.commandId, (mostUsedCommandsMap.get(command.commandId) || 0) + 1);
+		});
+		const mostUsedCommandsArray = Array.from(mostUsedCommandsMap.entries()).sort((a, b) => b[1] - a[1]);
+		return { members, activityInTheLastHour, activeMembers: uniqueActiveMembers.size, mostUsedCommands: mostUsedCommandsArray.map(a => ({ command: a[0], count: a[1] })) };
 	})
 };

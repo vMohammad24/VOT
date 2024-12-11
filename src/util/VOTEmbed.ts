@@ -1,7 +1,7 @@
 import { ColorResolvable, EmbedBuilder, EmbedData } from 'discord.js';
 import commandHandler from '..';
 import { loadImg } from './database';
-import { getTwoMostUsedColors } from './util';
+import { getTwoMostUsedColors, isNullish } from './util';
 let votIcon: string | undefined = undefined;
 class VOTEmbed extends EmbedBuilder {
 	constructor(data?: EmbedData) {
@@ -32,6 +32,16 @@ class VOTEmbed extends EmbedBuilder {
 
 	addDescription(description: string) {
 		return this.setDescription((this.toJSON().description || '') + description);
+	}
+
+	setDescription(description: string | null | undefined): this {
+		if (!description || isNullish(description)) return this;
+		return super.setDescription(description);
+	}
+
+	setTitle(title: string | null | undefined): this {
+		if (!title || isNullish(title)) return this;
+		return super.setTitle(title);
 	}
 
 	toJSON() {

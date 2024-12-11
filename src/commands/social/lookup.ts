@@ -11,6 +11,7 @@ import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
 import { addEmojiByURL, getEmoji } from '../../util/emojis';
+import { getTikTokUser } from '../../util/social/tiktok';
 import { getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
 
 interface User {
@@ -33,104 +34,12 @@ function captitalizeString(string: string) {
 	return (string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()).replace(/_/g, ' ');
 }
 
-interface BioLink {
-	link: string;
-	risk: number;
-}
-
-interface CommerceUserInfo {
-	commerceUser: boolean;
-	downLoadLink: {
-		android: string;
-		ios: string;
-	};
-	category: string;
-	categoryButton: boolean;
-}
-
-interface ProfileTab {
-	showMusicTab: boolean;
-	showQuestionTab: boolean;
-	showPlayListTab: boolean;
-}
-
-interface User {
-	id: string;
-	shortId: string;
-	uniqueId: string;
-	nickname: string;
-	avatarLarger: string;
-	avatarMedium: string;
-	avatarThumb: string;
-	signature: string;
-	createTime: number;
-	verified: boolean;
-	secUid: string;
-	ftc: boolean;
-	relation: number;
-	openFavorite: boolean;
-	bioLink: BioLink;
-	commentSetting: number;
-	commerceUserInfo: CommerceUserInfo;
-	duetSetting: number;
-	stitchSetting: number;
-	privateAccount: boolean;
-	secret: boolean;
-	isADVirtual: boolean;
-	roomId: string;
-	uniqueIdModifyTime: number;
-	ttSeller: boolean;
-	region: string;
-	downloadSetting: number;
-	profileTab: ProfileTab;
-	followingVisibility: number;
-	recommendReason: string;
-	nowInvitationCardUrl: string;
-	nickNameModifyTime: number;
-	isEmbedBanned: boolean;
-	canExpPlaylist: boolean;
-	profileEmbedPermission: number;
-	language: string;
-	eventList: any[];
-	suggestAccountBind: boolean;
-	isOrganization: number;
-}
-
-interface Stats {
-	followerCount: number;
-	followingCount: number;
-	heart: number;
-	heartCount: number;
-	videoCount: number;
-	diggCount: number;
-	friendCount: number;
-}
-
-interface UserInfo {
-	user: User;
-	stats: Stats;
-	itemList: any[];
-}
-
-interface ShareMeta {
-	title: string;
-	desc: string;
-}
-
-interface TikTokResponse {
-	userInfo: UserInfo;
-	shareMeta: ShareMeta;
-	statusCode: number;
-	statusMsg: string;
-	needFix: boolean;
-}
-
 interface Badge {
 	tooltip: string;
 	url: string;
 }
 
-interface RangeUser {
+interface InjectUser {
 	username: string;
 	display_name: string;
 	background_color: string;
@@ -476,46 +385,35 @@ export default {
 					],
 				};
 			case 'tiktok':
-				const tRes = await axios.get(`https://socials.evade.rest/experiments/tiktok?user=${query}`, {
-					headers: {
-						Authorization: import.meta.env.OTHER_EVADE_API_KEY,
-					},
-				});
-				const tiktokData = tRes.data;
-				if (!tiktokData)
+				const tData = await getTikTokUser(query);
+				if (!tData)
 					return {
 						ephemeral: true,
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
-				const tData: TikTokResponse = tiktokData;
-				if (tData.statusCode != 0)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\` (1)`,
-					};
 				const embed = new EmbedBuilder()
-					// .setAuthor({ name: data.userInfo.user.nickname, url: `https://www.tiktok.com/@${data.userInfo.user.uniqueId}`, iconURL: data.userInfo.user.avatarThumb })
+					// .setAuthor({ name: data..nickname, url: `https://www.tiktok.com/@${data..uniqueId}`, iconURL: data..avatarThumb })
 					.setTitle(
-						`${tData.userInfo.user.nickname} ${tData.userInfo.user.verified ? getEmoji('verified').toString() : ''}`,
+						`${tData.nickname} ${tData.verified ? getEmoji('verified').toString() : ''}`,
 					)
-					.setURL(`https://www.tiktok.com/@${tData.userInfo.user.uniqueId}`)
-					.setThumbnail(tData.userInfo.user.avatarLarger)
+					.setURL(`https://www.tiktok.com/@${tData.uniqueId}`)
+					.setThumbnail(tData.avatarLarger)
 					.addFields([
-						// { name: 'Username', value: data.userInfo.user.uniqueId, inline: true },
-						{ name: 'Followers', value: numeral(tData.userInfo.stats.followerCount).format('0,0'), inline: true },
-						{ name: 'Following', value: numeral(tData.userInfo.stats.followingCount).format('0,0'), inline: true },
-						{ name: 'Friends', value: numeral(tData.userInfo.stats.friendCount).format('0,0'), inline: true },
-						{ name: 'Hearts', value: numeral(tData.userInfo.stats.heart).format('0,0'), inline: true },
-						{ name: 'Videos', value: numeral(tData.userInfo.stats.videoCount).format('0,0'), inline: true },
-						// { name: 'Verified', value: data.userInfo.user.verified ? 'Yes' : 'No', inline: true },
+						// { name: 'Username', value: data..uniqueId, inline: true },
+						{ name: 'Followers', value: numeral(tData.followerCount).format('0,0'), inline: true },
+						{ name: 'Following', value: numeral(tData.followingCount).format('0,0'), inline: true },
+						{ name: 'Friends', value: numeral(tData.friendCount).format('0,0'), inline: true },
+						{ name: 'Hearts', value: numeral(tData.heart).format('0,0'), inline: true },
+						{ name: 'Videos', value: numeral(tData.videoCount).format('0,0'), inline: true },
+						// { name: 'Verified', value: data..verified ? 'Yes' : 'No', inline: true },
 					])
-					.setDescription(tData.userInfo.user.signature || 'No bio')
+					.setDescription(tData.signature || 'No bio')
 					.setColor(
-						tData.userInfo.user.avatarLarger
-							? getTwoMostUsedColors(await loadImg(tData.userInfo.user.avatarLarger))[0]
+						tData.avatarLarger
+							? getTwoMostUsedColors(await loadImg(tData.avatarLarger))[0]
 							: 'Random',
 					)
-					.setTimestamp(new Date(tData.userInfo.user.createTime * 1000))
+					.setTimestamp(new Date(tData.createTime * 1000))
 					.setFooter({ text: 'Account created on' });
 				return {
 					embeds: [embed],
@@ -529,7 +427,7 @@ export default {
 						ephemeral: true,
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
-				const rUser = rData.data as RangeUser;
+				const rUser = rData.data as InjectUser;
 				// const avatarImg = user.avatar ? await loadImg(user.avatar, {
 				//     requestOptions: {
 				//         headers: {

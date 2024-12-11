@@ -5,7 +5,7 @@ import type ICommand from '../interfaces/ICommand';
 import type { CommandContext } from '../interfaces/ICommand';
 
 export class Argument<T> {
-	constructor(public value: T) {}
+	constructor(public value: T) { }
 }
 
 export class ArgumentMap<T> {
@@ -423,7 +423,22 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								} else if (/^\d+$/.test(roleArg)) {
 									roleVal = message.guild?.roles.cache.get(roleArg) || null;
 								} else {
-									roleVal = message.guild?.roles.cache.find((role) => role.name === roleArg) || null;
+									// partial name
+									roleVal = message.guild?.roles.cache.find(role =>
+										role.name.toLowerCase().includes(roleArg.toLowerCase()) ||
+										role.name.toLowerCase().startsWith(roleArg.toLowerCase())
+									) || null;
+
+									// fuzzy
+									if (!roleVal) {
+										const roles = message.guild?.roles.cache
+											.filter(role =>
+												role.name.toLowerCase().includes(roleArg.toLowerCase()) ||
+												role.name.toLowerCase().startsWith(roleArg.toLowerCase())
+											)
+											.sort((a, b) => a.name.length - b.name.length);
+										roleVal = roles?.first() || null;
+									}
 								}
 							} else if (message.mentions.roles.size > 0) {
 								roleVal = message.mentions.roles.first() || null;

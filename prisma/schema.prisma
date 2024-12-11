@@ -113,14 +113,17 @@ model Track {
 }
 
 model Command {
-  id          String   @id @default(uuid())
-  commandId   String
-  commandInfo Json
-  User        User     @relation(fields: [userId], references: [id])
-  userId      String
-  createdAt   DateTime @default(now())
-  messageId   String?
-  errors      Error[]
+  id             String   @id @default(uuid())
+  commandId      String
+  commandInfo    Json
+  User           User     @relation(fields: [userId], references: [id])
+  userId         String
+  createdAt      DateTime @default(now())
+  messageId      String?
+  guildId        String?
+  guild          Guild?   @relation(fields: [guildId], references: [id])
+  errors         Error[]
+  validationTime Int?
 }
 
 model Guild {
@@ -145,6 +148,7 @@ model Guild {
   VerificationSettings VerificationSettings?
   ModerationSettings   ModerationSettings?
   voiceMaster          VoiceMaster?
+  commands             Command[]
 }
 
 model Ticket {

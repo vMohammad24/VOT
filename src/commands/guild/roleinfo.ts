@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType, Role } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import VOTEmbed from "../../util/VOTEmbed";
-import { camelToTitleCase } from "../../util/util";
+import { camelToTitleCase, isNullish } from "../../util/util";
 
 export default {
     description: 'Get information about a role',
@@ -22,14 +22,21 @@ export default {
         const embed = new VOTEmbed()
             .setDescription(`Role information for ${role.name}`)
             .setColor(role.color)
-            .addFields(
-                { name: 'Position', value: role.position.toString(), inline: true },
-                { name: 'Members', value: role.members.size.toString(), inline: true },
-                { name: 'Permissions', value: role.permissions.toArray().map(a => camelToTitleCase(a.toString())).join(', '), inline: false }
-            )
             .setFooter({ text: `ID: ${role.id} • ${role.mentionable ? 'Mentionable' : 'Not Mentionable'} • Color: ${role.hexColor}` })
             .setTimestamp(role.createdTimestamp);
+        const position = role.position.toString();
+        const members = role.members.size.toString();
+        const permissions = role.permissions.toArray().map(a => camelToTitleCase(a.toString())).join(', ');
 
+        if (!isNullish(position)) {
+            embed.addFields({ name: 'Position', value: position, inline: true });
+        }
+        if (!isNullish(members)) {
+            embed.addFields({ name: 'Members', value: members, inline: true });
+        }
+        if (!isNullish(permissions)) {
+            embed.addFields({ name: 'Permissions', value: permissions, inline: false });
+        }
         if (roleIcon) {
             await embed.setThumbnail(roleIcon).dominant()
         }
