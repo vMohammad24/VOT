@@ -38,7 +38,7 @@ type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
 interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
-const createCommand = async (commandContext: CommandContext, command: ICommand) => {
+const createCommand = async (commandContext: CommandContext, command: ICommand, validationTime: number) => {
 	const cId = commandContext.cID || nanoid(10);
 	return await commandContext.handler.prisma.user.upsert({
 		where: {
@@ -58,6 +58,8 @@ const createCommand = async (commandContext: CommandContext, command: ICommand) 
 						interaction: commandContext?.interaction?.id || null,
 					},
 					id: `cmd_${cId}`,
+					guildId: commandContext.guild.id,
+					validationTime
 				},
 			},
 		},
@@ -76,6 +78,8 @@ const createCommand = async (commandContext: CommandContext, command: ICommand) 
 						interaction: commandContext?.interaction?.id || null,
 					},
 					id: `cmd_${cId}`,
+					guildId: commandContext.guild.id,
+					validationTime
 				},
 			},
 		},
@@ -112,13 +116,11 @@ export default class CommandHandler {
 		handler.client.on(Events.ClientReady, async () => {
 			const time = Date.now();
 			this.logger.debug('Fetching guilds...');
-			await Promise.all(
-				(await this.client.guilds.fetch()).map(async (guild) => {
-					const fetchedGuild = await guild.fetch();
-					return fetchedGuild.members.fetch();
-				}),
-			);
-			this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
+			this.client.guilds.cache.map(async (guild) => {
+				const fetchedGuild = await guild.fetch();
+				return fetchedGuild.members.fetch();
+			}),
+				this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
 			this.validations = await (async () => {
 				const validationDir = path.join(import.meta.dir, 'validations');
 				const validationFiles = [];
@@ -153,7 +155,8 @@ export default class CommandHandler {
 			}
 			const loadCommand = async (file: string) => {
 				const start = Date.now();
-				const categoryName = file.split(path.sep).slice(-2, -1)[0].replace(/\\/g, '/');
+				const splitPath = file.split(path.sep);
+				const categoryName = splitPath[splitPath.length - 2]?.replace(/\\/g, '/') || 'uncategorized';
 				const fileName = file.split(path.sep).pop()!.split('.')[0];
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
 
@@ -300,12 +303,12 @@ export default class CommandHandler {
 					contextTime = Date.now() - start;
 				}
 				const vStart = Date.now();
-				const validationResults = await Promise.all(
-					this.validations.map(async (validation) => validation(command, commandContext)),
-				);
-				const invalidResult = validationResults.find((result) => result !== true);
-				if (invalidResult || invalidResult === false) {
-					return invalidResult;
+				for (const validation of this.validations) {
+					const result = await validation(command, commandContext);
+					if (result !== true) {
+						validationTime = Date.now() - vStart;
+						return result;
+					}
 				}
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
@@ -317,7 +320,7 @@ export default class CommandHandler {
 					}
 				}, 2700);
 
-				await createCommand(commandContext, command);
+				await createCommand(commandContext, command, validationTime);
 				const result = await command.execute(commandContext);
 				const executionTime = Date.now() - eStart;
 				const total = Date.now() - start;

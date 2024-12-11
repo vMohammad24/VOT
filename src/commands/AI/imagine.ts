@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
     description: 'Image generation (Premium Only)',
@@ -37,6 +38,13 @@ export default {
         }
         const buffer = Buffer.from(res.data)
         return {
+            embeds: [await new VOTEmbed()
+                .setTitle('Image Generation')
+                .setDescription(`> ${prompt}`)
+                .setTimestamp()
+                .setImage('attachment://image.png')
+                .setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() })
+            ],
             files: [{
                 attachment: buffer,
                 name: 'image.png'

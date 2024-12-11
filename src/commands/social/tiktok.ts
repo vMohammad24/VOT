@@ -3,6 +3,9 @@ import { ApplicationCommandOptionType, AttachmentBuilder, ColorResolvable } from
 import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
+import { pagination } from '../../util/pagination';
+import { getVideoBuffer, newPage } from '../../util/puppeteer';
+import { TikTokExploreResponse } from '../../util/social/tiktok';
 import { getTwoMostUsedColors } from '../../util/util';
 import VOTEmbed from '../../util/VOTEmbed';
 
@@ -223,6 +226,11 @@ export default {
 				},
 			],
 		},
+		// {
+		// 	name: 'trending',
+		// 	description: 'Get trending videos from Tiktok',
+		// 	type: ApplicationCommandOptionType.Subcommand,
+		// }
 	],
 	slashOnly: true,
 	execute: async ({ interaction }) => {
@@ -298,6 +306,49 @@ export default {
 					],
 					files: [new AttachmentBuilder(Buffer.from(videoData), { name: 'video.mp4' })],
 				};
+				break;
+			case 'trending':
+				const page = await newPage();
+				await page.goto('https://www.tiktok.com/api/explore/item_list/?aid=2&browser_language=en-US&count=3&data_collection_enabled=false&history_len=4&region=US&tz_name=America%2FVirgin&user_is_login=true&device_id=1&categoryType=120&language=en', {
+					waitUntil: 'networkidle2'
+				})
+				const content = await page.$('pre').then(e => e?.evaluate(node => node.textContent));
+				// await page.close();
+				// console.log(content)
+				const trending = JSON.parse(content) as TikTokExploreResponse;
+				if (!trending) return { content: 'Failed to fetch Tiktok trending videos', ephemeral: true };
+				const videos = trending.itemList;
+				await pagination({
+					interaction,
+					pages: await Promise.all(videos.map(async (video) => {
+						const playAddr = video.video.bitrateInfo[0].PlayAddr.UrlList.slice(-1)[0];
+						const videoPlay = await getVideoBuffer(playAddr);
+						console.log(videoPlay)
+						return {
+							page:
+							{
+								embeds: [
+									new VOTEmbed()
+										.setAuthor({
+											name: video.author.nickname,
+											iconURL: video.author.avatarLarger,
+											url: `https://www.tiktok.com/@${video.author.uniqueId}`,
+										})
+										.setDescription(video.desc)
+										.setFooter({
+											text: `❤️ ${numeral(video.statsV2.diggCount).format('0,0')} • 💬 ${numeral(video.statsV2.commentCount).format('0,0')} • 🔁 ${numeral(video.statsV2.shareCount).format('0,0')}`
+										})
+										.setImage(video.video.downloadAddr)
+										.setTimestamp(video.createTime * 1000),
+								],
+								files: [new AttachmentBuilder(Buffer.from(videoPlay), { name: 'VOT_TT_Trending.mp4' })],
+							},
+							description: video.desc ?? 'No description',
+							name: video.author.nickname ?? 'Unknown',
+						}
+					})),
+					// type: 'select'
+				})
 		}
 	},
 } as ICommand;

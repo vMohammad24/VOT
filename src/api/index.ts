@@ -23,11 +23,10 @@ const discordElysia = new Elysia({ prefix: 'discord' });
 const spotifyElysia = new Elysia({ prefix: 'spotify' });
 const guildsElysia = new Elysia({ prefix: 'guilds' });
 const braveElysia = new Elysia({ prefix: 'brave' });
-// const oxapayElysia = new Elysia({ prefix: 'oxapay' });
+const sellsnElysia = new Elysia({ prefix: 'sellsn' });
 discord(discordElysia);
 spotify(spotifyElysia);
 brave(braveElysia);
-// oxapay(oxapayElysia);
 verification(guildsElysia);
 const elysia = new Elysia()
 	.use(html())
@@ -50,6 +49,7 @@ const elysia = new Elysia()
 	.use(spotifyElysia)
 	.use(guildsElysia)
 	.use(braveElysia)
+	.use(sellsnElysia)
 	.onParse(async ({ request, contentType }) => {
 		try {
 			if (contentType === 'application/json') {
@@ -61,6 +61,7 @@ const elysia = new Elysia()
 	})
 	.onRequest(async ({ set, error, request }) => {
 		const endpoint = new URL(request.url).pathname;
+		console.log(request.method, endpoint);
 		const auth = request.headers.get('authorization');
 		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || endpoint.startsWith('/ipinfo') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
 		if (needsAPIKey && !(await checkKey(auth))) {
@@ -85,15 +86,65 @@ elysia.get('/', async () => {
 });
 
 elysia.get('/commands', () => {
-	const commands: {
+	interface Command {
 		name: string;
 		description: string;
 		category: string;
 		perms?: string[];
 		type?: string;
 		context: boolean;
-	}[] = [];
+		subcommands?: Command[];
+	}
+	const commands: Command[] = [];
 	const cmds = commandHandler.commands!;
+	for (const command of cmds) {
+		if (command.perms == 'dev' || command.disabled) continue;
+		const perms = (command.perms || []).map(a => camelToTitleCase(a.toString()));
+		const cmd: Command = { name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined), context: 'context' in command };
+		if (command.options) {
+			for (const option of command.options!) {
+				if (option.type == ApplicationCommandOptionType.Subcommand) {
+					if (!cmd.subcommands) cmd.subcommands = [];
+					cmd.subcommands.push({
+						name: option.name,
+						description: option.description,
+						category: command.category || 'All',
+						perms,
+						type: command.type,
+						context: false
+					});
+				}
+			}
+		}
+		commands.push(cmd);
+	}
+	return commands;
+}, {
+	response: t.Array(t.Object({
+		name: t.String(),
+		description: t.String(),
+		category: t.String(),
+		perms: t.Optional(t.Array(t.String())),
+		type: t.Optional(t.String()),
+		context: t.Boolean(),
+		subcommands: t.Optional(t.Array(t.Object({
+			name: t.String(),
+			description: t.String(),
+			category: t.String(),
+			perms: t.Optional(t.Array(t.String())),
+			type: t.Optional(t.String()),
+			context: t.Boolean()
+		})))
+	})),
+	detail: {
+		description: 'Get all commands',
+
+	}
+});
+
+elysia.get('/commands/:name', ({ params: { name }, set }) => {
+	const cmds = commandHandler.commands!;
+	const commands = [];
 	for (const command of cmds) {
 		if (command.perms == 'dev' || command.disabled) continue;
 		const perms = (command.perms || []).map(a => camelToTitleCase(a.toString()));
@@ -111,33 +162,10 @@ elysia.get('/commands', () => {
 				}
 			}
 		}
-		commands.push({ name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined), context: 'context' in command });
+		commands.push({ options: command.options, name: command.name!, description: command.description, category: command.category || 'All', perms, type: typeof command.type == 'string' ? command.type : ('context' in command ? command.context as string : undefined), context: 'context' in command });
 	}
-	return commands;
-}, {
-	response: t.Array(t.Object({
-		name: t.String(),
-		description: t.String(),
-		category: t.String(),
-		perms: t.Optional(t.Array(t.String())),
-		type: t.Optional(t.String()),
-		context: t.Boolean(),
-	})),
-	detail: {
-		description: 'Get all commands',
-
-	}
-});
-
-elysia.get('/commands/:name', ({ params: { name }, set }) => {
-	const command = commandHandler.commands!.find((cmd) => cmd.name === name);
-	if (!command) {
-		set.status = 404;
-		return {
-			error: 'Command not found',
-		};
-	}
-	return command;
+	const command = commands.find(c => c.name.localeCompare(name, undefined, { sensitivity: 'base' }) == 0);
+	return command || { error: 'Command not found' };
 });
 
 elysia.get(

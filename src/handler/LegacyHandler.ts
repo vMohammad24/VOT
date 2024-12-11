@@ -61,10 +61,15 @@ export default class LegacyCommandHandler {
 			const execution = await this.handler.executeCommand(command, message);
 			if (execution) {
 				try {
-					const msg = await message.reply({
-						allowedMentions: {},
-						...execution,
-					});
+					if (!execution.allowedMentions) {
+						execution.allowedMentions = {
+							parse: [],
+							users: [],
+							roles: [],
+							repliedUser: false,
+						};
+					}
+					const msg = await message.reply(execution);
 					if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
 						setTimeout(async () => {
 							await Promise.all([msg.delete(), message.delete()]);
@@ -73,12 +78,17 @@ export default class LegacyCommandHandler {
 				} catch (e) {
 					try {
 						const msg = await message.reply({
-							allowedMentions: {},
+							allowedMentions: {
+								parse: [],
+								users: [],
+								roles: [],
+								repliedUser: false,
+							},
 							...execution,
 						});
 						if (msg.embeds.length > 0 && (msg.embeds[0].title === 'Error' || msg.embeds[0].color == 10038562)) {
 							setTimeout(async () => {
-								await Promise.all([await msg.delete(), await message.delete()]);
+								await Promise.all([msg.delete(), message.delete()]);
 							}, 3000);
 						}
 					} catch (error) { }

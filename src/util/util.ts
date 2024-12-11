@@ -133,7 +133,7 @@ export function parseTime(timestr: string): number {
 			}
 			time += num;
 		}
-	} catch (ignored) {}
+	} catch (ignored) { }
 	return time;
 }
 
@@ -169,7 +169,7 @@ export function isURL(url: string): boolean {
 }
 
 export function isNullish(value: any): boolean {
-	return value === null || value === undefined || value === '';
+	return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0 && value.every(isNullish));
 }
 
 export function camelToTitleCase(str: string): string {
@@ -177,4 +177,13 @@ export function camelToTitleCase(str: string): string {
 		.replace(/([a-z])([A-Z])/g, '$1 $2')
 		.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
 		.trim();
+}
+
+export function capitalizeString(str: string): string {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+export function randomInt(min?: number, max?: number): number {
+	if (min === undefined) min = 0;
+	if (max === undefined) max = 100;
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
