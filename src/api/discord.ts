@@ -409,14 +409,10 @@ export default (elysia: Elysia<'discord'>) => {
 		const mostUsedCommands = await commandHandler.prisma.command.findMany({
 			where: {
 				guildId: id,
-				// createdAt: {
-				// 	gte: new Date(Date.now() - 3600000),
-				// },
 			},
 			orderBy: {
 				createdAt: 'desc',
 			},
-			take: 5,
 			select: {
 				commandId: true,
 			},
