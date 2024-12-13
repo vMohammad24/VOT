@@ -62,7 +62,8 @@ export default {
                     iconURL: logo.imageURL()!
                 })
                 .dominant();
-            const res = await i.reply({
+            await i.update({});
+            const res = await rMsg.edit({
                 embeds: [embed],
                 components: [
                     new ActionRowBuilder<ButtonBuilder>()
@@ -76,19 +77,21 @@ export default {
                                 .setCustomId('check_payment')
                                 .setLabel('Check Payment')
                                 .setStyle(ButtonStyle.Secondary)
+                                .setEmoji('🔍')
                         )
                 ]
             });
             const checkCollector = res.createMessageComponentCollector({
-                filter: i => i.user.id === user.id,
+                filter: i => i.user.id == user.id,
                 time: 60000
             })
             checkCollector.on('collect', async inter => {
-                checkCollector.stop();
+                console.log('Checking payment')
                 const result = await getOrder(
                     payment.result.order_id,
                     payment.result.uuid
                 );
+                console.log('Checked payment')
 
                 const embed = await new VOTEmbed()
                     .setTitle('VOT Premium - Payment Status')
@@ -138,7 +141,7 @@ export default {
                             .setColor('Yellow');
                         break;
                     case E_PAYMENT_STATUS.CHECK:
-                        embed.setDescription('Payment is being checked')
+                        embed.setDescription('Waiting for the transaction to appear on the blockchain')
                             .setColor('Yellow');
                         break;
                     case E_PAYMENT_STATUS.CONFIRM_CHECK:
@@ -162,7 +165,7 @@ export default {
                             .setColor('Grey');
                         break;
                 }
-                inter.update({});
+                await inter.update({});
                 await i.editReply({
                     embeds: [embed],
                 })
