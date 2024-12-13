@@ -135,11 +135,19 @@ const notablePerms = [
 	PermissionsBitField.Flags.KickMembers,
 ];
 const apiKey = import.meta.env.OTHER_EVADE_API_KEY;
+const userPfps = new Map<string, string>();
+await (async () => {
+	const res = await axios.get<{
+		avatars: Record<string, string>;
+	}>('https://raw.githubusercontent.com/UserPFP/UserPFP/refs/heads/main/source/data.json');
+	Object.entries(res.data.avatars).forEach(([key, value]) => {
+		userPfps.set(key, value);
+	});
+})();
 export default {
 	name: 'userinfo',
 	aliases: ['user', 'whois', 'ui'],
 	description: 'Get information about a user',
-	cooldown: 5000,
 	options: [
 		{
 			type: ApplicationCommandOptionType.User,
@@ -200,7 +208,7 @@ export default {
 		const buttonId = nanoid();
 		const connectionsButtonId = nanoid();
 		const bannerButtonId = nanoid();
-
+		const userPfpId = nanoid();
 		const u = user instanceof GuildMember ? user.user : user;
 		if (!u) return { content: 'User not found', ephemeral: true };
 		if (clan && clan.identity_guild_id && clan.tag && clan.badge) {
@@ -430,6 +438,7 @@ export default {
 		// 	embed.setColor(dColor[0]);
 		// }
 		await embed.dominant();
+		const userPfp = userPfps.get(user.id);
 		const content = {
 			embeds: [embed],
 			content: `<@${u.id}>`,
@@ -448,10 +457,18 @@ export default {
 				),
 			],
 		};
+		if (userPfp) {
+			content.components[0].addComponents(
+				new ButtonBuilder()
+					.setLabel('View UserPFP')
+					.setStyle(ButtonStyle.Secondary)
+					.setCustomId(userPfpId)
+			)
+		}
 		const sentMessage = message ? await message.reply(content) : await interaction!.editReply(content);
 
 		const collector = sentMessage?.createMessageComponentCollector({
-			filter: (i) => i.customId === buttonId || i.customId === connectionsButtonId || i.customId === bannerButtonId,
+			filter: (i) => i.customId === buttonId || i.customId === connectionsButtonId || i.customId === bannerButtonId || i.customId === userPfpId,
 		});
 		collector?.on('collect', async (i) => {
 			if (i.customId === buttonId) {
@@ -532,6 +549,22 @@ export default {
 					}
 				}
 				await embed.dominant();
+				i.reply({
+					embeds: [embed],
+					ephemeral: true,
+					allowedMentions: { repliedUser: true },
+				});
+			} else if (i.customId == userPfpId) {
+				const embed = new EmbedBuilder()
+					.setTitle('UserPFP')
+					.setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
+					.setColor(embedColor)
+					.setTimestamp();
+				if (userPfp) {
+					embed.setImage(userPfp);
+				} else {
+					embed.setDescription('No UserPFP found');
+				}
 				i.reply({
 					embeds: [embed],
 					ephemeral: true,
