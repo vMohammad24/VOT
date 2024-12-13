@@ -1,4 +1,9 @@
-import { ApplicationCommandOptionType, type GuildTextBasedChannel } from 'discord.js';
+import {
+	ApplicationCommandOptionType,
+	FetchMessagesOptions,
+	GuildMember,
+	type GuildTextBasedChannel,
+} from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { createCase } from '../../util/cases';
 
@@ -46,7 +51,7 @@ export default {
 	execute: async ({ channel, args, message, guild, member: ranBy }) => {
 		const amount = (args.get('amount') as number) || 100;
 		const bots = args.get('bots') as boolean | undefined;
-		const user = args.get('user') as string | undefined;
+		const user = args.get('user') as GuildMember | undefined;
 		const before = args.get('before') as string | undefined;
 		const after = args.get('after') as string | undefined;
 		const contains = args.get('contains') as string | undefined;
@@ -60,32 +65,29 @@ export default {
 
 		try {
 			await message?.delete();
-			let messages = await (channel as GuildTextBasedChannel).messages.fetch({ limit: amount });
+			const fetchOptions: FetchMessagesOptions = { limit: Math.min(amount, 100) };
+			if (before) fetchOptions.before = before;
+			if (after) fetchOptions.after = after;
+			let messages = await (channel as GuildTextBasedChannel).messages.fetch(fetchOptions);
+			messages = messages.filter(msg => {
 
-			if (bots) {
-				messages = messages.filter((msg) => msg.author.bot);
+				if (Date.now() - msg.createdTimestamp > 1209600000) return false;
+
+				if (bots && !msg.author.bot) return false;
+				if (user && msg.author.id !== user.id) return false;
+				if (contains && !msg.content.toLowerCase().includes(contains.toLowerCase())) return false;
+
+				return true;
+			});
+
+			if (messages.size === 0) {
+				throw new Error('No messages found matching the criteria');
 			}
 
-			if (user) {
-				messages = messages.filter((msg) => msg.author.id === user);
-			}
 
-			if (before) {
-				messages = messages.filter((msg) => msg.createdTimestamp < msg.createdTimestamp);
-			}
+			const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(messages);
 
-			if (after) {
-				const msg = await (channel as GuildTextBasedChannel).messages.fetch(after);
-				messages = messages.filter((msg) => msg.createdTimestamp > msg.createdTimestamp);
-			}
 
-			if (contains) {
-				messages = messages.filter((msg) => msg.content.includes(contains));
-			}
-
-			const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(messages, true);
-
-			// Create a moderation case
 			await createCase(
 				guild.id,
 				'Purge',
