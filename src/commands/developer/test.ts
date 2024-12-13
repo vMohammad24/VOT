@@ -6,7 +6,6 @@ import type ICommand from '../../handler/interfaces/ICommand';
 import TurnDownService from 'turndown';
 import { searchBrave } from '../../util/brave';
 import { DuckDuckGoChat } from '../../util/ddg';
-import { getTikTokTrending } from '../../util/social/tiktok';
 const turndownService = new TurnDownService();
 // Mocking the DDG object to mimic the input function's behavior in TypeScript
 
@@ -277,9 +276,24 @@ export default {
 			required: false,
 		},
 	],
+	perms: 'dev',
 	execute: async ({ user, interaction, member, handler, args, guild, channel, message, editReply }) => {
-		console.log(await getTikTokTrending())
-		return { content: 'done' }
+		// console.log(await getTikTokTrending())
+		// const url = 'https://www.tiktok.com/api/explore/item_list/?aid=2&browser_language=en-US&count=3&data_collection_enabled=false&history_len=4&region=US&tz_name=America%2FVirgin&user_is_login=true&device_id=1&categoryType=120&language=en';
+		// let res = await axios.get(url);
+		// const { data, headers } = res;
+		// const cookies = headers['set-cookie']
+		// 	? headers['set-cookie'].map((cookie: string) => cookie.split(';')[0]).join('; ')
+		// 	: '';
+		// res = await axios.get(url, {
+		// 	headers: {
+		// 		cookie: cookies,
+		// 	},
+		// });
+		// const content = res.data;
+		// console.log(content, data)
+
+		// return { content: 'done' }
 		// const res = await handler.client.rest.post(`/guilds/${guild.id}/members-search`, {
 		// 	body: { "or_query": {}, "and_query": {}, "limit": 250 }
 		// })
