@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	description: 'Kicks a member',
@@ -32,13 +33,17 @@ export default {
 				ephemeral: true,
 			};
 		}
+
+		// Create case
+		const newCase = await createCase(guild.id, 'Kick', member.id, kicker.id, reason);
+
 		const userEmbed = new EmbedBuilder()
 			.setTitle('Kicked')
 			.setDescription(`You have been kicked from **${guild.name}**`)
 			.setColor('DarkOrange')
 			.setTimestamp()
 			.setFooter({
-				text: `Kicked by ${kicker.user.displayName}`,
+				text: `Kicked by ${kicker.user.displayName} • Case ID: ${newCase.caseId}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' });
@@ -49,12 +54,15 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Kicked by ${kicker.user.displayName}`,
+				text: `Kicked by ${kicker.user.displayName} • Case ID: ${newCase.caseId}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' });
-		await member.send({ embeds: [userEmbed] });
-		await member.kick(reason);
+		try {
+			// await member.send({ embeds: [userEmbed] });
+		} catch (e) { }
+
+		await member.kick(`${reason || 'No reason provided'} (Case #${newCase.caseId})`);
 		return {
 			embeds: [embed],
 		};

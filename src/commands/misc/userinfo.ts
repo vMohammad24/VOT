@@ -199,6 +199,7 @@ export default {
 		}
 		const buttonId = nanoid();
 		const connectionsButtonId = nanoid();
+		const bannerButtonId = nanoid();
 
 		const u = user instanceof GuildMember ? user.user : user;
 		if (!u) return { content: 'User not found', ephemeral: true };
@@ -440,13 +441,17 @@ export default {
 						.setLabel('View connections')
 						.setStyle(ButtonStyle.Secondary)
 						.setCustomId(connectionsButtonId),
+					new ButtonBuilder()
+						.setLabel('View banner')
+						.setStyle(ButtonStyle.Secondary)
+						.setCustomId(bannerButtonId),
 				),
 			],
 		};
 		const sentMessage = message ? await message.reply(content) : await interaction!.editReply(content);
 
 		const collector = sentMessage?.createMessageComponentCollector({
-			filter: (i) => i.customId === buttonId || i.customId === connectionsButtonId,
+			filter: (i) => i.customId === buttonId || i.customId === connectionsButtonId || i.customId === bannerButtonId,
 		});
 		collector?.on('collect', async (i) => {
 			if (i.customId === buttonId) {
@@ -505,6 +510,22 @@ export default {
 				} else {
 					embed.setDescription('No connections found');
 				}
+				i.reply({
+					embeds: [embed],
+					ephemeral: true,
+					allowedMentions: { repliedUser: true },
+				});
+			} else if (i.customId === bannerButtonId) {
+				const embed = await new VOTEmbed()
+					.setAuthor({ name: u.tag, iconURL: avatar, url: `https://discord.com/users/${user.id}` })
+					.setColor(embedColor)
+					.setTimestamp();
+				if (data.banner_url) {
+					embed.setImage(data.banner_url);
+				} else {
+					embed.setDescription('No banner found');
+				}
+				await embed.dominant();
 				i.reply({
 					embeds: [embed],
 					ephemeral: true,

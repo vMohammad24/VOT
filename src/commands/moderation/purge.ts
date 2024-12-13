@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, type GuildTextBasedChannel } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	description: 'Purges messages from a channel',
@@ -42,7 +43,7 @@ export default {
 		},
 	],
 	perms: ['ManageMessages'],
-	execute: async ({ channel, args, message }) => {
+	execute: async ({ channel, args, message, guild, member: ranBy }) => {
 		const amount = (args.get('amount') as number) || 100;
 		const bots = args.get('bots') as boolean | undefined;
 		const user = args.get('user') as string | undefined;
@@ -83,6 +84,15 @@ export default {
 			}
 
 			const deletedMessages = await (channel as GuildTextBasedChannel).bulkDelete(messages, true);
+
+			// Create a moderation case
+			await createCase(
+				guild.id,
+				'Purge',
+				channel.id,
+				ranBy.id,
+				`Purged ${deletedMessages.size} messages in #${(channel as GuildTextBasedChannel).name}`
+			);
 
 			return {
 				content: `Purged ${deletedMessages.size} messages`,

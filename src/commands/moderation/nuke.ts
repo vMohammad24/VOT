@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, type BaseGuildTextChannel } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	description: 'Nukes a channel',
@@ -20,6 +21,13 @@ export default {
 		await c
 			.clone({ reason: 'Nuked', name: c.name })
 			.then(async (ch) => {
+				await createCase(
+					guild.id,
+					'Nuke',
+					channel.id,
+					member.id,
+					`Nuked channel #${c.name}`
+				);
 				c.delete('Nuked');
 				const embed = new EmbedBuilder()
 					.setTitle('Nuked')

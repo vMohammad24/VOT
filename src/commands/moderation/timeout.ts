@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 import { parseTime } from '../../util/util';
 
 export default {
@@ -56,13 +57,17 @@ export default {
 				content: 'Please provide a valid duration',
 				ephemeral: true,
 			};
+
+		// Create case after time validation
+		const newCase = await createCase(guild.id, 'Timeout', member.id, owner.id, reason);
+
 		const userEmbed = new EmbedBuilder()
 			.setTitle('Silenced')
 			.setDescription(`You have been silenced from **${guild.name}**`)
 			.setColor('Orange')
 			.setTimestamp()
 			.setFooter({
-				text: `Silenced by ${owner.user.displayName}`,
+				text: `Silenced by ${owner.user.displayName} • Case ID: ${newCase.caseId}`,
 				iconURL: owner.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' })
@@ -77,7 +82,7 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Done by ${owner.user.displayName}`,
+				text: `Done by ${owner.user.displayName} • Case ID: ${newCase.caseId}`,
 				iconURL: owner.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' })
@@ -85,8 +90,11 @@ export default {
 				name: 'Expires',
 				value: `<t:${Math.round(Date.now() / 1000 + time)}:R>`,
 			});
-		await member.send({ embeds: [userEmbed] });
-		await member.timeout(time * 1000, reason);
+		try {
+			// await member.send({ embeds: [userEmbed] });
+		} catch (e) { }
+
+		await member.timeout(time * 1000, `${reason || 'No reason provided'} (Case #${newCase.caseId})`);
 		return {
 			embeds: [embed],
 		};

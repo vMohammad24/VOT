@@ -215,7 +215,7 @@ export default class SlashCommandHandler {
 						},
 					});
 					return await interaction.reply({
-						content: `This command does not exist.\nFor further information please report this to the developers.\n-# ${error?.id}`,
+						content: `This command does not exist.\nFor further information please report this to the developers in the [discord server](https://discord.gg/X42fBGVRtR).\n-# ${error?.id}`,
 						ephemeral: true,
 					});
 				}
@@ -233,7 +233,7 @@ export default class SlashCommandHandler {
 							new EmbedBuilder()
 								.setTitle(`${getEmoji('warn').toString()} Error`)
 								.setDescription(
-									`There was an error while executing this command, Please submit the id below to the developer\n-# ${id}`,
+									`There was an error while executing this command, Please submit the id below to the developer in the [discord server](https://discord.gg/X42fBGVRtR).\n-# ${id}`,
 								)
 								.setColor('Red')
 								.setTimestamp(),

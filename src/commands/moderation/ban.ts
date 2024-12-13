@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	description: 'Bans a member',
@@ -39,6 +40,10 @@ export default {
 				ephemeral: true,
 			};
 		}
+
+		// Create a case for this ban
+		const newCase = await createCase(guild.id, 'Ban', member.id, kicker.id, reason);
+
 		const userEmbed = new EmbedBuilder()
 			.setTitle('Banned')
 			.setDescription(`You have been banned from **${guild.name}**`)
@@ -48,7 +53,8 @@ export default {
 				text: `Banned by ${kicker.user.tag}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
-			.addFields({ name: 'Reason', value: reason || 'No reason provided' });
+			.addFields({ name: 'Reason', value: reason || 'No reason provided' })
+			.setFooter({ text: `Case ID: ${newCase.caseId}` });
 
 		const embed = new EmbedBuilder()
 			.setTitle('Banned')
@@ -56,13 +62,16 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Banned by ${kicker.user.tag}`,
+				text: `Banned by ${kicker.user.tag} • Case ID: ${newCase.caseId}`,
 				iconURL: kicker.user.displayAvatarURL(),
 			})
 			.addFields({ name: 'Reason', value: reason || 'No reason provided' });
-		await member.send({ embeds: [userEmbed] });
+
+		try {
+			// await member.send({ embeds: [userEmbed] });
+		} catch (e) { }
 		await member.ban({
-			reason: reason,
+			reason: `${reason || 'No reason provided'} (Case #${newCase.caseId})`,
 		});
 		return {
 			embeds: [embed],

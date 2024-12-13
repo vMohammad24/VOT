@@ -149,6 +149,7 @@ model Guild {
   ModerationSettings   ModerationSettings?
   voiceMaster          VoiceMaster?
   commands             Command[]
+  cases                Case[]
 }
 
 model Ticket {
@@ -309,6 +310,20 @@ model VoiceMasterChannel {
   ownerId       String
 }
 
+model Case {
+  id          Int      @id @default(autoincrement())
+  caseId      Int
+  type        CaseType
+  reason      String?
+  targetId    String
+  moderatorId String
+  guild       Guild    @relation(fields: [guildId], references: [id])
+  guildId     String
+  createdAt   DateTime @default(now())
+
+  @@unique([guildId, caseId])
+}
+
 enum PanelType {
   Embed
   Image
@@ -325,4 +340,16 @@ enum UserTier {
 enum ArgumentMode {
   Normal
   Advanced
+}
+
+enum CaseType {
+  Ban
+  Kick
+  Timeout
+  TimeoutRemove
+  Softban
+  RoleRemove
+  RoleAdd
+  Nuke
+  Purge
 }
