@@ -524,6 +524,12 @@ export default {
 					embed.setImage(data.banner_url);
 				} else {
 					embed.setDescription('No banner found');
+					const url = `https://usrbg.is-hardly.online/usrbg/v2/${user.id}`
+					const res = await axios.get(url);
+					if (res.status != 404) {
+						embed.setImage(url);
+						embed.setDescription('Note: This banner is from USRBG')
+					}
 				}
 				await embed.dominant();
 				i.reply({
