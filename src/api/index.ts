@@ -61,7 +61,7 @@ const elysia = new Elysia()
 		const endpoint = new URL(request.url).pathname;
 		console.log(request.method, endpoint);
 		const auth = request.headers.get('authorization');
-		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || endpoint.startsWith('/ipinfo') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
+		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
 		if (needsAPIKey && !(await checkKey(auth))) {
 			return error(401, 'Unauthorized');
 		}
