@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	name: 'softban',
@@ -32,7 +33,13 @@ export default {
 				ephemeral: true,
 			};
 
-		await user.ban({ reason, deleteMessageSeconds: 604800 });
+		// Create case
+		const newCase = await createCase(guild.id, 'Softban', user.id, member.id, reason);
+
+		await user.ban({
+			reason: `${reason} (Case #${newCase.caseId})`,
+			deleteMessageSeconds: 604800
+		});
 		await guild.bans.remove(user.id);
 		const embed = new EmbedBuilder()
 			.setTitle('Softban')
@@ -40,7 +47,7 @@ export default {
 			.setColor('Red')
 			.setTimestamp()
 			.setFooter({
-				text: `Softbanned by ${member.user.tag}`,
+				text: `Softbanned by ${member.user.tag} • Case ID: ${newCase.caseId}`,
 				iconURL: member.user.displayAvatarURL(),
 			});
 		return { embeds: [embed] };

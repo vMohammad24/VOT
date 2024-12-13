@@ -23,7 +23,6 @@ const discordElysia = new Elysia({ prefix: 'discord' });
 const spotifyElysia = new Elysia({ prefix: 'spotify' });
 const guildsElysia = new Elysia({ prefix: 'guilds' });
 const braveElysia = new Elysia({ prefix: 'brave' });
-const sellsnElysia = new Elysia({ prefix: 'sellsn' });
 discord(discordElysia);
 spotify(spotifyElysia);
 brave(braveElysia);
@@ -49,7 +48,6 @@ const elysia = new Elysia()
 	.use(spotifyElysia)
 	.use(guildsElysia)
 	.use(braveElysia)
-	.use(sellsnElysia)
 	.onParse(async ({ request, contentType }) => {
 		try {
 			if (contentType === 'application/json') {

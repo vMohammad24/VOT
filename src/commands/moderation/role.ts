@@ -1,5 +1,7 @@
+import { CaseType } from '@prisma/client';
 import { ApplicationCommandOptionType, GuildMember, Role } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
+import { createCase } from '../../util/cases';
 
 export default {
 	name: 'role',
@@ -32,12 +34,26 @@ export default {
 			};
 		if (role.members.has(member.id)) {
 			await member.roles.remove(role, `removed by ${ranBy.user.tag}.`);
+			await createCase(
+				guild.id,
+				CaseType.RoleRemove,
+				member.id,
+				ranBy.id,
+				`Removed role ${role.name}`
+			);
 			return {
 				content: `Removed ${role} from ${member}.`,
 				allowedMentions: {},
 			};
 		} else {
 			await member.roles.add(role, `added by ${ranBy.user.tag}.`);
+			await createCase(
+				guild.id,
+				CaseType.RoleAdd,
+				member.id,
+				ranBy.id,
+				`Added role ${role.name}`
+			);
 			return { content: `Added ${role} to ${member}.`, allowedMentions: {} };
 		}
 	},

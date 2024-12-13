@@ -166,7 +166,7 @@ interface ItemControl {
 	can_repost: boolean;
 }
 
-interface TikTokVideo {
+export interface TikTokVideo {
 	id: string;
 	desc: string;
 	createTime: string;
@@ -235,7 +235,6 @@ export default {
 	slashOnly: true,
 	execute: async ({ interaction }) => {
 		if (!interaction) return;
-		await interaction.deferReply();
 		const subCommand = interaction?.options.getSubcommand();
 		switch (subCommand) {
 			case 'repost':
@@ -317,6 +316,7 @@ export default {
 				// console.log(content)
 				const trending = JSON.parse(content) as TikTokExploreResponse;
 				if (!trending) return { content: 'Failed to fetch Tiktok trending videos', ephemeral: true };
+
 				const videos = trending.itemList;
 				await pagination({
 					interaction,

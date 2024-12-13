@@ -377,7 +377,7 @@ export default class CommandHandler {
 					new EmbedBuilder()
 						.setTitle(`${getEmoji('warn').toString()} Error`)
 						.setDescription(
-							`There was an error while executing this command, Please submit the id below to the developer\n\n-# ${cId}`,
+							`There was an error while executing this command, Please submit the id below to the developer in the [discord server](https://discord.gg/X42fBGVRtR).\n\n-# ${cId}`,
 						)
 						.setColor('Red')
 						.setTimestamp(),
