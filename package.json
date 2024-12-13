@@ -27,6 +27,7 @@
     "@elysiajs/cors": "latest",
     "@elysiajs/html": "latest",
     "@elysiajs/swagger": "latest",
+    "@ignaigna/cryptomus": "git+https://github.com/ignaigna/cryptomus",
     "@lobehub/tts": "latest",
     "@napi-rs/canvas": "latest",
     "@prisma/client": "latest",

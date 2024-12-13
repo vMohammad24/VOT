@@ -33,24 +33,24 @@ model User {
   tier             UserTier       @default(Normal)
   banned           Boolean        @default(false)
   avatar           String?
-  playlists        Playlist[]
-  commands         Command[]
-  guilds           Guild[]
   spotify          Spotify?
   discord          Discord?
   economy          Economy?
   giveawaysHosted  Giveaway[]     @relation("giveawayHoster")
   enteredGiveaways Giveaway[]     @relation("giveawayEntrants")
   giveawaysWon     Giveaway[]     @relation("giveawayWinners")
+  playlists        Playlist[]
+  commands         Command[]
+  guilds           Guild[]
   guildMembers     Member[]
   ticketsOwned     Ticket[]
+  TrainingData     TrainingData[]
+  previousIps      String[]
   musicSettings    MusicSettings?
   lastUpdated      DateTime       @default(now()) @updatedAt
-  TrainingData     TrainingData[]
   shouldTrain      Boolean        @default(true)
   ArgumentMode     ArgumentMode   @default(Normal)
   hashedIp         String?
-  previousIps      String[]
   clan             Clan?          @relation(fields: [clanId], references: [id])
   clanId           String?
 }
