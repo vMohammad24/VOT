@@ -283,7 +283,6 @@ elysia.get('/ipinfo', async ({ query }) => {
 	query: t.Object({
 		ip: t.String(),
 	}),
-	response: t.Object({}),
 	detail: {
 		description: 'Get information about an IP address',
 	},
