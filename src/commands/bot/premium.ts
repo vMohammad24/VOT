@@ -83,7 +83,7 @@ export default {
             });
             const checkCollector = res.createMessageComponentCollector({
                 filter: i => i.user.id == user.id,
-                time: 60000
+                time: 86400000
             })
             checkCollector.on('collect', async inter => {
                 console.log('Checking payment')
