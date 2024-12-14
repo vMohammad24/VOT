@@ -1,10 +1,3 @@
-import { Canvas } from '@napi-rs/canvas';
-import { bboxClip, polygon } from '@turf/turf';
-import { createNoise3D } from 'simplex-noise';
-import simplify from 'simplify-js';
-
-const simplex = createNoise3D();
-
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
 	return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
@@ -13,65 +6,6 @@ function linspace(count: number): number[] {
 	return Array.from({ length: count }, (_, i) => i / (count - 1));
 }
 
-export function generateTopography(canvas: Canvas, seed: number, nrlines: number) {
-	const sizeX = canvas.width;
-	const sizeY = canvas.height;
-	const ctx = canvas.getContext('2d');
-	const gridSize = [200, 100];
-	const data: number[][] = [];
-
-	for (let y = 0; y < gridSize[1]; y++) {
-		data[y] = [];
-		for (let x = 0; x < gridSize[0]; x++) {
-			const _n = simplex(x / (gridSize[0] * 0.75), y / (gridSize[1] * 0.75), seed);
-			const n = mapRange(_n, -1, 1, 0, 1);
-			data[y].push(n);
-		}
-	}
-
-	const intervals = linspace(nrlines);
-	let lines: number[][][] = [];
-
-	intervals.forEach((_, idx) => {
-		if (idx > 0) {
-			const lowerBand = intervals[idx - 1];
-			const upperBand = intervals[idx];
-			const bands = isoBands(data, lowerBand, upperBand);
-			bands.forEach((band) => {
-				const scaledBand: [number, number][] = band.map(([x, y]) => [
-					mapRange(x, 0, gridSize[0] - 1, 0, sizeX),
-					mapRange(y, 0, gridSize[1] - 1, 0, sizeY),
-				]) as [number, number][];
-				lines.push(drawShape(scaledBand));
-			});
-		}
-	});
-
-	const margin = 4;
-	const bbox: [number, number, number, number] = [margin, margin, sizeX - margin, sizeY - margin];
-	let clipped: [number, number][][] = lines.map(
-		(line) => bboxClip(polygon([line]), bbox).geometry.coordinates[0] as [number, number][],
-	);
-	clipped = clipped.filter((l) => l);
-	const splitted = splitLinesAtEdges(clipped, bbox);
-	let filtered = removeDuplicateLines(splitted);
-	const simplified = filtered.map((line) => {
-		const objectLine = line.map(([x, y]) => ({ x, y }));
-		return simplify(objectLine, 5, true).map((obj) => [obj.x, obj.y]);
-	});
-
-	simplified.forEach((line) => {
-		ctx.beginPath();
-		line.forEach(([x, y], idx) => {
-			if (idx === 0) ctx.moveTo(x, y);
-			else ctx.lineTo(x, y);
-		});
-		ctx.closePath();
-		ctx.stroke();
-	});
-
-	return canvas;
-}
 
 function drawShape([start, ...pts]: [number, number][]): [number, number][] {
 	if (pts.length < 2) {
