@@ -6,6 +6,7 @@ import * as cheerio from 'cheerio';
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { ApplicationCommandOptionType, Collection } from 'discord.js';
 import { Elysia, t } from 'elysia';
+import { Client } from 'genius-lyrics';
 import { nanoid } from 'nanoid/non-secure';
 import numeral from 'numeral';
 import commandHandler, { redis, upSince } from '..';
@@ -475,6 +476,23 @@ elysia.get('/hypixel', async ({ query }) => {
 }, {
 	query: t.Object({
 		name: t.String()
+	})
+})
+const genius = new Client();
+elysia.get('/lyrics', async ({ query }) => {
+	const { query: q } = query;
+	const songs = await genius.songs.search(q, { sanitizeQuery: true });
+	const song = songs[0];
+	if (!song) return { error: 'Song not found' };
+	const lyrics = await song.lyrics();
+	if (!lyrics) return { error: 'Lyrics not found' };
+	return {
+		lyrics,
+		...song._raw
+	};
+}, {
+	query: t.Object({
+		query: t.String()
 	})
 })
 
