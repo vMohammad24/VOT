@@ -9,6 +9,7 @@ import { Elysia, t } from 'elysia';
 import { Client } from 'genius-lyrics';
 import { nanoid } from 'nanoid/non-secure';
 import numeral from 'numeral';
+import UserAgent from 'user-agents';
 import commandHandler, { redis, upSince } from '..';
 import { getInstallCounts, loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
@@ -62,7 +63,7 @@ const elysia = new Elysia()
 		const endpoint = new URL(request.url).pathname;
 		console.log(request.method, endpoint);
 		const auth = request.headers.get('authorization');
-		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
+		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/lyrics') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
 		if (needsAPIKey && !(await checkKey(auth))) {
 			return error(401, 'Unauthorized');
 		}
@@ -501,21 +502,45 @@ elysia.get('/hypixel', async ({ query }) => {
 	})
 })
 const genius = new Client();
+const userAgent = new UserAgent();
 elysia.get('/lyrics', async ({ query }) => {
 	const { query: q } = query;
+	// Check cache first
+	const cached = await redis.get(`lyrics:${q}`);
+	if (cached) {
+		return JSON.parse(cached);
+	}
+
 	const songs = await genius.songs.search(q, { sanitizeQuery: true });
 	const song = songs[0];
 	if (!song) return { error: 'Song not found' };
 	const lyrics = await song.lyrics();
 	if (!lyrics) return { error: 'Lyrics not found' };
-	return {
+	const { id } = song;
+	const url = `https://genius.com/songs/${id}/apple_music_player?react=1`
+	const res = await axios.get(url, {
+		headers: {
+			"User-Agent": userAgent.random().toString()
+		}
+	});
+	const $ = cheerio.load(res.data);
+	const previewURL = $('link[rel="preload"][as="audio"]').attr('href');
+
+	const response = {
 		lyrics,
-		...song._raw
+		...song._raw,
+		previewURL
 	};
+	await redis.set(`lyrics:${q}`, JSON.stringify(response), 'EX', 60 * 60 * 24);
+
+	return response;
 }, {
 	query: t.Object({
 		query: t.String()
-	})
+	}),
+	headers: t.Object({
+		authorization: t.String()
+	}),
 })
 
 export default elysia;
