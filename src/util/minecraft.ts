@@ -273,7 +273,6 @@ export async function getCraftyProfile(input: string): Promise<CraftyProfileResp
                 "User-Agent": ua.random().toString()
             }
         });
-        console.log(res)
         if (!res.data.success) return res.data.message || 'An error occurred';
         return res.data;
     });
