@@ -347,16 +347,27 @@ export default class CommandHandler {
 			}
 		} catch (e) {
 			if ((e as any).code in RESTJSONErrorCodes) {
-				return {
-					embeds: [
-						new VOTEmbed()
-							.setTitle('Error')
-							.setDescription(`An error occurred: ${(e as any).message}`)
-							.setColor('DarkRed')
-							.setTimestamp(),
-					],
-					ephemeral: true,
-				};
+				try {
+					return {
+						embeds: [
+							new VOTEmbed()
+								.setTitle('Error')
+								.setDescription(`An error occurred: ${(e as any).message}`)
+								.setColor('DarkRed')
+								.setTimestamp(),
+						],
+						ephemeral: true,
+					};
+				} catch (e) {
+					try {
+						return {
+							content: `An error occurred: ${(e as any).message}`,
+							ephemeral: true,
+						};
+					} catch (e) {
+
+					}
+				}
 			}
 			this.logger.error(e);
 			await this.prisma.error.create({
