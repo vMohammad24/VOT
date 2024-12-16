@@ -60,6 +60,8 @@ class VOTEmbed extends EmbedBuilder {
 				name: 'VOT',
 				icon_url: votIcon,
 			};
+		} else if (!json.footer.icon_url) {
+			json.footer.icon_url = votIcon;
 		}
 		return json;
 	}

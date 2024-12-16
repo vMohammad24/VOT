@@ -1,7 +1,103 @@
 import axios from "axios";
+import UserAgent from "user-agents";
 import { redis } from "..";
 
 // Types
+
+
+
+interface Usernames {
+    id: string;
+    username: string;
+    available: boolean;
+    pivot_id: string;
+    changed_at: string;
+    hidden: boolean;
+}
+
+interface Skins {
+    id: string;
+    hash: string;
+    texture: string;
+    slim: boolean;
+    upvotes_monthly: number;
+    upvotes_lifetime: number;
+    views_lifetime: number;
+    views_monthly: number;
+    first_player_id: string;
+    created_at: string;
+    players_count: number;
+    pivot_id: string;
+    changed_at: string;
+    hidden: boolean;
+}
+
+interface User {
+    id: string;
+    name: string;
+    subscription: string;
+}
+
+interface Type {
+    id: string;
+    name: string;
+    slug: string;
+    url: string;
+}
+
+interface Capes {
+    id: string;
+    name: string;
+    slug: string;
+    hash: string;
+    texture: string;
+    upvotes_monthly: number;
+    upvotes_lifetime: number;
+    views_lifetime: number;
+    views_monthly: number;
+    cape_type_id: string;
+    first_player_id: string;
+    created_at: string;
+    players_count: number;
+    description: string;
+    type: Type;
+    pivot_id: string;
+    changed_at: string;
+    hidden: boolean;
+}
+
+interface Data {
+    id: string;
+    uuid: string;
+    username: string;
+    type: string;
+    version: number;
+    deleted: boolean;
+    upvotes_lifetime: number;
+    views_lifetime: number;
+    user_id: string;
+    location_id: string;
+    claimed_at: string;
+    created_at: string;
+    skins_count: number;
+    capes_count: number;
+    bio: string;
+    color: string;
+    upvotes_monthly: number;
+    views_monthly: number;
+    usernames: Usernames[];
+    skins: Skins[];
+    user: User;
+    socials: string[];
+    location: string;
+    capes: Capes[];
+}
+
+interface CraftyProfileResponse {
+    success: boolean;
+    data: Data;
+}
+
 interface UsernameResponse {
     uniqueId: string;
     username: string;
@@ -59,7 +155,8 @@ async function resolveToUUID(input: string): Promise<string | null> {
         return input.replace(/-/g, '');
     }
     const response = await getUuidFromUsername(input);
-    return response?.uniqueId.replace(/-/g, '') || null;
+    if (!response) return null;
+    return response.uniqueId.replace(/-/g, '') || null;
 }
 
 export async function renderSkin3D(input: string, shadow: boolean = true) {
@@ -96,15 +193,17 @@ export async function getHead(input: string) {
 export async function getUuidFromUsername(username: string): Promise<UsernameResponse | null> {
     return getCachedData(`uuid:${username}`, 21600, async () => {
         const res = await axios.get(`https://laby.net/api/v3/user/${username}/uniqueId`);
+        if (res.data.message) return null;
         return res.data;
     });
 }
 
-export async function getProfile(input: string): Promise<ProfileResponse | null> {
+export async function getProfile(input: string): Promise<ProfileResponse | string> {
     const uuid = await resolveToUUID(input);
-    if (!uuid) return null;
+    if (!uuid) return 'Invalid username or UUID';
     return getCachedData(`profile:${uuid}`, 3600, async () => {
         const res = await axios.get(`https://laby.net/api/v3/user/${uuid}/profile`);
+        if (res.data.error) return res.data.error as string;
         return res.data;
     });
 }
@@ -161,6 +260,21 @@ export async function searchSkins(params: {
 export async function getStatistics() {
     return getCachedData('statistics', 900, async () => {
         const res = await axios.get('https://laby.net/api/v3/statistics');
+        return res.data;
+    });
+}
+
+const ua = new UserAgent();
+export async function getCraftyProfile(input: string): Promise<CraftyProfileResponse | string> {
+    const url = `https://api.crafty.gg/api/v2/players/${input}`;
+    return getCachedData(`crafty:${input}`, 300, async () => {
+        const res = await axios.get(url, {
+            headers: {
+                "User-Agent": ua.random().toString()
+            }
+        });
+        console.log(res)
+        if (!res.data.success) return res.data.message || 'An error occurred';
         return res.data;
     });
 }

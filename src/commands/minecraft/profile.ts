@@ -1,10 +1,10 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
-import { getHead, getProfile, renderSkin3D, searchNames } from "../../util/minecraft";
+import { getCraftyProfile, getHead, getProfile, renderSkin3D, searchNames } from "../../util/minecraft";
 import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
-    description: 'View the Minecraft profile of a user',
+    description: 'View the Minecraft profiles[0] of a user',
     options: [
         {
             name: 'player',
@@ -31,46 +31,91 @@ export default {
             content: 'Please provide a valid username or uuid',
             ephemeral: true
         }
-        const profile = await getProfile(player);
-        if (!profile) return {
+
+        // Get both profiles - Crafty for data, Laby for textures
+        const [labyProfile, craftyProfile] = await Promise.all([
+            getProfile(player),
+            getCraftyProfile(player)
+        ]);
+
+        if (typeof craftyProfile === 'string') return {
             content: 'Profile not found',
             embeds: [{
                 title: 'Error',
-                description: 'The profile for this user was not found'
-            }]
-        };
-        if ((profile as any).error) return {
-            content: 'An error occurred',
-            embeds: [{
-                title: 'Error',
-                description: (profile as any).error
+                description: craftyProfile
             }]
         }
-        if (!profile.name) return {
+
+        if (typeof labyProfile === 'string') return {
             content: 'Profile not found',
             embeds: [{
                 title: 'Error',
-                description: 'The profile for this user was not found'
+                description: craftyProfile
             }]
         }
-        console.log('a')
-        const activeSkin = profile.textures.SKIN?.find(s => s.active)?.image_hash;
+
+        const { data } = craftyProfile;
+        // Prefer Laby textures, fallback to Crafty
+        const activeSkin = labyProfile?.textures.SKIN?.find(s => s.active)?.image_hash
+            ?? data.skins[0]?.texture;
         const skin = activeSkin ? await renderSkin3D(activeSkin) : null;
-        const head = await getHead(profile.uuid);
+        const head = await getHead(data.uuid);
+
         const embed = new VOTEmbed()
-            .setAuthor({ name: profile.name, iconURL: head ? 'attachment://head.png' : undefined })
-            .setFooter({ text: `UUID: ${profile.uuid}` })
+            .setAuthor({ name: data.username, iconURL: head ? 'attachment://head.png' : undefined })
+            .setFooter({ text: `UUID: ${data.uuid}` })
             .setImage(skin ? 'attachment://skin.png' : null)
-            .setColor('Random')
             .setTimestamp();
-        if (profile.name_history) {
-            const mapped = profile.name_history.map(u => `**${u.name}**: (${u.changed_at ? `<t:${Math.round(new Date(u.changed_at).getTime() / 1000)}:R>` : 'Original'})`).reverse();
-            embed.setDescription(`## **Name History**:\n${mapped.join('\n')}`);
+
+        const usernames = [];
+        if (data.usernames?.length > 0) {
+            // Sort usernames by date descending
+            const allChanges = data.usernames.map(u => ({
+                name: u.username,
+                changed_at: u.changed_at,
+                accurate: true
+            })).sort((a, b) => {
+                const dateA = a.changed_at ? new Date(a.changed_at).getTime() : 0;
+                const dateB = b.changed_at ? new Date(b.changed_at).getTime() : 0;
+                return dateB - dateA;
+            });
+
+            // Handle duplicates and special cases
+            const oneMonth = 30 * 24 * 60 * 60 * 1000;
+            const filtered = allChanges.filter((change, i, arr) => {
+                if (!change.changed_at) {
+                    return !arr.some((other, j) =>
+                        i > j && !other.changed_at &&
+                        other.name.toLowerCase() === change.name.toLowerCase()
+                    );
+                }
+
+                const changeDate = new Date(change.changed_at).getTime();
+                return !arr.some((other, j) => {
+                    if (i === j || !other.changed_at) return false;
+                    const otherDate = new Date(other.changed_at).getTime();
+                    const withinMonth = Math.abs(changeDate - otherDate) <= oneMonth;
+
+                    if (!withinMonth) return false;
+
+                    if (other.name === '-' || change.name === '-') {
+                        return other.name !== '-' && change.name === '-';
+                    }
+                    return j < i;
+                });
+            });
+
+            usernames.push(...filtered.map(u =>
+                `**${u.name}**: (${u.changed_at ? `<t:${Math.round(new Date(u.changed_at).getTime() / 1000)}:R>` : 'Original'})`
+            ));
+
+            if (usernames.length > 0) {
+                embed.setDescription(usernames.join('\n'));
+            }
         }
+
         return {
-            embeds: [
-                embed
-            ],
+            embeds: [embed],
             files: [
                 skin ? { attachment: skin, name: 'skin.png' } : undefined,
                 head ? { attachment: head, name: 'head.png' } : undefined
