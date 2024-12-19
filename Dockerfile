@@ -2,14 +2,18 @@ FROM oven/bun:debian
 WORKDIR /home/vot
 
 RUN apt-get update && apt-get install -y \
-    curl gnupg \
-  && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-  && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-  && apt-get update \
-  && apt-get install google-chrome-stable build-essential python3 -y --no-install-recommends \
-  && rm -rf /var/lib/apt/lists/* \
-  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-  && apt-get install -y nodejs
+    curl \
+    gnupg \
+    build-essential \
+    python3 \
+    --no-install-recommends \
+    && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable nodejs \
+    && rm -rf /var/lib/apt/lists/*
 COPY package.json ./
 COPY bun.lockb ./
 RUN bun install
