@@ -216,20 +216,23 @@ export async function pagination({
 
 			const selectMenus = [];
 			const selectMenuCount = Math.ceil(pages.length / 25);
+
 			for (let i = 0; i < selectMenuCount; i++) {
 				const start = i * 25;
 				const end = Math.min(start + 25, pages.length);
 				const options: (StringSelectMenuOptionBuilder | SelectMenuComponentOptionData | APISelectMenuOption)[] =
-					pages.map((e, index) => ({
-						label: e.name || `Page ${index + 1}`,
-						value: index.toString(),
+					pages.slice(start, end).map((e, index) => ({
+						label: e.name || `Page ${start + index + 1}`,
+						value: (start + index).toString(),
 						emoji: e.emoji,
 						description: e.description,
 					}));
+
 				const selectMenu = new StringSelectMenuBuilder()
 					.setCustomId(`${id}_${i}`)
-					.setPlaceholder(name ?? 'Select a page')
+					.setPlaceholder(name ? `${name} (${i + 1}/${selectMenuCount})` : `Select a page (${i + 1}/${selectMenuCount})`)
 					.addOptions(options);
+
 				selectMenus.push(selectMenu);
 			}
 
