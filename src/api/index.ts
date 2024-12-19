@@ -1,7 +1,7 @@
 import { cors } from '@elysiajs/cors';
 import { html } from '@elysiajs/html';
 import { swagger } from '@elysiajs/swagger';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import * as cheerio from 'cheerio';
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { ApplicationCommandOptionType, Collection } from 'discord.js';
@@ -29,6 +29,8 @@ discord(discordElysia);
 spotify(spotifyElysia);
 brave(braveElysia);
 verification(guildsElysia);
+const globalAPIKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+export let apiAxios: AxiosInstance;
 const elysia = new Elysia()
 	.use(html())
 	.use(cors())
@@ -50,6 +52,14 @@ const elysia = new Elysia()
 	.use(spotifyElysia)
 	.use(guildsElysia)
 	.use(braveElysia)
+	.on('start', () => {
+		apiAxios = axios.create({
+			baseURL: elysia.server?.url!.toString(),
+			headers: {
+				authorization: globalAPIKey
+			}
+		})
+	})
 	.onParse(async ({ request, contentType }) => {
 		try {
 			if (contentType === 'application/json') {
@@ -64,7 +74,7 @@ const elysia = new Elysia()
 		console.log(request.method, endpoint);
 		const auth = request.headers.get('authorization');
 		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/lyrics') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
-		if (needsAPIKey && !(await checkKey(auth))) {
+		if (needsAPIKey && commandHandler.prodMode && !((await checkKey(auth)) || auth === globalAPIKey)) {
 			return error(401, 'Unauthorized');
 		}
 
@@ -84,7 +94,6 @@ elysia.get('/', async () => {
 	// await new Promise(resolve => setTimeout(resolve, 5000));
 	return { ping, upSince, totalCommands, guilds: numeral(approximate_guild_count).format('0,0'), users: numeral(approximate_user_install_count).format('0,0'), featuredServers };
 });
-
 elysia.get('/commands', () => {
 	interface Command {
 		name: string;

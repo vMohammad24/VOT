@@ -4,7 +4,7 @@ import { getCraftyProfile, getHead, getProfile, renderSkin3D, searchNames } from
 import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
-    description: 'View the Minecraft profiles[0] of a user',
+    description: 'View the Minecraft profile of a user',
     options: [
         {
             name: 'player',

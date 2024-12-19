@@ -2,7 +2,6 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
 import numeral from 'numeral';
 import type ICommand from '../../handler/interfaces/ICommand';
-import { getEmoji } from '../../util/emojis';
 import { pagination } from '../../util/pagination';
 import { launchPuppeteer, newPage } from '../../util/puppeteer';
 import { isNullish } from '../../util/util';
@@ -266,6 +265,12 @@ export default {
 					description: 'The URL of the instagram post',
 					required: true,
 				},
+				{
+					type: ApplicationCommandOptionType.Boolean,
+					name: 'embed',
+					description: 'Deletes the embed posting the video alone if set to false',
+					required: false,
+				}
 			],
 		},
 	],
@@ -273,12 +278,11 @@ export default {
 	slashOnly: true,
 	execute: async ({ interaction }) => {
 		if (!interaction) return;
-		await interaction?.deferReply();
+		await interaction.deferReply();
 		switch (interaction.options.getSubcommand()) {
 			case 'repost': {
 				const url = interaction.options.getString('url', true);
-				const heartEmoji = getEmoji('heart');
-				const likeEmoji = getEmoji('like');
+				const shouldEmbed = interaction.options.getBoolean('embed') ?? true;
 				const res = await axios.get('https://socials.evade.rest/experiments/reel?url=' + url, {
 					headers: {
 						Authorization: process.env.OTHER_EVADE_API_KEY,
@@ -296,13 +300,12 @@ export default {
 					.setThumbnail(media.image_versions2.candidates[0].url)
 					.setTimestamp(new Date(media.taken_at * 1000))
 					.setFooter({
-						text: `❤️ ${numeral(media.like_count).format('0,0')} • 💬 ${numeral(media.comment_count).format('0,0')} • 👀 ${numeral(media.view_count).format('0,0')} • Uploaded`
+						text: `❤️ ${numeral(media.like_count).format('0,0')} • 💬 ${numeral(media.comment_count).format('0,0')} • Uploaded`
 					});
-
 				const videoUrl = media.video_versions[0]?.url;
 				if (videoUrl) {
 					const attachment = new AttachmentBuilder(videoUrl, { name: `VOT_Instagram_Repost.mp4` });
-					interaction.editReply({ embeds: [embed], files: [attachment] });
+					interaction.editReply({ embeds: shouldEmbed ? [embed] : [], files: [attachment] });
 				} else {
 					interaction.editReply({ embeds: [embed] });
 				}
