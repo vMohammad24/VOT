@@ -12,19 +12,23 @@ RUN apt-get update && apt-get install -y \
   && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
   && apt-get install -y nodejs
 
-# Create a non-root user
+# Create non-root user and set permissions
 RUN useradd -m -u 1000 bun-user \
-    && chown -R bun-user:bun-user /home/vot
+    && chown -R bun-user:bun-user /home/vot \
+    && mkdir -p /home/vot/node_modules/.prisma \
+    && chown -R bun-user:bun-user /home/vot/node_modules
 
-# Switch to non-root user
 USER bun-user
 
-COPY --chown=bun-user:bun-user package.json ./
-COPY --chown=bun-user:bun-user bun.lockb ./
+COPY --chown=bun-user:bun-user package.json bun.lockb ./
 RUN bun install
-COPY --chown=bun-user:bun-user src ./src
-COPY --chown=bun-user:bun-user prisma ./prisma
-COPY --chown=bun-user:bun-user assets ./assets
+
+COPY --chown=bun-user:bun-user . .
+
+# Generate Prisma client during build
+RUN bunx prisma generate
 
 EXPOSE 8080
-CMD [ "bun", "start" ]
+
+# Modify the CMD to not include prisma generate
+CMD [ "bun", "run", "start" ]
