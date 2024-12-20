@@ -163,7 +163,6 @@ export default {
 				return {
 					page: {
 						embeds: [embed],
-						files: item.showcaseVideo ? [item.showcaseVideo] : []
 					},
 					name: item.name,
 					pageNumber: index,
