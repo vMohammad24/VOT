@@ -11,7 +11,7 @@ services:
       - vot
     expose:
       - 8080
-    user: '1000:1000'
+    user: '1001:1001'
     depends_on:
       - postgres
       - lavalink
