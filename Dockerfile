@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
   && apt-get install -y nodejs
 
 # Create non-root user and set permissions
-RUN useradd -m -u 1000 bun-user \
+RUN useradd -m -u 1001 bun-user \
     && chown -R bun-user:bun-user /home/vot \
     && mkdir -p /home/vot/node_modules/.prisma \
     && chown -R bun-user:bun-user /home/vot/node_modules
