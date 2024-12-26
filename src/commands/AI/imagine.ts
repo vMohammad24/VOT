@@ -43,7 +43,8 @@ export default {
                 .setDescription(`> ${prompt}`)
                 .setTimestamp()
                 .setImage('attachment://image.png')
-                .setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() })
+                .author(user)
+                .dominant()
             ],
             files: [{
                 attachment: buffer,

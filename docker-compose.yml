@@ -107,7 +107,7 @@ services:
     volumes:
       - ./db/data:/var/lib/postgresql/data
   lavalink_dev:
-    image: ghcr.io/lavalink-devs/lavalink:4.0.8
+    image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
     restart: unless-stopped
     profiles:

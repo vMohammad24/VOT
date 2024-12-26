@@ -161,7 +161,7 @@ export default class CommandHandler {
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
 
 				// Clear the require cache for the module
-				const modulePath = path.join(commandsDir, file) + '?t=' + Date.now();
+				const modulePath = path.join(commandsDir, file);
 				const command = (await import(modulePath)).default;
 				const commandName = command.name || fileName;
 				const old = handler.commands.find((c) => c.name === fileName);
@@ -233,6 +233,22 @@ export default class CommandHandler {
 				}
 			}
 		});
+	}
+
+	private async executeJishaku(command: string, context: CommandContext) {
+		// Add Jishaku execution logic
+		return null;
+	}
+
+	public async reloadCommand(commandName: string) {
+		const command = this.commands?.find((c) => c.name === commandName);
+		if (!command) throw new Error('Command not found');
+		const index = this.commands?.indexOf(command);
+		this.commands?.splice(index!, 1);
+		const modulePath = path.join(import.meta.dir, '..', 'commands', command.category!.toLowerCase(), `${commandName}.ts`);
+		const newCommand = (await import(modulePath)).default;
+		this.commands?.push(newCommand);
+		return newCommand;
 	}
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {

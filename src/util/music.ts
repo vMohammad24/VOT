@@ -8,9 +8,12 @@ import {
 	type GuildTextBasedChannel,
 } from 'discord.js';
 import type { Kazagumo, KazagumoPlayer } from 'kazagumo';
-import { ClassicPro } from 'musicard';
+import numeral from 'numeral';
 import commandHandler from '..';
+import { createMusicCanvas } from './canvas';
+import { loadImg } from './database';
 import { getEmoji } from './emojis';
+import { getTwoMostUsedColors, rgbToHex } from './util';
 
 export function getRows(player: KazagumoPlayer) {
 	const status = player.paused ? 'Resume' : 'Pause';
@@ -18,15 +21,15 @@ export function getRows(player: KazagumoPlayer) {
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		status === 'Pause'
 			? new ButtonBuilder()
-					.setCustomId('pause')
-					.setLabel('Pause')
-					.setStyle(ButtonStyle.Danger)
-					.setEmoji(getEmoji('pause')!.id)
+				.setCustomId('pause')
+				.setLabel('Pause')
+				.setStyle(ButtonStyle.Danger)
+				.setEmoji(getEmoji('pause')!.id)
 			: new ButtonBuilder()
-					.setCustomId('resume')
-					.setLabel('Resume')
-					.setStyle(ButtonStyle.Success)
-					.setEmoji(getEmoji('play')!.id),
+				.setCustomId('resume')
+				.setLabel('Resume')
+				.setStyle(ButtonStyle.Success)
+				.setEmoji(getEmoji('play')!.id),
 		new ButtonBuilder()
 			.setCustomId('skip')
 			.setLabel('Skip')
@@ -98,14 +101,18 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
 		if (panelType === 'Image') {
 			const progress =
 				new Date(player.queue.current?.position!).getTime() / new Date(player.queue.current?.length!).getTime();
-			const panel = await ClassicPro({
+			const track = player.queue.current!;
+			const domColor = await getTwoMostUsedColors(await loadImg(track.thumbnail!));
+
+			const panel = await createMusicCanvas({
 				author: track.author,
+				backgroundColor: rgbToHex(domColor[0]),
+				thumbnailImage: track.thumbnail!,
+				endTime: numeral(track.length).format('00:00'),
+				progress: (track.position! / track.length!) * 100,
+				progressBarColor: rgbToHex(domColor[1]),
 				name: track.title,
-				thumbnailImage: track.thumbnail,
-				// minutes:seconds
-				startTime: new Date(player.queue.current?.position || 0).toISOString().substring(14, 19),
-				endTime: new Date(player.queue.current?.length!).toISOString().substring(14, 19),
-				progress: progress,
+				imageDarkness: 0.5,
 			});
 			msg = await voiceChannel.send({
 				files: [panel],

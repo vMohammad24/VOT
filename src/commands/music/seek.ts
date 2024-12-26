@@ -28,7 +28,7 @@ export default {
 		const seconds = parseInt(parts[1], 10);
 		if (isNaN(minutes) || isNaN(seconds)) {
 			return {
-				content: 'Invalid input format. Expected numbers for minutes and seconds.',
+				content: 'Invalid input format. Expected numbers for minutes and seconds.\n-# For example: 2:30',
 				ephemeral: true,
 			};
 		}

@@ -1,8 +1,11 @@
 import { inspect } from 'bun';
+import { exec } from 'child_process';
 import { ApplicationCommandOptionType, Colors, EmbedBuilder } from 'discord.js';
 import numeral from 'numeral';
+import { promisify } from 'util';
 import commandHandler, { redis } from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
+const execAsync = promisify(exec);
 export default {
 	name: 'eval',
 	description: 'Allows the developer to evaluate code',
@@ -23,6 +26,10 @@ export default {
 				{
 					name: 'JavaScript',
 					value: 'js',
+				},
+				{
+					name: 'Shell',
+					value: 'sh'
 				},
 				{
 					name: 'SQL',
@@ -53,13 +60,13 @@ export default {
 			return { embeds: [embed] };
 		}
 		const startTime = process.hrtime();
-		// return code;
 		try {
 			if (code.startsWith('```')) {
-				code = code.replace(/```/g, '');
+				code = code.slice(3, -3);
 			}
+			const lang = args.get('type');
 			let evaluatedResult = '';
-			switch (args.get('type')) {
+			switch (lang) {
 				case 'sql':
 					evaluatedResult = inspect(JSON.stringify(await handler.prisma.$queryRawUnsafe(code)));
 					break;
@@ -69,6 +76,11 @@ export default {
 				case 'js':
 					evaluatedResult = await eval(code);
 					break;
+				case 'sh':
+				case 'shell':
+					const { stdout: shellStdout, stderr: shellStderr } = await execAsync(code);
+					evaluatedResult = shellStdout || shellStderr;
+					break;
 				default:
 					evaluatedResult = await new Function(`
 						return (async () => { 
@@ -76,7 +88,7 @@ export default {
 					`).call(null, { handler, args, channel, guild, interaction, member, message, player });
 					break;
 			}
-			embed.setDescription(`\`\`\`js\n${evaluatedResult}\`\`\``);
+			embed.setDescription(`\`\`\`${lang}\n${evaluatedResult}\`\`\``);
 		} catch (e) {
 			embed.setDescription(`\`\`\`js\n${e}\`\`\``).setColor('DarkRed');
 		}

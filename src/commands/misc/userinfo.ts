@@ -408,6 +408,11 @@ export default {
 			const n = user.permissions
 				.toArray()
 				.filter((p) => notablePerms.includes(PermissionsBitField.Flags[p as keyof typeof PermissionsBitField.Flags]))
+				.sort((a, b) => {
+					const aIndex = notablePerms.indexOf(PermissionsBitField.Flags[a as keyof typeof PermissionsBitField.Flags]);
+					const bIndex = notablePerms.indexOf(PermissionsBitField.Flags[b as keyof typeof PermissionsBitField.Flags]);
+					return aIndex - bIndex;
+				})
 				.map((p) => camelToTitleCase(p.toString()));
 
 			if (n && n.length > 0) {
