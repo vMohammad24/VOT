@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Guild, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getGuild } from '../util/database';
@@ -19,10 +20,7 @@ export default {
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
 				.setTitle('🗑️ Message Deleted')
-				.setAuthor({
-					name: message.author!.tag,
-					iconURL: message.author!.displayAvatarURL(),
-				})
+				.author(message.author!)
 				.addFields(
 					{ name: 'Channel', value: `<#${message.channel!.id}>`, inline: true },
 					{ name: 'Content', value: message.content!.length > 1024 ? message.content!.slice(0, 1024) : message.content! }
@@ -30,14 +28,17 @@ export default {
 				.setColor('DarkRed')
 				.setFooter({ text: `Message ID: ${message.id}` })
 				.setTimestamp();
+			if (message.attachments.size > 0) embed.setDescription(`NOTE: This message contained attachments, that are gonna be present in this message`);
 			const messageBefore = (await message.channel.messages.fetch({ before: message.id, limit: 1 }))?.first();
+			const attachements = await Promise.all(message.attachments.map(a => a.url).map(async (url) => Buffer.from((await axios.get(url, { responseType: 'arraybuffer' })).data)).map(async (buffer) => ({ attachment: await buffer, name: 'attachment.png' })));
 			logChannel.send({
 				embeds: [embed],
 				components: messageBefore ? [
 					new ActionRowBuilder<ButtonBuilder>().addComponents([
 						new ButtonBuilder().setLabel('Jump to Surrounding').setStyle(ButtonStyle.Link).setEmoji('🔍').setURL(messageBefore.url)
 					])
-				] : []
+				] : [],
+				files: attachements
 			});
 		});
 		client.on('messageUpdate', async (oldMessage, newMessage) => {

@@ -18,38 +18,14 @@ export class ArgumentMap<T> {
 	get(key: string): T | undefined {
 		return (this.map.get(key)?.value as any).value;
 	}
+
+	list() {
+		return this.map.values().toArray() as any[];
+	}
 }
 
 function parseMessageArgs(messageContent: string): string[] {
-	const args = [];
-	let currentArg = '';
-	let inQuotes = false;
-	let quoteChar = '';
-	for (let i = 0; i < messageContent.length; i++) {
-		const char = messageContent[i];
-		if (char === '"' || char === "'") {
-			if (inQuotes && char === quoteChar) {
-				inQuotes = false;
-				quoteChar = '';
-			} else if (!inQuotes) {
-				inQuotes = true;
-				quoteChar = char;
-			} else {
-				currentArg += char;
-			}
-		} else if (char === ' ' && !inQuotes) {
-			if (currentArg.length > 0) {
-				args.push(currentArg);
-				currentArg = '';
-			}
-		} else {
-			currentArg += char;
-		}
-	}
-	if (currentArg.length > 0) {
-		args.push(currentArg);
-	}
-	return args;
+	return messageContent.split(' ');
 }
 
 export default async function (command: ICommand, ctx: CommandContext): Promise<boolean | any> {

@@ -187,3 +187,42 @@ export function randomInt(min?: number, max?: number): number {
 	if (max === undefined) max = 100;
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+export function parseCurl(curlCommand: string) {
+	const args = curlCommand.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+	const config: any = {
+		method: 'GET',
+		headers: {},
+		url: ''
+	};
+
+	for (let i = 1; i < args.length; i++) {
+		const arg = args[i].replace(/^['"]|['"]$/g, '');
+
+		switch (arg) {
+			case '-X':
+			case '--request':
+				config.method = args[++i].toUpperCase();
+				break;
+			case '-H':
+			case '--header':
+				const [key, value] = args[++i].split(':').map(s => s.trim());
+				config.headers[key] = value;
+				break;
+			case '-d':
+			case '--data':
+				const data = args[++i];
+				try {
+					config.data = JSON.parse(data);
+				} catch {
+					config.data = data;
+				}
+				break;
+			default:
+				if (arg.startsWith('http')) {
+					config.url = arg;
+				}
+		}
+	}
+
+	return config;
+}

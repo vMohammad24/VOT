@@ -1,3 +1,5 @@
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
 	return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
@@ -116,4 +118,155 @@ function marchSquare(square: [number, number, number][], lower: number, upper: n
 	});
 
 	return edges;
+}
+
+
+export type MusicCanvasOptions = {
+	thumbnailImage?: string;
+	backgroundColor?: string;
+	backgroundImage?: string;
+	imageDarkness?: number;
+	progress?: number;
+	progressColor?: string;
+	progressBarColor?: string;
+	name?: string;
+	nameColor?: string;
+	author?: string;
+	authorColor?: string;
+	startTime?: string;
+	endTime?: string;
+	timeColor?: string;
+};
+
+export async function createMusicCanvas(options: MusicCanvasOptions) {
+	const canvas = createCanvas(2458, 837);
+	const ctx = canvas.getContext('2d');
+
+	// Set defaults with better colors
+	if (!options.progressBarColor) options.progressBarColor = "#5F2D00";
+	if (!options.progressColor) options.progressColor = "#FF7A00";
+	if (!options.backgroundColor) options.backgroundColor = "#070707";
+	if (!options.nameColor) options.nameColor = "#FF7A00";
+	if (!options.authorColor) options.authorColor = "#FFFFFF";
+	if (!options.timeColor) options.timeColor = "#FFFFFF";
+	if (!options.imageDarkness) options.imageDarkness = 10;
+	if (!options.progress) options.progress = 0;
+	if (!options.name) options.name = "Unknown";
+	if (!options.author) options.author = "Unknown Artist";
+	if (!options.startTime) options.startTime = "0:00";
+	if (!options.endTime) options.endTime = "0:00";
+
+	// Create background gradient
+	if (options.backgroundImage) {
+		const background = await loadImage(options.backgroundImage);
+		ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+		// Add gradient overlay
+		const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+		gradient.addColorStop(0, `rgba(0, 0, 0, ${options.imageDarkness / 100})`);
+		gradient.addColorStop(1, `rgba(0, 0, 0, ${(options.imageDarkness + 20) / 100})`);
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	} else {
+		ctx.fillStyle = options.backgroundColor;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	}
+
+	// Add a subtle glow effect
+	ctx.shadowColor = options.progressColor;
+	ctx.shadowBlur = 20;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+
+	// Enhanced thumbnail display
+	if (options.thumbnailImage) {
+		const thumbnail = await loadImage(options.thumbnailImage);
+		ctx.save();
+		// Create thumbnail container with border
+		ctx.beginPath();
+		ctx.roundRect(100, 100, 600, 600, 30);
+		ctx.strokeStyle = options.progressColor;
+		ctx.lineWidth = 4;
+		ctx.stroke();
+		ctx.clip();
+		ctx.drawImage(thumbnail, 100, 100, 600, 600);
+
+		// Add reflection effect
+		const gradient = ctx.createLinearGradient(0, 100, 0, 700);
+		gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+		gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+		ctx.fillStyle = gradient;
+		ctx.fillRect(100, 100, 600, 600);
+		ctx.restore();
+	}
+
+	// Modern text styling
+	ctx.textBaseline = 'top';
+	ctx.shadowBlur = 0; // Reset shadow for text
+
+	// Title with gradient
+	const titleGradient = ctx.createLinearGradient(750, 150, 750, 230);
+	titleGradient.addColorStop(0, options.nameColor);
+	titleGradient.addColorStop(1, options.progressColor);
+	ctx.fillStyle = titleGradient;
+	ctx.font = 'bold 90px sans-serif';
+	ctx.fillText(options.name, 750, 150);
+
+	// Artist name with subtle glow
+	ctx.fillStyle = options.authorColor;
+	ctx.font = '60px sans-serif';
+	ctx.globalAlpha = 0.9;
+	ctx.fillText(options.author, 750, 280);
+	ctx.globalAlpha = 1;
+
+	// Enhanced progress bar
+	const progressWidth = canvas.width - 900;
+	const progressHeight = 15;
+	const progressX = 750;
+	const progressY = 400;
+
+	// Progress bar background with gradient
+	const barGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+	barGradient.addColorStop(0, options.progressBarColor);
+	barGradient.addColorStop(1, adjustColor(options.progressBarColor, -20));
+	ctx.fillStyle = barGradient;
+	ctx.roundRect(progressX, progressY, progressWidth, progressHeight, progressHeight / 2);
+	ctx.fill();
+
+	// Progress indicator with glow
+	const progress = Math.min(100, Math.max(0, options.progress));
+	const progressGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+	progressGradient.addColorStop(0, options.progressColor);
+	progressGradient.addColorStop(1, adjustColor(options.progressColor, 20));
+	ctx.fillStyle = progressGradient;
+	ctx.shadowColor = options.progressColor;
+	ctx.shadowBlur = 10;
+	ctx.roundRect(progressX, progressY, progressWidth * (progress / 100), progressHeight, progressHeight / 2);
+	ctx.fill();
+
+	// Progress knob
+	ctx.beginPath();
+	ctx.arc(progressX + (progressWidth * (progress / 100)), progressY + progressHeight / 2, 12, 0, Math.PI * 2);
+	ctx.fillStyle = '#FFFFFF';
+	ctx.shadowBlur = 15;
+	ctx.fill();
+
+	// Time indicators with enhanced styling
+	ctx.shadowBlur = 0;
+	ctx.fillStyle = options.timeColor;
+	ctx.font = 'bold 40px sans-serif';
+	ctx.fillText(options.startTime, progressX, progressY + 30);
+	ctx.fillText(options.endTime, progressX + progressWidth - 100, progressY + 30);
+
+	return canvas.toBuffer('image/png');
+}
+
+// Helper function to adjust color brightness
+function adjustColor(color: string, amount: number): string {
+	const hex = color.replace('#', '');
+	const num = parseInt(hex, 16);
+	const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+	const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
+	const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
+	return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }

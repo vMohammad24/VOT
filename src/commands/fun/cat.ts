@@ -39,7 +39,7 @@ export default {
 	type: 'all',
 	execute: async ({ args, interaction }) => {
 		const tag = (args.get('tag') as string) || undefined;
-		const reqUrl = `https://cataas.com/cat${tag ? '/' + encodeURI(tag.split(' ')[0]) : ''}?html=true`;
+		const reqUrl = `https://cataas.com/cat${tag ? '/' + encodeURIComponent(tag.split(' ')[0]) : ''}?html=true`;
 		const res = await axios.get(reqUrl, {
 			responseType: 'json',
 		});
