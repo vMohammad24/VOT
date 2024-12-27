@@ -44,7 +44,6 @@ export default {
                 .setTimestamp()
                 .setImage('attachment://image.png')
                 .author(user)
-                .dominant()
             ],
             files: [{
                 attachment: buffer,
