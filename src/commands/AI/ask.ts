@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ApplicationCommandOptionType, Collection, GuildTextBasedChannel } from 'discord.js';
 import ICommand from '../../handler/interfaces/ICommand';
 import { searchBrave } from '../../util/brave';
@@ -5,6 +6,12 @@ import { ddgModels, DuckDuckGoChat } from '../../util/ddg';
 import { pagination } from '../../util/pagination';
 import { isNullish } from '../../util/util';
 const collection = new Collection<string, DuckDuckGoChat>();
+
+
+
+function getURLSFromString(text: string): string[] {
+	return text.match(/(https?:\/\/[^\s]+)/g) || [];
+}
 export default {
 	name: 'ask',
 	description: 'Ask a question to the AI',
@@ -46,9 +53,13 @@ export default {
 		let context = '';
 		const web = args.get('web') ?? false;
 		if (web) {
-			context += (await searchBrave(question)).data.body.response.web.results
-				.map((r) => `- ${r.title} - ${r.description} - ${r.url}`)
-				.join('\n');
+			const urls = getURLSFromString(question);
+			const brave = (await searchBrave(question).then(a => a.data.body.response.web.results)).map(page => {
+				urls.push(page.url);
+				context += `**${page.title}**\n${page.description}\n${page.url}\n\n`;
+			})
+			const res = await Promise.all(urls.map(url => axios.get(url).then(a => (a.data as string))));
+			context += res.map((text, i) => `**${urls[i]}**\n${text}`).join('\n\n');
 		}
 		const model = (args.get('model') as string) ?? 'gpt-4o-mini';
 		let ddg = collection.get(user.id);
@@ -69,12 +80,17 @@ export default {
 		}
 		if (message) (channel as GuildTextBasedChannel).sendTyping();
 		const time = Date.now();
-		const res = await ddg.chat(`Here's some context for you:\n${context}\n\n${question}`);
+		await ddg.chat('Only respond with "OK" until i say "**CONTEXT END** so i can give you context at any time.');
+		if (!isNullish(context)) for (const text of context.match(/[\s\S]{1,1999}/g)!) {
+			await ddg.chat(text);
+		}
+		const res = await ddg.chat('**CONTEXT END** you may now respond, my question is:' + question);
 		if (isNullish(res)) {
 			collection.delete(user.id);
 			collection.set(user.id, new DuckDuckGoChat('gpt-4o-mini'));
 		}
 		const response = ((res as string) || '') + `\n\n-# Took ${Date.now() - time}ms using ${ddg.getModel()} model`;
+		console.log(ddg.export())
 		await pagination({
 			interaction,
 			message,

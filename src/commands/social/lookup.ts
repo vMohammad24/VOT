@@ -11,7 +11,7 @@ import numeral from 'numeral';
 import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
 import { addEmojiByURL, getEmoji } from '../../util/emojis';
-import { getTikTokUser } from '../../util/social/tiktok';
+import { getTikTokUser } from '../../util/tiktok';
 import { getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
 
 interface User {

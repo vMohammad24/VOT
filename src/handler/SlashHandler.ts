@@ -42,10 +42,11 @@ export default class SlashCommandHandler {
 	}
 
 	public async initCommands(client: Client) {
-		const commands = this.commands
+		const initCommands = new Map<string, ICommand>();
+		this.commands
 			.filter(isICommand)
 			.filter((a) => a.category != null && !a.disabled)
-			.map((cmd: ICommand) => {
+			.forEach((cmd: ICommand) => {
 				let perms: bigint | null = 0n;
 				if (cmd.type == 'legacy') return;
 				if (!cmd.options) cmd.options = [];
@@ -90,6 +91,34 @@ export default class SlashCommandHandler {
 					uInstall.contexts.push(1);
 					uInstall.integration_types.push(0);
 				}
+				if (cmd.name!.includes(" ")) {
+					const subCommands = cmd.name!.split(" ");
+					const cmdName = subCommands.shift()!;
+					cmd.name = cmdName;
+					const eCommand = initCommands.has(cmdName) ? initCommands.get(cmdName) : null;
+					for (const subCommand of subCommands) {
+						if (eCommand) {
+							let oldOptions = eCommand.options!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
+							eCommand.options!.push({
+								name: subCommand.trim(),
+								description: cmd.description,
+								type: ApplicationCommandOptionType.Subcommand,
+								options: oldOptions as any[] || [],
+							});
+							eCommand.options = eCommand.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
+							cmd = eCommand;
+						} else {
+							let oldOptions = cmd.options!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
+							cmd.options!.push({
+								name: subCommand.trim(),
+								description: cmd.description,
+								type: ApplicationCommandOptionType.Subcommand,
+								options: oldOptions as any[] || [],
+							});
+							cmd.options = cmd.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
+						}
+					}
+				}
 				const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, [
 					'integration_types',
 					'contexts',
@@ -101,7 +130,7 @@ export default class SlashCommandHandler {
 				]);
 				command.name = cmd.name?.toLowerCase();
 				if (cmd.autocomplete && !cmd.disabled) this.autocompletes.push(cmd);
-				return command;
+				initCommands.set(cmd.name!, command as any);
 			});
 		const contextCommands = this.commands!.filter((a) => (a as IContextCommand).context != null)
 			.map((c) => {
@@ -146,7 +175,7 @@ export default class SlashCommandHandler {
 			const startTime = Date.now();
 			const res = await client.rest.put(Routes.applicationCommands(client.user!.id), {
 				body: JSON.parse(
-					JSON.stringify(commands.concat(contextCommands), (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
+					JSON.stringify([...initCommands.values(), ...contextCommands], (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
 				),
 			});
 			const endTime = Date.now();
@@ -205,7 +234,7 @@ export default class SlashCommandHandler {
 			// 	return;
 			// }
 			if (interaction.isCommand() || interaction.isContextMenuCommand()) {
-				const command = this.commands.find((cmd) => cmd.name?.toLowerCase() === interaction.commandName.toLowerCase());
+				const command = this.commands.find((cmd) => cmd.id! === interaction.commandId);
 				if (!command) {
 					const error = await this.handler.prisma.error.create({
 						data: {
