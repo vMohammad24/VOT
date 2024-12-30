@@ -151,7 +151,7 @@ export default {
 					.setTimestamp(song.release_date_components ? new Date(song.release_date_components.year, song.release_date_components.month, song.release_date_components.day) : null)
 					.setFooter(song.release_date_components ? { text: `Released` } : null)
 					.dominant()],
-				files: song.previewURL ? [new AttachmentBuilder(song.previewURL, {
+				files: song.previewURL && i == 0 ? [new AttachmentBuilder(song.previewURL, {
 					name: `${song.title} Preview.m4a`,
 					description: `A preview of the song: "${song.full_title}"`
 				})] : [],

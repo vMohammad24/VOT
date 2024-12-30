@@ -465,17 +465,21 @@ elysia.get('/hypixel', async ({ query }) => {
 	try {
 		const response = await axios.get(url, { headers });
 		const $ = cheerio.load(response.data);
-
-		const inGameName = $('#wrapper').find("span[style=\"font-family: 'Minecraftia', serif;\"]").text();
-		const basicStats: { [key: string]: string } = {};
-		$('#wrapper .card-box.m-b-10').first().find('b').each((index, element) => {
-			basicStats[$(element).text().trim()] = $(element).next().text().trim();
-		});
-
-		return {
-			inGameName,
-			...basicStats
-		}
+		const card = $('#wrapper > div.content-page > div > div > div:nth-child(2) > div.col-lg-3.b-0.p-0 > div:nth-child(1) > div');
+		const details = {
+			rank: card.find('span').text().match(/\[([A-Z\d+]+)\]/)?.[1] ?? null,
+			playerName: card.find('span').text().split(']').pop()?.split(' [')[0].trim() ?? null,
+			multiplier: card.find('b:contains("Multiplier:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			level: card.find('b:contains("Level:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			karma: card.find('b:contains("Karma:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			achievementPoints: card.find('b:contains("Achievement Points:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			questsCompleted: card.find('b:contains("Quests Completed:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			ranksGifted: card.find('b:contains("Ranks Gifted:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			firstLogin: card.find('b:contains("First login:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			lastLogin: card.find('b:contains("Last login:")').parent().text().split(':')[1]?.split('\n')[0]?.trim() ?? null,
+			skyblockLink: card.find('a:contains("SkyBlock Stats")').attr('href') ?? null,
+		};
+		return details
 	} catch (error) {
 		console.error('Error fetching player info:', error);
 	}

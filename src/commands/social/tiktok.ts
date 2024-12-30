@@ -5,7 +5,7 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
 import { pagination } from '../../util/pagination';
 import { getVideoBuffer, newPage } from '../../util/puppeteer';
-import { TikTokExploreResponse } from '../../util/social/tiktok';
+import { TikTokExploreResponse } from '../../util/tiktok';
 import { getTwoMostUsedColors } from '../../util/util';
 import VOTEmbed from '../../util/VOTEmbed';
 

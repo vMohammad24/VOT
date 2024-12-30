@@ -85,7 +85,7 @@ export default {
 	// slashOnly: true,
 	execute: async ({ args, interaction, handler }) => {
 		const text = args.get('text') as string | undefined;
-		const voice = (args.get('voice') as string | undefined) || 'en-US-GuyNeural';
+		const voice = (args.get('voice') as string | undefined) || 'en_us_001';
 		if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };
 		await interaction?.deferReply();
 
@@ -94,7 +94,7 @@ export default {
 		const selectedVoice = matchedVoices.length > 0 ? matchedVoices[0].value : 'en_us_001';
 		const { data } = await axios.post('https://tiktok-tts.weilnet.workers.dev/api/generation', {
 			text,
-			voice,
+			voice: selectedVoice,
 		});
 		if (!data.success) {
 			return { ephemeral: true, content: 'Failed to generate audio' };

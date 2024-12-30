@@ -1,7 +1,7 @@
 import axios from "axios";
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
-import { newPage } from "../puppeteer";
+import { newPage } from "./puppeteer";
 
 interface BioLink {
     link: string;
