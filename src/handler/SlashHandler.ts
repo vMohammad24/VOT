@@ -1,5 +1,6 @@
 import { inspect } from 'bun';
 import {
+	ApplicationCommandOption,
 	ApplicationCommandOptionType,
 	type Client,
 	ContextMenuCommandBuilder,
@@ -96,51 +97,17 @@ export default class SlashCommandHandler {
 				if (cmd.type == 'installable' || cmd.type == 'all') {
 					uInstall.contexts.push(2);
 					uInstall.integration_types.push(1);
-					const hasSubCommannds = this.commands
-						.filter(isICommand)
-						.filter((a) => a.category != null)
-						.some((c) => c.options?.some((o) => o.type == ApplicationCommandOptionType.Subcommand));
-					if (!hasSubCommannds)
-						cmd.options?.push({
-							name: 'silent',
-							description: "ephemeral's the response",
-							type: ApplicationCommandOptionType.Boolean,
-							required: false,
-						});
 				}
 				if (cmd.type == 'guildOnly' || cmd.type == 'all') {
 					uInstall.contexts.push(0);
 					uInstall.integration_types.push(0);
 				}
-
 				if (cmd.type == 'dmOnly') {
 					uInstall.contexts.push(1);
 					uInstall.integration_types.push(0);
 				}
-				if (cmd.name!.includes(" ")) {
-					const subCommands = cmd.name!.split(" ");
-					const cmdName = subCommands.shift()!;
-					cmd.name = cmdName;
-					const eCommand = initCommands.has(cmdName) ? initCommands.get(cmdName)! : cmd;
-					for (const subCommand of subCommands) {
-						let oldOptions = merge(eCommand.options || [], cmd.options || [], (a, b) => a.name === b.name)!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
-						eCommand.options!.push({
-							name: subCommand.trim(),
-							description: cmd.description,
-							type: ApplicationCommandOptionType.Subcommand,
-							options: oldOptions as any[] || [],
-						});
-						eCommand.options = eCommand.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
-						cmd = eCommand;
-						console.log(cmd.options);
-					}
-				}
-
 				if (cmd.autocomplete && !cmd.disabled) this.autocompletes.push(cmd);
-				if (initCommands.has(cmd.name!)) {
-					const oldCmd = initCommands.get(cmd.name!);
-					cmd.options = merge(oldCmd!.options!, cmd.options!, (a, b) => a.name === b.name);
-				}
+
 				const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, [
 					'integration_types',
 					'contexts',
@@ -150,8 +117,35 @@ export default class SlashCommandHandler {
 					'default_member_permissions',
 					'dmPermission',
 				]);
-				command.name = cmd.name?.toLowerCase();
-				initCommands.set(cmd.name!, command as any);
+				command.name = cmd.name?.toLowerCase().split(" ").shift();
+				if (initCommands.has(command.name!)) {
+					const oldCmd = initCommands.get(command.name!);
+					command.options = merge(oldCmd!.options!, command.options!, (a, b) => a.name === b.name);
+				}
+				if (cmd.name!.includes(" ")) {
+					const subCommands = cmd.name!.split(" ");
+					// const cmdName = subCommands.shift()!;
+					for (const subCommand of subCommands) {
+						let oldOptions = merge(command.options || [], cmd.options || [], (a, b) => a.name === b.name)!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
+						command.options!.push({
+							name: subCommand.trim(),
+							description: cmd.description,
+							type: ApplicationCommandOptionType.Subcommand,
+							options: oldOptions as any[] || [],
+						});
+						command.options = command.options!.filter((o: ApplicationCommandOption) => o.type == ApplicationCommandOptionType.Subcommand);
+
+					}
+				}
+				if (command.options?.length) {
+					const unique = new Map<string, ApplicationCommandOption>();
+					for (const opt of command.options) {
+						unique.set(opt.name, opt);
+					}
+					command.options = [...unique.values()];
+				}
+				initCommands.set(command.name!, command as any);
+
 			});
 		const contextCommands = this.commands!.filter((a) => (a as IContextCommand).context != null)
 			.map((c) => {
@@ -255,13 +249,17 @@ export default class SlashCommandHandler {
 			// 	return;
 			// }
 			if (interaction.isCommand() || interaction.isContextMenuCommand()) {
-				const command = this.commands.find((cmd) => cmd.id! === interaction.commandId);
+				const command = this.commands.find((cmd) => {
+					if (interaction.isContextMenuCommand()) return cmd.id! === interaction.commandId;
+					const subCommand = interaction.options.getSubcommand(false);
+					return cmd.name?.toLowerCase() === interaction.commandName.toLowerCase() || (subCommand && cmd.name?.toLowerCase() === `${interaction.commandName.toLowerCase()} ${subCommand}`);
+				});
 				if (!command) {
 					const error = await this.handler.prisma.error.create({
 						data: {
 							channelId: interaction.channelId!,
 							guildId: interaction.guildId || null,
-							fullJson: interaction,
+							// fullJson,
 						},
 					});
 					return await interaction.reply({

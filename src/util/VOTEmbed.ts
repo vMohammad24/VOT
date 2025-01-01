@@ -31,7 +31,8 @@ class VOTEmbed extends EmbedBuilder {
 	}
 
 	addDescription(description: string) {
-		return this.setDescription((this.toJSON().description || '') + description);
+		const org = this.toJSON().description
+		return this.setDescription(org ? org + '\n' : '' + description);
 	}
 
 	setDescription(description: string | null | undefined): this {

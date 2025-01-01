@@ -224,7 +224,7 @@ model Error {
   guildId   String?
   message   String?
   command   Command? @relation(fields: [commandId], references: [id])
-  fullJson  Json?
+  fullJson  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   commandId String?

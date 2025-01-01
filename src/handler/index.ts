@@ -39,54 +39,56 @@ type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
 
 const createCommand = async (commandContext: CommandContext, command: ICommand, validationTime: number) => {
-	const cId = commandContext.cID || nanoid(10);
-	return await commandContext.handler.prisma.user.upsert({
-		where: {
-			id: commandContext.user.id,
-		},
-		update: {
-			name: commandContext.user.username,
-			avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-			commands: {
-				create: {
-					commandId: command.name!,
-					commandInfo: {
-						args: (commandContext.args as any) || null,
-						guild: (commandContext?.guild && commandContext.guild.id) || null,
-						channel: commandContext?.channel?.id || null,
-						message: commandContext?.message?.id || null,
-						interaction: commandContext?.interaction?.id || null,
+	try {
+		const cId = commandContext.cID || nanoid(10);
+		await commandContext.handler.prisma.user.upsert({
+			where: {
+				id: commandContext.user.id,
+			},
+			update: {
+				name: commandContext.user.username,
+				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+				commands: {
+					create: {
+						commandId: command.name!,
+						commandInfo: {
+							args: (commandContext.args as any) || null,
+							guild: (commandContext?.guild && commandContext.guild.id) || null,
+							channel: commandContext?.channel?.id || null,
+							message: commandContext?.message?.id || null,
+							interaction: commandContext?.interaction?.id || null,
+						},
+						id: `cmd_${cId}`,
+						guildId: commandContext.guild?.id,
+						validationTime
 					},
-					id: `cmd_${cId}`,
-					guildId: commandContext.guild?.id,
-					validationTime
 				},
 			},
-		},
-		create: {
-			id: commandContext.user.id,
-			name: commandContext.user.username,
-			avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
-			commands: {
-				create: {
-					commandId: command.name!,
-					commandInfo: {
-						args: (commandContext.args as any) || null,
-						guild: commandContext?.guild?.id || null,
-						channel: commandContext?.channel?.id || null,
-						message: commandContext?.message?.id || null,
-						interaction: commandContext?.interaction?.id || null,
+			create: {
+				id: commandContext.user.id,
+				name: commandContext.user.username,
+				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+				commands: {
+					create: {
+						commandId: command.name!,
+						commandInfo: {
+							args: (commandContext.args as any) || null,
+							guild: commandContext?.guild?.id || null,
+							channel: commandContext?.channel?.id || null,
+							message: commandContext?.message?.id || null,
+							interaction: commandContext?.interaction?.id || null,
+						},
+						id: `cmd_${cId}`,
+						guildId: commandContext.guild?.id,
+						validationTime
 					},
-					id: `cmd_${cId}`,
-					guildId: commandContext.guild?.id,
-					validationTime
 				},
 			},
-		},
-		select: {
-			commands: { orderBy: { createdAt: 'desc' } },
-		},
-	});
+			select: {
+				commands: { orderBy: { createdAt: 'desc' } },
+			},
+		});
+	} catch (e) { }
 };
 export default class CommandHandler {
 	public prisma: ICommandHandler['prisma'];

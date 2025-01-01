@@ -14,7 +14,7 @@ export default {
             content: 'Please set your stats.fm username with `/statsfm set`',
             ephemeral: true
         };
-        const np = await getUserCurrentStream(statsFm.statsfmUser);
+        const np = await getUserCurrentStream(statsFm);
         if (!np) return {
             content: 'Nothing is currently playing',
             ephemeral: true
@@ -26,6 +26,7 @@ export default {
                     .setTitle(np.item.track.name)
                     .setURL(`https://open.spotify.com/track/${np.item.track.externalIds.spotify[0]}`)
                     .setThumbnail(np.item.track.albums[0].image)
+                    .dominant()
             ]
         }
     }

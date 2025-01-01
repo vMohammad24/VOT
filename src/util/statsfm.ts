@@ -191,7 +191,7 @@ interface TopArtistsResponse {
 }
 
 export async function getUserTopArtists(userId: string): Promise<TopArtistsResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/top/artists`);
+    const response = await axiosInstance.get(`/users/${userId}/top/artists?range=weeks`);
     return response.data;
 }
 
@@ -212,7 +212,7 @@ export async function getUserTopAlbumTracks(userId: string, albumId: string) {
 }
 
 export async function getUserTopGenres(userId: string): Promise<TopGenresResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/top/genres`);
+    const response = await axiosInstance.get(`/users/${userId}/top/genres?range=weeks`);
     return response.data;
 }
 
@@ -369,6 +369,7 @@ interface GenreDetails {
 }
 
 interface TopGenreItem {
+    artistCount: number | null;
     position: number;
     streams: number | null;
     playedMs: number;
