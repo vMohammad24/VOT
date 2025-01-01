@@ -20,6 +20,32 @@ import type SlashHandler from './interfaces/ISlashHandler';
 function isICommand(cmd: ICommand | IContextCommand): cmd is ICommand {
 	return (cmd as ICommand).category !== undefined;
 }
+
+const merge = (a: any[], b: any[], predicate = (a: any, b: any) => a === b) => {
+	const c = [...a];
+	b.forEach((bItem) => {
+		const existing = c.find((cItem) => predicate(bItem, cItem));
+		if (!existing) {
+			c.push(bItem);
+			return;
+		}
+		for (const key in bItem) {
+			if (Array.isArray(bItem[key]) && Array.isArray(existing[key])) {
+				existing[key] = merge(existing[key], bItem[key], predicate);
+			} else if (
+				typeof bItem[key] === 'object' &&
+				bItem[key] !== null &&
+				typeof existing[key] === 'object' &&
+				existing[key] !== null
+			) {
+				existing[key] = { ...existing[key], ...bItem[key] };
+			} else {
+				existing[key] = bItem[key];
+			}
+		}
+	});
+	return c;
+}
 export default class SlashCommandHandler {
 	public commands: (ICommand | IContextCommand)[] = [];
 	private handler: CommandHandler;
@@ -95,29 +121,25 @@ export default class SlashCommandHandler {
 					const subCommands = cmd.name!.split(" ");
 					const cmdName = subCommands.shift()!;
 					cmd.name = cmdName;
-					const eCommand = initCommands.has(cmdName) ? initCommands.get(cmdName) : null;
+					const eCommand = initCommands.has(cmdName) ? initCommands.get(cmdName)! : cmd;
 					for (const subCommand of subCommands) {
-						if (eCommand) {
-							let oldOptions = eCommand.options!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
-							eCommand.options!.push({
-								name: subCommand.trim(),
-								description: cmd.description,
-								type: ApplicationCommandOptionType.Subcommand,
-								options: oldOptions as any[] || [],
-							});
-							eCommand.options = eCommand.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
-							cmd = eCommand;
-						} else {
-							let oldOptions = cmd.options!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
-							cmd.options!.push({
-								name: subCommand.trim(),
-								description: cmd.description,
-								type: ApplicationCommandOptionType.Subcommand,
-								options: oldOptions as any[] || [],
-							});
-							cmd.options = cmd.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
-						}
+						let oldOptions = merge(eCommand.options || [], cmd.options || [], (a, b) => a.name === b.name)!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
+						eCommand.options!.push({
+							name: subCommand.trim(),
+							description: cmd.description,
+							type: ApplicationCommandOptionType.Subcommand,
+							options: oldOptions as any[] || [],
+						});
+						eCommand.options = eCommand.options!.filter((o) => o.type == ApplicationCommandOptionType.Subcommand);
+						cmd = eCommand;
+						console.log(cmd.options);
 					}
+				}
+
+				if (cmd.autocomplete && !cmd.disabled) this.autocompletes.push(cmd);
+				if (initCommands.has(cmd.name!)) {
+					const oldCmd = initCommands.get(cmd.name!);
+					cmd.options = merge(oldCmd!.options!, cmd.options!, (a, b) => a.name === b.name);
 				}
 				const command = this.filterObject({ ...cmd, default_member_permissions: perms?.toString(), ...uInstall }, [
 					'integration_types',
@@ -129,7 +151,6 @@ export default class SlashCommandHandler {
 					'dmPermission',
 				]);
 				command.name = cmd.name?.toLowerCase();
-				if (cmd.autocomplete && !cmd.disabled) this.autocompletes.push(cmd);
 				initCommands.set(cmd.name!, command as any);
 			});
 		const contextCommands = this.commands!.filter((a) => (a as IContextCommand).context != null)

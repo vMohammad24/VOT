@@ -160,7 +160,6 @@ export default class CommandHandler {
 				const fileName = file.split(path.sep).pop()!.split('.')[0];
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
 
-				// Clear the require cache for the module
 				const modulePath = path.join(commandsDir, file);
 				const command = (await import(modulePath)).default;
 				const commandName = command.name || fileName;
@@ -235,10 +234,6 @@ export default class CommandHandler {
 		});
 	}
 
-	private async executeJishaku(command: string, context: CommandContext) {
-		// Add Jishaku execution logic
-		return null;
-	}
 
 	public async reloadCommand(commandName: string) {
 		const command = this.commands?.find((c) => c.name === commandName);
@@ -253,6 +248,7 @@ export default class CommandHandler {
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
 		const cId = nanoid(5);
+
 		try {
 			if ('aliases' in cmd) {
 				const start = Date.now();
