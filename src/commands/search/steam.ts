@@ -5,9 +5,26 @@ import TurndownService from "turndown";
 import commandHandler, { redis } from '../..';
 import ICommand from "../../handler/interfaces/ICommand";
 import VOTEmbed from '../../util/VOTEmbed';
-import { isNullish } from '../../util/util';
+import { capitalizeString, isNullish } from '../../util/util';
+
+interface ProtonDBGame {
+    bestReportedTier: string;
+    confidence: string;
+    score: number;
+    tier: string;
+    total: number;
+    trendingTier: string;
+}
 
 
+
+async function getProtonDB(appId: number): Promise<ProtonDBGame | null> {
+    const res = await axios.get(`https://www.protondb.com/api/v1/reports/summaries/${appId}.json`)
+    if (res.status == 404) {
+        return null;
+    }
+    return res.data;
+}
 
 async function searchSteamDB(query: string) {
     const apiKey = 'MzQ1ZjdkNzVjM2I0YjFkYmFlZDViYTgwNDY5MjNlNGY4NzY1NDEzNmIzMmY3YzIzZjVjYmQ2NjJlMzMxN2YxM3ZhbGlkVW50aWw9MTczMzU5MzI0MiZ1c2VyVG9rZW49YTQzOThiNGZiYzQwOTc1NDkzMGRhOTkyNDU3MjI4YTk='
@@ -262,8 +279,9 @@ export default {
             console.log(results[0])
             query = results[0].appid;
         }
-        const [game] = await Promise.all([
+        const [game, protonDB] = await Promise.all([
             getGameInfo(query),
+            getProtonDB(Number(query))
         ])
         if (!game) {
             return {
@@ -299,7 +317,9 @@ export default {
         //         { name: 'Lowest Discount', value: prices.lowestRecordedPrice ?? "N/A", inline: true },
         //     );
         // }
-
+        if (protonDB) {
+            embed.addDescription(`\n\nReported by ${protonDB.total} users to work with ${protonDB.confidence} confidence and a score of ${protonDB.score * 100} (${capitalizeString(protonDB.tier)}) on ProtonDB`)
+        }
         return {
             embeds: [embed],
         }
