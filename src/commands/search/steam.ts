@@ -318,7 +318,7 @@ export default {
         //     );
         // }
         if (protonDB) {
-            embed.addDescription(`\n\nReported by ${protonDB.total} users to work with ${protonDB.confidence} confidence and a score of ${protonDB.score * 100} (${capitalizeString(protonDB.tier)}) on ProtonDB`)
+            embed.addDescription(`\nReported by ${protonDB.total} users to work with ${protonDB.confidence} confidence and a score of ${protonDB.score * 100} (${capitalizeString(protonDB.tier)}) on ProtonDB`)
         }
         return {
             embeds: [embed],

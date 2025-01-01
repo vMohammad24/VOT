@@ -33,11 +33,11 @@ export default {
                 id: user.id
             },
             data: {
-                statsfmUser: u.item.customId || u.item.id
+                statsfmUser: u.item.id || u.item.customId
             }
         })
         return {
-            content: `Stats.fm username set to ${u.item.displayName}`,
+            content: `Stats.fm username set to ${u.item.displayName} (${u.item.customId || u.item.id})`,
             ephemeral: true
         }
     }
