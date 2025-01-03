@@ -127,7 +127,6 @@ export default {
 				.dominant();
 			const trackId = track.identifier;
 			const features = await getTrackFeatures(trackId, user.id);
-			console.log(features)
 			if (typeof features != 'string') {
 				if (features.analysis_url) {
 					embed.addFields([

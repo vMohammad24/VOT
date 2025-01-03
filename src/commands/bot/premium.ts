@@ -86,12 +86,10 @@ export default {
                 time: 86400000
             })
             checkCollector.on('collect', async inter => {
-                console.log('Checking payment')
                 const result = await getOrder(
                     payment.result.order_id,
                     payment.result.uuid
                 );
-                console.log('Checked payment')
 
                 const embed = await new VOTEmbed()
                     .setTitle('VOT Premium - Payment Status')

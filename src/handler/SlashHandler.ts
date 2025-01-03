@@ -134,7 +134,6 @@ export default class SlashCommandHandler {
 							options: oldOptions as any[] || [],
 						});
 						command.options = command.options!.filter((o: ApplicationCommandOption) => o.type == ApplicationCommandOptionType.Subcommand);
-
 					}
 				}
 				if (command.options?.length) {
@@ -142,7 +141,8 @@ export default class SlashCommandHandler {
 					for (const opt of command.options) {
 						unique.set(opt.name, opt);
 					}
-					command.options = [...unique.values()];
+					if (unique.has(command.name)) unique.delete(command.name);
+					command.options = unique.values().toArray();
 				}
 				initCommands.set(command.name!, command as any);
 

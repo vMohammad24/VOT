@@ -323,7 +323,6 @@ export default {
 					pages: await Promise.all(videos.map(async (video) => {
 						const playAddr = video.video.bitrateInfo[0].PlayAddr.UrlList.slice(-1)[0];
 						const videoPlay = await getVideoBuffer(playAddr);
-						console.log(videoPlay)
 						return {
 							page:
 							{

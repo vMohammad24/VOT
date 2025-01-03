@@ -3,6 +3,7 @@ import commandHandler from "../..";
 import ICommand from "../../handler/interfaces/ICommand";
 import { getUserByID } from "../../util/database";
 import { getUser } from "../../util/statsfm";
+import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
     name: 'statsfm set',
@@ -18,7 +19,6 @@ export default {
         }
     ],
     execute: async ({ user, args }) => {
-        console.log(args)
         const sFmUser = args.get('username') as string;
         const u = await getUser(sFmUser);
         if (!u || !u.item.displayName) {
@@ -27,6 +27,29 @@ export default {
                 ephemeral: true
             }
         }
+        const embed = new VOTEmbed()
+        if (!u.item.privacySettings.currentlyPlaying) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Currently Playing\`\` from working`)
+        }
+        if (!u.item.privacySettings.recentlyPlayed) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Recently Played\`\` from working`)
+        }
+        if (!u.item.privacySettings.topTracks) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Top Tracks\`\` from working`)
+        }
+        if (!u.item.privacySettings.topArtists) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Top Artists\`\` from working`)
+        }
+        if (!u.item.privacySettings.topGenres) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Top Genres\`\` from working`)
+        }
+        if (!u.item.privacySettings.topAlbums) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Top Albums\`\` from working`)
+        }
+        if (!u.item.privacySettings.profile) {
+            embed.addDescription(`**WARNING**: Your privacy settings are preventing \`\`Profile\`\` from working`)
+        }
+        embed.setAuthor({ name: u.item.displayName, iconURL: u.item.image })
         await getUserByID(user.id, { statsfmUser: true });
         await commandHandler.prisma.user.update({
             where: {
@@ -37,7 +60,7 @@ export default {
             }
         })
         return {
-            content: `Stats.fm username set to ${u.item.displayName} (${u.item.customId || u.item.id})`,
+            embeds: [embed],
             ephemeral: true
         }
     }

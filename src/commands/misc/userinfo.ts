@@ -291,7 +291,7 @@ export default {
 					.join(' ')
 				: undefined;
 		const embed = new VOTEmbed()
-			.setThumbnail(u.displayAvatarURL())
+			.setThumbnail(u.displayAvatarURL({ size: 1024 }))
 			.setAuthor({ name: `${u.tag}`, iconURL: u.displayAvatarURL(), url: `https://discord.com/users/${u.id}` });
 
 		let description = '';

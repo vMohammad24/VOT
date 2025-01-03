@@ -4,7 +4,10 @@ import { DefaultArgs } from '@prisma/client/runtime/library';
 import { APIApplication, Client, Guild, GuildMember, Routes, User } from 'discord.js';
 import commandHandler, { redis } from '..';
 
-export async function getUser(member: User, select?: Prisma.UserSelect<DefaultArgs>) {
+export async function getUser<T extends Prisma.UserSelect<DefaultArgs>>(
+	member: User,
+	select?: T
+): Promise<Prisma.UserGetPayload<{ select: T }>> {
 	const cacheKey = `user:${member.id}:${JSON.stringify(select)}`;
 	const cachedUser = await redis.get(cacheKey);
 
@@ -41,13 +44,12 @@ export async function getUser(member: User, select?: Prisma.UserSelect<DefaultAr
 				id: member.id,
 				name: member.tag,
 			},
-			select,
-		});
-
+			select: select || undefined,
+		}) as Prisma.UserGetPayload<{ select: T }>;
 	}
 
-	redis.set(cacheKey, JSON.stringify(user), 'EX', 2); // Expires in 1 hour
-	return user;
+	redis.set(cacheKey, JSON.stringify(user), 'EX', 2);
+	return user as any;
 }
 
 export async function getCachedCommand(commandId: string, args: string, user: string, guild: string) {
