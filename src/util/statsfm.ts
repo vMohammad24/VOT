@@ -7,6 +7,7 @@ const url = 'https://api.stats.fm/api/v1';
 const axiosInstance = axios.create({
     baseURL: url,
     timeout: 10000,
+    validateStatus: () => true
 });
 
 async function getCached(key: string) {

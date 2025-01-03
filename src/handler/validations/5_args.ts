@@ -24,8 +24,34 @@ export class ArgumentMap<T> {
 	}
 }
 
-function parseMessageArgs(messageContent: string): string[] {
-	return messageContent.split(' ');
+async function parseMessageArgs(messageContent: string, cmd: ICommand, user: User): Promise<string[]> {
+	if (!cmd.name) return [];
+	const prefix = (await getUser(user, { prefix: true })).prefix ?? ';';
+	const commandParts = messageContent.slice(prefix.length).split(" ");
+
+	if (cmd.name.includes(" ")) {
+		const parts = cmd.name.split(" ");
+		if (parts.join(" ").toLowerCase() === commandParts.slice(0, parts.length).join(" ").toLowerCase()) {
+			return commandParts.slice(parts.length);
+		}
+	}
+
+	if (cmd.aliases?.some(alias => alias.includes(" "))) {
+		for (const alias of cmd.aliases) {
+			const aliasParts = alias.split(" ");
+			if (aliasParts.join(" ").toLowerCase() === commandParts.slice(0, aliasParts.length).join(" ").toLowerCase()) {
+				return commandParts.slice(aliasParts.length);
+			}
+		}
+	}
+
+	const commandName = commandParts[0];
+	if (cmd.name?.toLowerCase() === commandName.toLowerCase() ||
+		cmd.aliases?.some(a => !a.includes(" ") && a.toLowerCase() === commandName.toLowerCase())) {
+		return commandParts.slice(1);
+	}
+
+	return [];
 }
 
 export default async function (command: ICommand, ctx: CommandContext): Promise<boolean | any> {
@@ -36,7 +62,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 	const pUser = await getUser(user, {
 		ArgumentMode: true,
 	});
-	const messageArgs = message ? parseMessageArgs(message.content).slice(1) : [];
+	const messageArgs = message ? await parseMessageArgs(message.content, command, ctx.user) : [];
 	let argIndex = 0;
 	const validateInteractionOptions = async (options: ApplicationCommandOption[]) => {
 		for (let i = 0; i < options.length; i++) {

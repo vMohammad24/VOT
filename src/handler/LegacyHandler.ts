@@ -30,10 +30,11 @@ export default class LegacyCommandHandler {
 	}
 
 	public initListener(client: Client, kazagumo: Kazagumo, gPrefix: string) {
+		const commandNames = this.commands.map((cmd) => cmd.name);
+		const getCommand = (name: string) => commandNames.find((cmd) => (cmd?.split(' ')[0] ?? cmd)?.toLowerCase() === name.toLowerCase());
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 			const prefix = (await getPrefix(message)) ?? gPrefix;
-			let commandName = message.content.startsWith(prefix) ? message.content.slice(prefix.length).split(' ')[0] : null;
 			if (!message.content.startsWith(prefix)) {
 				if (message.mentions.users.has(client.user!.id) && !message.mentions.everyone && !message.mentions.roles.size && !message.mentions.repliedUser) {
 					if (message.content.trim() === `<@${client.user!.id}>`) {
@@ -44,11 +45,29 @@ export default class LegacyCommandHandler {
 					}
 				}
 			}
-			if (!commandName) return;
 			const command = this.commands.find(
-				(cmd) =>
-					cmd.name?.toLowerCase() == commandName.toLowerCase() ||
-					cmd.aliases?.map((a) => a.toLowerCase()).includes(commandName.toLowerCase()),
+				(cmd) => {
+					if (!cmd.name) return;
+					const commandParts = message.content.slice(prefix.length).split(" ");
+
+					if (cmd.name.includes(" ")) {
+						const parts = cmd.name.split(" ");
+						const cmdParts = commandParts.slice(0, parts.length);
+						if (parts.join(" ").toLowerCase() === cmdParts.join(" ").toLowerCase()) return true;
+					}
+
+					if (cmd.aliases?.some(alias => alias.includes(" "))) {
+						for (const alias of cmd.aliases) {
+							const aliasParts = alias.split(" ");
+							const cmdParts = commandParts.slice(0, aliasParts.length);
+							if (aliasParts.join(" ").toLowerCase() === cmdParts.join(" ").toLowerCase()) return true;
+						}
+					}
+
+					const commandName = commandParts[0];
+					return cmd.name?.toLowerCase() === commandName.toLowerCase() ||
+						cmd.aliases?.some(a => !a.includes(" ") && a.toLowerCase() === commandName.toLowerCase());
+				}
 			);
 			if (!command) return;
 			if (command.slashOnly) {
