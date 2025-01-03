@@ -41,9 +41,9 @@ export default class LegacyCommandHandler {
 						message.reply({
 							embeds: [new EmbedBuilder().setDescription(`Your prefix is \`${prefix}\``)],
 						});
-						return;
 					}
 				}
+				return;
 			}
 			const command = this.commands.find(
 				(cmd) => {
