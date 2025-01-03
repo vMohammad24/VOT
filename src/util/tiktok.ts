@@ -341,7 +341,6 @@ export async function getTikTokTrending(count: number = 3) {
         })
         const content = await page.$('pre').then(e => e?.evaluate(node => node.textContent));
         await page.close();
-        console.log(content)
         return JSON.parse(content) as TikTokExploreResponse;
     } catch (error) {
         console.error('Error fetching TikTok trending data:', error);

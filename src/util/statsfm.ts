@@ -357,6 +357,32 @@ export async function getUserAchievement(userId: string, achievementId: string) 
     return await axiosInstance.get(`/users/${userId}/achievements/${achievementId}`);
 }
 
+
+export async function getSpotifyFeatures(trackId: string): Promise<SpotifyFeatures> {
+    const res = await axiosInstance.get(`/spotify/audio-features/${trackId}`);
+    return res.data.item;
+}
+
+
+
+interface SpotifyFeatures {
+    acousticness: number;
+    createdAt: number;
+    danceability: number;
+    duration_ms: number;
+    energy: number;
+    instrumentalness: number;
+    key: number;
+    liveness: number;
+    loudness: number;
+    mode: number;
+    speechiness: number;
+    tempo: number;
+    time_signature: number;
+    valence: number;
+}
+
+
 interface PreviewArtist {
     position: number;
     streams: number | null;

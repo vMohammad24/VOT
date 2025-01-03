@@ -32,7 +32,7 @@ class VOTEmbed extends EmbedBuilder {
 
 	addDescription(description: string) {
 		const org = this.toJSON().description
-		return this.setDescription(org ? org + '\n' : '' + description);
+		return this.setDescription((org ? org + '\n' : '') + description);
 	}
 
 	setDescription(description: string | null | undefined): this {
