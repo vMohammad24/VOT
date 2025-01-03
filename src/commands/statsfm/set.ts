@@ -21,9 +21,9 @@ export default {
     execute: async ({ user, args }) => {
         const sFmUser = args.get('username') as string;
         const u = await getUser(sFmUser);
-        if (!u || !u.item.displayName) {
+        if (!u.item?.displayName) {
             return {
-                content: 'Invalid stats.fm username',
+                content: `\`${sFmUser}\` is an invalid stats.fm username`,
                 ephemeral: true
             }
         }

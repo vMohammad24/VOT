@@ -6,6 +6,7 @@ import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
     name: 'statsfm top',
+    aliases: ['sfm top'],
     description: 'Get the top 10 songs on stats.fm',
     type: 'all',
     options: [
@@ -99,6 +100,11 @@ export default {
                             .dominant()
                     ]
                 };
+            default:
+                return {
+                    content: 'Invalid type',
+                    ephemeral: true
+                }
         }
     }
 } as ICommand
