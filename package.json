@@ -46,6 +46,7 @@
     "kazagumo-spotify": "latest",
     "mathjs": "^14.0.0",
     "minimist": "latest",
+    "moment-timezone": "^0.5.46",
     "nanoid": "latest",
     "node-schedule": "latest",
     "numeral": "latest",
