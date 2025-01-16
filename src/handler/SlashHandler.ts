@@ -296,12 +296,23 @@ export default class SlashCommandHandler {
 					if (typeof interaction.options.get('silent', false)?.value === 'boolean') {
 						r = { ...(result as InteractionReplyOptions), ephemeral: true };
 					}
-					if (interaction.deferred) {
-						await interaction.editReply(r);
-					} else if (interaction.replied) {
-						await interaction.followUp(r);
-					} else {
-						await interaction.reply(r);
+					let attempts = 0;
+					while (attempts < 3) {
+						attempts++;
+						try {
+							if (interaction.deferred) {
+								await interaction.editReply(r);
+							} else if (interaction.replied) {
+								await interaction.followUp(r);
+							} else {
+								await interaction.reply(r);
+							}
+							break;
+						} catch (err) {
+							if (attempts >= 3) {
+								throw err;
+							}
+						}
 					}
 				}
 				await this.handler.prisma.error.create({

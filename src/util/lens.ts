@@ -44,7 +44,7 @@ export class GoogleLens {
 				thumbnail: prerenderScript[0][1][8][12][0][2][0][0],
 				pageURL: prerenderScript[0][1][8][12][0][2][0][4],
 			};
-		} catch (e) {}
+		} catch (e) { }
 
 		let visualMatches;
 		if (data.match) {
@@ -89,6 +89,7 @@ export class GoogleLens {
 
 	async searchByUrl(url: string): Promise<any> {
 		const response = await this.session.get(`${this.url}/uploadbyurl`, { params: { url }, maxRedirects: true });
+		console.log(response)
 		const prerenderScript = await this.getPrerenderScript(response.data);
 		return this.parsePrerenderScript(prerenderScript);
 	}
