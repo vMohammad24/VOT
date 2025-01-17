@@ -1,1 +1,5 @@
 node_modules
+db
+docker-compose.yml
+application.yml
+README.md
