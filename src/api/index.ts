@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid/non-secure';
 import numeral from 'numeral';
 import UserAgent from 'user-agents';
 import commandHandler, { redis, upSince } from '..';
+import { findCurrency, isValidCurrency, loadExchangeRates } from '../util/currency';
 import { getInstallCounts, loadImg } from '../util/database';
 import { DuckDuckGoChat } from '../util/ddg';
 import { GoogleLens } from '../util/lens';
@@ -553,6 +554,36 @@ elysia.get('/lyrics', async ({ query }) => {
 	}),
 	headers: t.Object({
 		authorization: t.String()
+	}),
+})
+
+elysia.get('/convertCurrency', async ({ query: { amount, from, to } }) => {
+	const rates = await loadExchangeRates();
+
+	if (!isValidCurrency(from, rates)) {
+		return { error: `Invalid source currency "${from}"` };
+	}
+
+	if (!isValidCurrency(to, rates)) {
+		return { error: `Invalid target currency "${to}"` };
+	}
+
+	const fromCurrency = findCurrency(from, rates)!;
+	const toCurrency = findCurrency(to, rates)!;
+
+	const result = amount * (toCurrency.value / fromCurrency.value);
+
+	return {
+		from: { ...fromCurrency, formatted: `${numeral(amount).format('0,0')}${fromCurrency.unit}` },
+		to: { ...toCurrency, formatted: `${numeral(result).format('0,0.0000')}${toCurrency.unit}` },
+		amount,
+		result,
+	};
+}, {
+	query: t.Object({
+		from: t.String(),
+		to: t.String(),
+		amount: t.Number()
 	}),
 })
 

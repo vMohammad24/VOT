@@ -1,4 +1,4 @@
-# vot
+# VOT
 
 To install dependencies:
 
@@ -19,8 +19,22 @@ Then run:
 bunx prisma db push
 ```
 
-To run (normally):
+## Production
 
 ```bash
 docker compose --profile prod up -d
+```
+
+## Development:
+
+### For services:
+
+```bash
+docker compose --profile dev up -d
+```
+
+### For the bot:
+
+```bash
+bun dev
 ```
