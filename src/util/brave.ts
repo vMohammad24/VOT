@@ -651,13 +651,19 @@ const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles
 	}
 };
 
+function extractData(data: string) {
+	const lookFor = 'data: [';
+	const index = data.indexOf(lookFor);
+	const endIndex = data.indexOf('form: null,', index);
+	let end = data.substring(index + lookFor.length - 1, endIndex).trim();
+	end = end.substring(0, end.length - 1);
+	return end;
+}
+
 export async function searchBrave(query: string, params?: string) {
 	const data = await getQueryResult(query, 'query', params);
 	if (typeof data == 'string') {
-		const lookFor = 'const data = ';
-		const index = data.indexOf(lookFor);
-		const endIndex = data.indexOf('];', index);
-		const end = data.substring(index + lookFor.length, endIndex + 1);
+		const end = extractData(data);
 		try {
 			const json = new Function(`"use strict";return ${end}`)()[1] as BraveSearchResult;
 			await redis.set(`brave:${query}`, JSON.stringify(json), 'EX', 60 * 60);
@@ -673,10 +679,7 @@ export async function searchBrave(query: string, params?: string) {
 export async function searchBraveImages(query: string) {
 	const data = await getQueryResult(query, 'images');
 	if (typeof data == 'string') {
-		const lookFor = 'const data = ';
-		const index = data.indexOf(lookFor);
-		const endIndex = data.indexOf('];', index);
-		const end = data.substring(index + lookFor.length, endIndex + 1);
+		const end = extractData(data);
 		const json = new Function(`"use strict";return ${end}`)()[1] as BraveSearchImages;
 		await redis.set(`braveImages:${query}`, JSON.stringify(json), 'EX', 60 * 60);
 		return json;
@@ -688,10 +691,7 @@ export async function searchBraveImages(query: string) {
 export async function searchBraveGoggles(query: string) {
 	const data = await getQueryResult(query, 'goggles');
 	if (typeof data == 'string') {
-		const lookFor = 'const data = ';
-		const index = data.indexOf(lookFor);
-		const endIndex = data.indexOf('];', index);
-		const end = data.substring(index + lookFor.length, endIndex + 1);
+		const end = extractData(data);
 		const json = new Function(`"use strict";return ${end}`)()[1];
 		await redis.set(`braveImages:${query}`, JSON.stringify(json), 'EX', 60 * 60);
 		return json as BraveSearchGoggles;
