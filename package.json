@@ -65,7 +65,6 @@
     "tough-cookie": "latest",
     "turndown": "latest",
     "user-agents": "latest",
-    "utf-8-validate": "latest",
     "zlib-sync": "latest"
   },
   "trustedDependencies": [
@@ -79,7 +78,6 @@
     "sharp",
     "ssh2",
     "tesseract.js",
-    "utf-8-validate",
     "zlib-sync"
   ]
 }
