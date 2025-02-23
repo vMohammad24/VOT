@@ -11,7 +11,7 @@ RUN apt-get update -o Acquire::ForceIPv4=true && apt-get install -y \
 
 RUN  apt-get update && \
     apt-get install -y \
-    google-chrome-stable \
+    chromium \
     build-essential \
     python3 \
     python3-dev \
