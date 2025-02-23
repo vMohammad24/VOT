@@ -32,6 +32,7 @@ export interface DDGAIRes {
 
 export const ddgModels = {
 	'gpt-4o-mini': 'GPT-4o Mini',
+	'o3-mini': 'GPT-o3 Mini',
 	'claude-3-haiku-20240307': 'Claude 3 Haiku',
 	'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo': 'Llama 3.1 70B',
 	'mistralai/Mixtral-8x7B-Instruct-v0.1': 'Mixtral',
@@ -151,7 +152,7 @@ export class DuckDuckGoChat {
 							}
 						}
 					});
-				} catch (e) {}
+				} catch (e) { }
 			});
 			res.data.on('end', () => {
 				response = responses
