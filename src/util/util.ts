@@ -75,7 +75,7 @@ export const rgbToHex = ([r, g, b]: RGB) => {
 
 export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
 	const time = Date.now();
-	const scale = 0.1; // Scale down the image to 10% of its original size
+	const scale = 0.1;
 	const canvas = createCanvas(img.width * scale, img.height * scale);
 	const ctx = canvas.getContext('2d');
 
