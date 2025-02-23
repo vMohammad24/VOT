@@ -11,7 +11,7 @@ RUN apt-get update -o Acquire::ForceIPv4=true && apt-get install -y \
 
 RUN apt-get update && \
     apt-get install -y \
-    chromium-browser \
+    chromium \
     build-essential \
     python3 \
     --no-install-recommends && \
