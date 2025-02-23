@@ -77,25 +77,23 @@ export default {
 			}
 		});
 
-		let timeElapsed = 0; // Track time in seconds
+		let timeElapsed = 0;
 		const interval = setInterval(async () => {
 			if (cashedOut) {
 				clearInterval(interval);
 				return;
 			}
 
-			// Determine multiplier increase based on time elapsed
 			if (timeElapsed < 5) {
-				multiplier += 0.1; // Phase 1: 0-5 seconds, increase by 0.1 per second
+				multiplier += 0.1;
 			} else if (timeElapsed < 10) {
-				multiplier += 0.2; // Phase 2: 5-10 seconds, increase by 0.2 per second
+				multiplier += 0.2;
 			} else {
-				multiplier += 0.5; // Phase 3: 10+ seconds, increase by 0.5 per second
+				multiplier += 0.5;
 			}
 
-			timeElapsed++; // Increment the time tracker
+			timeElapsed++;
 
-			// Check if the game has crashed
 			if (multiplier >= crashPoint) {
 				clearInterval(interval);
 				eco.balance -= bet;
@@ -108,10 +106,9 @@ export default {
 				await rMsg.edit({ embeds: [embed], components: [] });
 				collector.stop();
 			} else {
-				// Update embed message with the current multiplier
 				embed.setDescription(`Multiplier: ${multiplier.toFixed(2)}x\nPress "Cash Out" to secure your winnings!`);
 				await rMsg.edit({ embeds: [embed] });
 			}
-		}, 1000); // Interval set to 1000ms (1 second)
+		}, 1000);
 	},
 } as ICommand;
