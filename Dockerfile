@@ -9,9 +9,11 @@ RUN apt-get update -o Acquire::ForceIPv4=true && apt-get install -y \
     apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
+RUN curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=arm64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list && \
+    apt-get update && \
     apt-get install -y \
-    chromium \
+    google-chrome-stable \
     build-essential \
     python3 \
     --no-install-recommends && \
