@@ -39,6 +39,7 @@ export async function launchPuppeteer() {
 					' --disable-site-isolation-trials',
 					'--enable-features=WebContentsForceDark',
 				],
+
 			});
 	}
 	return browser;
