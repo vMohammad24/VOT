@@ -96,6 +96,7 @@ services:
     image: hlohaus789/g4f:latest-slim
     container_name: g4f
     restart: always
+    command: python -m g4f --debug --port 8080
     profiles:
       - prod
     networks:
