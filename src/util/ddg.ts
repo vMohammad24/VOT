@@ -33,9 +33,9 @@ export interface DDGAIRes {
 export const ddgModels = {
 	'gpt-4o-mini': 'GPT-4o Mini',
 	'o3-mini': 'GPT-o3 Mini',
-	'claude-3-haiku-20240307': 'Claude 3 Haiku',
-	'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo': 'Llama 3.1 70B',
-	'mistralai/Mixtral-8x7B-Instruct-v0.1': 'Mixtral',
+	'claude-3-haiku-20240307': 'Claude3 Haiku',
+	'meta-llama/Llama-3.3-70B-Instruct-Turbo': 'Llama 3.170B',
+	'mistralai/Mistral-Small-24B-Instruct-2501': 'Mixtral',
 };
 
 export async function askDDG(
@@ -111,7 +111,7 @@ export class DuckDuckGoChat {
 		this.vqd = response.headers['x-vqd-4'];
 	}
 
-	public async chat(query: string) {
+	public async chat(query: string): Promise<string> {
 		if (!this.vqd) {
 			await this.generateVQD();
 		}
@@ -170,6 +170,10 @@ export class DuckDuckGoChat {
 				reject(err);
 			});
 		});
+
+		if (!response || response.length < 1) {
+			return await this.chat(query);
+		}
 		return response;
 	}
 

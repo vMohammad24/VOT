@@ -1,31 +1,13 @@
 import axios from 'axios';
-import { redis } from "..";
 
-const redisKey = 'statsfm';
-const url = 'https://api.stats.fm/api/v1';
 
+const url = 'https://api.stats.fm';
+const usersEndpoint = `${url}/api/v1/users`;
 const axiosInstance = axios.create({
-    baseURL: url,
+    baseURL: usersEndpoint,
     timeout: 10000,
     validateStatus: () => true
 });
-
-async function getCached(key: string) {
-    return await redis.get(`${redisKey}:${key}`);
-}
-
-async function setCached(key: string, value: string) {
-    return await redis.set(`${redisKey}:${key}`, value, 'EX', 60);
-}
-
-async function fetchAndCache(endpoint: string, cacheKey: string) {
-    const cachedData = await getCached(cacheKey);
-    if (cachedData) return JSON.parse(cachedData);
-
-    const response = await axiosInstance.get(endpoint);
-    await setCached(cacheKey, JSON.stringify(response.data));
-    return response.data;
-}
 
 interface Album {
     id: number;
@@ -145,7 +127,7 @@ interface UserResponse {
 }
 
 export async function getUser(userId: string): Promise<UserResponse> {
-    const response = await axiosInstance.get(`/users/${userId}`);
+    const response = await axiosInstance.get(`/${userId}`);
     return response.data;
 }
 
@@ -161,7 +143,7 @@ interface TopTracksResponse {
 }
 
 export async function getUserTopTracks(userId: string, range: 'weeks' | 'months'): Promise<TopTracksResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/top/tracks?range=${range}`);
+    const response = await axiosInstance.get(`/${userId}/top/tracks?range=${range}`);
     return response.data;
 }
 
@@ -192,28 +174,28 @@ interface TopArtistsResponse {
 }
 
 export async function getUserTopArtists(userId: string): Promise<TopArtistsResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/top/artists?range=weeks`);
+    const response = await axiosInstance.get(`/${userId}/top/artists?range=weeks`);
     return response.data;
 }
 
 export async function getUserTopArtistTracks(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/top/artists/${artistId}/tracks`);
+    return await axiosInstance.get(`/${userId}/top/artists/${artistId}/tracks`);
 }
 
 export async function getUserTopArtistAlbums(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/top/artists/${artistId}/albums`);
+    return await axiosInstance.get(`/${userId}/top/artists/${artistId}/albums`);
 }
 
 export async function getUserTopAlbums(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/top/albums`);
+    return await axiosInstance.get(`/${userId}/top/albums`);
 }
 
 export async function getUserTopAlbumTracks(userId: string, albumId: string) {
-    return await axiosInstance.get(`/users/${userId}/top/albums/${albumId}/tracks`);
+    return await axiosInstance.get(`/${userId}/top/albums/${albumId}/tracks`);
 }
 
 export async function getUserTopGenres(userId: string): Promise<TopGenresResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/top/genres?range=weeks`);
+    const response = await axiosInstance.get(`/${userId}/top/genres?range=weeks`);
     return response.data;
 }
 
@@ -237,12 +219,12 @@ interface StreamsResponse {
 }
 
 export async function getUserStreams(userId: string): Promise<StreamsResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/streams`);
+    const response = await axiosInstance.get(`/${userId}/streams`);
     return response.data;
 }
 
 export async function getUserCurrentStream(userId: string): Promise<CurrentStreamResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/streams/current`);
+    const response = await axiosInstance.get(`/${userId}/streams/current`);
     return response.data;
 }
 
@@ -262,109 +244,106 @@ interface RecentStreamsResponse {
 }
 
 export async function getUserRecentStreams(userId: string): Promise<RecentStreamsResponse> {
-    const response = await axiosInstance.get(`/users/${userId}/streams/recent`);
+    const response = await axiosInstance.get(`/${userId}/streams/recent`);
     return response.data;
 }
 
 export async function getUserStreamStats(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/stats`);
+    return await axiosInstance.get(`/${userId}/streams/stats`);
 }
 
 export async function getUserStreamStatsPerDay(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/stats/per-day`);
+    return await axiosInstance.get(`/${userId}/streams/stats/per-day`);
 }
 
 export async function getUserStreamStatsDates(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/stats/dates`);
+    return await axiosInstance.get(`/${userId}/streams/stats/dates`);
 }
 
 export async function getUserStreamTracksList(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/list`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/list`);
 }
 
 export async function getUserStreamTracksListStats(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/list/stats`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/list/stats`);
 }
 
 export async function getUserStreamTrack(userId: string, trackId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/${trackId}`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/${trackId}`);
 }
 
 export async function getUserStreamTrackStats(userId: string, trackId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/${trackId}/stats`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/${trackId}/stats`);
 }
 
 export async function getUserStreamTrackStatsPerDay(userId: string, trackId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/${trackId}/stats/per-day`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/${trackId}/stats/per-day`);
 }
 
 export async function getUserStreamTrackStatsDates(userId: string, trackId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/tracks/${trackId}/stats/dates`);
+    return await axiosInstance.get(`/${userId}/streams/tracks/${trackId}/stats/dates`);
 }
 
 export async function getUserStreamArtist(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/artists/${artistId}`);
+    return await axiosInstance.get(`/${userId}/streams/artists/${artistId}`);
 }
 
 export async function getUserStreamArtistStats(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/artists/${artistId}/stats`);
+    return await axiosInstance.get(`/${userId}/streams/artists/${artistId}/stats`);
 }
 
 export async function getUserStreamArtistStatsPerDay(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/artists/${artistId}/stats/per-day`);
+    return await axiosInstance.get(`/${userId}/streams/artists/${artistId}/stats/per-day`);
 }
 
 export async function getUserStreamArtistStatsDates(userId: string, artistId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/artists/${artistId}/stats/dates`);
+    return await axiosInstance.get(`/${userId}/streams/artists/${artistId}/stats/dates`);
 }
 
 export async function getUserStreamAlbum(userId: string, albumId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/albums/${albumId}`);
+    return await axiosInstance.get(`/${userId}/streams/albums/${albumId}`);
 }
 
 export async function getUserStreamAlbumStats(userId: string, albumId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/albums/${albumId}/stats`);
+    return await axiosInstance.get(`/${userId}/streams/albums/${albumId}/stats`);
 }
 
 export async function getUserStreamAlbumStatsPerDay(userId: string, albumId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/albums/${albumId}/stats/per-day`);
+    return await axiosInstance.get(`/${userId}/streams/albums/${albumId}/stats/per-day`);
 }
 
 export async function getUserStreamAlbumStatsDates(userId: string, albumId: string) {
-    return await axiosInstance.get(`/users/${userId}/streams/albums/${albumId}/stats/dates`);
+    return await axiosInstance.get(`/${userId}/streams/albums/${albumId}/stats/dates`);
 }
 
 export async function getUserFriends(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/friends`);
+    return await axiosInstance.get(`/${userId}/friends`);
 }
 
 export async function getUserFriendsCount(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/friends/count`);
+    return await axiosInstance.get(`/${userId}/friends/count`);
 }
 
 export async function getUserRecordsArtists(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/records/artists`);
+    return await axiosInstance.get(`/${userId}/records/artists`);
 }
 
 export async function getUserCompletedAchievements(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/achievements/completed`);
+    return await axiosInstance.get(`/${userId}/achievements/completed`);
 }
 
 export async function getUserUncompletedAchievements(userId: string) {
-    return await axiosInstance.get(`/users/${userId}/achievements/uncompleted`);
+    return await axiosInstance.get(`/${userId}/achievements/uncompleted`);
 }
 
 export async function getUserAchievement(userId: string, achievementId: string) {
-    return await axiosInstance.get(`/users/${userId}/achievements/${achievementId}`);
+    return await axiosInstance.get(`/${userId}/achievements/${achievementId}`);
 }
-
 
 export async function getSpotifyFeatures(trackId: string): Promise<SpotifyFeatures> {
-    const res = await axiosInstance.get(`/spotify/audio-features/${trackId}`);
+    const res = await axios.get(`${url}/api/v1/spotify/audio-features/${trackId}`);
     return res.data.item;
 }
-
-
 
 interface SpotifyFeatures {
     acousticness: number;
@@ -382,7 +361,6 @@ interface SpotifyFeatures {
     time_signature: number;
     valence: number;
 }
-
 
 interface PreviewArtist {
     position: number;

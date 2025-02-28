@@ -17,7 +17,10 @@
     "check": "tsc --noEmit",
     "bundle": "bun build ./src/index.ts --target bun --outfile vot.js",
     "dev": "bun --bun src/index.ts | pino-pretty",
-    "start": "bunx prisma db push --accept-data-loss && NODE_ENV=production bun --bun src/index.ts | pino-pretty"
+    "start": "bunx prisma db push --accept-data-loss && NODE_ENV=production bun --bun src/index.ts | pino-pretty",
+    "docker:dev": "docker-compose --profile dev up -d",
+    "docker:prod": "docker-compose --profile prod up -d --build",
+    "prod": "cd ~/VOT-frontend && git pull && cd ~/VOT && git pull && docker compose --profile prod up -d --build && cd ~/VOT"
   },
   "peerDependencies": {
     "typescript": "latest"
@@ -44,7 +47,7 @@
     "ioredis": "latest",
     "kazagumo": "latest",
     "kazagumo-spotify": "latest",
-    "mathjs": "^14.0.0",
+    "mathjs": "latest",
     "minimist": "latest",
     "moment-timezone": "^0.5.46",
     "nanoid": "latest",

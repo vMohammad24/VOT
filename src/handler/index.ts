@@ -115,7 +115,7 @@ export default class CommandHandler {
 		this.developers = handler.developers;
 		this.verbose = handler.verbose || false;
 		handler.commands = [];
-		handler.client.on(Events.ClientReady, async () => {
+		handler.client.once(Events.ClientReady, async () => {
 			const time = Date.now();
 			this.logger.debug('Fetching guilds...');
 			this.client.guilds.cache.map(async (guild) => {

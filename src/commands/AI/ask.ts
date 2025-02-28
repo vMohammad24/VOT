@@ -34,9 +34,11 @@ export default {
 		},
 	],
 	type: 'all',
-	cooldown: 30000,
+	cooldown: 5000,
 	async execute({ args, interaction, message, user, editReply, channel }) {
 		const question = args.get('question') as string | undefined;
+		const model = args.get('model') as string | undefined || 'gpt-4o-mini';
+
 		if (!question)
 			return {
 				content: 'Please provide a question',
@@ -50,14 +52,12 @@ export default {
 				.map((r) => `- ${r.title} - ${r.description} - ${r.url}`)
 				.join('\n');
 		}
-		const model = (args.get('model') as string) ?? 'gpt-4o-mini';
-		let ddg = collection.get(user.id);
 
+		let ddg = collection.get(user.id);
 		if (!ddg) {
-			ddg = new DuckDuckGoChat('gpt-4o-mini');
+			ddg = new DuckDuckGoChat(model);
 			collection.set(user.id, ddg);
-		}
-		if (ddg.getModel() != model) {
+		} else if (ddg.getModel() != model) {
 			try {
 				ddg.setModel(model);
 			} catch (e) {

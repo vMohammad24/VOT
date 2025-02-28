@@ -118,7 +118,62 @@ export default class SlashCommandHandler {
 					'dmPermission',
 				]);
 				command.name = cmd.name?.toLowerCase().split(" ").shift();
-				if (initCommands.has(command.name!)) {
+
+				if (cmd.advancedChoices === true && command.options) {
+					const optionsWithChoices = command.options.filter((opt: any) => opt.choices && opt.choices.length > 0);
+
+					if (optionsWithChoices.length > 0) {
+						const baseOptions = command.options.filter((opt: any) => !opt.choices || opt.choices.length === 0);
+						const newOptions: any[] = [];
+
+						for (const choiceOption of optionsWithChoices) {
+							for (const choice of choiceOption.choices) {
+								const choiceName = choice.name.toLowerCase();
+
+								if (choiceName.includes(' ')) {
+									const parts = choiceName.split(' ');
+									const groupName = parts[0].toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 32) || 'group';
+									const subName = parts.slice(1).join('_').toLowerCase().replace(/[^a-z0-9_]/g, '').substring(0, 32) || 'option';
+
+									let group = newOptions.find(opt => opt.name === groupName &&
+										opt.type === ApplicationCommandOptionType.SubcommandGroup);
+
+									if (!group) {
+										group = {
+											name: groupName,
+											description: `${groupName} options for ${cmd.name}`,
+											type: ApplicationCommandOptionType.SubcommandGroup,
+											options: []
+										};
+										newOptions.push(group);
+									}
+
+									group.options.push({
+										name: subName,
+										description: `${cmd.description} using ${choice.name}`,
+										type: ApplicationCommandOptionType.Subcommand,
+										_originalValue: choice.value,
+										_optionName: choiceOption.name,
+										options: baseOptions.map((opt: ApplicationCommandOption) => ({ ...opt }))
+									});
+								} else {
+									const validName = choiceName.replace(/[^a-z0-9]/g, '').substring(0, 32) || 'option';
+
+									newOptions.push({
+										name: validName,
+										description: `${cmd.description} using ${choice.name}`,
+										type: ApplicationCommandOptionType.Subcommand,
+										_originalValue: choice.value,
+										_optionName: choiceOption.name,
+										options: baseOptions.map((opt: ApplicationCommandOption) => ({ ...opt }))
+									});
+								}
+							}
+						}
+
+						command.options = newOptions;
+					}
+				} else if (initCommands.has(command.name!)) {
 					const oldCmd = initCommands.get(command.name!);
 					command.options = merge(oldCmd!.options!, command.options!, (a, b) => a.name === b.name);
 				}
@@ -248,6 +303,7 @@ export default class SlashCommandHandler {
 			// 	}
 			// 	return;
 			// }
+			this.commands.forEach(c => c.interactionHandler && c.interactionHandler(interaction));
 			if (interaction.isCommand() || interaction.isContextMenuCommand()) {
 				const command = this.commands.find((cmd) => {
 					if (interaction.isContextMenuCommand()) return cmd.id! === interaction.commandId;

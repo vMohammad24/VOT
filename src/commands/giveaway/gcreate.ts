@@ -1,12 +1,12 @@
 import {
 	ActionRowBuilder,
-	Events,
 	GuildMember,
 	ModalBuilder,
 	TextInputBuilder,
 	TextInputStyle,
 	type GuildTextBasedChannel,
 } from 'discord.js';
+import commandHandler from '../..';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { createGiveaway } from '../../util/giveaways';
 import { parseTime } from '../../util/util';
@@ -16,56 +16,54 @@ export default {
 	name: 'gcreate',
 	slashOnly: true,
 	perms: ['Administrator'],
-	init: async (handler) => {
-		handler.client.on(Events.InteractionCreate, async (interaction) => {
-			if (!interaction.isModalSubmit()) return;
-			if (interaction.customId !== 'gcreate') return;
-			const title = interaction.fields.getTextInputValue('gcreate-title');
-			const description = interaction.fields.getTextInputValue('gcreate-description');
-			const duration = interaction.fields.getTextInputValue('gcreate-duration');
-			const winners = interaction.fields.getTextInputValue('gcreate-winners');
-			const channel = interaction.channel;
-			if (!channel) return;
-			if (!title || !description || !duration || !winners) {
-				await interaction.reply({
-					content: 'Please fill out all the fields',
-					ephemeral: true,
-				});
-				return;
-			}
-			const durationValue = parseTime(duration);
-			if (durationValue > 262_980_1) {
-				await interaction.reply({
-					content: 'Duration must be at most a month',
-					ephemeral: true,
-				});
-				return;
-			}
-			const winnersValue = parseInt(winners);
-			if (isNaN(winnersValue)) {
-				await interaction.reply({ content: 'Invalid winners', ephemeral: true });
-				return;
-			}
-			if (winnersValue < 1) {
-				await interaction.reply({
-					content: 'There must be at least 1 winner',
-					ephemeral: true,
-				});
-				return;
-			}
-			const ga = await createGiveaway(
-				handler,
-				interaction.member as GuildMember,
-				title,
-				description,
-				durationValue,
-				winnersValue,
-				channel as GuildTextBasedChannel,
-			);
+	interactionHandler: async (interaction) => {
+		if (!interaction.isModalSubmit()) return;
+		if (interaction.customId !== 'gcreate') return;
+		const title = interaction.fields.getTextInputValue('gcreate-title');
+		const description = interaction.fields.getTextInputValue('gcreate-description');
+		const duration = interaction.fields.getTextInputValue('gcreate-duration');
+		const winners = interaction.fields.getTextInputValue('gcreate-winners');
+		const channel = interaction.channel;
+		if (!channel) return;
+		if (!title || !description || !duration || !winners) {
 			await interaction.reply({
-				content: `Created giveaway in <#${ga.channelId}>`,
+				content: 'Please fill out all the fields',
 				ephemeral: true,
 			});
+			return;
+		}
+		const durationValue = parseTime(duration);
+		if (durationValue > 262_980_1) {
+			await interaction.reply({
+				content: 'Duration must be at most a month',
+				ephemeral: true,
+			});
+			return;
+		}
+		const winnersValue = parseInt(winners);
+		if (isNaN(winnersValue)) {
+			await interaction.reply({ content: 'Invalid winners', ephemeral: true });
+			return;
+		}
+		if (winnersValue < 1) {
+			await interaction.reply({
+				content: 'There must be at least 1 winner',
+				ephemeral: true,
+			});
+			return;
+		}
+		const ga = await createGiveaway(
+			commandHandler,
+			interaction.member as GuildMember,
+			title,
+			description,
+			durationValue,
+			winnersValue,
+			channel as GuildTextBasedChannel,
+		);
+		await interaction.reply({
+			content: `Created giveaway in <#${ga.channelId}>`,
+			ephemeral: true,
 		});
 	},
 	execute: async ({ interaction, handler }) => {

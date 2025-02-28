@@ -64,12 +64,60 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 	});
 	const messageArgs = message ? await parseMessageArgs(message.content, command, ctx.user) : [];
 	let argIndex = 0;
+
 	const validateInteractionOptions = async (options: ApplicationCommandOption[]) => {
 		for (let i = 0; i < options.length; i++) {
 			const option = options[i];
 			if (!option) continue;
 			let argument: Argument<any> = new Argument(null);
+
 			if (interaction) {
+				if (command.advancedChoices) {
+					try {
+						const subcommandGroup = interaction.options.getSubcommandGroup(false);
+						const subcommand = interaction.options.getSubcommand(false);
+
+						if (subcommand) {
+							if (!subcommandGroup) {
+								for (const opt of command.options || []) {
+									if (opt.name === subcommand &&
+										'type' in opt &&
+										opt.type === ApplicationCommandOptionType.Subcommand) {
+
+										if ('_originalValue' in opt && '_optionName' in opt) {
+											// @ts-ignore
+											args.set(opt._optionName, new Argument(opt._originalValue));
+											break;
+										}
+									}
+								}
+							}
+							else {
+								for (const optGroup of command.options || []) {
+									if (optGroup.name === subcommandGroup &&
+										optGroup.type === ApplicationCommandOptionType.SubcommandGroup) {
+
+										for (const subCmd of optGroup.options || []) {
+											if (subCmd.name === subcommand &&
+												'type' in subCmd &&
+												subCmd.type === ApplicationCommandOptionType.Subcommand) {
+												if ('_originalValue' in subCmd && '_optionName' in subCmd) {
+													// @ts-ignore
+													args.set(subCmd._optionName, new Argument(subCmd._originalValue));
+													break;
+												}
+											}
+										}
+										break;
+									}
+								}
+							}
+						}
+					} catch (e) {
+						console.error("Error processing advanced choices:", e);
+					}
+				}
+
 				switch (option.type) {
 					case ApplicationCommandOptionType.String:
 						const strValue = interaction.options.getString(option.name, option.required) || null;
@@ -428,13 +476,12 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 									} else if (/^\d+$/.test(roleArg)) {
 										roleVal = message.guild?.roles.cache.get(roleArg) || null;
 									} else {
-										// partial name
+
 										roleVal = message.guild?.roles.cache.find(role =>
 											role.name.toLowerCase().includes(roleArg.toLowerCase()) ||
 											role.name.toLowerCase().startsWith(roleArg.toLowerCase())
 										) || null;
 
-										// fuzzy
 										if (!roleVal) {
 											const roles = message.guild?.roles.cache
 												.filter(role =>
@@ -832,6 +879,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 			}
 		}
 	}
+
 	await validateInteractionOptions(options);
 	ctx.args = args;
 	return true;

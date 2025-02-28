@@ -1,5 +1,6 @@
 import {
 	ContextMenuCommandType,
+	Interaction,
 	InteractionEditReplyOptions,
 	InteractionReplyOptions,
 	MessageContextMenuCommandInteraction,
@@ -13,6 +14,7 @@ export interface IContextCommand {
 	disabled?: boolean;
 	type: ContextMenuCommandType;
 	context?: 'dmOnly' | 'guildOnly' | 'installable' | 'all';
+	interactionHandler?: (interaction: Interaction) => Promise<void> | void | null | undefined;
 	execute: (
 		interaction: MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
 	) => Promise<any | InteractionReplyOptions | string | InteractionEditReplyOptions>;
