@@ -11,7 +11,7 @@ vot.wtf {
 
 api.vot.wtf {
     tls /etc/caddy/certs/cloudflare.crt /etc/caddy/certs/cloudflare.key
-    reverse_proxy vot:8080 {
+    reverse_proxy vot:8000 {
         header_up X-Forwarded-For {remote_host}
     }
 }

@@ -9,7 +9,6 @@ export default async function (command: ICommand, ctx: CommandContext) {
 	const { userTier } = command;
 	const {
 		user,
-		handler: { logger },
 	} = ctx;
 	if (userTier != 'Normal') {
 		const u = await getUserByID(user.id, { tier: true });

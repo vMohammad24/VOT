@@ -10,7 +10,7 @@ services:
     networks:
       - vot
     expose:
-      - 8080
+      - 8000
     user: '1001:1001'
     depends_on:
       - postgres
@@ -92,6 +92,18 @@ services:
       - ./caddy/config:/config # Caddy config storage
       - ./caddy/certs:/etc/caddy/certs # (Optional) Cloudflare Origin Certs
 
+  g4f:
+    image: hlohaus789/g4f:latest
+    container_name: g4f
+    restart: always
+    profiles:
+      - prod
+    networks:
+      - vot
+    expose:
+      - 8080
+    shm_size: 2g
+
   postgres_dev:
     image: postgres:17
     container_name: postgres
@@ -106,6 +118,18 @@ services:
       - '5432:5432'
     volumes:
       - ./db/data:/var/lib/postgresql/data
+
+  g4f_dev:
+    image: hlohaus789/g4f:latest
+    container_name: g4f_dev
+    restart: unless-stopped
+    profiles:
+      - dev
+    ports:
+      - '8080:8080'
+      - '1337:1337'
+    shm_size: 2g
+
   lavalink_dev:
     image: ghcr.io/lavalink-devs/lavalink:latest
     container_name: lavalink
@@ -137,3 +161,5 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  g4f_har_and_cookies:
+  g4f_generated_images:

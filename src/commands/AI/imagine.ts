@@ -1,10 +1,11 @@
 import axios from "axios";
 import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
+import { generateImage } from "../../util/ai";
 import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
-    description: 'Image generation (Premium Only)',
+    description: 'Image generation using flux-schnell',
     options: [
         {
             name: 'prompt',
@@ -13,7 +14,6 @@ export default {
             required: true
         }
     ],
-    userTier: 'Premium',
     type: 'all',
     execute: async ({ args, user, editReply, interaction, message }) => {
         const prompt = args.get('prompt') as string | undefined;
@@ -21,24 +21,10 @@ export default {
             content: 'Please provide a prompt',
             ephemeral: true
         }
-        const res = await axios.post('https://api.evade.rest/image', {
-            prompt
-        }, {
-            headers: {
-                Authorization: process.env.EVADE_API_KEY!
-            },
-            params: {
-                watermark: false
-            },
-            responseType: 'arraybuffer'
-        })
-        if (res.status !== 200) return {
-            content: 'Failed to generate image',
-            ephemeral: true
-        }
-        const buffer = Buffer.from(res.data)
+        const imageUrl = (await generateImage(prompt))[0];
+        const image = await axios.get(imageUrl, { responseType: 'arraybuffer' });
         return {
-            embeds: [await new VOTEmbed()
+            embeds: [new VOTEmbed()
                 .setTitle('Image Generation')
                 .setDescription(`> ${prompt}`)
                 .setTimestamp()
@@ -46,8 +32,8 @@ export default {
                 .author(user)
             ],
             files: [{
-                attachment: buffer,
-                name: 'image.png'
+                attachment: imageUrl,
+                name: 'VOT_GENERATED_IMAGE.png'
             }],
         }
     }

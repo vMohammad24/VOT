@@ -5,6 +5,7 @@ import type {
 	ChatInputCommandInteraction,
 	Guild,
 	GuildMember,
+	Interaction,
 	InteractionReplyOptions,
 	InteractionResponse,
 	Message,
@@ -32,9 +33,11 @@ export default interface ICommand {
 	slashOnly?: boolean;
 	shouldCache?: boolean;
 	needsPlayer?: boolean;
+	advancedChoices?: boolean;
 	type?: 'dmOnly' | 'guildOnly' | 'installable' | 'all' | 'legacy';
 	options?: ApplicationCommandOption[];
 	init?: (handler: CommandHandler) => Promise<void> | void | null | undefined;
+	interactionHandler?: (interaction: Interaction) => Promise<void> | void | null | undefined;
 	autocomplete?: (interaction: AutocompleteInteraction) => Promise<void> | void | null | undefined;
 	execute: (ctx: CommandContext) => Promise<MessagePayload | string | InteractionReplyOptions | null | undefined>;
 }

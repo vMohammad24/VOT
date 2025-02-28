@@ -61,11 +61,15 @@ export default (server: Elysia<'brave'>) => {
 			const { query } = s;
 			const search = await searchBrave(query);
 			const { results } = search.data.body.response.web;
-			return results.map((result) => ({
+			const res = results.map((result) => ({
 				title: turndown.turndown(result.title),
 				description: turndown.turndown(result.description),
 				url: result.url,
 			}));
+			return {
+				formatted: res,
+				raw: results,
+			}
 		},
 		{
 			query: t.Object({
@@ -77,11 +81,14 @@ export default (server: Elysia<'brave'>) => {
 			detail: {
 				description: 'Search for a query using Brave search',
 			},
-			response: t.Array(t.Object({
-				title: t.String(),
-				description: t.String(),
-				url: t.String(),
-			}))
+			response: t.Object({
+				formatted: t.Array(t.Object({
+					title: t.String(),
+					description: t.String(),
+					url: t.String(),
+				})),
+				raw: t.Any()
+			})
 		},
 	);
 
