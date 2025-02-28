@@ -102,6 +102,7 @@ services:
       - vot
     expose:
       - 8080
+      - 1337
     shm_size: 2g
 
   postgres_dev:
