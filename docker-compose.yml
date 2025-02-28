@@ -93,7 +93,7 @@ services:
       - ./caddy/certs:/etc/caddy/certs # (Optional) Cloudflare Origin Certs
 
   g4f:
-    image: hlohaus789/g4f:latest=slim
+    image: hlohaus789/g4f:latest-slim
     container_name: g4f
     restart: always
     profiles:
