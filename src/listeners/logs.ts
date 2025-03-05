@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Guild, type GuildTextBasedChannel } from 'discord.js';
 import type { IListener } from '../handler/ListenerHandler';
 import { getGuild } from '../util/database';
@@ -30,7 +29,6 @@ export default {
 				.setTimestamp();
 			if (message.attachments.size > 0) embed.setDescription(`NOTE: This message contained attachments, that are gonna be present in this message`);
 			const messageBefore = (await message.channel.messages.fetch({ before: message.id, limit: 1 }))?.first();
-			const attachements = await Promise.all(message.attachments.map(a => a.url).map(async (url) => Buffer.from((await axios.get(url, { responseType: 'arraybuffer' })).data)).map(async (buffer) => ({ attachment: await buffer, name: 'attachment.png' })));
 			logChannel.send({
 				embeds: [embed],
 				components: messageBefore ? [
@@ -38,7 +36,7 @@ export default {
 						new ButtonBuilder().setLabel('Jump to Surrounding').setStyle(ButtonStyle.Link).setEmoji('🔍').setURL(messageBefore.url)
 					])
 				] : [],
-				files: attachements
+				files: (message.attachments.values().toArray().filter(a => a.size < 25_000_000))
 			});
 		});
 		client.on('messageUpdate', async (oldMessage, newMessage) => {

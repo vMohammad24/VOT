@@ -30,9 +30,17 @@ export default {
         }
     ],
     execute: async ({ args }) => {
-        const url = args.get('url') as string;
+        let url = args.get('url') as string;
         const shouldEmbed = (args.get('embed') as boolean || true);
         const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":';
+        if (!url.includes("://www.")) {
+            url = url.replace("://", "://www.");
+        }
+        if (url.includes("/reel/")) {
+            url = url.replace("/reel/", "/reels/");
+        }
+
+        if (!url.startsWith(requireStartWith)) return { content: "This is not a valid instagram reel url", ephemeral: true };
         const res = await axios.get(url, {
             headers: {
                 'User-Agent': userAgent.random().toString(),
