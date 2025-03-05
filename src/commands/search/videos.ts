@@ -9,7 +9,7 @@ const turndownService = new TurnDownService();
 
 export default {
 	description: 'Search for videos on the internet',
-	aliases: ['yt', 'youtube'],
+	aliases: ['yt', 'youtube', 'video'],
 	options: [
 		{
 			name: 'query',
