@@ -276,7 +276,6 @@ export default {
                     ephemeral: true
                 }
             }
-            console.log(results[0])
             query = results[0].appid;
         }
         const [game, protonDB] = await Promise.all([

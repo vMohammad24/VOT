@@ -17,7 +17,7 @@ export default {
 	perms: ['CreateGuildExpressions'],
 	aliases: ['yoinkemoji', 'stealemoji', 'steal'],
 	execute: async ({ args, interaction, guild, member, message }) => {
-		await interaction?.deferReply();
+		;
 		let text = args.get('emojis') as string | undefined;
 		const err = {
 			content: 'Please provide some emojis to yoink',

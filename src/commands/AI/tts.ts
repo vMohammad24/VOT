@@ -87,7 +87,6 @@ export default {
 		const text = args.get('text') as string | undefined;
 		const voice = (args.get('voice') as string | undefined) || 'en_us_001';
 		if (!text) return { ephemeral: true, content: 'Please provide text to convert.' };
-		await interaction?.deferReply();
 
 
 		const matchedVoices = fuzzySearch(voice, voices);

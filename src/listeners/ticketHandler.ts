@@ -57,7 +57,6 @@ export default {
 					return;
 				}
 			} else if (interaction.customId == 'cancel_close_req') {
-				await interaction.deferReply();
 				const close = await cancelCloseTimer(interaction.channel as GuildTextBasedChannel);
 				if (close && close.error) {
 					const embed = new EmbedBuilder().setTitle('Error').setDescription(close.error).setColor('DarkRed');

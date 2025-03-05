@@ -82,7 +82,6 @@ export default {
 	context: 'all',
 	description: 'Quote a message',
 	execute: async (interaction: MessageContextMenuCommandInteraction) => {
-		await interaction.deferReply();
 		const message = interaction.targetMessage;
 		if (!message) {
 			return { content: "Couldn't find the message" };
