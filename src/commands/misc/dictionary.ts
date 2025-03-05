@@ -25,7 +25,7 @@ export default {
 		const reqUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 		const res = await axios.get(reqUrl);
 		if (res.status == 404) {
-			await interaction?.deferReply();
+			;
 			const urbanRes = await axios.get(`https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(word)}`);
 			const { data: urbanData, status } = urbanRes;
 			if (status == 404) {

@@ -106,7 +106,7 @@ export default {
 				responseType: 'arraybuffer',
 			})
 		).data;
-		await interaction?.deferReply();
+		;
 		if (!file.contentType.endsWith('gif')) {
 			oFile = await compressImage(oFile);
 		} else {

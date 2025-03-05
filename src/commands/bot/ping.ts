@@ -7,7 +7,7 @@ export default {
 	shouldCache: true,
 	execute: async ({ interaction, message, handler }) => {
 		const messageLatency = Math.abs(Date.now() - (interaction?.createdTimestamp || message?.createdTimestamp)!)
-		await interaction?.deferReply();
+			;
 		const wsLatency = handler.client.ws.ping;
 		const pStart = Date.now();
 		await handler.prisma.$queryRaw`SELECT 1`;

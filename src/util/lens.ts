@@ -89,7 +89,6 @@ export class GoogleLens {
 
 	async searchByUrl(url: string): Promise<any> {
 		const response = await this.session.get(`${this.url}/uploadbyurl`, { params: { url }, maxRedirects: true });
-		console.log(response)
 		const prerenderScript = await this.getPrerenderScript(response.data);
 		return this.parsePrerenderScript(prerenderScript);
 	}

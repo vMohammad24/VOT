@@ -16,7 +16,7 @@ export default {
 	aliases: ['sp'],
 	type: 'all',
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
-		await interaction?.deferReply();
+		;
 
 		const res = await getSpotifyRPC(user.id);
 		if (res.error) {

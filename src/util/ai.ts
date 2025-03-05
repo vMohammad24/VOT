@@ -44,6 +44,5 @@ export const generateImage = async (query: string, model?: string): Promise<stri
         provider: model === defaultModel ? "BlackForestLabsFlux1Schnell" : null,
         response_format: "url"
     })
-    console.log(res.data)
     return res.data.data.map((a: any) => a.url);
 }

@@ -312,8 +312,6 @@ export default {
 					waitUntil: 'networkidle2'
 				})
 				const content = await page.$('pre').then(e => e?.evaluate(node => node.textContent));
-				// await page.close();
-				// console.log(content)
 				const trending = JSON.parse(content) as TikTokExploreResponse;
 				if (!trending) return { content: 'Failed to fetch Tiktok trending videos', ephemeral: true };
 

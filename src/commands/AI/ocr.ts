@@ -54,7 +54,7 @@ export default {
 		const attachment = args.get('image') as Attachment | undefined;
 		const lang = (args.get('lang') as string | undefined) || 'eng';
 		if (!attachment) return { ephemeral: true, content: 'Please provide an image to extract text from' };
-		await interaction?.deferReply();
+		;
 		let text = '';
 		let conf = 0;
 		try {

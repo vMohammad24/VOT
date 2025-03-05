@@ -328,7 +328,7 @@ export default {
 		const query = args.get('query') as string;
 		if (!service) return { ephemeral: true, content: `Please provide a service to lookup the user in.` };
 		if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
-		await interaction?.deferReply();
+		;
 		const ems = await handler.client.application?.emojis.fetch();
 		const regex = /<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
 		switch (service) {

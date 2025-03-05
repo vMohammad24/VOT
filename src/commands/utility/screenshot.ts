@@ -74,7 +74,7 @@ export default {
 				],
 				content: `-# Took ${Date.now() - time}ms`,
 			};
-		await interaction?.deferReply();
+		;
 		const page = await newPage();
 		try {
 			await page.goto(url, {
