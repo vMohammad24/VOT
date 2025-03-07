@@ -301,15 +301,15 @@ elysia.get('/ipinfo', async ({ query }) => {
 })
 
 function encrypt(text: string, secretKey: string) {
-	const iv = randomBytes(12); // Generate a 12-byte IV
+	const iv = randomBytes(12);
 	const cipher = createCipheriv(
 		'aes-256-gcm',
-		Uint8Array.from(Buffer.from(secretKey, 'hex')), // Ensure Uint8Array
-		Uint8Array.from(iv) // Ensure Uint8Array
+		Uint8Array.from(Buffer.from(secretKey, 'hex')),
+		Uint8Array.from(iv)
 	);
 	let encrypted = cipher.update(text, 'utf-8', 'hex');
 	encrypted += cipher.final('hex');
-	const authTag = cipher.getAuthTag(); // Get the authentication tag
+	const authTag = cipher.getAuthTag();
 
 	return {
 		iv: iv.toString('hex'),
@@ -324,7 +324,7 @@ function decrypt(encryptedData: string, secretKey: string, iv: string, authTag: 
 		new Uint8Array(Buffer.from(secretKey, 'hex')),
 		new Uint8Array(Buffer.from(iv, 'hex'))
 	);
-	decipher.setAuthTag(new Uint8Array(Buffer.from(authTag, 'hex'))); // Set the authentication tag
+	decipher.setAuthTag(new Uint8Array(Buffer.from(authTag, 'hex')));
 
 	let decrypted = decipher.update(encryptedData, 'hex', 'utf-8');
 	decrypted += decipher.final('utf-8');

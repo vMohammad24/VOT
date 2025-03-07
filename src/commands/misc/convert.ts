@@ -17,13 +17,24 @@ export default {
 			description: 'The format you want to convert to',
 			type: ApplicationCommandOptionType.String,
 			choices: choices.map((choice) => ({ name: choice, value: choice })),
+			required: false
 		},
 	],
 	type: 'all',
 	cooldown: 10000,
-	execute: async ({ args }) => {
-		const attachment = args.get('file') as Attachment | undefined;
-		const format = (args.get('format') as string | undefined) || 'png';
+	aliases: ['gif'],
+	execute: async ({ args, message }) => {
+		let attachment = args.get('file') as Attachment | undefined;
+		const format = (args.get('format') as string | undefined) || 'gif';
+		if (!attachment) {
+			if (message && message.reference) {
+				const m = await message.fetchReference();
+				if (!m) return { ephemeral: true, content: 'Please provide a file to convert.' };
+				if (m.attachments.size > 0) {
+					attachment = m.attachments.first()!;
+				}
+			}
+		}
 		if (!attachment) return { ephemeral: true, content: 'Please provide a file to convert.' };
 		if (!choices.includes(format)) return { ephemeral: true, content: 'Invalid format' };
 		let file = Buffer.from(await axios.get(attachment.url, { responseType: 'arraybuffer' }).then((res) => res.data));

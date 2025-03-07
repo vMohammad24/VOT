@@ -35,7 +35,7 @@ export default {
 		// const client = getClient();
 		// const res = await client.chat.completions.create({
 		// 	stream: false,
-		// 	messages:2 [
+		// 	messages:2 [/
 		// 		{
 		// 			role: 'user',
 		// 			content: query,

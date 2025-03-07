@@ -96,7 +96,8 @@ export default {
 			voice: selectedVoice,
 		});
 		if (!data.success) {
-			return { ephemeral: true, content: 'Failed to generate audio' };
+			console.log(data)
+			return { ephemeral: true, content: data.error || 'An error occurred while generating the audio.' };
 		}
 		const audio = Buffer.from(data.data, 'base64');
 		// return {

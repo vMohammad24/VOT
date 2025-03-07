@@ -1,4 +1,5 @@
 import { Canvas, createCanvas, Image } from '@napi-rs/canvas';
+import axios from 'axios';
 import type { Guild, GuildTextBasedChannel } from 'discord.js';
 import commandHandler from '..';
 import { getGuild } from './database';
@@ -225,4 +226,17 @@ export function parseCurl(curlCommand: string) {
 	}
 
 	return config;
+}
+
+const badWords = await axios.get('https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/refs/heads/master/en').then(res => res.data.split('\n').map((word: string) => word.trim()).filter((word: string) => word.length > 0));
+export function isProfane(text: string): {
+	containsProfanity: boolean;
+	profanityWords: string[];
+} {
+	const words = text.split(/\s+/);
+	const profanityWords = words.filter((word) => badWords.includes(word.toLowerCase()));
+	return {
+		containsProfanity: profanityWords.length > 0,
+		profanityWords: profanityWords
+	};
 }
