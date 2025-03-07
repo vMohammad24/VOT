@@ -326,13 +326,15 @@ export default class CommandHandler {
 				}
 				validationTime = Date.now() - vStart;
 				const eStart = Date.now();
-				setTimeout(() => {
-					if (ctx instanceof CommandInteraction) {
-						if (!ctx.deferred && !ctx.replied) {
-							ctx.deferReply();
+				try {
+					setTimeout(() => {
+						if (ctx instanceof CommandInteraction) {
+							if (!ctx.deferred && !ctx.replied) {
+								ctx.deferReply();
+							}
 						}
-					}
-				}, 2700);
+					}, 2700);
+				} catch (e) { }
 
 				await createCommand(commandContext, command, validationTime);
 				const result = await command.execute(commandContext);
@@ -343,7 +345,15 @@ export default class CommandHandler {
 						`Executed command ${command.name} in ${total}ms (execution: ${executionTime}, context: ${contextTime}ms, player: ${playerTime || -1}ms, validation: ${validationTime}ms)`,
 					);
 				}
-				return result;
+				let retries = 3;
+				while (retries > 0) {
+					try {
+						return result;
+					} catch (e: any) {
+						this.logger.error(e);
+						retries--;
+					}
+				}
 			} else {
 				const command = cmd as IContextCommand;
 				const start = Date.now();
@@ -359,8 +369,11 @@ export default class CommandHandler {
 				}
 				return result;
 			}
-		} catch (e) {
+		} catch (e: any) {
 			if ((e as any).code in RESTJSONErrorCodes) {
+				if (e.code == 10005 || e.code == 40060) {
+
+				}
 				try {
 					return {
 						embeds: [
