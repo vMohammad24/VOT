@@ -1,7 +1,7 @@
-import axios from "axios";
 import { ApplicationCommandOptionType } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import { generateImage } from "../../util/ai";
+import { isProfane } from "../../util/util";
 import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
@@ -21,8 +21,20 @@ export default {
             content: 'Please provide a prompt',
             ephemeral: true
         }
+        const profane = isProfane(prompt);
+        if (profane.containsProfanity) return {
+            embeds: [
+                new VOTEmbed()
+                    .setTitle('Profanity Detected')
+                    .setDescription(`> ${prompt}\n\n**Profanity Words:**\n${profane.profanityWords.map((word: string) => `- ${word}`).join('\n')}`)
+                    .setFooter({ text: 'Please avoid using profanity in your prompts.' })
+                    .setTimestamp()
+                    .author(user)
+                    .setColor('Red')
+            ],
+            ephemeral: true
+        }
         const imageUrl = (await generateImage(prompt))[0];
-        const image = await axios.get(imageUrl, { responseType: 'arraybuffer' });
         return {
             embeds: [new VOTEmbed()
                 .setTitle('Image Generation')

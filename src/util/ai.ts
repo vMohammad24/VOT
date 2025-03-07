@@ -9,30 +9,37 @@ const axiosInstance = axios.create({
 interface Message {
     role: 'user' | 'assistant' | 'system';
     content: string;
+    tool_calls?: any;
 }
 
 const sessions = new Collection<string, Message[]>();
 export const chat = async (query: string, sessionId?: string, model?: string) => {
-    const session = sessionId ? sessions.get(sessionId) : [];
-    const defaultModel = 'deepseek-r1';
-    if (!model) model = defaultModel;
-    const res = await axiosInstance.post('/chat/completions', {
-        messages: [
-            ...(session || []),
-            {
-                role: 'user',
-                content: query,
-            },
-        ],
-        model: model,
-        provider: model === defaultModel ? "Blackbox" : undefined,
-        stream: false
-    })
-    const message = res.data.choices[0].message;
-    if (sessionId) {
-        sessions.set(sessionId, [...session!, message]);
+    try {
+        const session = sessionId ? (sessions.get(sessionId) || []) : [];
+        const defaultModel = 'deepseek-r1';
+        if (!model) model = defaultModel;
+        session.push({ role: 'user', content: query });
+        const res = await axiosInstance.post('/chat/completions', {
+            messages: session,
+            model: model,
+            provider: model === defaultModel ? "Blackbox" : undefined,
+            stream: false
+        });
+
+        if (!res.data?.choices?.[0]?.message) {
+            throw new Error('Invalid response format from API');
+        }
+
+        const message = res.data.choices[0].message;
+        session.push(message);
+        if (sessionId) {
+            sessions.set(sessionId, session);
+        }
+        return message.content;
+    } catch (error) {
+        console.error('Error in chat function:', error);
+        throw error;
     }
-    return message.content;
 }
 
 export const generateImage = async (query: string, model?: string): Promise<string[]> => {

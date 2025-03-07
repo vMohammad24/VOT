@@ -628,25 +628,33 @@ interface BraveSearchGoggles {
 	};
 }
 
+const braveAxios = axios.create({
+	baseURL: 'https://search.brave.com',
+	headers: {
+		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+		'Cookie': 'safesearch=strict'
+	}
+});
+
 const getQueryResult = async (query: string, type: 'images' | 'query' | 'goggles' = 'query', params?: string) => {
 	switch (type) {
 		case 'query':
 			const cache = await redis.get(`brave:${query}`);
 			if (cache && commandHandler.prodMode) return JSON.parse(cache);
-			//(`https://search.brave.com/search?q=${encodeURIComponent(query)}?rich=true` + (params ?? ''))
-			const res = await axios.get(
-				`https://search.brave.com/search?q=${encodeURIComponent(query)}&rich=true` + (params ?? ''),
+			const res = await braveAxios.get(
+				`/search?q=${encodeURIComponent(query)}&rich=true${params ? params : ''}`
 			);
 			return res.data as string;
 		case 'images':
 			const imageCache = await redis.get(`braveImages:${query}`);
 			if (imageCache && commandHandler.prodMode) return JSON.parse(imageCache);
-			const imagesRes = await axios.get(`https://search.brave.com/images?q=${encodeURIComponent(query)}`);
+			const imagesRes = await braveAxios.get(`/images?q=${encodeURIComponent(query)}`);
 			return imagesRes.data as string;
 		case 'goggles':
 			const gogglesCache = await redis.get(`braveGoggles:${query}`);
 			if (gogglesCache && commandHandler.prodMode) return JSON.parse(gogglesCache);
-			const gogglesRes = await axios.get(`https://search.brave.com/goggles?q=${encodeURIComponent(query)}`);
+			const gogglesRes = await braveAxios.get(`/goggles?q=${encodeURIComponent(query)}`);
 			return gogglesRes.data as string;
 	}
 };
@@ -703,21 +711,20 @@ export async function searchBraveGoggles(query: string) {
 export async function chatllm(result: BraveSearchResult['data']['body']['response']['chatllm']) {
 	const cache = await redis.get(`braveChatllm:${result.query}`);
 	if (cache && commandHandler.prodMode) return JSON.parse(cache) as BraveEnrichments;
-	await axios.get(`https://search.brave.com/api/chatllm/?key=${result.key}`);
+	await braveAxios.get(`/api/chatllm/?key=${result.key}`);
 	const [enrichments, followUps] = await Promise.all([
-		axios.get(`https://search.brave.com/api/chatllm/enrichments?key=${result.key}`),
-		axios.get(`https://search.brave.com/api/chatllm/followups?key=${result.key}`),
+		braveAxios.get(`/api/chatllm/enrichments?key=${result.key}`),
+		braveAxios.get(`/api/chatllm/followups?key=${result.key}`),
 	]);
 	enrichments.data.followups = followUps.data;
 	await redis.set(`braveChatllm:${result.query}`, JSON.stringify(enrichments.data), 'EX', 60 * 60 * 24 * 7);
 	return enrichments.data as BraveEnrichments;
 }
 
-
 export async function searchBraveSuggest(query: string): Promise<string[]> {
 	const cache = await redis.get(`braveSuggest:${query}`);
 	if (cache && commandHandler.prodMode) return JSON.parse(cache);
-	const res = await axios.get(`https://search.brave.com/api/suggest?q=${encodeURIComponent(query)}`);
+	const res = await braveAxios.get(`/api/suggest?q=${encodeURIComponent(query)}`);
 	const suggestions = res.data[1];
 	await redis.set(`braveSuggest:${query}`, JSON.stringify(suggestions), 'EX', 60 * 60);
 	return suggestions;

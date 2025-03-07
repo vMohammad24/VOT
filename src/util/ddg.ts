@@ -189,3 +189,65 @@ export class DuckDuckGoChat {
 		this.messages = data.messages;
 	}
 }
+
+export interface TranslationResponse {
+	detected_language: string | null;
+	translated: string;
+}
+
+export class DuckDuckGoTranslate {
+	private vqd: string | undefined;
+	private userAgent = new UserAgent();
+
+	private async generateVQD() {
+		const response = await axios.get('https://duckduckgo.com/?q=translate&ia=web', {
+			headers: {
+				'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				'accept-language': 'en-US,en;q=0.9',
+				'cache-control': 'max-age=0',
+				'user-agent': this.userAgent.toString(),
+				'sec-fetch-dest': 'document',
+				'sec-fetch-mode': 'navigate',
+				'sec-fetch-site': 'same-origin'
+			}
+		});
+
+		const html = response.data;
+		const vqdMatch = html.match(/vqd="([^"]+)"/);
+		if (vqdMatch && vqdMatch[1]) {
+			this.vqd = vqdMatch[1];
+		} else {
+			throw new Error('Failed to extract VQD from DuckDuckGo response');
+		}
+	}
+
+	public async translate(text: string, to: string = 'en', from?: string): Promise<string> {
+		if (!this.vqd) {
+			await this.generateVQD();
+		}
+
+		let url = `https://duckduckgo.com/translation.js?vqd=${this.vqd}&query=translate&to=${to}`;
+		if (from) {
+			url += `&from=${from}`;
+		}
+
+		const response = await axios({
+			method: 'post',
+			url,
+			headers: {
+				'content-type': 'text/plain',
+				'user-agent': this.userAgent.toString(),
+				'origin': 'https://duckduckgo.com',
+				'referer': 'https://duckduckgo.com/',
+				'x-requested-with': 'XMLHttpRequest',
+			},
+			data: text,
+		});
+
+		console.log(response.data)
+
+
+		const result = response.data as TranslationResponse;
+		return result.translated;
+	}
+}
