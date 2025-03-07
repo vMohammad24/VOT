@@ -10,7 +10,7 @@ export default {
 			name: 'file',
 			description: 'The file you want to convert',
 			type: ApplicationCommandOptionType.Attachment,
-			required: true,
+			required: false,
 		},
 		{
 			name: 'format',

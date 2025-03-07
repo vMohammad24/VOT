@@ -1,4 +1,4 @@
-import { Canvas, createCanvas, Image } from '@napi-rs/canvas';
+import { Canvas, createCanvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import axios from 'axios';
 import type { Guild, GuildTextBasedChannel } from 'discord.js';
 import commandHandler from '..';
@@ -239,4 +239,28 @@ export function isProfane(text: string): {
 		containsProfanity: profanityWords.length > 0,
 		profanityWords: profanityWords
 	};
+}
+
+export function wrapText(context: SKRSContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, preparingSentence: string[], lines: string[]) {
+	const words = text.split(" ");
+	for (let i = 0; i < words.length; i++) {
+		const workSentence = preparingSentence.join(" ") + " " + words[i];
+
+		if (context.measureText(workSentence).width > maxWidth) {
+			lines.push(preparingSentence.join(" "));
+			preparingSentence = [words[i]];
+		} else {
+			preparingSentence.push(words[i]);
+		}
+	}
+
+	lines.push(preparingSentence.join(" "));
+
+	lines.forEach(element => {
+		const lineWidth = context.measureText(element).width;
+		const xOffset = (maxWidth - lineWidth) / 2;
+
+		y += lineHeight;
+		context.fillText(element, x + xOffset, y);
+	});
 }
