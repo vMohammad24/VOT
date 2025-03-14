@@ -1,5 +1,4 @@
 import type { Glob } from 'bun';
-import { join } from 'path';
 import type CommandHandler from '.';
 
 export default class ListenerHandler {
@@ -13,16 +12,18 @@ export default class ListenerHandler {
 	}
 
 	public async initListeners(listenersDir: string) {
-		// const listeners = await getFiles(listenersDir);
-		for await (const file of this.glob.scan({
-			absolute: false,
+		const files = [...this.glob.scanSync({
+			absolute: true,
 			cwd: listenersDir,
-		})) {
-			const listener = await import(join(listenersDir, file));
-			this.listeners.push(listener.default as IListener);
-			listener.default.execute(this.handler);
-			if (this.handler.verbose) this.handler.logger.info(`Initialized listener ${listener.default.name}`);
-		}
+		})];
+		const s = await Promise.all(files.map(file => {
+			return import(file).then((listener) => {
+				if (this.handler.verbose) this.handler.logger.info(`Initialized listener ${listener.default.name}`);
+				this.listeners.push(listener.default as IListener);
+				listener.default.execute(this.handler);
+			});
+		}))
+		if (this.handler.verbose) this.handler.logger.info(`Initialized ${s.length}/${this.listeners.length} listeners`);
 	}
 }
 
