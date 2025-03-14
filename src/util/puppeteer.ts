@@ -30,6 +30,7 @@ export async function launchPuppeteer() {
 					width: 1920,
 					height: 1080,
 				},
+				executablePath: import.meta.env.CHROME_PATH,
 				args: [
 					'--window-position=000,000',
 					'--no-sandbox',
