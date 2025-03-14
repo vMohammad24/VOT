@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ApplicationCommandOptionType, AttachmentBuilder, Sticker } from 'discord.js';
 import type ICommand from '../../handler/interfaces/ICommand';
 import { isNullish } from '../../util/util';
+import VOTEmbed from '../../util/VOTEmbed';
 
 export default {
 	name: 'yoink',
@@ -89,18 +90,23 @@ export default {
 		for (const emoji of emojiMatches) {
 			const id = emoji.match(/<a?:\w+:(\d+)>/)?.[1];
 			const name = emoji.match(/<a?:\w+:(\d+)>/)?.[0].split(':')[1];
-			const url = `https://cdn.discordapp.com/emojis/${id}.png`;
+			const url = `https://cdn.discordapp.com/emojis/${id}.webp?quality=lossless&animated=true`;
 			try {
 				const e = await guild.emojis.create({
 					attachment: url,
 					name: name ?? 'yoinked_' + id,
 					reason: `Yoinked by ${member.user.tag}`,
 				});
-				results.push(e.toString());
-			} catch (e) {
-				if ((e as any).message.includes('Maximum number of emojis reached')) {
+				results.push(`${e.toString()} (${url})`);
+			} catch (e: any) {
+				if (e.message) {
 					return {
-						content: 'Maximum number of emojis reached',
+						embeds: [
+							new VOTEmbed()
+								.setColor('DarkRed')
+								.setTitle('Error')
+								.setDescription(`> ${e.message}`)
+						],
 						ephemeral: true,
 					};
 				}
