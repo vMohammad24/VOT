@@ -62,7 +62,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 	const pUser = await getUser(user, {
 		ArgumentMode: true,
 	});
-	const messageArgs = message ? await parseMessageArgs(message.content, command, ctx.user) : [];
+	const messageArgs = message ? await parseMessageArgs(message.content.trim(), command, ctx.user) : [];
 	let argIndex = 0;
 
 	const validateInteractionOptions = async (options: ApplicationCommandOption[]) => {

@@ -42,7 +42,7 @@ export default {
         if (!response) return { ephemeral: true, content: "An error occurred while translating the text." };
         const embed = new VOTEmbed()
             .setTitle("Translation")
-            .setDescription(`**Original:** ${text}\n**Translated:** ${response}`)
+            .setDescription(`\`\`\`\n${response}\n\`\`\``)
             .setColor("#00FF00")
             .author(user);
         return {

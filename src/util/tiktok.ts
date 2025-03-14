@@ -331,6 +331,70 @@ interface TikTokRelatedResponse {
     status_msg: string;
 }
 
+interface ItemControl {
+    can_repost: boolean;
+}
+interface Content {
+    desc: string;
+    textExtra: any[];
+}
+
+interface Challenge {
+    id: string;
+    title: string;
+    desc: string;
+    profileLarger: string;
+    profileMedium: string;
+    profileThumb: string;
+    coverLarger: string;
+    coverMedium: string;
+    coverThumb: string;
+}
+
+export interface TikTokVideo {
+    id: string;
+    desc: string;
+    createTime: string;
+    scheduleTime: number;
+    video: Video;
+    author: Author;
+    music: Music;
+    challenges: Challenge[];
+    stats: Stats;
+    statsV2: StatsV2;
+    warnInfo: any[];
+    originalItem: boolean;
+    officalItem: boolean;
+    textExtra: TextExtra[];
+    secret: boolean;
+    forFriend: boolean;
+    digged: boolean;
+    itemCommentStatus: number;
+    takeDown: number;
+    effectStickers: any[];
+    privateItem: boolean;
+    duetEnabled: boolean;
+    stitchEnabled: boolean;
+    stickersOnItem: any[];
+    shareEnabled: boolean;
+    comments: any[];
+    duetDisplay: number;
+    stitchDisplay: number;
+    indexEnabled: boolean;
+    diversificationLabels: string[];
+    locationCreated: string;
+    suggestedWords: string[];
+    contents: Content[];
+    diversificationId: number;
+    collected: boolean;
+    channelTags: any[];
+    item_control: ItemControl;
+    IsAigc: boolean;
+    AIGCDescription: string;
+    backendSourceEventTracking: string;
+}
+
+
 const jar = new CookieJar();
 const client = wrapper(axios.create({ jar }));
 export async function getTikTokTrending(count: number = 3) {

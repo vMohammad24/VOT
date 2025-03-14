@@ -31,7 +31,7 @@ export default {
     ],
     execute: async ({ args }) => {
         let url = args.get('url') as string;
-        const shouldEmbed = (args.get('embed') as boolean || true);
+        const shouldEmbed = (args.get('embed') as boolean);
         const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":';
         if (!url.includes("://www.")) {
             url = url.replace("://", "://www.");
