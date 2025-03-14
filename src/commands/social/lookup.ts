@@ -311,7 +311,7 @@ export default {
 			description: 'The service to lookup the user in',
 			type: ApplicationCommandOptionType.String,
 			required: true,
-			choices: ['nest.rip', 'guns.lol', 'inject.bio', 'death.ovh', 'socl.gg', 'ammo.lol', 'biography', 'tiktok'].map(
+			choices: ['nest.rip', 'guns.lol', 'socl.gg', 'ammo.lol', 'tiktok'].map(
 				(service) => ({ name: service, value: service }),
 			),
 		},

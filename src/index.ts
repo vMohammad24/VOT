@@ -7,6 +7,7 @@ import { Kazagumo, Plugins } from 'kazagumo';
 import Spotify from 'kazagumo-spotify';
 import { gracefulShutdown, scheduleJob, scheduledJobs } from 'node-schedule';
 import { Connectors, type NodeOption } from 'shoukaku';
+import UserAgent from 'user-agents';
 import app from './api';
 import CommandHandler from './handler/index';
 import { initEmojis } from './util/emojis';
@@ -114,6 +115,23 @@ client.on(Events.ClientReady, async (c) => {
 			return Promise.reject(error);
 		},
 	);
+
+	axios.defaults.headers.common['User-Agent'] = new UserAgent().toString();
+	axios.defaults.headers.common['Accept-Language'] = 'en-US,en;q=0.9';
+	axios.defaults.headers.common['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7';
+	axios.defaults.headers.common['cache-control'] = 'max-age=0';
+	axios.defaults.headers.common['dnt'] = '1';
+	axios.defaults.headers.common['sec-ch-prefers-color-scheme'] = 'dark';
+	axios.defaults.headers.common['sec-ch-ua'] = '"Not;A=Brand";v="24", "Chromium";v="128"';
+	axios.defaults.headers.common['sec-ch-ua-mobile'] = '?0';
+	axios.defaults.headers.common['sec-ch-ua-platform'] = '"Windows"';
+	axios.defaults.headers.common['sec-fetch-dest'] = 'document';
+	axios.defaults.headers.common['sec-fetch-mode'] = 'navigate';
+	axios.defaults.headers.common['sec-fetch-site'] = 'none';
+	axios.defaults.headers.common['sec-fetch-user'] = '?1';
+	axios.defaults.headers.common['upgrade-insecure-requests'] = '1';
+	axios.defaults.headers.common['viewport-width'] = '1920';
+
 
 	axios.defaults.validateStatus = () => true;
 

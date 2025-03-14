@@ -64,7 +64,7 @@ export default {
 		}
 
 		try {
-			await message?.delete();
+			message?.delete();
 			const fetchOptions: FetchMessagesOptions = { limit: Math.min(amount, 100) };
 			if (before) fetchOptions.before = before;
 			if (after) fetchOptions.after = after;
