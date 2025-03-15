@@ -174,7 +174,16 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 		const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('Red');
 		return undefined;
 	}
-	const messages = await channel.messages.fetch();
+	const messages = await channel.messages.fetch({ limit: 100 });
+	let lastMessageId = messages.last()?.id;
+
+	while (lastMessageId) {
+		const newMessages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
+		if (newMessages.size === 0) break;
+
+		newMessages.forEach(msg => messages.set(msg.id, msg));
+		lastMessageId = newMessages.last()?.id;
+	}
 	// const json = await Promise.all(messages.values().map(async (message) => ({
 	// 	message: {
 	// 		attachments: await Promise.all(
