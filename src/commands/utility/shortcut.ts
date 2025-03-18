@@ -5,8 +5,8 @@ import type ICommand from '../../handler/interfaces/ICommand';
 const routes = [
     { label: 'Login', url: 'discord://-/login' },
     { label: 'Register', url: 'discord://-/register' },
-    // { label: 'Reset', url: 'discord://-/reset' },
-    // { label: 'Restore', url: 'discord://-/restore' },
+
+
     { label: 'Library', url: 'discord://-/library/' },
     { label: 'Library Inventory', url: 'discord://-/library/inventory' },
     { label: 'Library Settings', url: 'discord://-/library/settings/' },

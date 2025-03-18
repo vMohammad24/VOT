@@ -69,6 +69,9 @@ export default class SlashCommandHandler {
 	}
 
 	public async initCommands(client: Client) {
+		// Reset autocompletes when re-initializing commands
+		this.autocompletes = [];
+
 		const initCommands = new Map<string, ICommand>();
 		this.commands
 			.filter(isICommand)
@@ -253,7 +256,7 @@ export default class SlashCommandHandler {
 				const cmd = this.commands.find((c) => c.name?.toLowerCase() === command.name.toLowerCase());
 				if (cmd) cmd.id = command.id;
 			}
-			commandHandler.logger.info(`Successfully reloaded (/) commands. Took ${endTime - startTime}ms`);
+			commandHandler.logger.info(`Successfully reloaded ${(res as any[]).length} (/) commands. Took ${endTime - startTime}ms`);
 		} catch (error) {
 			commandHandler.logger.error('Error refreshing (/) commands: ' + error);
 		}

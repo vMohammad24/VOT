@@ -38,13 +38,14 @@ export default interface ICommand {
 	options?: ApplicationCommandOption[];
 	init?: (handler: CommandHandler) => Promise<void> | void | null | undefined;
 	interactionHandler?: (interaction: Interaction) => Promise<void> | void | null | undefined;
+	messageHandler?: (message: Message) => Promise<void> | void | null | undefined;
 	autocomplete?: (interaction: AutocompleteInteraction) => Promise<void> | void | null | undefined;
 	execute: (ctx: CommandContext) => Promise<MessagePayload | string | InteractionReplyOptions | null | undefined>;
 }
 
 export interface CommandContext {
 	message: Message | null;
-	args: ArgumentMap<any>;
+	args: ArgumentMap<Record<string, any>>;
 	guild: Guild;
 	member: GuildMember;
 	user: User;

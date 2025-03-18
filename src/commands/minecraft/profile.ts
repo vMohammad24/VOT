@@ -32,7 +32,7 @@ export default {
             ephemeral: true
         }
 
-        // Get both profiles - Crafty for data, Laby for textures
+
         const [labyProfile, craftyProfile] = await Promise.all([
             getProfile(player),
             getCraftyProfile(player)
@@ -55,7 +55,7 @@ export default {
         }
 
         const { data } = craftyProfile;
-        // Prefer Laby textures, fallback to Crafty
+
         const activeSkin = labyProfile?.textures.SKIN?.find(s => s.active)?.image_hash
             ?? data.skins[0]?.texture;
         const skin = activeSkin ? await renderSkin3D(activeSkin) : null;
@@ -69,7 +69,7 @@ export default {
 
         const usernames = [];
         if (data.usernames?.length > 0) {
-            // Sort usernames by date descending
+
             const allChanges = data.usernames.map(u => ({
                 name: u.username,
                 changed_at: u.changed_at,
@@ -80,7 +80,7 @@ export default {
                 return dateB - dateA;
             });
 
-            // Handle duplicates and special cases
+
             const oneMonth = 30 * 24 * 60 * 60 * 1000;
             const filtered = allChanges.filter((change, i, arr) => {
                 if (!change.changed_at) {

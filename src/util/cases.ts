@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 
 export async function createCase(guildId: string, type: CaseType, targetId: string, moderatorId: string, reason?: string) {
-    // Get the latest case number for this guild
+
     const latestCase = await prisma.case.findFirst({
         where: { guildId },
         orderBy: { caseId: 'desc' },
@@ -11,7 +11,7 @@ export async function createCase(guildId: string, type: CaseType, targetId: stri
 
     const caseId = (latestCase?.caseId ?? 0) + 1;
 
-    // Create the new case
+
     const newCase = await prisma.case.create({
         data: {
             caseId,

@@ -145,7 +145,7 @@ async function getCachedData<T>(key: string, ttl: number, fetchFn: () => Promise
 }
 
 function isValidUUID(uuid: string): boolean {
-    // Check both formats: with and without hyphens
+
     const uuidRegex = /^[0-9a-f]{32}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(uuid);
 }

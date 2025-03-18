@@ -41,7 +41,7 @@ export default {
                 : '';
             const target = `${typeof entry.target === 'object' && entry.target?.toString() === '[object Object]' ? 'unknown' : entry.target?.toString()} (${entry.targetType ? camelToTitleCase(entry.targetType as string) : 'unknown'})`;
             const extra = `${typeof entry.extra === 'object' && entry.extra?.toString() === '[object Object]' ? 'unknown' : entry.extra}`;
-            // const extra = entry.extra ? entry.extra.map((e) => `**${e.key}**: ${e.old || 'none'} ➜ ${e.new || 'none'}`).join('\n') : '';
+
             const description = [
                 entry.reason ? `**Reason**: ${entry.reason}` : '',
                 entry.target ? `**Target**: ${target}` : '',

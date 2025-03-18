@@ -73,7 +73,7 @@ const createCommand = async (commandContext: CommandContext, command: ICommand, 
 						commandId: command.name!,
 						commandInfo: {
 							args: (commandContext.args as any) || null,
-							guild: commandContext?.guild?.id || null,
+							guild: (commandContext?.guild?.id) || null,
 							channel: commandContext?.channel?.id || null,
 							message: commandContext?.message?.id || null,
 							interaction: commandContext?.interaction?.id || null,
@@ -101,9 +101,16 @@ export default class CommandHandler {
 	private glob = new Glob('**/*.{ts,js}');
 	private validations: Function[] = [];
 	public logger: Logger;
+	private slashHandler: SlashCommandHandler | null = null;
+	private legacyHandler: LegacyCommandHandler | null = null;
+	private commandsDir: string = '';
+	private contextCommandsDir: string = '';
+
 	constructor(mHandler: IMCommandHandler) {
 		const handler = mHandler as ICommandHandler;
 		const { commandsDir, listenersDir, contextCommandsDir } = handler;
+		this.commandsDir = commandsDir;
+		this.contextCommandsDir = contextCommandsDir;
 		this.prodMode = handler.prodMode;
 		this.logger = PinoLogger({
 			name: path.basename(path.resolve(import.meta.dir, '../../')),
@@ -163,6 +170,10 @@ export default class CommandHandler {
 				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
 
 				const modulePath = path.join(commandsDir, file);
+
+
+				delete require.cache[require.resolve(modulePath)];
+
 				const command = (await import(modulePath)).default;
 				const commandName = command.name || fileName;
 				const old = handler.commands.find((c) => c.name === fileName);
@@ -190,6 +201,7 @@ export default class CommandHandler {
 				if (old === modifiedData) {
 					this.logger.info(`Command ${commandName} is the same as the old one`);
 				}
+				return { new: modifiedData, old };
 			};
 
 			await Promise.all(
@@ -218,34 +230,281 @@ export default class CommandHandler {
 			this.logger.info(`Initialized ${handler.commands.length} commands in ${total}ms`);
 			const Ilegacy = handler as LegacyHandler;
 			const Islash = handler as SlashHandler;
-			const slash = new SlashCommandHandler(Islash, this);
-			const legacy = new LegacyCommandHandler(Ilegacy, this);
+			this.slashHandler = new SlashCommandHandler(Islash, this);
+			this.legacyHandler = new LegacyCommandHandler(Ilegacy, this);
 			this.commands = handler.commands;
 			const listener = new ListenerHandler(this, listenersDir, this.glob);
 
 			if (!handler.prodMode) {
-				const watcher = watch(commandsDir, {
-					recursive: true,
-				});
-				for await (const event of watcher) {
-					if (event.filename) {
-						await loadCommand(event.filename);
-					}
-				}
+				this.setupFileWatcher(commandsDir, contextCommandsDir);
 			}
 		});
 	}
 
+	private async setupFileWatcher(commandsDir: string, contextCommandsDir: string) {
+		try {
+			const debounce = (func: Function, delay: number) => {
+				let timeout: any;
+				const fileLastChanged = new Map<string, number>();
+
+				return (filename: string) => {
+					const now = Date.now();
+					const lastChanged = fileLastChanged.get(filename) || 0;
+					if (now - lastChanged < delay) {
+						clearTimeout(timeout);
+					}
+
+					fileLastChanged.set(filename, now);
+					timeout = setTimeout(() => func(filename), delay);
+				};
+			};
+
+			const handleCommandChange = debounce(async (filename: string) => {
+				try {
+					this.logger.info(`File change detected: ${filename}`);
+					const fileInfo = path.parse(filename);
+
+					if (fileInfo.ext === '.ts' || fileInfo.ext === '.js') {
+						await this.reloadCommandByPath(filename);
+
+						if (this.slashHandler) {
+							await this.slashHandler.initCommands(this.client);
+						}
+					}
+				} catch (ignored) {
+				}
+			}, 300);
+
+			const handleContextCommandChange = debounce(async (filename: string) => {
+				try {
+					this.logger.info(`Context command file change detected: ${filename}`);
+					const commandName = path.basename(filename, path.extname(filename));
+					await this.reloadContextCommand(commandName);
+					if (this.slashHandler) {
+						await this.slashHandler.initCommands(this.client);
+					}
+				} catch (ignored) {
+
+				}
+			}, 300);
+
+			const cmdWatcher = watch(commandsDir, {
+				recursive: true,
+			});
+
+			this.logger.info("File watcher started for commands directory");
+
+			(async () => {
+				try {
+					for await (const event of cmdWatcher) {
+						if (event.filename) {
+							handleCommandChange(event.filename);
+						}
+					}
+				} catch (error) {
+					this.logger.error(`Command watcher error: ${error}`);
+					setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+				}
+			})();
+
+			const contextWatcher = watch(contextCommandsDir, {
+				recursive: true,
+			});
+
+			this.logger.info("File watcher started for context commands directory");
+
+			(async () => {
+				try {
+					for await (const event of contextWatcher) {
+						if (event.filename) {
+							handleContextCommandChange(event.filename);
+						}
+					}
+				} catch (error) {
+					this.logger.error(`Context command watcher error: ${error}`);
+					setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+				}
+			})();
+		} catch (error) {
+			this.logger.error(`Error setting up file watcher: ${error}`);
+
+			setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+		}
+	}
+
+	private async reloadCommandByPath(filePath: string) {
+		try {
+			if (!this.commands) return null;
+
+			const splitPath = filePath.split(path.sep);
+			const categoryName = splitPath[splitPath.length - 2]?.replace(/\\/g, '/') || 'uncategorized';
+			const fileName = splitPath[splitPath.length - 1].split('.')[0];
+
+			if (categoryName.startsWith('_') || fileName.startsWith('_')) return null;
+
+			const modulePath = path.join(this.commandsDir, filePath);
+
+			const commandName = fileName;
+			const oldCommandIndex = this.commands.findIndex(cmd =>
+				cmd.name === commandName ||
+				(cmd.name?.toLowerCase() === commandName.toLowerCase())
+			);
+
+			let oldCommand = null;
+			if (oldCommandIndex !== -1) {
+				oldCommand = this.commands[oldCommandIndex];
+				this.commands.splice(oldCommandIndex, 1);
+				this.logger.info(`Removed old command: ${oldCommand.name}`);
+			}
+
+			this.clearModuleCache(modulePath);
+
+			let commandModule;
+			try {
+				commandModule = await import(modulePath);
+			} catch (error) {
+				this.logger.error(`Failed to import module at ${modulePath}: ${error}`);
+
+				if (oldCommand) {
+					this.commands.push(oldCommand);
+					this.logger.info(`Restored old command: ${oldCommand.name} due to import failure`);
+				}
+
+				return null;
+			}
+
+			const commandData = commandModule.default;
+
+			if (!commandData) {
+				this.logger.warn(`Command in ${filePath} has no default export`);
+				return null;
+			}
+
+			const modifiedData: ICommand = Object.assign({}, commandData, {
+				name: commandData.name || fileName,
+				category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
+				aliases: commandData.aliases || [],
+			});
+
+			this.commands.push(modifiedData);
+
+			if (modifiedData.init && !modifiedData.disabled) {
+				try {
+					modifiedData.init(this);
+				} catch (error) {
+					this.logger.error(`Error in command init method: ${error}`);
+				}
+			}
+
+			this.logger.info(`Successfully reloaded command: ${modifiedData.name}`);
+
+			if (this.legacyHandler) {
+				this.legacyHandler.updateCommands();
+			}
+
+			return modifiedData;
+		} catch (error) {
+			this.logger.error(`Failed to reload command from path ${filePath}: ${error}`);
+			return null;
+		}
+	}
+
+
+	private clearModuleCache(modulePath: string) {
+		try {
+			const normalizedPath = path.resolve(modulePath);
+
+			if (require.cache && normalizedPath in require.cache) {
+				delete require.cache[normalizedPath];
+			}
+		} catch (error) {
+			this.logger.warn(`Error clearing module cache: ${error}`);
+		}
+	}
+
+	private async reloadContextCommand(commandName: string) {
+		try {
+			if (!this.commands) return null;
+
+			const filePath = path.join(this.contextCommandsDir, `${commandName}${path.extname(commandName) ? '' : '.ts'}`);
+
+
+			const oldCommandIndex = this.commands.findIndex(cmd =>
+				cmd.name === commandName ||
+				(cmd.name?.toLowerCase() === commandName.toLowerCase())
+			);
+
+			let oldCommand = null;
+			if (oldCommandIndex !== -1) {
+				oldCommand = this.commands[oldCommandIndex];
+				this.commands.splice(oldCommandIndex, 1);
+				this.logger.info(`Removed old context command: ${oldCommand.name}`);
+			}
+
+
+			this.clearModuleCache(filePath);
+
+
+			let commandModule;
+			try {
+				commandModule = await import(filePath);
+			} catch (error) {
+				this.logger.error(`Failed to import context command at ${filePath}: ${error}`);
+				if (oldCommand) {
+					this.commands.push(oldCommand);
+				}
+
+				return null;
+			}
+
+			const commandData = commandModule.default as IContextCommand;
+
+			if (!commandData) {
+				this.logger.warn(`Context command ${commandName} has no default export`);
+				return null;
+			}
+
+			const modifiedData: IContextCommand = Object.assign({}, commandData, {
+				name: commandData.name || commandName,
+			});
+
+			this.commands.push(modifiedData);
+			this.logger.info(`Successfully reloaded context command: ${modifiedData.name}`);
+			return modifiedData;
+		} catch (error) {
+			this.logger.error(`Failed to reload context command ${commandName}: ${error}`);
+			return null;
+		}
+	}
 
 	public async reloadCommand(commandName: string) {
-		const command = this.commands?.find((c) => c.name === commandName);
+		if (!this.commands) throw new Error('Commands not initialized');
+
+		const command = this.commands.find((c) => c.name === commandName);
 		if (!command) throw new Error('Command not found');
-		const index = this.commands?.indexOf(command);
-		this.commands?.splice(index!, 1);
-		const modulePath = path.join(import.meta.dir, '..', 'commands', command.category!.toLowerCase(), `${commandName}.ts`);
-		const newCommand = (await import(modulePath)).default;
-		this.commands?.push(newCommand);
-		return newCommand;
+
+		try {
+			if ('category' in command) {
+				const filePath = path.join(command.category!.toLowerCase(), `${commandName}.ts`);
+				const reloaded = await this.reloadCommandByPath(filePath);
+
+				if (reloaded && this.slashHandler) {
+					await this.slashHandler.initCommands(this.client);
+				}
+
+				return reloaded;
+			} else {
+				const reloaded = await this.reloadContextCommand(commandName);
+				if (reloaded && this.slashHandler) {
+					await this.slashHandler.initCommands(this.client);
+				}
+
+				return reloaded;
+			}
+		} catch (error) {
+			this.logger.error(`Error in reloadCommand: ${error}`);
+			throw error;
+		}
 	}
 
 	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {

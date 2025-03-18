@@ -75,7 +75,7 @@ export default {
             .addFields({ name: 'Reason', value: reason || 'No reason provided' });
 
         try {
-            // await member.send({ embeds: [userEmbed] });
+
         } catch (e) { }
 
         return {

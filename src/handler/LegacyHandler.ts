@@ -23,6 +23,7 @@ export const getPrefix = async (message: Message<boolean>) => {
 export default class LegacyCommandHandler {
 	public commands: ICommand[] = [];
 	private handler: CommandHandler;
+
 	constructor({ client, commands, kazagumo, globalPrefix }: LegacyHandler, handler: CommandHandler) {
 		this.commands = commands;
 		this.handler = handler;
@@ -30,10 +31,12 @@ export default class LegacyCommandHandler {
 	}
 
 	public initListener(client: Client, kazagumo: Kazagumo, gPrefix: string) {
-		const commandNames = this.commands.map((cmd) => cmd.name);
-		const getCommand = (name: string) => commandNames.find((cmd) => (cmd?.split(' ')[0] ?? cmd)?.toLowerCase() === name.toLowerCase());
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
+
+
+			this.commands.forEach(c => c.messageHandler && c.messageHandler(message));
+
 			const prefix = (await getPrefix(message)) ?? gPrefix;
 			if (!message.content.startsWith(prefix)) {
 				if (message.mentions.users.has(client.user!.id) && !message.mentions.everyone && !message.mentions.roles.size && !message.mentions.repliedUser) {
@@ -45,7 +48,9 @@ export default class LegacyCommandHandler {
 				}
 				return;
 			}
-			const command = this.commands.find(
+
+
+			const command = this.handler.commands?.filter(cmd => 'aliases' in cmd).find(
 				(cmd) => {
 					if (!cmd.name) return;
 					const commandParts = message.content.slice(prefix.length).split(" ");
@@ -68,7 +73,8 @@ export default class LegacyCommandHandler {
 					return cmd.name?.toLowerCase() === commandName.toLowerCase() ||
 						cmd.aliases?.some(a => !a.includes(" ") && a.toLowerCase() === commandName.toLowerCase());
 				}
-			);
+			) as ICommand;
+
 			if (!command) return;
 			if (command.slashOnly) {
 				const msg = await message.reply({
@@ -114,5 +120,11 @@ export default class LegacyCommandHandler {
 				}
 			}
 		});
+	}
+
+	public updateCommands() {
+		if (this.handler.commands) {
+			this.commands = this.handler.commands.filter(cmd => 'aliases' in cmd) as ICommand[];
+		}
 	}
 }

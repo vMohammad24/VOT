@@ -38,7 +38,6 @@ export default {
 	async execute({ args, interaction, message, user, editReply, channel }) {
 		const question = args.get('question') as string | undefined;
 		const model = args.get('model') as string | undefined || 'gpt-4o-mini';
-
 		if (!question)
 			return {
 				content: 'Please provide a question',
