@@ -15,11 +15,11 @@ export default {
     aliases: ["ig trending", "igtrending", "igt", "igtr"],
     execute: async ({ interaction, message }) => {
         const lookFor = '{"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"require":';
-        // const page = await newPage();
-        // const res = await page.goto('https://www.instagram.com/reels/'); //await axios.get('https://www.instagram.com/reels/')
-        // const data = await res!.content();
-        // page.close();
-        // const body = Buffer.from(data).toString('utf-8');
+
+
+
+
+
         const res = await axios.get('https://www.instagram.com/reels/', {
             headers: {
                 'User-Agent': userAgent.random().toString(),

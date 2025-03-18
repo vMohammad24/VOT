@@ -15,7 +15,7 @@ export default {
     ],
     perms: ['ManageMessages'],
     execute: async ({ guild, args, interaction, handler: { client } }) => {
-        // ...existing code...
+
         const caseId = args.get('id') as number;
         const moderationCase = await getCase(guild.id, caseId);
 

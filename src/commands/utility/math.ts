@@ -31,7 +31,7 @@ export default {
         const parser = userContexts.get(userId)!;
 
         try {
-            // Evaluate the expression using the user's context
+
             const startTime = process.hrtime();
             const result = parser.evaluate(expression);
             const diff = process.hrtime(startTime);

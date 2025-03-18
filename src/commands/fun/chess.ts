@@ -60,7 +60,7 @@ class ChessGame {
     }
 
     private async drawBoard() {
-        // Draw the chess board
+
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 this.ctx.fillStyle = (x + y) % 2 === 0 ? '#ffffff' : '#808080';
@@ -68,7 +68,7 @@ class ChessGame {
             }
         }
 
-        // Draw row and column labels
+
         this.ctx.fillStyle = '#ffffff';
         this.ctx.font = '30px Arial';
         for (let i = 0; i < 8; i++) {
@@ -76,7 +76,7 @@ class ChessGame {
             this.ctx.fillText((8 - i).toString(), 8 * this.tileSize + 10, i * this.tileSize + this.tileSize / 2 + 10);
         }
 
-        // Load and draw the pieces
+
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 const piece = this.board[y][x];
@@ -86,7 +86,7 @@ class ChessGame {
             }
         }
 
-        // Save the canvas to a buffer
+
         const buffer = this.canvas.toBuffer('image/png');
         return buffer;
     }
@@ -237,7 +237,7 @@ class ChessGame {
         const isTargetWhite = targetPiece === targetPiece.toUpperCase();
 
         if (piece === 'p') {
-            // Pawn movement rules
+
             const direction = isWhite ? -1 : 1;
             if (fromX === toX && this.board[toY][toX] === ' ' && (toY - fromY === direction || (fromY === (isWhite ? 6 : 1) && toY - fromY === 2 * direction && this.board[fromY + direction][fromX] === ' '))) {
                 return true;
@@ -249,7 +249,7 @@ class ChessGame {
         }
 
         if (piece === 'r') {
-            // Rook movement rules
+
             if (fromX === toX || fromY === toY) {
                 return this.isPathClear(fromX, fromY, toX, toY);
             }
@@ -257,14 +257,14 @@ class ChessGame {
         }
 
         if (piece === 'n') {
-            // Knight movement rules
+
             const dx = Math.abs(fromX - toX);
             const dy = Math.abs(fromY - toY);
             return (dx === 2 && dy === 1) || (dx === 1 && dy === 2);
         }
 
         if (piece === 'b') {
-            // Bishop movement rules
+
             if (Math.abs(fromX - toX) === Math.abs(fromY - toY)) {
                 return this.isPathClear(fromX, fromY, toX, toY);
             }
@@ -272,7 +272,7 @@ class ChessGame {
         }
 
         if (piece === 'q') {
-            // Queen movement rules
+
             if (fromX === toX || fromY === toY || Math.abs(fromX - toX) === Math.abs(fromY - toY)) {
                 return this.isPathClear(fromX, fromY, toX, toY);
             }
@@ -280,7 +280,7 @@ class ChessGame {
         }
 
         if (piece === 'k') {
-            // King movement rules
+
             const dx = Math.abs(fromX - toX);
             const dy = Math.abs(fromY - toY);
             return (dx <= 1 && dy <= 1);
@@ -305,8 +305,8 @@ class ChessGame {
     }
 
     private isCheckmate(isWhite: boolean): boolean {
-        // Check if the current player is in checkmate
-        // This is a simplified version and may need more comprehensive checks
+
+
         const king = isWhite ? 'K' : 'k';
         const opponentMoves = this.getAllPossibleMoves(!isWhite);
         const kingPosition = this.findPiece(king);
@@ -317,8 +317,8 @@ class ChessGame {
     }
 
     private isStalemate(isWhite: boolean): boolean {
-        // Check if the current player is in stalemate
-        // This is a simplified version and may need more comprehensive checks
+
+
         const allMoves = this.getAllPossibleMoves(isWhite);
         return allMoves.length === 0;
     }

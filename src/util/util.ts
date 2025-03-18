@@ -165,12 +165,45 @@ export function timeUntil(timestamp: Date | number): string {
 	}
 }
 
+export function timeElapsed(date: Date | number, detailed: boolean = false): string {
+	if (typeof date === 'number') date = new Date(date);
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+
+	const seconds = Math.floor(diff / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+
+	if (!detailed) {
+		let timeString = "";
+		if (days > 0) timeString = `${days} day${days > 1 ? 's' : ''}`;
+		else if (hours > 0) timeString = `${hours} hour${hours > 1 ? 's' : ''}`;
+		else if (minutes > 0) timeString = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+		else timeString = `${seconds} second${seconds > 1 ? 's' : ''}`;
+
+		return timeString;
+	} else {
+		const hoursRemaining = hours % 24;
+		const minutesRemaining = minutes % 60;
+		const secondsRemaining = seconds % 60;
+
+		const parts = [];
+		if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+		if (hoursRemaining > 0) parts.push(`${hoursRemaining} hour${hoursRemaining > 1 ? 's' : ''}`);
+		if (minutesRemaining > 0) parts.push(`${minutesRemaining} minute${minutesRemaining > 1 ? 's' : ''}`);
+		if (secondsRemaining > 0) parts.push(`${secondsRemaining} second${secondsRemaining > 1 ? 's' : ''}`);
+
+		return parts.join(', ');
+	}
+}
+
 export function isURL(url: string): boolean {
 	return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(url);
 }
 
 export function isNullish(value: any): boolean {
-	return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0 && value.every(isNullish));
+	return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0 && value.every(isNullish)) || (typeof value === 'object' && Object.keys(value).length === 0 && Object.values(value).every(isNullish));
 }
 
 export function camelToTitleCase(str: string): string {

@@ -87,8 +87,8 @@ async function searchSteamDB(query: string) {
                         "technologies",
                         "userScore"
                     ],
-                    // "highlightPostTag": "__/ais-highlight__",
-                    // "highlightPreTag": "__ais-highlight__",
+
+
                     "hitsPerPage": 20,
                     "maxValuesPerFacet": 200,
                     "page": 0,
@@ -130,7 +130,7 @@ async function createIndex() {
         const indexNames = indexExists as string[];
 
         if (!indexNames.includes('games_index')) {
-            // If the index doesn't exist, create it
+
             await redis.call('FT.CREATE', 'games_index', 'SCHEMA', 'appid', 'NUMERIC', 'name', 'TEXT');
             commandHandler.logger.info('Index created successfully.');
         } else {
@@ -165,7 +165,7 @@ indexGames();
 // Function to perform fuzzy search on indexed games
 async function searchGames(query: string) {
     try {
-        // Use FT.SEARCH for full-text search. Wrap the query with '%' for fuzzy matching.
+
         const results: Array<string | number> = await redis.call(
             'FT.SEARCH',
             'games_index',
@@ -195,7 +195,7 @@ async function searchGames(query: string) {
 async function getGameInfo(appId: number) {
     const response = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${appId}`);
     const data = response.data[appId].data;
-    // console.log(appId, response.data)
+
     if (!data) return null;
     return {
         name: isNullish(data.name) ? null : data.name,
@@ -260,7 +260,7 @@ export default {
         if (!game) return interaction.respond([{ name: 'Please provide a game to search for', value: '' }]);
         const response = await searchGames(game);
         if (!response) return interaction.respond([{ name: 'No games found', value: '' }]);
-        await interaction.respond(response/*.sort((a, b) => b.userScore - a.userScore)*/.map((hit) => ({ name: hit.name, value: hit.appid })));
+        await interaction.respond(response.map((hit) => ({ name: hit.name, value: hit.appid })));
     },
     execute: async ({ args, channel }) => {
         let query = args.get('game')
@@ -304,18 +304,18 @@ export default {
             .setImage(game.headerImage ?? null)
             .dominant()
 
-        // if (game.pc_requirements) {
-        //     embed.addFields(
-        //         { name: 'Minimum Requirements', value: turndown.turndown(game.pc_requirements.minimum) ?? "N/A", inline: true },
-        //         { name: 'Recommended Requirements', value: turndown.turndown(game.pc_requirements.recommended) ?? "N/A", inline: true },
-        //     );
-        // }
-        // if (prices) {
-        //     embed.addFields(
-        //         { name: 'Price', value: prices.currentPrice ?? "N/A", inline: true },
-        //         { name: 'Lowest Discount', value: prices.lowestRecordedPrice ?? "N/A", inline: true },
-        //     );
-        // }
+
+
+
+
+
+
+
+
+
+
+
+
         if (protonDB) {
             embed.addDescription(`\nReported by ${protonDB.total} users to work with ${protonDB.confidence} confidence and a score of ${protonDB.score * 100} (${capitalizeString(protonDB.tier)}) on ProtonDB`)
         }

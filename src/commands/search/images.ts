@@ -10,7 +10,7 @@ const turndownService = new TurnDownService();
 
 export default {
 	description: 'Search for images on the internet',
-	aliases: ['img', 'image'],
+	aliases: ['img', 'image', 'imgs'],
 	options: [
 		{
 			name: 'query',

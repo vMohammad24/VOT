@@ -54,6 +54,8 @@ model User {
   clan             Clan?          @relation(fields: [clanId], references: [id])
   clanId           String?
   statsfmUser      String?
+  afkReason        String?
+  afkSince         DateTime?
 }
 
 model Member {

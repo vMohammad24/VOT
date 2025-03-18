@@ -72,7 +72,6 @@ const elysia = new Elysia()
 	})
 	.onRequest(async ({ set, error, request }) => {
 		const endpoint = new URL(request.url).pathname;
-		console.log(request.method, endpoint);
 		const auth = request.headers.get('authorization');
 		const needsAPIKey = endpoint.startsWith('/mostUsedColors') || endpoint.startsWith('/lyrics') || endpoint.startsWith('/askDDG') || endpoint.startsWith('/googleLens') || endpoint.startsWith('/brave') || (endpoint.startsWith('/upload') && !endpoint.startsWith('/uploads'));
 		if (needsAPIKey && commandHandler.prodMode && !((await checkKey(auth)) || auth === globalAPIKey)) {

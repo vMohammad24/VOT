@@ -63,7 +63,7 @@ export default {
 				name: 'Select a category',
 			});
 		} else {
-			const cmd = handler.commands!.find((cmd) => cmd.name === command);
+			const cmd = handler.commands!.find((cmd) => cmd.name === command) ?? handler.commands!.find((cmd) => cmd.aliases?.includes(command!));
 			if (!cmd) return { content: `Command \`${command}\` not found`, ephemeral: true };
 			const embed = new VOTEmbed();
 			embed.setTitle(cmd.name!).setDescription(cmd.description).setColor('Random').setTimestamp();

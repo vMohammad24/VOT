@@ -38,12 +38,6 @@ export default {
             commandHandler.executeCommand.call(commandHandler, commandHandler.commands?.find(a => a.name === 'tiktok trending')!, (interaction ? interaction : message)!);
         }
         cookies = res.headers['set-cookie']?.map((cookie: string) => cookie.split(';')[0]).join('; ') ?? '';
-        console.log({
-            cookies,
-            data: res.data,
-            status: res.status,
-            statusText: res.statusText,
-        });
         const trending = res.data as TikTokExploreResponse // JSON.parse(content) as TikTokExploreResponse;
         if (!trending) return { content: 'Failed to fetch Tiktok trending videos', ephemeral: true };
 
@@ -90,7 +84,7 @@ export default {
                     name: video.author.nickname ?? 'Unknown',
                 }
             })),
-            // type: 'select'
+
         })
     }
 } as ICommand

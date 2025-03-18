@@ -244,8 +244,6 @@ export class DuckDuckGoTranslate {
 			data: text,
 		});
 
-		console.log(response.data)
-
 
 		const result = response.data as TranslationResponse;
 		return result.translated;

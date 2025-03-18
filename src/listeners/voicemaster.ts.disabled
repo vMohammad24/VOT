@@ -85,7 +85,7 @@ export default {
         })
 
         client.on('interactionCreate', async (interaction) => {
-            // if (!interaction.isButton()) return;
+         
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
             const vm = await getVoiceMaster(interaction.guildId!);
