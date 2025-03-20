@@ -49,7 +49,6 @@ export default class LegacyCommandHandler {
 				return;
 			}
 
-
 			const command = this.handler.commands?.filter(cmd => 'aliases' in cmd).find(
 				(cmd) => {
 					if (!cmd.name) return;
@@ -74,7 +73,6 @@ export default class LegacyCommandHandler {
 						cmd.aliases?.some(a => !a.includes(" ") && a.toLowerCase() === commandName.toLowerCase());
 				}
 			) as ICommand;
-
 			if (!command) return;
 			if (command.slashOnly) {
 				const msg = await message.reply({

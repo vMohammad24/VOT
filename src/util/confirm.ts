@@ -4,16 +4,16 @@ import {
 	ButtonInteraction,
 	ButtonStyle,
 	Message,
+	type Interaction,
 	type InteractionReplyOptions,
 	type MessageReplyOptions,
-	type Interaction,
 	type RepliableInteraction,
 } from 'discord.js';
 
 interface ConfirmOptions {
 	redBtnText: string;
 	greenBtnText: string;
-	context: Message | Interaction;
+	context: Message<boolean> | Interaction;
 	onConfirm: (interaction: ButtonInteraction) => void;
 	onDecline: (Interaction: ButtonInteraction) => void;
 }
@@ -37,14 +37,14 @@ export default class Confirm {
 		const msg =
 			this.context instanceof Message
 				? await this.context.reply({
-						...(payload as MessageReplyOptions),
-						components: components,
-					})
+					...(payload as MessageReplyOptions),
+					components: components,
+				})
 				: ((await (this.context as RepliableInteraction).reply({
-						...(payload as InteractionReplyOptions),
-						components: components,
-						fetchReply: true,
-					})) as Message);
+					...(payload as InteractionReplyOptions),
+					components: components,
+					fetchReply: true,
+				})) as Message);
 		this.createCollector(msg);
 	}
 	private createCollector(msg: Message) {
