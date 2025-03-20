@@ -1,12 +1,13 @@
 # VOT
 
-To install dependencies:
+## To install dependencies:
 
 ```bash
 bun install
 ```
 
-First install:
+## First install:
+
 Fix a .env
 
 ```bash
@@ -19,13 +20,13 @@ Then run:
 bunx prisma db push
 ```
 
-## Production
+# Production
 
 ```bash
 docker compose --profile prod up -d
 ```
 
-## Development:
+# Development:
 
 ### For services:
 

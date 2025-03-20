@@ -39,6 +39,10 @@ export default {
 					name: 'Redis',
 					value: 'redis',
 				},
+				{
+					name: 'Source',
+					value: 'src',
+				}
 			],
 		},
 		{
@@ -64,7 +68,7 @@ export default {
 			if (code.startsWith('```')) {
 				code = code.slice(3, -3);
 			}
-			const lang = args.get('type');
+			let lang = args.get('type');
 			let evaluatedResult = '';
 			switch (lang) {
 				case 'sql':
@@ -80,6 +84,13 @@ export default {
 				case 'shell':
 					const { stdout: shellStdout, stderr: shellStderr } = await execAsync(code);
 					evaluatedResult = shellStdout || shellStderr;
+					break;
+				case 'src':
+				case 'source':
+					const command = await commandHandler.commands!.find((c) => c.name === code || c.aliases?.includes(code!));
+					if (!command) return { content: 'Command not found', ephemeral: true };
+					evaluatedResult = "" + command.execute
+					lang = "ts";
 					break;
 				default:
 					evaluatedResult = await new Function(`
