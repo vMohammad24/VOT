@@ -12,7 +12,7 @@ import ICommand from '../../handler/interfaces/ICommand';
 import { loadImg } from '../../util/database';
 import { addEmojiByURL, getEmoji } from '../../util/emojis';
 import { getTikTokUser } from '../../util/tiktok';
-import { getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
+import { capitalizeString, getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
 
 interface User {
 	avatar: string;
@@ -30,9 +30,6 @@ interface User {
 	username: string;
 }
 
-function captitalizeString(string: string) {
-	return (string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()).replace(/_/g, ' ');
-}
 
 interface Badge {
 	tooltip: string;
@@ -69,28 +66,6 @@ interface BiographyUser {
 	instagram?: string;
 	youtube?: string;
 	ranks?: string[];
-}
-
-interface DeathUser {
-	username: string;
-	uid: number;
-	description: string;
-	avatarUrl: string;
-	views: number;
-	premium: boolean;
-	joined_at: number;
-	alias: string;
-	badges: {
-		name: string;
-		url: string;
-		id: string;
-		toggle: boolean;
-	}[];
-	discord_id: string;
-	discord_username: string;
-	backgroundUrl: string;
-	audioUrl: string;
-	cursorUrl: string;
 }
 
 interface DiscordConnection {
@@ -366,7 +341,7 @@ export default {
 							.setThumbnail(nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : null)
 							.addFields([
 								{ name: 'ID', value: nUser.uid.toString(), inline: true },
-								{ name: 'Rank', value: captitalizeString(nUser.rank), inline: true },
+								{ name: 'Rank', value: capitalizeString(nUser.rank), inline: true },
 								{ name: 'Contributor', value: nUser.contributor ? 'Yes' : 'No', inline: true },
 								// { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
 								{ name: 'Storage Used', value: numeral(nUser.storage_used).format('0.00b'), inline: true },
@@ -417,156 +392,6 @@ export default {
 					.setFooter({ text: 'Account created on' });
 				return {
 					embeds: [embed],
-				};
-			case 'inject.bio':
-				const url = `https://api.inject.bio/80c734yt8c795t43/UserInfo/?api_key=${import.meta.env.INJECT_API_KEY}&username=${encodeURI(query)}`;
-				const rRes = await axios.get(url);
-				const { data: rData } = rRes;
-				if (!rData.success)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
-					};
-				const rUser = rData.data as InjectUser;
-				// const avatarImg = user.avatar ? await loadImg(user.avatar, {
-				//     requestOptions: {
-				//         headers: {
-				//             'User-Agent': userAgent.random().toString(),
-				//             'cookie': 'PHPSESSID=6v9g6br11q29jafjhq0saehval'
-				//         }
-				//     }
-				// }) : null;
-				return {
-					embeds: [
-						new EmbedBuilder()
-							.setAuthor({
-								name: rUser.username,
-								iconURL: isURL(rUser.avatar) ? rUser.avatar : undefined,
-								url: `https://inject.bio/${rUser.username}`,
-							})
-							.setTitle(isNullish(rUser.display_name) ? rUser.username : rUser.display_name)
-							.setURL(`https://inject.bio/${rUser.username}`)
-							.setDescription(isNullish(rUser.description) ? 'No description' : rUser.description)
-							.setThumbnail(isURL(rUser.avatar) ? rUser.avatar : null)
-							.setImage(isURL(rUser.background) ? rUser.background : null)
-							.addFields([
-								{ name: 'View Count', value: numeral(rUser.view_count).format('0,0'), inline: true },
-								{ name: 'Discord', value: rUser.discord_id ? `<@${rUser.discord_id}>` : 'Not linked', inline: true },
-							])
-							.setColor(rUser.background_color as ColorResolvable)
-							.setFooter({ text: `UID: ${rUser.uid}` })
-							.setTimestamp(new Date(rUser.created_at)),
-					],
-				};
-			case 'biography':
-				const res = await axios.get(`https://biographyon.top/api/${query}`);
-				if (res.status != 200)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
-					};
-				const bUser = res.data as BiographyUser;
-				if (!bUser.id && bUser.id != 0)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
-					};
-				let color: ColorResolvable = 'Random';
-				if (bUser.avatar) {
-					try {
-						const image = await loadImg(`https://cdn.nest.rip/uploads/${bUser.avatar}`);
-						color = getTwoMostUsedColors(image)[0];
-					} catch (error) { }
-				}
-
-				const socialFields = [];
-				if (bUser.github) socialFields.push({ name: 'GitHub', value: bUser.github, inline: true });
-				if (bUser.twitter) socialFields.push({ name: 'Twitter', value: bUser.twitter, inline: true });
-				if (bUser.instagram) socialFields.push({ name: 'Instagram', value: bUser.instagram, inline: true });
-				if (bUser.youtube) socialFields.push({ name: 'YouTube', value: bUser.youtube, inline: true });
-
-				return {
-					embeds: [
-						new EmbedBuilder()
-							.setAuthor({
-								name: bUser.username,
-								iconURL: bUser.avatar ? `https://cdn.nest.rip/uploads/${bUser.avatar}` : undefined,
-								url: `https://bio.polardev.net/${bUser.username}`,
-							})
-							.setTitle(bUser.username || 'No username')
-							.setDescription(`${bUser.bio || 'No bio'}${bUser.ranks?.length ? `\n\n**Ranks:** ${bUser.ranks.join(', ')}` : ''}`)
-							.addFields([
-								{ name: 'About Me', value: bUser.aboutme || 'No about me' },
-								...socialFields
-							])
-							.setThumbnail(bUser.avatar ? `https://cdn.nest.rip/uploads/${bUser.avatar}` : null)
-							.setColor(color)
-							.setFooter({ text: `Invited by ${bUser.invited_by} • ID: ${bUser.id}` })
-							.setImage(bUser.banner ? `https://cdn.nest.rip/uploads/${bUser.banner}` : null)
-							.setTimestamp(new Date(bUser.created_at)),
-					],
-				};
-			case 'death.ovh':
-				const deathRes = await axios.post(`https://death.ovh/api/bot/lookup2`, {
-					key: import.meta.env.DEATH_OVH_API_KEY,
-					username: query,
-				});
-				if (deathRes.status !== 200)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
-					};
-				const deathUser = deathRes.data as DeathUser;
-				if (!deathUser.uid)
-					return {
-						ephemeral: true,
-						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
-					};
-				const emojis: string[] = [];
-				const { badges } = deathUser;
-				if (badges && badges.length != 0) {
-					await Promise.all(
-						badges.map(async (badge) => {
-							if (!badge.toggle) return;
-							const emoji = await addEmojiByURL(`death_${badge.id}`, badge.url, ems);
-							// const res = await axios.get(badge.url, { responseType: 'arraybuffer' });
-							// const path = join(import.meta.dir, '..', '..', '..', 'assets', 'emojis', `death_${badge.id}.png`);
-							// await write(path, res.data);
-							emojis.push(emoji?.toString()!);
-						}),
-					);
-				}
-				const ucolor: ColorResolvable = deathUser.backgroundUrl
-					? getTwoMostUsedColors(await loadImg(deathUser.avatarUrl))[0]
-					: 'Random';
-				return {
-					embeds: [
-						new EmbedBuilder()
-							.setAuthor({
-								name: deathUser.username,
-								iconURL: deathUser.avatarUrl,
-								url: `https://death.ovh/${deathUser.alias}`,
-							})
-							// .setTitle(deathUser.username)
-							.setDescription(
-								`
-### ${emojis.join('')}                                
-${deathUser.description}`,
-							)
-							.setThumbnail(deathUser.avatarUrl || null)
-							.setImage(deathUser.backgroundUrl || null)
-							.addFields([
-								{ name: 'Views', value: numeral(deathUser.views).format('0,0'), inline: true },
-								{
-									name: 'Discord',
-									value: deathUser.discord_username ? `<@${deathUser.discord_id}>` : 'Not linked',
-									inline: true,
-								},
-							])
-							.setColor(ucolor)
-							.setFooter({ text: `UID: ${deathUser.uid} • Joined` })
-							.setTimestamp(new Date(deathUser.joined_at * 1000)),
-					],
 				};
 			case 'socl.gg':
 				const sHtml = (await axios.get(`https://socl.gg/${query}`)).data;
@@ -718,7 +543,7 @@ ${deathUser.description}`,
 							.setThumbnail(isNullish(gData.config.avatar) ? null : gData.config.avatar)
 							.addFields(
 								gData.config.socials.map((social) => ({
-									name: captitalizeString(social.social),
+									name: capitalizeString(social.social),
 									value: social.value,
 									inline: true,
 								})),
