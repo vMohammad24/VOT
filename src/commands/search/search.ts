@@ -29,7 +29,6 @@ export default {
 	execute: async ({ args, interaction, message, handler: { client } }) => {
 		const query = args.get('query') as string | undefined;
 		if (isNullish(query) || !query) return { ephemeral: true, content: 'Please provide a query to search for' };
-		interaction?.deferReply();
 		const json = await searchBrave(query);
 		const { web, infobox } = json.data.body.response;
 		const results = web.results;
