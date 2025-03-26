@@ -1,35 +1,6 @@
+import axios from 'axios';
 import { ApplicationCommandOptionType, Attachment, EmbedBuilder } from 'discord.js';
-import { join } from 'path';
-import { createWorker } from 'tesseract.js';
 import ICommand from '../../handler/interfaces/ICommand';
-const langs: { name: string; value: string }[] = [
-	{ name: 'Arabic', value: 'ara' },
-	{ name: 'Bengali', value: 'ben' },
-	{ name: 'Chinese - Simplified', value: 'chi_sim' },
-	{ name: 'Chinese - Traditional', value: 'chi_tra' },
-	{ name: 'Danish', value: 'dan' },
-	{ name: 'Dutch; Flemish', value: 'nld' },
-	{ name: 'English', value: 'eng' },
-	{ name: 'French', value: 'fra' },
-	{ name: 'German', value: 'deu' },
-	{ name: 'Greek, Modern (1453-)', value: 'ell' },
-	{ name: 'Hebrew', value: 'heb' },
-	{ name: 'Hindi', value: 'hin' },
-	{ name: 'Indonesian', value: 'ind' },
-	{ name: 'Italian', value: 'ita' },
-	{ name: 'Japanese', value: 'jpn' },
-	{ name: 'Korean', value: 'kor' },
-	{ name: 'Malay', value: 'msa' },
-	{ name: 'Persian', value: 'fas' },
-	{ name: 'Polish', value: 'pol' },
-	{ name: 'Portuguese', value: 'por' },
-	{ name: 'Russian', value: 'rus' },
-	{ name: 'Spanish; Castilian', value: 'spa' },
-	{ name: 'Swedish', value: 'swe' },
-	{ name: 'Turkish', value: 'tur' },
-	{ name: 'Vietnamese', value: 'vie' },
-];
-
 export default {
 	description: 'Extract text from an image',
 	category: 'ai',
@@ -40,41 +11,30 @@ export default {
 			description: 'The image you want to extract text from',
 			type: ApplicationCommandOptionType.Attachment,
 			required: true,
-		},
-		{
-			name: 'lang',
-			description: 'The language you want to extract text in',
-			type: ApplicationCommandOptionType.String,
-			required: false,
-			choices: langs,
-		},
+		}
 	],
 	type: 'all',
 	execute: async ({ args, interaction }) => {
 		const attachment = args.get('image') as Attachment | undefined;
-		const lang = (args.get('lang') as string | undefined) || 'eng';
 		if (!attachment) return { ephemeral: true, content: 'Please provide an image to extract text from' };
-		;
-		let text = '';
-		let conf = 0;
-		try {
-			const worker = await createWorker(lang, undefined, {
-				cachePath: join(import.meta.dir, '..', '..', '..', 'assets', 'tesseract'),
-			});
-			const data = (await worker.recognize(attachment.url)).data;
-			text = data.text;
-			conf = data.confidence;
-			await worker.terminate();
-		} catch (e) {
-			text = 'Invalid image/language';
+		const form = new FormData();
+		form.set('image', new Blob([await axios.get(attachment.url, { responseType: 'arraybuffer' }).then(res => res.data)]), attachment.name);
+		form.set('fileName', attachment.name);
+		form.set('userId', 'bcaf15e5-b8e1-43d7-90c7-c2966d1cbed8'); // literally any random uuid
+
+		const res = await axios.post('https://www.blackbox.ai/api/upload', form);
+
+		if (res.status !== 200 || res.data.status !== "success") {
+			return { ephemeral: true, content: 'Failed to process image' };
 		}
+		if (res.status !== 200) return { ephemeral: true, content: 'Failed to upload image' };
+		const { response, status } = res.data;
 		return {
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Extracted Text')
-					.setDescription(text)
-					.setFooter({ text: `Confidence: ${conf}` })
-					.setColor(text.includes('Invalid') ? 'Red' : 'Green')
+					.setDescription(response ?? '> Failed to extract text')
+					.setColor('Green')
 					.setImage(attachment.url),
 			],
 		};

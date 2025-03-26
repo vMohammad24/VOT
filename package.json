@@ -62,7 +62,6 @@
     "query-string": "latest",
     "sharp": "latest",
     "shoukaku": "latest",
-    "tesseract.js": "latest",
     "tough-cookie": "latest",
     "turndown": "latest",
     "user-agents": "latest",
@@ -78,7 +77,6 @@
     "puppeteer",
     "sharp",
     "ssh2",
-    "tesseract.js",
     "zlib-sync"
   ]
 }
