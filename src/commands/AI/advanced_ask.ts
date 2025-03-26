@@ -1,8 +1,10 @@
-import { ApplicationCommandOptionType, BaseGuildTextChannel, GuildTextBasedChannel, Message } from "discord.js";
+import { ApplicationCommandOptionType, BaseGuildTextChannel, Collection, GuildTextBasedChannel, Message } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import { advancedChat, AIMessage } from "../../util/ai";
 import { pagination } from "../../util/pagination";
 // expirement command from a very old src brought back because of deepseek <3 
+
+const PMC = new Collection<string, AIMessage[]>();
 export default {
     name: "advanced ask",
     aliases: ["aask", "aa"],
@@ -90,6 +92,7 @@ export default {
         //         webMessage = 'No web results found';
         //     }
         // }
+        const previousMessages = PMC.get(user.id) || [];
         const messages: AIMessage[] = [
             {
                 role: 'user',
@@ -163,14 +166,24 @@ export default {
                 content: 'I understand. I will provide accurate and concise responses using the command information you provided while following the proper Discord formatting conventions.',
             },
         ];
+        const tempMsgs: AIMessage[] = [];
+        const qMsg = {
+            role: 'user',
+            content: question,
+        } as AIMessage;
         messages.push(
-            {
-                role: 'user',
-                content: question,
-            }
+            qMsg
         )
+        tempMsgs.push(qMsg);
         await editReply('Processing...', rMsg);
         const response = await advancedChat(messages, 'gemini-2.0-flash');
+        tempMsgs.push({
+            role: 'assistant',
+            content: response,
+        })
+        if (user.id) {
+            PMC.set(user.id, tempMsgs);
+        }
         await pagination({
             interaction,
             message,
