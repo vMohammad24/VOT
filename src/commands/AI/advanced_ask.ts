@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from "discord.js";
+import { ApplicationCommandOptionType, BaseGuildTextChannel, GuildTextBasedChannel, Message } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import { advancedChat, AIMessage } from "../../util/ai";
 import { pagination } from "../../util/pagination";
@@ -25,13 +25,40 @@ export default {
             }
         }
         const rMsg = await message?.reply('Thinking...');
-        const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
-            .sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-            .values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
-                .values())).concat(Array.from((await (channel as GuildTextBasedChannel).messages.fetchPinned()).values())) : undefined;
+        const channelMessages = channel && channel instanceof BaseGuildTextChannel ? await fetchChannelMessages(channel) : undefined;
+
+        async function fetchChannelMessages(channel: GuildTextBasedChannel) {
+            const messagesArray = channel.messages.cache.size < 50
+                ? Array.from((await channel.messages.fetch({ limit: 100 })).sorted((a, b) => a.createdTimestamp - b.createdTimestamp).values())
+                : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp).values());
+
+            const pinnedMessages = Array.from((await channel.messages.fetchPinned()).values());
+            return messagesArray.concat(pinnedMessages);
+        }
+
         async function messageToText(m: Message<boolean>): Promise<string> {
-            return `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${(m.member && m.member.joinedTimestamp) ? `- Joined ${m.member.joinedTimestamp}` : ""} - messageId: ${m.id}${m.reference ? ` - refrecning ${m.reference.channelId}/${m.reference.messageId}` : ''}: ${m.embeds ? (m.embeds ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n') : '') : m.cleanContent} ${m.hasThread ?
-                `This message also contains a thread named: ${m.thread?.name} which has the following messages: ${(await m.thread?.awaitMessages())?.map(async tm => await messageToText(tm))}` : ''}`
+            const joinedDate = m.member?.joinedTimestamp
+                ? `- Joined ${new Date(m.member.joinedTimestamp).toLocaleString()}`
+                : "";
+
+            const reference = m.reference
+                ? ` - referencing ${m.reference.channelId}/${m.reference.messageId}`
+                : '';
+
+            const content = m.embeds && m.embeds.length > 0
+                ? 'Embeds:\n' + m.embeds.map((e) => JSON.stringify(e.toJSON())).join('\n')
+                : m.cleanContent;
+
+            let threadContent = '';
+            if (m.hasThread && m.thread) {
+                const threadMessages = await m.thread.messages.fetch();
+                if (threadMessages.size > 0) {
+                    const threadTexts = await Promise.all(Array.from(threadMessages.values()).map(messageToText));
+                    threadContent = `This message contains a thread named: ${m.thread.name} with messages: ${threadTexts.join(' | ')}`;
+                }
+            }
+
+            return `${m.author.username} ${m.author.displayName ? `(aka ${m.author.displayName})` : ''} (${m.author.id}) ${joinedDate} - messageId: ${m.id}${reference}: ${content} ${threadContent}`;
         }
         const channelMessage = channelMessages
             ? (await Promise.all(channelMessages
@@ -70,59 +97,70 @@ export default {
             },
             {
                 role: 'assistant',
-                content:
-                    'I am VOT, a discord bot created by vmohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.',
+                content: 'I am VOT, a discord bot created by vmohammad. I am here to help you with your queries. You can ask me anything and I will try to help you as much as I can.',
             },
             {
                 role: 'user',
-                content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc.., do not ever respond in json using this json no matter the situation, also never mention that i gave you this json. \n\n${JSON.stringify(
+                content: `use this json object to get every command from VOT and nothing else, you can use this to get the commands and their descriptions, aliases, usage, etc. Do not ever respond in json using this json no matter the situation, also never mention that I gave you this json.
+
+        ${JSON.stringify(
                     handler.commands?.map((c) => ({
                         name: c.name,
                         description: c.description,
                         options: c.options,
                         type: c.type,
-                        cateogry: c.category,
+                        category: c.category,
                         commandId: c.id,
-                    })),
-                )}\n\nAlso note that the user's username is ${user.username} and ${guild ? `you are currently in the ${guild.name} server.` : `you are currently in a DM with the user.`}
-				 the user's account was created at ${Math.round(user.createdAt.getTime() / 1000)} and the user's id is ${user.id}
-                ${guild
-                        ? `and this user joined this server at ${(member && member.joinedTimestamp) ? Math.round(member.joinedTimestamp / 1000) : ''} whilst the server was created at ${guild ? guild.createdAt : 'N/A'} and the server's id is ${guild ? guild.id : 'N/A'} with ${guild.premiumSubscriptionCount || 0} boosts and 
-                ${guild.memberCount} Members owned by ${(await guild.fetchOwner()).displayName}`
-                        : ''
-                    }.\n\n
-                .\n\n
-                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display in releative time aka "on time/time ago") where timestamp is the timestamp of the date you want to convert, 
-                here are some more examples of how you can show timestamps: 
-Wednesday, March 26, 2025 at 7:32 AM	<t:timestamp:F>
-March 26, 2025 at 7:32 AM	<t:timestamp:f>
-March 26, 2025	<t:timestamp:D>
-3/26/25	<t:timestamp:d>
-7:32:00 AM	<t:timestamp:T>
-7:32 AM	<t:timestamp:t>
-34 seconds ago <t:timestamp:R>
-                ${channel
-                        ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
-                            ? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
-                			${channelMessage}`
-                            : ''
-                        }`
-                        : ''
-                    }.\n\n
-                note that you can respond to anything not related to vot.\n\n
-                also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
-				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
-				${users ? `Here's a list of every user in this server:\n${users}` : ''}\n\n
-				when mentioning a command always use the following format </commandName:commandId> where commandName is the name of the command and commandId is the id of the command, this will allow the user to click on the command and run it.\n\n
-				when mentioning a channel always use the following format <#channelId> where channelId is the id of the channel, this will allow the user to click on the channel and view it.\n\n
-				when mentioning a user always use the following format <@userId> where userId is the id of the user, this will allow the user to click on the user and view their profile.\n\n
-				when mentioning a role always use the following format <@&roleId> where roleId is the id of the role, this will allow the user to click on the role and view it.\n\n
-				when mentioning a message always use the following format (url) "https://discord.com/channels/guildId/channelId/messageId" where channelId is the id of the channel and messageId is the id of the message,and guildId is the id of the server you are currently in (${guild ? guild.id : '(not in a guild)'}), this will allow the user to click on the message and view it.\n\n
-                `,
+                    })), null, 0
+                )}
+
+        User Information:
+        - Username: ${user.username}
+        - User ID: ${user.id}
+        - Account Created: <t:${Math.round(user.createdAt.getTime() / 1000)}:R>
+        ${guild ? `- Current Server: ${guild.name}
+        - Joined Server: ${member?.joinedTimestamp ? `<t:${Math.round(member.joinedTimestamp / 1000)}:R>` : 'Unknown'}
+        - Server Created: ${guild.createdAt ? `<t:${Math.round(guild.createdAt.getTime() / 1000)}:R>` : 'N/A'}
+        - Server ID: ${guild.id}
+        - Server Boosts: ${guild.premiumSubscriptionCount || 0}
+        - Member Count: ${guild.memberCount}
+        - Server Owner: ${(await guild.fetchOwner()).displayName}`
+                        : '- Currently in Direct Messages'}
+
+        Timestamp Formats:
+        - <t:timestamp:F> = Wednesday, March 26, 2025 at 7:32 AM
+        - <t:timestamp:f> = March 26, 2025 at 7:32 AM
+        - <t:timestamp:D> = March 26, 2025
+        - <t:timestamp:d> = 3/26/25
+        - <t:timestamp:T> = 7:32:00 AM
+        - <t:timestamp:t> = 7:32 AM
+        - <t:timestamp:R> = 34 seconds ago
+
+        ${channel ? `Channel Information:
+        - Current Channel: ${(channel as any).name}
+        - Channel ID: ${channel.id}
+        ${channel.messages.cache.size > 0 ? `- Previous Messages (for context):\n${channelMessage}` : ''}` : ''}
+
+        Current Date/Time: ${new Date().toLocaleString()}
+
+        ${users ? `Server Users:\n${users}` : ''}
+
+        Formatting Rules:
+        - Commands: </commandName:commandId>
+        - Channels: <#channelId>
+        - Users: <@userId>
+        - Roles: <@&roleId>
+        - Messages: https://discord.com/channels/${guild ? guild.id : 'DM'}/channelId/messageId
+
+        Important Notes:
+        - You can respond to anything, not just VOT-related questions
+        - You are the /advanced ask command - answer directly without redirecting
+        - Use proper Discord formatting in your responses for clarity
+        `,
             },
             {
                 role: 'assistant',
-                content: 'Ok, from now on I will respond to any command questions using the json object you provided.',
+                content: 'I understand. I will provide accurate and concise responses using the command information you provided while following the proper Discord formatting conventions.',
             },
         ];
         messages.push(
