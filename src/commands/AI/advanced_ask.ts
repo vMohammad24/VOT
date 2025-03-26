@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType, GuildTextBasedChannel, Message } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import { advancedChat, AIMessage } from "../../util/ai";
-import { searchBrave } from "../../util/brave";
 import { pagination } from "../../util/pagination";
 // expirement command from a very old src brought back because of deepseek <3 
 export default {
@@ -26,8 +25,6 @@ export default {
             }
         }
         const rMsg = await message?.reply('Thinking...');
-        if (message && guild && channel && !interaction) await (channel as GuildTextBasedChannel).sendTyping();
-        await editReply('Gathering context...', rMsg);
         const channelMessages = channel ? (channel.messages.cache.size < 50 ? Array.from((await channel.messages.fetch({ limit: 100 }))
             .sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
             .values()) : Array.from(channel.messages.cache.sorted((a, b) => a.createdTimestamp - b.createdTimestamp)
@@ -45,29 +42,27 @@ export default {
                 .join('\n')
             : '';
         const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - Boosting since ${user.premiumSinceTimestamp}`).join('\n') : undefined;
-        await editReply('Searching...', rMsg);
-        const webRes = (await searchBrave(question)).data.body.response;
-        let webMessage = 'No web results found';
-        let webLength = 0;
-        if (webRes) {
-            const { web, infobox } = webRes;
-            const results = web.results;
-            webLength = results.length;
-            if (results.length > 0) {
-                webMessage = results.map((result) => {
-                    return `**${result.title}**\n${result.description}\n${result.url}`;
-                }).join('\n\n');
-            }
-            if (infobox) {
-                const ib = infobox.results[0];
-                if (ib.description) {
-                    webMessage = ib.description;
-                }
-            } else {
-                webMessage = 'No web results found';
-            }
-        }
-        await editReply('Generating response...', rMsg);
+        // const webRes = (await searchBrave(question)).data.body.response;
+        // let webMessage = 'No web results found';
+        // let webLength = 0;
+        // if (webRes) {
+        //     const { web, infobox } = webRes;
+        //     const results = web.results;
+        //     webLength = results.length;
+        //     if (results.length > 0) {
+        //         webMessage = results.map((result) => {
+        //             return `**${result.title}**\n${result.description}\n${result.url}`;
+        //         }).join('\n\n');
+        //     }
+        //     if (infobox) {
+        //         const ib = infobox.results[0];
+        //         if (ib.description) {
+        //             webMessage = ib.description;
+        //         }
+        //     } else {
+        //         webMessage = 'No web results found';
+        //     }
+        // }
         const messages: AIMessage[] = [
             {
                 role: 'user',
@@ -108,8 +103,6 @@ export default {
                     }.\n\n
                 note that you can respond to anything not related to vot.\n\n
                 also note that you are the /ask command do not tell users to use this command for someting instead you should answer it.\n\n
-				note that you have the ability to search the web, and it has been searched for "${question}" and the results are as follows although you should never prioritize  them above channel messages or pinned messages:\n\n
-				${webMessage}\n\n
 				note that the current date is ${new Date().toDateString()} and the current time is ${new Date().toTimeString()}.\n\n
 				${users ? `Here's a list of every user in this server:\n${users}` : ''}\n\n
 				when mentioning a command always use the following format </commandName:commandId> where commandName is the name of the command and commandId is the id of the command, this will allow the user to click on the command and run it.\n\n
@@ -131,13 +124,12 @@ export default {
             }
         )
         await editReply('Processing...', rMsg);
-        const response = await advancedChat(messages, 'deepseek-r1', 'Blackbox');
-        console.log(response)
+        const response = await advancedChat(messages, 'gemini-2.0-flash');
         await pagination({
             interaction,
             message,
             rMsg,
-            pages: (response + `\n\n-# ${webLength} web results have been used towards this prompt`).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+            pages: (response).match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
                 page: {
                     content: text,
                     allowedMentions: {}
