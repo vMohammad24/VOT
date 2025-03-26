@@ -27,6 +27,7 @@ model Giveaway {
 
 model User {
   id               String         @id @default(uuid())
+  uid              Int            @unique @default(autoincrement())
   name             String?        @unique
   prefix           String?
   token            String         @unique @default(cuid())

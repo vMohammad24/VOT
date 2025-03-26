@@ -6,27 +6,27 @@
 bun install
 ```
 
-## First install:
-
-Fix a .env
-
-```bash
-cp .env.example .env
-```
-
-Then run:
-
-```bash
-bunx prisma db push
-```
-
 # Production
+
+First you're gonna have to create a `.env.prod` file in the root directory. You can use the `.env.example` file as a template.
+
+```
+cp .env.example .env.prod
+```
+
+### Then, you can run the following command to build and start the containers:
 
 ```bash
 docker compose --profile prod up -d
 ```
 
 # Development:
+
+First you're gonna have to create a `.env` file in the root directory. You can use the `.env.example` file as a template.
+
+```
+cp .env.example .env
+```
 
 ### For services:
 
