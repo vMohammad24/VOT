@@ -1,10 +1,12 @@
 import { ApplicationCommandOptionType, BaseGuildTextChannel, Collection, GuildTextBasedChannel, Message } from "discord.js";
 import ICommand from "../../handler/interfaces/ICommand";
 import { advancedChat, AIMessage } from "../../util/ai";
+import { searchBrave } from "../../util/brave";
 import { pagination } from "../../util/pagination";
 // expirement command from a very old src brought back because of deepseek <3 
 
 const PMC = new Collection<string, AIMessage[]>();
+const searchActivators = ['search', 'google', 'web', 'internet'];
 export default {
     name: "advanced ask",
     aliases: ["aask", "aa"],
@@ -18,7 +20,7 @@ export default {
         },
     ],
     execute: async ({ args, editReply, guild, message, interaction, channel, handler, user, member }) => {
-        const question = args.get("quesiton");
+        const question = args.get("quesiton") as string;
         if (!question) {
             console.log(args)
             return {
@@ -26,6 +28,7 @@ export default {
                 ephemeral: true
             }
         }
+        const shouldSearch = searchActivators.find(a => question.includes(a)) != undefined;
         const rMsg = await message?.reply('Thinking...');
         const channelMessages = channel && channel instanceof BaseGuildTextChannel ? await fetchChannelMessages(channel) : undefined;
 
@@ -71,27 +74,29 @@ export default {
                 .join('\n')
             : '';
         const users = guild ? await guild.members.cache.map(user => `Display name: ${user.displayName} (ID: ${user.id}) - Role: ${user.roles.highest.name} - Joined: ${user.joinedAt} - Boosting since ${user.premiumSinceTimestamp}`).join('\n') : undefined;
-        // const webRes = (await searchBrave(question)).data.body.response;
-        // let webMessage = 'No web results found';
-        // let webLength = 0;
-        // if (webRes) {
-        //     const { web, infobox } = webRes;
-        //     const results = web.results;
-        //     webLength = results.length;
-        //     if (results.length > 0) {
-        //         webMessage = results.map((result) => {
-        //             return `**${result.title}**\n${result.description}\n${result.url}`;
-        //         }).join('\n\n');
-        //     }
-        //     if (infobox) {
-        //         const ib = infobox.results[0];
-        //         if (ib.description) {
-        //             webMessage = ib.description;
-        //         }
-        //     } else {
-        //         webMessage = 'No web results found';
-        //     }
-        // }
+        let webMessage: undefined | string;
+        if (shouldSearch) {
+            const webRes = (await searchBrave(question)).data.body.response;
+            let webLength = 0;
+            if (webRes) {
+                const { web, infobox } = webRes;
+                const results = web.results;
+                webLength = results.length;
+                if (results.length > 0) {
+                    webMessage = results.map((result) => {
+                        return `**${result.title}**\n${result.description}\n${result.url}`;
+                    }).join('\n\n');
+                }
+                if (infobox) {
+                    const ib = infobox.results[0];
+                    if (ib.description) {
+                        webMessage = ib.description;
+                    }
+                } else {
+                    webMessage = 'No web results found';
+                }
+            }
+        }
         const previousMessages = PMC.get(user.id) || [];
         const messages: AIMessage[] = [
             {
@@ -159,6 +164,8 @@ export default {
         - You can respond to anything, not just VOT-related questions
         - You are the /advanced ask command - answer directly without redirecting
         - Use proper Discord formatting in your responses for clarity
+
+        ${shouldSearch ? `Web Results (Make sure to use them for context): ${webMessage}` : ''}
         `,
             },
             {
