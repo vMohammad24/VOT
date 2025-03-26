@@ -177,7 +177,7 @@ export default {
 			if (n && n.length > 0) {
 				fields.push({
 					name: 'Notable Permissions',
-					value: n.reverse().join(', '),
+					value: n.join(', '),
 				});
 			}
 		}
