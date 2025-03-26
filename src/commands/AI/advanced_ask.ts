@@ -165,6 +165,7 @@ export default {
                 role: 'assistant',
                 content: 'I understand. I will provide accurate and concise responses using the command information you provided while following the proper Discord formatting conventions.',
             },
+            ...previousMessages
         ];
         const tempMsgs: AIMessage[] = [];
         const qMsg = {
