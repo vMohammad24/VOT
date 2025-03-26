@@ -92,7 +92,15 @@ export default {
                         : ''
                     }.\n\n
                 .\n\n
-                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display on time/time ago) where timestamp is the timestamp of the date you want to convert.
+                if you ever want to use dates in your responses, use the following format: <t:timestamp:R> (note that this will display in releative time aka "on time/time ago") where timestamp is the timestamp of the date you want to convert, 
+                here are some more examples of how you can show timestamps: 
+Wednesday, March 26, 2025 at 7:32 AM	<t:timestamp:F>
+March 26, 2025 at 7:32 AM	<t:timestamp:f>
+March 26, 2025	<t:timestamp:D>
+3/26/25	<t:timestamp:d>
+7:32:00 AM	<t:timestamp:T>
+7:32 AM	<t:timestamp:t>
+34 seconds ago <t:timestamp:R>
                 ${channel
                         ? `the current channel is ${(channel as any).name} and the channel's id is ${channel.id} ${channel.messages.cache.size > 0
                             ? `Here's a list of the previous messages that were sent in this channel with their author use them as much as possible for context if you see 'refrecning' this is its format "channelId/messageId":\n\n
