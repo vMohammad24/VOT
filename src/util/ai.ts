@@ -1,18 +1,19 @@
 import axios from "axios";
 import { Collection } from "discord.js";
+import commandHandler from "..";
 
 
 const axiosInstance = axios.create({
     baseURL: import.meta.env.NODE_ENV === 'production' ? 'http://g4f:8080/v1' : 'http://localhost:8080/v1/',
 })
 
-interface Message {
+export interface AIMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;
     tool_calls?: any;
 }
 
-const sessions = new Collection<string, Message[]>();
+const sessions = new Collection<string, AIMessage[]>();
 export const chat = async (query: string, sessionId?: string, model?: string) => {
     try {
         const session = sessionId ? (sessions.get(sessionId) || []) : [];
@@ -37,7 +38,27 @@ export const chat = async (query: string, sessionId?: string, model?: string) =>
         }
         return message.content;
     } catch (error) {
-        console.error('Error in chat function:', error);
+        commandHandler.logger.error('Error in chat function:', error);
+        throw error;
+    }
+}
+
+export const advancedChat = async (messages: AIMessage[], model: string, provider?: string) => {
+    try {
+        const res = await axiosInstance.post('/chat/completions', {
+            messages: messages,
+            model: model,
+            provider: provider || undefined,
+            stream: false
+        });
+
+        if (!res.data?.choices?.[0]?.message) {
+            throw new Error('Invalid response format from API');
+        }
+
+        return res.data.choices[0].message.content;
+    } catch (error) {
+        commandHandler.logger.error('Error in advancedChat function:', error);
         throw error;
     }
 }
