@@ -65,7 +65,7 @@ export default {
 		]);
 
 		// Fetch user data from database
-		const pUser = await getUserByID(user.id, { tier: true, commands: true });
+		const pUser = await getUserByID(user.id, { tier: true, commands: true, uid: true });
 
 		const buttonId = nanoid();
 		const userPfpId = nanoid();
@@ -191,7 +191,7 @@ export default {
 		embed
 			.setFields(fields.map((field) => ({ ...field, value: field.value || 'Unknown' })))
 			.setTimestamp(u.createdTimestamp)
-			.setFooter({ text: 'Created at' });
+			.setFooter({ text: `UID: ${pUser.uid} • Created` });
 
 		const avatar = u.displayAvatarURL();
 		await embed.dominant();
