@@ -1,10 +1,18 @@
-import axios from 'axios';
-import { ApplicationCommandOptionType, Attachment, EmbedBuilder } from 'discord.js';
-import sharp from 'sharp';
-import type ICommand from '../../handler/interfaces/ICommand';
-async function compressImage(inputBuffer: Buffer, maxSizeBytes = 512 * 1024): Promise<Buffer> {
+import axios from "axios";
+import {
+	ApplicationCommandOptionType,
+	type Attachment,
+	EmbedBuilder,
+} from "discord.js";
+import sharp from "sharp";
+import type ICommand from "../../handler/interfaces/ICommand";
+async function compressImage(
+	inputBuffer: Buffer,
+	maxSizeBytes = 512 * 1024,
+): Promise<Buffer> {
 	let { width, height } = await sharp(inputBuffer).metadata();
-	if (inputBuffer.length <= maxSizeBytes && width! < 320 && height! < 320) return inputBuffer;
+	if (inputBuffer.length <= maxSizeBytes && width! < 320 && height! < 320)
+		return inputBuffer;
 	if (width! > 320) {
 		inputBuffer = await sharp(inputBuffer).resize({ width: 319 }).toBuffer();
 	}
@@ -24,7 +32,10 @@ async function compressImage(inputBuffer: Buffer, maxSizeBytes = 512 * 1024): Pr
 	while (buffer.length > maxSizeBytes && width! > 10 && height! > 10) {
 		width = Math.round(width! * 0.9);
 		height = Math.round(height! * 0.9);
-		buffer = await sharp(inputBuffer).resize(width, height).png({ quality }).toBuffer();
+		buffer = await sharp(inputBuffer)
+			.resize(width, height)
+			.png({ quality })
+			.toBuffer();
 	}
 
 	return buffer;
@@ -35,7 +46,7 @@ function findChunk(buffer: Buffer, type: string): Buffer {
 
 	while (offset < buffer.length) {
 		const chunkLength = buffer.readUInt32BE(offset);
-		const chunkType = buffer.subarray(offset + 4, offset + 8).toString('ascii');
+		const chunkType = buffer.subarray(offset + 4, offset + 8).toString("ascii");
 
 		if (chunkType === type) {
 			return buffer.subarray(offset, offset + chunkLength + 12);
@@ -48,72 +59,72 @@ function findChunk(buffer: Buffer, type: string): Buffer {
 }
 
 export default {
-	name: 'add',
-	description: 'Add a sticker/emoji to the guild',
+	name: "add",
+	description: "Add a sticker/emoji to the guild",
 	options: [
 		{
-			name: 'type',
-			description: 'choose between stickers or emojis',
+			name: "type",
+			description: "choose between stickers or emojis",
 			type: ApplicationCommandOptionType.String,
 			required: true,
 			choices: [
 				{
-					name: 'Stickers',
-					value: 'stickers',
+					name: "Stickers",
+					value: "stickers",
 				},
 				{
-					name: 'Emojis',
-					value: 'emojis',
+					name: "Emojis",
+					value: "emojis",
 				},
 			],
 		},
 		{
-			name: 'file',
-			description: 'file of the sticker/emoji',
+			name: "file",
+			description: "file of the sticker/emoji",
 			type: ApplicationCommandOptionType.Attachment,
 			required: true,
 		},
 		{
-			name: 'name',
-			description: 'name of the sticker/emoji',
+			name: "name",
+			description: "name of the sticker/emoji",
 			type: ApplicationCommandOptionType.String,
 			required: false,
 			minLength: 2,
 			maxLength: 32,
 		},
 	],
-	perms: ['CreateGuildExpressions'],
+	perms: ["CreateGuildExpressions"],
 	execute: async ({ args, interaction, guild, member }) => {
-		const type = args.get('type') as string | undefined;
-		const file = args.get('file') as Attachment | undefined;
+		const type = args.get("type") as string | undefined;
+		const file = args.get("file") as Attachment | undefined;
 		if (!file) {
 			return {
-				content: 'No file provided',
+				content: "No file provided",
 				ephemeral: true,
 			};
 		}
-		if (!file.contentType?.startsWith('image')) {
+		if (!file.contentType?.startsWith("image")) {
 			return {
-				content: 'File must be an image',
+				content: "File must be an image",
 				ephemeral: true,
 			};
 		}
-		const name = (args.get('name') || file.name.trim().replace(/\.[^/.]+$/, '')) as string;
+		const name = (args.get("name") ||
+			file.name.trim().replace(/\.[^/.]+$/, "")) as string;
 
 		const embed = new EmbedBuilder();
 		let oFile: Buffer = (
 			await axios.get(file.url, {
-				responseType: 'arraybuffer',
+				responseType: "arraybuffer",
 			})
 		).data;
-		;
-		if (!file.contentType.endsWith('gif')) {
+		if (!file.contentType.endsWith("gif")) {
 			oFile = await compressImage(oFile);
 		} else {
 			// TODO: Implement gif support
 			return {
 				ephemeral: true,
-				content: 'Gif support is not implemented yet',
+				content: "Gif support is not implemented yet",
 			};
 			// const apng = await compressGif(oFile);
 			// if (typeof apng === 'string')
@@ -123,45 +134,49 @@ export default {
 			// 	};
 			// oFile = apng;
 		}
-		let content: string = '';
+		let content = "";
 		switch (type) {
-			case 'stickers':
-				embed.setTitle('Stickers');
+			case "stickers":
+				embed.setTitle("Stickers");
 				try {
 					const sticker = await guild.stickers.create({
 						file: oFile,
 						name,
 						tags: name,
 					});
-					embed.setDescription('Sticker added successfully');
+					embed.setDescription("Sticker added successfully");
 					content = sticker.url;
 				} catch (err) {
-					embed.setColor('Red');
-					embed.setDescription('Failed to add sticker (' + (err as any).message + ')');
+					embed.setColor("Red");
+					embed.setDescription(
+						"Failed to add sticker (" + (err as any).message + ")",
+					);
 				}
 				break;
-			case 'emojis':
-				embed.setTitle('Emojis');
+			case "emojis":
+				embed.setTitle("Emojis");
 				try {
 					const emoji = await guild.emojis.create({
 						attachment: oFile,
 						name,
 						reason: `Added by ${member.user.username} (${member.user.id})`,
 					});
-					embed.setDescription('Emoji added successfully');
+					embed.setDescription("Emoji added successfully");
 					content = emoji.url;
 				} catch (err) {
-					embed.setColor('Red');
-					embed.setDescription('Failed to add emoji (' + (err as any).message + ')');
+					embed.setColor("Red");
+					embed.setDescription(
+						"Failed to add emoji (" + (err as any).message + ")",
+					);
 				}
 				break;
 			default:
-				embed.setTitle('Invalid type');
-				embed.setColor('Red');
-				embed.setDescription('Type can either be stickers or emojis');
+				embed.setTitle("Invalid type");
+				embed.setColor("Red");
+				embed.setDescription("Type can either be stickers or emojis");
 				break;
 		}
-		if (!embed.data.color) embed.setColor('Green');
+		if (!embed.data.color) embed.setColor("Green");
 		return {
 			embeds: [embed],
 			content,

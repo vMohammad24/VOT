@@ -1,12 +1,11 @@
-import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
-import { Client } from 'genius-lyrics';
-import { apiAxios } from '../../api';
-import ICommand from '../../handler/interfaces/ICommand';
-import { pagination } from '../../util/pagination';
-import { getSpotifyRPC } from '../../util/spotify';
-import VOTEmbed from '../../util/VOTEmbed';
+import { ApplicationCommandOptionType, AttachmentBuilder } from "discord.js";
+import { Client } from "genius-lyrics";
+import { apiAxios } from "../../api";
+import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
+import { pagination } from "../../util/pagination";
+import { getSpotifyRPC } from "../../util/spotify";
 const genius = new Client();
-
 
 interface Release_date_components {
 	year: number;
@@ -100,15 +99,14 @@ interface Response {
 	previewURL: string;
 }
 
-
 export default {
-	description: 'Get the lyrics of the current song',
-	aliases: ['ly'],
-	type: 'all',
+	description: "Get the lyrics of the current song",
+	aliases: ["ly"],
+	type: "all",
 	options: [
 		{
-			name: 'song',
-			description: 'The song you want to get the lyrics for',
+			name: "song",
+			description: "The song you want to get the lyrics for",
 			type: ApplicationCommandOptionType.String,
 			required: false,
 			autocomplete: true,
@@ -116,7 +114,10 @@ export default {
 	],
 	autocomplete: async (interaction) => {
 		const query = await interaction.options.getFocused();
-		if (!query) return await interaction.respond([{ name: 'Provide a query to continue', value: '' }]);
+		if (!query)
+			return await interaction.respond([
+				{ name: "Provide a query to continue", value: "" },
+			]);
 		const songs = await genius.songs.search(query, { sanitizeQuery: false });
 		await interaction.respond(
 			songs
@@ -128,40 +129,68 @@ export default {
 		);
 	},
 	execute: async ({ player, args, interaction, message, user }) => {
-		let query = args.get('song') || (player ? player.queue.current?.title : null);
+		let query =
+			args.get("song") || (player ? player.queue.current?.title : null);
 		if (!query) {
-			const r = await getSpotifyRPC(user.id)
-			if (r.error) return {
-				content: 'Please provide a query to continue',
-				ephemeral: true,
-			}
+			const r = await getSpotifyRPC(user.id);
+			if (r.error)
+				return {
+					content: "Please provide a query to continue",
+					ephemeral: true,
+				};
 			query = `${r.raw?.details}|${r.raw?.state}`;
-		};
-		const song = (await apiAxios.get<Response>(`/lyrics?query=${encodeURIComponent(query)}`)).data;
+		}
+		const song = (
+			await apiAxios.get<Response>(`/lyrics?query=${encodeURIComponent(query)}`)
+		).data;
 		const lyrics = song.lyrics;
 		const splitText = lyrics.match(/[\s\S]{1,768}/g)!;
 		const embeds = splitText.map(async (text, i) => ({
 			page: {
-				embeds: [await new VOTEmbed()
-					.setTitle(`${song.title}`)
-					.setAuthor({ name: song.primary_artist.name, iconURL: song.primary_artist.image_url, url: song.primary_artist.url })
-					.setURL(song.url)
-					.setThumbnail(song.song_art_image_thumbnail_url || song.header_image_thumbnail_url)
-					.setDescription(text)
-					.setTimestamp(song.release_date_components ? new Date(song.release_date_components.year, song.release_date_components.month, song.release_date_components.day) : null)
-					.setFooter(song.release_date_components ? { text: `Released` } : null)
-					.dominant()],
-				files: song.previewURL && i == 0 ? [new AttachmentBuilder(song.previewURL, {
-					name: `${song.title} Preview.m4a`,
-					description: `A preview of the song: "${song.full_title}"`
-				})] : [],
+				embeds: [
+					await new VOTEmbed()
+						.setTitle(`${song.title}`)
+						.setAuthor({
+							name: song.primary_artist.name,
+							iconURL: song.primary_artist.image_url,
+							url: song.primary_artist.url,
+						})
+						.setURL(song.url)
+						.setThumbnail(
+							song.song_art_image_thumbnail_url ||
+								song.header_image_thumbnail_url,
+						)
+						.setDescription(text)
+						.setTimestamp(
+							song.release_date_components
+								? new Date(
+										song.release_date_components.year,
+										song.release_date_components.month,
+										song.release_date_components.day,
+									)
+								: null,
+						)
+						.setFooter(
+							song.release_date_components ? { text: `Released` } : null,
+						)
+						.dominant(),
+				],
+				files:
+					song.previewURL && i == 0
+						? [
+								new AttachmentBuilder(song.previewURL, {
+									name: `${song.title} Preview.m4a`,
+									description: `A preview of the song: "${song.full_title}"`,
+								}),
+							]
+						: [],
 			},
 		}));
 		const pag = await pagination({
 			interaction,
 			message,
 			pages: await Promise.all(embeds),
-			type: 'buttons',
+			type: "buttons",
 		});
 	},
 } as ICommand;

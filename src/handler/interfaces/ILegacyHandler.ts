@@ -1,7 +1,7 @@
-import type { PrismaClient } from '@prisma/client';
-import type { Client } from 'discord.js';
-import type { Kazagumo } from 'kazagumo';
-import type ICommand from './ICommand';
+import type { PrismaClient } from "@prisma/client";
+import type { Client } from "discord.js";
+import type { Kazagumo } from "kazagumo";
+import type ICommand from "./ICommand";
 
 export default interface LegacyHandler {
 	client: Client;

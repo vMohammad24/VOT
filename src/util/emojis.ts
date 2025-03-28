@@ -1,9 +1,9 @@
-import axios from 'axios';
-import { file, write } from 'bun';
-import { ApplicationEmoji, Collection } from 'discord.js';
-import { basename, extname, join } from 'path';
-import sharp from 'sharp';
-import commandHandler from '..';
+import { basename, extname, join } from "path";
+import axios from "axios";
+import { file, write } from "bun";
+import type { ApplicationEmoji, Collection } from "discord.js";
+import sharp from "sharp";
+import commandHandler from "..";
 
 const emojis = new Map<string, ApplicationEmoji>();
 
@@ -14,10 +14,13 @@ export function getEmoji(name: string) {
 	return emojis.get(name)!;
 }
 
-export async function addEmoji(emojiPath: string, ems: Collection<string, ApplicationEmoji> | undefined) {
+export async function addEmoji(
+	emojiPath: string,
+	ems: Collection<string, ApplicationEmoji> | undefined,
+) {
 	if (!ems) {
-		throw new Error('Emojis collection is undefined');
-	};
+		throw new Error("Emojis collection is undefined");
+	}
 	const { verbose, logger, client } = commandHandler;
 	const emojiName = basename(emojiPath, extname(emojiPath));
 	if (emojis.has(emojiName)) return emojis.get(emojiName)!;
@@ -25,43 +28,50 @@ export async function addEmoji(emojiPath: string, ems: Collection<string, Applic
 	let emoji = ems?.find((e) => e.name === emojiName);
 	try {
 		if (emoji) {
-			if (verbose) logger.info(`Emoji ${emojiName} already exists with id ${emoji.id}`);
+			if (verbose)
+				logger.info(`Emoji ${emojiName} already exists with id ${emoji.id}`);
 			emojis.set(emojiName, emoji);
 		} else {
 			const f = await file(emojiPath);
 			const dims = 128;
 			let emojiData = Buffer.from(await f.arrayBuffer());
 			logger.info(`Creating emoji ${emojiName}`);
-			if (f.type == 'image/svg+xml') {
+			if (f.type == "image/svg+xml") {
 				if (verbose) logger.info(`Converting SVG to PNG`);
 				const svg = (await f.text()).replace(
 					'width="16" height="16" fill="currentColor"',
 					`width="${dims}" height="${dims}" fill="white"`,
 				);
-				emojiData = await sharp(Buffer.from(svg)).png().resize(dims, dims).toBuffer();
+				emojiData = await sharp(Buffer.from(svg))
+					.png()
+					.resize(dims, dims)
+					.toBuffer();
 			}
 			try {
 				emoji = await client.application?.emojis.create({
 					attachment: emojiData,
 					name: emojiName,
 				})!;
-				if (verbose) logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
+				if (verbose)
+					logger.info(`Initialized emoji ${emoji?.name} with id ${emoji?.id}`);
 				emojis.set(emojiName, emoji);
 			} catch (error) {
-				commandHandler.logger.error(`Failed to create emoji ${emojiName}: ${error}`);
+				commandHandler.logger.error(
+					`Failed to create emoji ${emojiName}: ${error}`,
+				);
 			}
 		}
 		return emoji;
 	} catch (e) {
-		return '';
+		return "";
 	}
 }
 
 export async function initEmojis() {
 	const { client, logger, verbose } = commandHandler;
-	if (verbose) logger.info('Initializing emojis');
-	const emojiFolder = join(import.meta.dirname, '..', '..', 'assets', 'emojis');
-	const glob = new Bun.Glob('*.{png,jpg,jpeg,gif,svg}');
+	if (verbose) logger.info("Initializing emojis");
+	const emojiFolder = join(import.meta.dirname, "..", "..", "assets", "emojis");
+	const glob = new Bun.Glob("*.{png,jpg,jpeg,gif,svg}");
 	const gEmojis = await glob.scanSync({ cwd: emojiFolder, absolute: true });
 	const ems = await client.application?.emojis.fetch();
 	const paths: string[] = [];
@@ -76,20 +86,35 @@ export async function initEmojis() {
 	);
 	// check if a file was deleted and the emoji still exists
 	emojis.forEach((emoji) => {
-		const emojiFileExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
-		const emojiExists = emojiFileExtensions.some((ext) => paths.includes(join(emojiFolder, `${emoji.name}.${ext}`)));
+		const emojiFileExtensions = ["png", "jpg", "jpeg", "gif", "svg"];
+		const emojiExists = emojiFileExtensions.some((ext) =>
+			paths.includes(join(emojiFolder, `${emoji.name}.${ext}`)),
+		);
 		if (!emojiExists) {
 			if (verbose) logger.info(`Deleting emoji ${emoji.name}`);
 			emoji.delete();
 		}
 	});
-	logger.info('Finished initializing emojis, took ' + (Date.now() - start) + 'ms');
+	logger.info(
+		"Finished initializing emojis, took " + (Date.now() - start) + "ms",
+	);
 }
 
-export async function addEmojiByURL(name: string, url: string, ems: Collection<string, ApplicationEmoji> | undefined) {
+export async function addEmojiByURL(
+	name: string,
+	url: string,
+	ems: Collection<string, ApplicationEmoji> | undefined,
+) {
 	if (emojis.has(name)) return emojis.get(name)!;
-	const res = await axios.get(url, { responseType: 'arraybuffer' });
-	const path = join(import.meta.dir, '..', '..', 'assets', 'emojis', `${name}.png`);
+	const res = await axios.get(url, { responseType: "arraybuffer" });
+	const path = join(
+		import.meta.dir,
+		"..",
+		"..",
+		"assets",
+		"emojis",
+		`${name}.png`,
+	);
 	await write(path, res.data);
 	const emoji = await addEmoji(path, ems);
 	return emoji;

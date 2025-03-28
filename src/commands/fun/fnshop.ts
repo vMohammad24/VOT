@@ -1,7 +1,7 @@
-import axios from 'axios';
-import ICommand from '../../handler/interfaces/ICommand';
-import VOTEmbed from '../../util/VOTEmbed';
-import { pagination } from '../../util/pagination';
+import axios from "axios";
+import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
+import { pagination } from "../../util/pagination";
 
 export interface Layout {
 	id: string;
@@ -139,24 +139,25 @@ export interface FortniteShopResponse {
 	data: Data;
 }
 
-
 export default {
-	description: 'Get the current Fortnite shop',
-	type: 'all',
-	aliases: ['fortnite', 'fortniteshop', 'fn'],
+	description: "Get the current Fortnite shop",
+	type: "all",
+	aliases: ["fortnite", "fortniteshop", "fn"],
 	execute: async ({ interaction, message }) => {
-		const res = await axios.get<FortniteShopResponse>('https://fortnite-api.com/v2/shop')
+		const res = await axios.get<FortniteShopResponse>(
+			"https://fortnite-api.com/v2/shop",
+		);
 		const pages = res.data.data.entries
 			.sort((a, b) => a.sortPriority - b.sortPriority)
-			.filter(e => e.brItems?.length > 0)
+			.filter((e) => e.brItems?.length > 0)
 			.map((entry, index) => {
 				const item = entry.brItems[0];
 				const embed = new VOTEmbed()
 					.setTitle(item.name)
 					.setDescription(
 						`${item.description} \n` +
-						`├ Type: ${item.rarity.displayValue} ${item.type.displayValue}\n` +
-						`├ Price: ${entry.finalPrice} V-Bucks`
+							`├ Type: ${item.rarity.displayValue} ${item.type.displayValue}\n` +
+							`├ Price: ${entry.finalPrice} V-Bucks`,
 					)
 					.setImage(item.images.featured);
 
@@ -166,16 +167,16 @@ export default {
 					},
 					name: item.name,
 					pageNumber: index,
-					description: `${item.description} • ${entry.finalPrice} V-Bucks`
+					description: `${item.description} • ${entry.finalPrice} V-Bucks`,
 				};
 			});
 
 		pagination({
 			pages,
-			type: 'multipleSelect',
+			type: "multipleSelect",
 			interaction,
 			message,
-			name: 'Fortnite Item Shop'
+			name: "Fortnite Item Shop",
 		});
-	}
+	},
 } as ICommand;

@@ -1,11 +1,11 @@
-import type Elysia from 'elysia';
-import { t } from 'elysia';
-import TurndownService from 'turndown';
-import { chatllm, searchBrave, searchBraveSuggest } from '../util/brave';
+import type Elysia from "elysia";
+import { t } from "elysia";
+import TurndownService from "turndown";
+import { chatllm, searchBrave, searchBraveSuggest } from "../util/brave";
 const turndown = new TurndownService();
-export default (server: Elysia<'brave'>) => {
+export default (server: Elysia<"brave">) => {
 	server.post(
-		'/ask',
+		"/ask",
 		async ({ body, headers, set }) => {
 			const { query } = body;
 			const search = await searchBrave(query);
@@ -20,43 +20,49 @@ export default (server: Elysia<'brave'>) => {
 				authorization: t.String(),
 			}),
 			detail: {
-				description: 'Ask a question using Brave search',
+				description: "Ask a question using Brave search",
 			},
 			response: t.Object({
 				raw_response: t.String(),
 				references: t.Array(t.Any()),
 				urls: t.Array(t.String()),
-				images: t.Array(t.Object({
-					src: t.String(),
-					text: t.String(),
-					page_url: t.String(),
-					query_text: t.String(),
-					click_url: t.Union([t.String(), t.Null()]),
-				})),
-				qa: t.Array(t.Object({
-					answer: t.String(),
-					score: t.Number(),
-					href: t.Union([t.String(), t.Null()]),
-				})),
+				images: t.Array(
+					t.Object({
+						src: t.String(),
+						text: t.String(),
+						page_url: t.String(),
+						query_text: t.String(),
+						click_url: t.Union([t.String(), t.Null()]),
+					}),
+				),
+				qa: t.Array(
+					t.Object({
+						answer: t.String(),
+						score: t.Number(),
+						href: t.Union([t.String(), t.Null()]),
+					}),
+				),
 				entities: t.Array(t.Any()),
 				main_entity: t.Union([t.String(), t.Null()]),
 				main_entity_infobox: t.Union([t.Any(), t.Null()]),
 				predicate: t.Union([t.Any(), t.Null()]),
 				context: t.Array(t.Any()),
 				context_urls: t.Array(t.String()),
-				context_results: t.Array(t.Object({
-					url: t.String(),
-					title: t.String(),
-					hostname: t.String(),
-					favicon: t.String(),
-				})),
-				followups: t.Optional(t.Array(t.String()))
+				context_results: t.Array(
+					t.Object({
+						url: t.String(),
+						title: t.String(),
+						hostname: t.String(),
+						favicon: t.String(),
+					}),
+				),
+				followups: t.Optional(t.Array(t.String())),
 			}),
 		},
 	);
 
 	server.get(
-		'/search',
+		"/search",
 		async ({ query: s, headers, set }) => {
 			const { query } = s;
 			const search = await searchBrave(query);
@@ -69,7 +75,7 @@ export default (server: Elysia<'brave'>) => {
 			return {
 				formatted: res,
 				raw: results,
-			}
+			};
 		},
 		{
 			query: t.Object({
@@ -79,21 +85,23 @@ export default (server: Elysia<'brave'>) => {
 				authorization: t.String(),
 			}),
 			detail: {
-				description: 'Search for a query using Brave search',
+				description: "Search for a query using Brave search",
 			},
 			response: t.Object({
-				formatted: t.Array(t.Object({
-					title: t.String(),
-					description: t.String(),
-					url: t.String(),
-				})),
-				raw: t.Any()
-			})
+				formatted: t.Array(
+					t.Object({
+						title: t.String(),
+						description: t.String(),
+						url: t.String(),
+					}),
+				),
+				raw: t.Any(),
+			}),
 		},
 	);
 
 	server.get(
-		'/suggest',
+		"/suggest",
 		async ({ query: { query }, headers, set }) => {
 			return await searchBraveSuggest(query);
 		},
@@ -105,9 +113,9 @@ export default (server: Elysia<'brave'>) => {
 				authorization: t.String(),
 			}),
 			detail: {
-				description: 'Get search suggestions from Brave',
+				description: "Get search suggestions from Brave",
 			},
-			response: t.Array(t.String())
+			response: t.Array(t.String()),
 		},
 	);
 };

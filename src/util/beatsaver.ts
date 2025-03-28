@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 interface BeatmapUploader {
 	id: number;
@@ -72,11 +72,15 @@ interface Beatmap {
 	versions: BeatmapVersion[];
 }
 
-export async function searchSaver(query: string, sorting: 'Rating' | 'Latest' | 'Relevance' | 'Curated') {
+export async function searchSaver(
+	query: string,
+	sorting: "Rating" | "Latest" | "Relevance" | "Curated",
+) {
 	const res = await axios.get(
 		`https://beatsaver.com/api/search/text/0?sortOrder=${sorting}&q=${encodeURIComponent(query)}`,
 	);
-	if (res.status !== 200) return `Error fetching data from beatsaver: ${res.statusText}`;
+	if (res.status !== 200)
+		return `Error fetching data from beatsaver: ${res.statusText}`;
 	const data = res.data.docs as Beatmap[];
 	return data;
 }

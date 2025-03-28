@@ -1,23 +1,23 @@
-import axios from 'axios';
+import { randomUUID } from "node:crypto";
+import { setTimeout } from "node:timers";
+import axios from "axios";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
-	CategoryChannel,
+	type CategoryChannel,
 	ChannelType,
 	EmbedBuilder,
-	GuildMember,
-	PermissionFlagsBits,
-	User,
+	type GuildMember,
 	type GuildTextBasedChannel,
-} from 'discord.js';
-import { randomUUID } from 'node:crypto';
-import { setTimeout } from 'node:timers';
-import commandHandler from '..';
-import { getUser } from './database';
-import { uploadFile } from './nest';
-import { getFrontEndURL } from './urls';
-import { getLogChannel } from './util';
+	PermissionFlagsBits,
+	type User,
+} from "discord.js";
+import commandHandler from "..";
+import { getUser } from "./database";
+import { uploadFile } from "./nest";
+import { getFrontEndURL } from "./urls";
+import { getLogChannel } from "./util";
 
 export async function createTicket(member: GuildMember, reason: string) {
 	const { guild } = member;
@@ -36,7 +36,8 @@ export async function createTicket(member: GuildMember, reason: string) {
 	});
 	if (alreadyExists) {
 		return {
-			error: 'You already have an open ticket <#' + alreadyExists.channelId + '>',
+			error:
+				"You already have an open ticket <#" + alreadyExists.channelId + ">",
 		};
 	}
 	const channel = await guild?.channels.create({
@@ -54,11 +55,11 @@ export async function createTicket(member: GuildMember, reason: string) {
 			// so vscode doesnt get mad
 			...(ticketSettings?.categoryId && ticketSettings?.roleId
 				? [
-					{
-						id: ticketSettings.roleId!,
-						allow: [PermissionFlagsBits.ViewChannel],
-					},
-				]
+						{
+							id: ticketSettings.roleId!,
+							allow: [PermissionFlagsBits.ViewChannel],
+						},
+					]
 				: []),
 		],
 		parent: ticketSettings?.categoryId
@@ -66,7 +67,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 			: undefined,
 		reason: `Ticket created by ${member.user.tag} for ${reason}`,
 	});
-	if (!channel) return { error: 'An error occurred while creating the ticket' };
+	if (!channel) return { error: "An error occurred while creating the ticket" };
 	const pUser = await getUser(member.user);
 	const ticket = await prisma.ticket.create({
 		data: {
@@ -78,15 +79,15 @@ export async function createTicket(member: GuildMember, reason: string) {
 		},
 	});
 	const embed = new EmbedBuilder()
-		.setTitle('Ticket Created')
-		.setDescription('Open Reason:\n```' + reason + '```')
-		.setColor('Green');
+		.setTitle("Ticket Created")
+		.setDescription("Open Reason:\n```" + reason + "```")
+		.setColor("Green");
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
-			.setCustomId('close_ticket')
-			.setLabel('Close Ticket')
+			.setCustomId("close_ticket")
+			.setLabel("Close Ticket")
 			.setStyle(ButtonStyle.Danger)
-			.setEmoji('🔒'),
+			.setEmoji("🔒"),
 	);
 	channel!.send({
 		embeds: [embed],
@@ -94,17 +95,20 @@ export async function createTicket(member: GuildMember, reason: string) {
 		content: `<@${member.id}>, please wait for a staff member to respond`,
 	});
 	const logEmbed = new EmbedBuilder()
-		.setTitle('Ticket Created')
+		.setTitle("Ticket Created")
 		.setDescription(`${channel.name} has been created for ${reason}`)
 		.setAuthor({ name: member.user.tag, iconURL: member.displayAvatarURL() })
-		.setColor('Green')
+		.setColor("Green")
 		.setTimestamp();
 	const logChannel = await getLogChannel(guild);
 	logChannel?.send({ embeds: [logEmbed] });
 	return { channel, ticket };
 }
 
-export async function closeTicket(channel: GuildTextBasedChannel, closedBy: GuildMember) {
+export async function closeTicket(
+	channel: GuildTextBasedChannel,
+	closedBy: GuildMember,
+) {
 	const { prisma } = commandHandler;
 	const ticketData = await prisma.ticket.findFirst({
 		where: {
@@ -112,11 +116,16 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 		},
 	});
 	if (!ticketData) {
-		const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('Red');
+		const embed = new EmbedBuilder()
+			.setTitle("Error")
+			.setDescription("This is not a ticket channel")
+			.setColor("Red");
 		return { embeds: [embed] };
 	}
-	const chan = (await channel.guild?.channels.fetch(channel.id)) as GuildTextBasedChannel;
-	if (!chan) return { error: 'An error occurred while fetching the channel' };
+	const chan = (await channel.guild?.channels.fetch(
+		channel.id,
+	)) as GuildTextBasedChannel;
+	if (!chan) return { error: "An error occurred while fetching the channel" };
 	const ticketOwner = await channel.guild?.members.fetch(ticketData.ownerId);
 	const cdnId = await transcriptTicket(chan);
 	await chan.delete();
@@ -131,39 +140,43 @@ export async function closeTicket(channel: GuildTextBasedChannel, closedBy: Guil
 	});
 	const logChannel = await getLogChannel(channel.guild);
 	const logEmbed = new EmbedBuilder()
-		.setTitle('Ticket Closed')
+		.setTitle("Ticket Closed")
 		.setDescription(`<@${ticketData.ownerId}> ticket's has been closed`)
 		.setAuthor({
 			name: closedBy.user.tag,
 			iconURL: closedBy.user.displayAvatarURL(),
 		})
-		.setColor('Red')
+		.setColor("Red")
 		.setTimestamp();
 	const userEmbed = new EmbedBuilder()
-		.setTitle('Ticket Closed')
+		.setTitle("Ticket Closed")
 		.setAuthor({
 			name: closedBy.user.tag,
 			iconURL: closedBy.user.displayAvatarURL(),
 		})
-		.setDescription(`A ticket you have opened in ${chan.guild.name} has been closed`)
+		.setDescription(
+			`A ticket you have opened in ${chan.guild.name} has been closed`,
+		)
 		.setTimestamp()
-		.setColor('Red')
+		.setColor("Red")
 		.setFooter({ text: `Ticket ID: ${ticketData.id}` });
 	const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
-			.setLabel('Transcript')
+			.setLabel("Transcript")
 			.setStyle(ButtonStyle.Link)
-			.setEmoji('📋')
+			.setEmoji("📋")
 			.setURL(`${getFrontEndURL()}/ticket/${ticketData.id}`),
 	);
 	logChannel?.send({ embeds: [logEmbed], components: [actionRow] });
 	try {
 		await ticketOwner?.send({ embeds: [userEmbed], components: [actionRow] });
-	} catch (e) { }
-	return { content: 'Ticked closed. ' };
+	} catch (e) {}
+	return { content: "Ticked closed. " };
 }
 
-export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<string | undefined> {
+export async function transcriptTicket(
+	channel: GuildTextBasedChannel,
+): Promise<string | undefined> {
 	const { prisma } = commandHandler;
 	const ticketData = await prisma.ticket.findFirst({
 		where: {
@@ -171,17 +184,23 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 		},
 	});
 	if (!ticketData) {
-		const embed = new EmbedBuilder().setTitle('Error').setDescription('This is not a ticket channel').setColor('Red');
+		const embed = new EmbedBuilder()
+			.setTitle("Error")
+			.setDescription("This is not a ticket channel")
+			.setColor("Red");
 		return undefined;
 	}
 	const messages = await channel.messages.fetch({ limit: 100 });
 	let lastMessageId = messages.last()?.id;
 
 	while (lastMessageId) {
-		const newMessages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
+		const newMessages = await channel.messages.fetch({
+			limit: 100,
+			before: lastMessageId,
+		});
 		if (newMessages.size === 0) break;
 
-		newMessages.forEach(msg => messages.set(msg.id, msg));
+		newMessages.forEach((msg) => messages.set(msg.id, msg));
 		lastMessageId = newMessages.last()?.id;
 	}
 	// const json = await Promise.all(messages.values().map(async (message) => ({
@@ -212,78 +231,101 @@ export async function transcriptTicket(channel: GuildTextBasedChannel): Promise<
 	// 	id: message.id,
 	// })))
 	const users: {
-		tag: string,
-		avatar: string,
-		color?: string,
-		icon?: string,
-		bot: boolean,
+		tag: string;
+		avatar: string;
+		color?: string;
+		icon?: string;
+		bot: boolean;
 		clan: string | null;
 		id: string;
 	}[] = [];
-	const messagesArray = await Promise.all(messages.values().map(async (message) => {
-		const aUI = message.interaction?.user;
-		const addUser = async (user: User) => {
-			if (!users.some((u) => u.id === user.id)) {
-				const pUser = await getUser(user, { clan: { select: { id: true } } });
-				users.push({
-					tag: user.tag,
-					avatar: user.displayAvatarURL(),
-					color: message.member?.displayHexColor,
-					icon: message.member?.roles.cache.filter((role) => role.icon).sort((a, b) => b.position - a.position).first()?.iconURL() || undefined,
-					bot: user.bot,
-					clan: pUser?.clan ? pUser.clan.id : null,
-					id: user.id,
-				});
-			}
-		};
+	const messagesArray = await Promise.all(
+		messages.values().map(async (message) => {
+			const aUI = message.interaction?.user;
+			const addUser = async (user: User) => {
+				if (!users.some((u) => u.id === user.id)) {
+					const pUser = await getUser(user, { clan: { select: { id: true } } });
+					users.push({
+						tag: user.tag,
+						avatar: user.displayAvatarURL(),
+						color: message.member?.displayHexColor,
+						icon:
+							message.member?.roles.cache
+								.filter((role) => role.icon)
+								.sort((a, b) => b.position - a.position)
+								.first()
+								?.iconURL() || undefined,
+						bot: user.bot,
+						clan: pUser?.clan ? pUser.clan.id : null,
+						id: user.id,
+					});
+				}
+			};
 
-		if (message.author.bot && aUI) {
-			await addUser(aUI);
-		}
-		await addUser(message.author);
-		users.filter((user, index, self) => self.findIndex((u) => u.id === user.id) === index);
-		return {
-			message: {
-				attachments: await Promise.all(
-					message.attachments.map(async (attachment) => {
-						const file = new File(
-							[new Blob([new Uint8Array((await axios.get(attachment.url, { responseType: 'arraybuffer' })).data)])],
-							attachment.name,
-							{ type: attachment.contentType || undefined },
-						);
-						const uploadedData = await uploadFile(file);
-						return {
-							id: uploadedData.cdnFileName,
-							name: attachment.name,
-							contentType: attachment.contentType,
-							size: attachment.size,
-						};
-					}),
-				),
-				content: message.content,
-				embeds: message.embeds,
-				interaction: message.interaction || undefined
-			},
-			userId: message.author.id,
-			timestamp: message.createdTimestamp,
-			edited: message.editedTimestamp !== null,
-			id: message.id,
-		};
-	}));
+			if (message.author.bot && aUI) {
+				await addUser(aUI);
+			}
+			await addUser(message.author);
+			users.filter(
+				(user, index, self) =>
+					self.findIndex((u) => u.id === user.id) === index,
+			);
+			return {
+				message: {
+					attachments: await Promise.all(
+						message.attachments.map(async (attachment) => {
+							const file = new File(
+								[
+									new Blob([
+										new Uint8Array(
+											(
+												await axios.get(attachment.url, {
+													responseType: "arraybuffer",
+												})
+											).data,
+										),
+									]),
+								],
+								attachment.name,
+								{ type: attachment.contentType || undefined },
+							);
+							const uploadedData = await uploadFile(file);
+							return {
+								id: uploadedData.cdnFileName,
+								name: attachment.name,
+								contentType: attachment.contentType,
+								size: attachment.size,
+							};
+						}),
+					),
+					content: message.content,
+					embeds: message.embeds,
+					interaction: message.interaction || undefined,
+				},
+				userId: message.author.id,
+				timestamp: message.createdTimestamp,
+				edited: message.editedTimestamp !== null,
+				id: message.id,
+			};
+		}),
+	);
 	const json = { users, messages: messagesArray };
 	const file = new File([JSON.stringify(json)], `${ticketData.id}.json`, {
-		type: 'application/json',
+		type: "application/json",
 	});
 	const uploadedData = await uploadFile(file);
 	return uploadedData.cdnFileName;
 }
 const map = new Map<string, Timer>();
-export async function startCloseTimer(channel: GuildTextBasedChannel, timeout: number) {
+export async function startCloseTimer(
+	channel: GuildTextBasedChannel,
+	timeout: number,
+) {
 	const ticket = await commandHandler.prisma.ticket.findFirst({
 		where: {
 			channelId: channel.id,
 		},
-	})
+	});
 	if (!ticket) return;
 	const to = setTimeout(async () => {
 		await closeTicket(channel, await channel.guild.members.fetchMe());
@@ -292,12 +334,12 @@ export async function startCloseTimer(channel: GuildTextBasedChannel, timeout: n
 	map.set(id, to);
 	await commandHandler.prisma.ticket.update({
 		where: {
-			id: ticket.id
+			id: ticket.id,
 		},
 		data: {
 			closeReqId: id,
-		}
-	})
+		},
+	});
 }
 
 export async function cancelCloseTimer(channel: GuildTextBasedChannel) {
@@ -305,13 +347,13 @@ export async function cancelCloseTimer(channel: GuildTextBasedChannel) {
 		where: {
 			channelId: channel.id,
 		},
-	})
+	});
 	if (!ticket) return;
 	const id = ticket.closeReqId;
 	if (!id) {
 		return {
-			error: 'No close request id found for ticket ' + ticket.id
-		}
+			error: "No close request id found for ticket " + ticket.id,
+		};
 	}
 	const timer = map.get(id);
 	if (timer) {
@@ -320,10 +362,10 @@ export async function cancelCloseTimer(channel: GuildTextBasedChannel) {
 	}
 	await commandHandler.prisma.ticket.update({
 		where: {
-			id: ticket.id
+			id: ticket.id,
 		},
 		data: {
 			closeReqId: null,
-		}
-	})
+		},
+	});
 }

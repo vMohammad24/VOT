@@ -1,18 +1,22 @@
-import { ApplicationCommandOptionType, EmbedBuilder, GuildMember } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
+import {
+	ApplicationCommandOptionType,
+	EmbedBuilder,
+	type GuildMember,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
 // import { expNeededForLevel }
 
 export default {
-	description: 'Displays your current level or the level of a selected user',
+	description: "Displays your current level or the level of a selected user",
 	options: [
 		{
-			name: 'user',
-			description: 'The user whose level you want to get',
+			name: "user",
+			description: "The user whose level you want to get",
 			type: ApplicationCommandOptionType.User,
 		},
 	],
 	execute: async ({ args, handler, guild, member }) => {
-		const user = (args.get('user') as GuildMember) || member;
+		const user = (args.get("user") as GuildMember) || member;
 		const prismaUser = await handler.prisma.member.findFirst({
 			where: {
 				guildId: guild.id,
@@ -23,12 +27,12 @@ export default {
 
 		const embed = new EmbedBuilder()
 			.setAuthor({ name: user.displayName, iconURL: user.displayAvatarURL() })
-			.setColor('Random')
+			.setColor("Random")
 			.setDescription(
-				`**Level**: ${prismaUser.level}\n**EXP**: ${prismaUser.exp}/${''}`,
+				`**Level**: ${prismaUser.level}\n**EXP**: ${prismaUser.exp}/${""}`,
 			)
 			.setTimestamp()
-			.setColor('Green');
+			.setColor("Green");
 		return {
 			embeds: [embed],
 		};

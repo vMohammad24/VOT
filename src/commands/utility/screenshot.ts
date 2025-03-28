@@ -1,59 +1,68 @@
-import { ApplicationCommandOptionType } from 'discord.js';
-import { join } from 'path';
-import { URL } from 'url';
-import commandHandler from '../..';
-import ICommand from '../../handler/interfaces/ICommand';
-import { cacheSite, getCachedSite } from '../../util/database';
-import { launchPuppeteer, newPage } from '../../util/puppeteer';
+import { join } from "path";
+import { URL } from "url";
+import { ApplicationCommandOptionType } from "discord.js";
+import commandHandler from "../..";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { cacheSite, getCachedSite } from "../../util/database";
+import { launchPuppeteer, newPage } from "../../util/puppeteer";
 const browser = await launchPuppeteer();
 const blacklist = await (async () => {
-	if (commandHandler.verbose) commandHandler.logger.info('Loading domain blacklist');
-	const path = join(import.meta.dir, '..', '..', '..', 'assets', 'domain_blacklist.txt');
+	if (commandHandler.verbose)
+		commandHandler.logger.info("Loading domain blacklist");
+	const path = join(
+		import.meta.dir,
+		"..",
+		"..",
+		"..",
+		"assets",
+		"domain_blacklist.txt",
+	);
 	const text = await Bun.file(path).text();
 	const domainRegex = /(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
-	if (commandHandler.verbose) commandHandler.logger.info('Loaded domain blacklist');
-	return text.split('\n').map((a) => a.match(domainRegex)?.[0]);
+	if (commandHandler.verbose)
+		commandHandler.logger.info("Loaded domain blacklist");
+	return text.split("\n").map((a) => a.match(domainRegex)?.[0]);
 })();
 export default {
-	description: 'Takes a screenshot of a website',
-	aliases: ['ss'],
+	description: "Takes a screenshot of a website",
+	aliases: ["ss"],
 	options: [
 		{
-			name: 'url',
-			description: 'The URL of the website to screenshot',
+			name: "url",
+			description: "The URL of the website to screenshot",
 			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
 		{
-			name: 'wait',
-			description: 'Whether to wait for the page to finish loading',
+			name: "wait",
+			description: "Whether to wait for the page to finish loading",
 			type: ApplicationCommandOptionType.Boolean,
 			required: false,
 		},
 	],
-	type: 'all',
+	type: "all",
 	execute: async ({ interaction, args }) => {
-		let url = args.get('url') as string;
-		const wait = (args.get('wait') as boolean) || false;
+		let url = args.get("url") as string;
+		const wait = (args.get("wait") as boolean) || false;
 		if (!url) {
 			return {
-				content: 'Please provide a URL',
+				content: "Please provide a URL",
 				ephemeral: true,
 			};
 		}
-		if (!url.startsWith('http')) url = `https://${url}`;
+		if (!url.startsWith("http")) url = `https://${url}`;
 		let urlObject: URL;
 		try {
 			urlObject = new URL(url);
 		} catch {
 			return {
-				content: 'Please provide a valid URL',
+				content: "Please provide a valid URL",
 				ephemeral: true,
 			};
 		}
 		if (!urlObject.hostname) {
 			return {
-				content: 'Please provide a valid URL',
+				content: "Please provide a valid URL",
 				ephemeral: true,
 			};
 		}
@@ -69,12 +78,11 @@ export default {
 				files: [
 					{
 						attachment: cached,
-						name: 'screenshot.png',
+						name: "screenshot.png",
 					},
 				],
 				content: `-# Took ${Date.now() - time}ms`,
 			};
-		;
 		const page = await newPage();
 		try {
 			await page.goto(url, {
@@ -87,11 +95,14 @@ export default {
 				content: `This site is not reachable.`,
 			};
 		}
-		const b = await page.$('body');
+		const b = await page.$("body");
 		try {
 			await b?.evaluate((body) => {
 				const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
-				body.innerHTML = (body.innerHTML as string).replaceAll(ipRegex, 'nuh uh');
+				body.innerHTML = (body.innerHTML as string).replaceAll(
+					ipRegex,
+					"nuh uh",
+				);
 			});
 		} catch (e) {
 			return {
@@ -108,7 +119,7 @@ export default {
 		const screenshot = await page.screenshot({
 			// quality: 50,
 			// optimizeForSpeed: true,
-			type: 'png',
+			type: "png",
 		});
 		const buffer = Buffer.from(screenshot);
 		page.close();
@@ -117,7 +128,7 @@ export default {
 			files: [
 				{
 					attachment: buffer,
-					name: 'screenshot.png',
+					name: "screenshot.png",
 				},
 			],
 			content: `-# Took ${Date.now() - time}ms`,

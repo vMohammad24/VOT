@@ -1,27 +1,28 @@
-import axios from 'axios';
-import type Elysia from 'elysia';
-import queryString from 'query-string';
-import commandHandler from '..';
-import { getRedirectURL } from '../util/urls';
-import { spotifyClientId, spotifyClientSecret } from './apiUtils';
-export default (server: Elysia<'spotify'>) => {
-	server.get('/callback', async ({ query, headers, redirect, set }) => {
+import axios from "axios";
+import type Elysia from "elysia";
+import queryString from "query-string";
+import commandHandler from "..";
+import { getRedirectURL } from "../util/urls";
+import { spotifyClientId, spotifyClientSecret } from "./apiUtils";
+export default (server: Elysia<"spotify">) => {
+	server.get("/callback", async ({ query, headers, redirect, set }) => {
 		const { code } = query as any;
 		const token = headers.authorization;
-		const scopes = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
+		const scopes =
+			"user-read-playback-state user-read-currently-playing user-modify-playback-state";
 		const state = crypto.randomUUID();
 		if (!code)
 			return redirect(
-				'https://accounts.spotify.com/authorize?' +
+				"https://accounts.spotify.com/authorize?" +
 					queryString.stringify({
-						response_type: 'code',
+						response_type: "code",
 						client_id: spotifyClientId,
 						scope: scopes,
-						redirect_uri: getRedirectURL('spotify'),
+						redirect_uri: getRedirectURL("spotify"),
 						state,
 					}),
 			);
-		if (!token) return redirect('/discord/callback');
+		if (!token) return redirect("/discord/callback");
 		const user = await commandHandler.prisma.user.findUnique({
 			where: { token },
 			select: {
@@ -29,20 +30,24 @@ export default (server: Elysia<'spotify'>) => {
 				spotify: true,
 			},
 		});
-		if (!user) return redirect('/discord/callback');
+		if (!user) return redirect("/discord/callback");
 		const tokenRes = (await axios
 			.post(
-				'https://accounts.spotify.com/api/token',
+				"https://accounts.spotify.com/api/token",
 				{
-					grant_type: 'authorization_code',
+					grant_type: "authorization_code",
 					code,
-					redirect_uri: getRedirectURL('spotify'),
+					redirect_uri: getRedirectURL("spotify"),
 				},
 				{
-					method: 'POST',
+					method: "POST",
 					headers: {
-						'content-type': 'application/x-www-form-urlencoded',
-						Authorization: 'Basic ' + Buffer.from(spotifyClientId + ':' + spotifyClientSecret).toString('base64'),
+						"content-type": "application/x-www-form-urlencoded",
+						Authorization:
+							"Basic " +
+							Buffer.from(spotifyClientId + ":" + spotifyClientSecret).toString(
+								"base64",
+							),
 					},
 				},
 			)
@@ -96,7 +101,7 @@ export default (server: Elysia<'spotify'>) => {
 
 		return {
 			success: true,
-			message: 'Successfully regisetred user',
+			message: "Successfully regisetred user",
 		};
 	});
 };

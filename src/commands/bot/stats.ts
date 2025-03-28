@@ -1,16 +1,21 @@
-import axios from 'axios';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
-import numeral from 'numeral';
-import { join } from 'path';
-import { upSince } from '../..';
-import ICommand from '../../handler/interfaces/ICommand';
-import { getInstallCounts } from '../../util/database';
-import VOTEmbed from '../../util/VOTEmbed';
+import { join } from "path";
+import axios from "axios";
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	Events,
+} from "discord.js";
+import numeral from "numeral";
+import { upSince } from "../..";
+import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
+import { getInstallCounts } from "../../util/database";
 async function getLines() {
-	const glob = new Bun.Glob('**/*.{ts,js,mjs,json}');
+	const glob = new Bun.Glob("**/*.{ts,js,mjs,json}");
 	const results = glob.scanSync({
 		absolute: true,
-		cwd: join(import.meta.dir, '..', '..'),
+		cwd: join(import.meta.dir, "..", ".."),
 	});
 
 	const lineCounts = await Promise.all(
@@ -35,17 +40,20 @@ async function getLines() {
 	return totalLines;
 }
 
-let globalLines = '';
+let globalLines = "";
 getLines();
 async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 	const headers = {
 		Authorization: `Bearer ${import.meta.env.GITHUB_TOKEN}`,
-		Accept: 'application/vnd.github+json',
-		'X-GitHub-Api-Version': '2022-11-28',
+		Accept: "application/vnd.github+json",
+		"X-GitHub-Api-Version": "2022-11-28",
 	};
-	const { data } = await axios.get('https://api.github.com/repos/vMohammad24/VOT/commits', {
-		headers,
-	});
+	const { data } = await axios.get(
+		"https://api.github.com/repos/vMohammad24/VOT/commits",
+		{
+			headers,
+		},
+	);
 	const commit = data[0].commit;
 	const message = commit.message;
 	const date = new Date(commit.committer.date);
@@ -54,9 +62,9 @@ async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
 const commit = await getCurrentCommit();
 
 export default {
-	name: 'stats',
-	description: 'Shows the bot stats',
-	type: 'all',
+	name: "stats",
+	description: "Shows the bot stats",
+	type: "all",
 	execute: async ({ handler }) => {
 		const { client } = handler;
 		const { memoryUsage } = process;
@@ -64,58 +72,68 @@ export default {
 		const { users, guilds } = client;
 		const { size } = guilds.cache;
 		const { size: usersSize } = users.cache;
-		const { approximate_guild_count, approximate_user_install_count } = await getInstallCounts(client);
+		const { approximate_guild_count, approximate_user_install_count } =
+			await getInstallCounts(client);
 		// if (globalLines === 0) globalLines = await getLines();
-		const listenerCount = Object.entries(Events).map(([key, value]) => {
-			const count = handler.client.listenerCount(value);
-			if (count != 0) return count;
-		}).filter(a => a != undefined).reduce((acc, curr) => acc + curr, 0);
-		const commitMessage = (commit.message.includes('---') ? commit.message.split('---')[0] : commit.message).trim().replace('[silent]', '');
+		const listenerCount = Object.entries(Events)
+			.map(([key, value]) => {
+				const count = handler.client.listenerCount(value);
+				if (count != 0) return count;
+			})
+			.filter((a) => a != undefined)
+			.reduce((acc, curr) => acc + curr, 0);
+		const commitMessage = (
+			commit.message.includes("---")
+				? commit.message.split("---")[0]
+				: commit.message
+		)
+			.trim()
+			.replace("[silent]", "");
 		const embed = await new VOTEmbed()
-			.setTitle('Bot Stats')
+			.setTitle("Bot Stats")
 			.addFields(
 				{
-					name: 'Memory Usage',
+					name: "Memory Usage",
 					value: `${(heapUsed / 1024 / 1024).toFixed(2)} MB`,
 					inline: true,
 				},
 				{
-					name: 'Commands',
+					name: "Commands",
 					value: `${handler.commands!.length}`,
 					inline: true,
 				},
 				{
-					name: 'Guilds',
+					name: "Guilds",
 					value: `${size}`,
 					inline: true,
 				},
 				{
-					name: 'Listeners',
+					name: "Listeners",
 					value: `${listenerCount}`,
 					inline: true,
 				},
 				{
-					name: 'Members',
-					value: `${numeral(usersSize).format('0,0')}`,
+					name: "Members",
+					value: `${numeral(usersSize).format("0,0")}`,
 					inline: true,
 				},
 				{
-					name: 'Channels',
-					value: `${numeral(client.channels.cache.size).format('0,0')}`,
+					name: "Channels",
+					value: `${numeral(client.channels.cache.size).format("0,0")}`,
 					inline: true,
 				},
 				{
-					name: 'Lines',
-					value: `${numeral(globalLines).format('0,0')}`,
+					name: "Lines",
+					value: `${numeral(globalLines).format("0,0")}`,
 					inline: true,
 				},
 				{
-					name: 'Installed by',
+					name: "Installed by",
 					value: `${approximate_user_install_count} users`,
 					inline: true,
 				},
 				{
-					name: 'Installed in',
+					name: "Installed in",
 					value: `${approximate_guild_count} servers`,
 					inline: true,
 				},
@@ -123,12 +141,14 @@ export default {
 			.setTimestamp(commit.date)
 			.setFooter({ text: commitMessage })
 			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
-			.setThumbnail(client.user?.displayAvatarURL({ extension: 'webp', size: 1024 })!)
+			.setThumbnail(
+				client.user?.displayAvatarURL({ extension: "webp", size: 1024 })!,
+			)
 			.dominant();
 		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
-				.setEmoji('🔗')
-				.setLabel('Invite')
+				.setEmoji("🔗")
+				.setLabel("Invite")
 				.setStyle(ButtonStyle.Link)
 				.setURL(
 					`https://discord.com/oauth2/authorize?client_id=${client.user?.id}`,

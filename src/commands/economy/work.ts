@@ -1,9 +1,9 @@
-import ICommand from '../../handler/interfaces/ICommand';
+import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
-	description: 'Work for money',
+	description: "Work for money",
 	cooldown: 60_000 * 5,
-	type: 'all',
+	type: "all",
 	execute: async ({ user, handler: { prisma } }) => {
 		const money = Math.floor(Math.random() * 500) + 1;
 		const eco = await prisma.economy.findFirst({
@@ -13,7 +13,8 @@ export default {
 		});
 		if (!eco)
 			return {
-				content: 'You do not have an economy account, please run the `balance` command to create one',
+				content:
+					"You do not have an economy account, please run the `balance` command to create one",
 				ephemeral: true,
 			};
 		eco.balance += money;

@@ -1,32 +1,32 @@
-import { ApplicationCommandOptionType } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { shortenUrl } from '../../util/nest';
+import { ApplicationCommandOptionType } from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { shortenUrl } from "../../util/nest";
 
 export default {
-	name: 'shorten',
-	description: 'Shorten a URL',
-	type: 'all',
+	name: "shorten",
+	description: "Shorten a URL",
+	type: "all",
 	options: [
 		{
-			name: 'url',
+			name: "url",
 			type: ApplicationCommandOptionType.String,
-			description: 'The URL to shorten',
+			description: "The URL to shorten",
 			required: true,
 		},
 		{
-			name: 'password',
+			name: "password",
 			type: ApplicationCommandOptionType.String,
-			description: 'The password to protect the URL',
+			description: "The password to protect the URL",
 			required: false,
 		},
 	],
 	// userTier: UserTier.Premium,
 	execute: async ({ interaction, args }) => {
-		const url = args.get('url');
-		const password = (args.get('password') as string) || undefined;
+		const url = args.get("url");
+		const password = (args.get("password") as string) || undefined;
 		if (!url)
 			return {
-				content: 'Please provide a URL to shorten',
+				content: "Please provide a URL to shorten",
 				ephemeral: true,
 			};
 		const res = await shortenUrl(url, password);

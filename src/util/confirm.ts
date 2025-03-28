@@ -1,14 +1,14 @@
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
-	ButtonInteraction,
+	type ButtonInteraction,
 	ButtonStyle,
-	Message,
 	type Interaction,
 	type InteractionReplyOptions,
+	Message,
 	type MessageReplyOptions,
 	type RepliableInteraction,
-} from 'discord.js';
+} from "discord.js";
 
 interface ConfirmOptions {
 	redBtnText: string;
@@ -23,58 +23,74 @@ export default class Confirm {
 	private context: Message | Interaction;
 	private onConfirm: (interaction: ButtonInteraction) => void;
 	private onDecline: (interaction: ButtonInteraction) => void;
-	constructor({ onConfirm, onDecline, context, greenBtnText, redBtnText }: ConfirmOptions) {
+	constructor({
+		onConfirm,
+		onDecline,
+		context,
+		greenBtnText,
+		redBtnText,
+	}: ConfirmOptions) {
 		this.row = new ActionRowBuilder<ButtonBuilder>().addComponents([
-			new ButtonBuilder().setStyle(ButtonStyle.Success).setLabel(greenBtnText).setCustomId('yes'),
-			new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel(redBtnText).setCustomId('no'),
+			new ButtonBuilder()
+				.setStyle(ButtonStyle.Success)
+				.setLabel(greenBtnText)
+				.setCustomId("yes"),
+			new ButtonBuilder()
+				.setStyle(ButtonStyle.Danger)
+				.setLabel(redBtnText)
+				.setCustomId("no"),
 		]);
 		this.context = context;
 		this.onConfirm = onConfirm;
 		this.onDecline = onDecline;
 	}
 	public async reply(payload: MessageReplyOptions | InteractionReplyOptions) {
-		const components = payload.components ? [this.row, ...payload.components] : [this.row];
+		const components = payload.components
+			? [this.row, ...payload.components]
+			: [this.row];
 		const msg =
 			this.context instanceof Message
 				? await this.context.reply({
-					...(payload as MessageReplyOptions),
-					components: components,
-				})
+						...(payload as MessageReplyOptions),
+						components: components,
+					})
 				: ((await (this.context as RepliableInteraction).reply({
-					...(payload as InteractionReplyOptions),
-					components: components,
-					fetchReply: true,
-				})) as Message);
+						...(payload as InteractionReplyOptions),
+						components: components,
+						fetchReply: true,
+					})) as Message);
 		this.createCollector(msg);
 	}
 	private createCollector(msg: Message) {
-		const usr = this.context instanceof Message ? this.context.author : this.context.user;
+		const usr =
+			this.context instanceof Message ? this.context.author : this.context.user;
 		const collector = msg.createMessageComponentCollector({
 			filter: (int) => int.user.id == usr.id,
 			time: 15_000,
 			max: 1,
 		});
-		collector.on('collect', (int) => {
+		collector.on("collect", (int) => {
 			if (!int.isButton()) return;
 			switch (int.customId) {
-				case 'yes': {
+				case "yes": {
 					this.onConfirm(int);
 					break;
 				}
-				case 'no': {
+				case "no": {
 					this.onDecline(int);
 					break;
 				}
 			}
 		});
-		collector.on('end', async (_) => {
+		collector.on("end", async (_) => {
 			msg.components.forEach((row, index) => {
 				if (index != 0) return;
 				row.components.forEach((comp) => {
 					if (comp instanceof ButtonBuilder) comp.setDisabled(true);
 				});
 			});
-			if (await msg.channel.messages.cache.get(msg.id)) msg.edit({ components: msg.components });
+			if (await msg.channel.messages.cache.get(msg.id))
+				msg.edit({ components: msg.components });
 		});
 	}
 }

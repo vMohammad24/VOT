@@ -1,18 +1,18 @@
-import type { Giveaway } from '@prisma/client';
+import type { Giveaway } from "@prisma/client";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	EmbedBuilder,
 	Events,
-	GuildMember,
+	type GuildMember,
 	type GuildTextBasedChannel,
-} from 'discord.js';
-import schedule from 'node-schedule';
-import commandHandler from '..';
-import type CommandHandler from '../handler';
-import { getUser } from './database';
-import { getFrontEndURL } from './urls';
+} from "discord.js";
+import schedule from "node-schedule";
+import commandHandler from "..";
+import type CommandHandler from "../handler";
+import { getUser } from "./database";
+import { getFrontEndURL } from "./urls";
 export async function createGiveaway(
 	handler: CommandHandler,
 	hoster: GuildMember,
@@ -25,19 +25,22 @@ export async function createGiveaway(
 	const { prisma, client } = handler;
 	const embed = new EmbedBuilder()
 		.setTitle(title)
-		.setColor('Random')
+		.setColor("Random")
 		.setTimestamp()
 		.setDescription(
-			`${description && description + '\n\n'}Ends: <t:${Math.floor(
+			`${description && description + "\n\n"}Ends: <t:${Math.floor(
 				(Date.now() + duration * 1000) / 1000,
 			)}:R>\nHosted by: ${hoster}`,
 		);
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		new ButtonBuilder().setCustomId('enter_giveaway').setEmoji('🎉').setStyle(ButtonStyle.Success),
+		new ButtonBuilder()
+			.setCustomId("enter_giveaway")
+			.setEmoji("🎉")
+			.setStyle(ButtonStyle.Success),
 	);
 	const message = await channel.send({
 		embeds: [embed],
-		content: '🎉 🎉 🎉 Giveaway 🎉 🎉 🎉',
+		content: "🎉 🎉 🎉 Giveaway 🎉 🎉 🎉",
 		components: [row],
 	});
 	const endsAt = new Date(Date.now() + duration * 1000);
@@ -78,7 +81,7 @@ export async function createGiveaway(
 	// editedComp.push(comp as any);
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
-		if (interaction.customId === 'enter_giveaway') {
+		if (interaction.customId === "enter_giveaway") {
 			const member = interaction.member as GuildMember;
 			if (!member) return;
 			const pMember = await getUser(member.user);
@@ -88,21 +91,22 @@ export async function createGiveaway(
 			});
 			if (!giveaway) {
 				await interaction.reply({
-					content: 'ok now something probably went wrong when the hoster craeted the giveaway',
+					content:
+						"ok now something probably went wrong when the hoster craeted the giveaway",
 					ephemeral: true,
 				});
 				return;
 			}
 			if (giveaway.end < new Date()) {
 				await interaction.reply({
-					content: 'This giveaway has ended',
+					content: "This giveaway has ended",
 					ephemeral: true,
 				});
 				return;
 			}
 			if (giveaway.entrants.find((e) => e.id === pMember.id)) {
 				await interaction.reply({
-					content: 'You have already entered this giveaway',
+					content: "You have already entered this giveaway",
 					ephemeral: true,
 				});
 				return;
@@ -136,7 +140,9 @@ export async function endGiveaway(giveawayId: string) {
 	if (!giveaway) return;
 	const winners = pickWinners(giveaway);
 	const guild = await client.guilds.fetch(giveaway.guildId);
-	const channel = guild.channels.cache.get(giveaway.channelId) as GuildTextBasedChannel;
+	const channel = guild.channels.cache.get(
+		giveaway.channelId,
+	) as GuildTextBasedChannel;
 	if (!channel) return;
 	const message = await channel.messages.fetch(giveaway.messageId!);
 	if (!message) return;
@@ -156,7 +162,7 @@ export async function endGiveaway(giveawayId: string) {
 		},
 	});
 	const congrats = await message.reply({
-		content: `Congratulations to ${winners.map((w) => `<@${w.id}>`).join(', ')} for winning the giveaway!`,
+		content: `Congratulations to ${winners.map((w) => `<@${w.id}>`).join(", ")} for winning the giveaway!`,
 		components: [],
 	});
 	const url = `${getFrontEndURL()}/giveaway/${giveaway.id}`;
@@ -180,12 +186,14 @@ export async function rerollGiveaway(giveawayId: string) {
 	if (!giveaway) return;
 	const winners = pickWinners(giveaway);
 	const guild = await client.guilds.fetch(giveaway.guildId);
-	const channel = guild.channels.cache.get(giveaway.channelId) as GuildTextBasedChannel;
+	const channel = guild.channels.cache.get(
+		giveaway.channelId,
+	) as GuildTextBasedChannel;
 	if (!channel) return;
 	const message = await channel.messages.fetch(giveaway.messageId!);
 	if (!message) return;
 	const congrats = await message.reply({
-		content: `Congratulations to ${winners.map((w) => `<@${w.id}>`).join(', ')} for winning the giveaway!`,
+		content: `Congratulations to ${winners.map((w) => `<@${w.id}>`).join(", ")} for winning the giveaway!`,
 		components: [],
 	});
 	message.edit({
@@ -211,7 +219,9 @@ export function pickWinners(ga: Giveaway) {
 		giveaway.winnerCount = giveaway.entrants.length;
 	}
 	for (let i = 0; i < ga.winnerCount; i++) {
-		winners.push(giveaway.entrants[Math.floor(Math.random() * giveaway.entrants.length)]);
+		winners.push(
+			giveaway.entrants[Math.floor(Math.random() * giveaway.entrants.length)],
+		);
 	}
 	return winners;
 }

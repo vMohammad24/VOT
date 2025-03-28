@@ -1,13 +1,18 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 
-function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+function mapRange(
+	value: number,
+	inMin: number,
+	inMax: number,
+	outMin: number,
+	outMax: number,
+): number {
 	return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
 
 function linspace(count: number): number[] {
 	return Array.from({ length: count }, (_, i) => i / (count - 1));
 }
-
 
 function drawShape([start, ...pts]: [number, number][]): [number, number][] {
 	if (pts.length < 2) {
@@ -16,15 +21,21 @@ function drawShape([start, ...pts]: [number, number][]): [number, number][] {
 	return [start, ...pts, start];
 }
 
-function splitLinesAtEdges(lines: [number, number][][], boundaryBox: [number, number, number, number]) {
+function splitLinesAtEdges(
+	lines: [number, number][][],
+	boundaryBox: [number, number, number, number],
+) {
 	return lines.flatMap((line) => {
-		let returnLines: [number, number][][] = [];
+		const returnLines: [number, number][][] = [];
 		let currline: [number, number][] = [];
 		for (let i = 1; i < line.length; i++) {
 			const prev = line[i - 1];
 			const curr = line[i];
 			currline.push(prev);
-			if (isOnBoundaryBox(prev, boundaryBox) && isOnBoundaryBox(curr, boundaryBox)) {
+			if (
+				isOnBoundaryBox(prev, boundaryBox) &&
+				isOnBoundaryBox(curr, boundaryBox)
+			) {
 				if (currline.length > 1) {
 					returnLines.push(currline);
 				}
@@ -37,24 +48,34 @@ function splitLinesAtEdges(lines: [number, number][][], boundaryBox: [number, nu
 	});
 }
 
-function isOnBoundaryBox(point: [number, number], [minX, minY, maxX, maxY]: [number, number, number, number]) {
+function isOnBoundaryBox(
+	point: [number, number],
+	[minX, minY, maxX, maxY]: [number, number, number, number],
+) {
 	const [x, y] = point;
-	return Math.abs(x - minX) < 0.5 || Math.abs(x - maxX) < 0.5 || Math.abs(y - minY) < 0.5 || Math.abs(y - maxY) < 0.5;
+	return (
+		Math.abs(x - minX) < 0.5 ||
+		Math.abs(x - maxX) < 0.5 ||
+		Math.abs(y - minY) < 0.5 ||
+		Math.abs(y - maxY) < 0.5
+	);
 }
 
 function removeDuplicateLines(lines: [number, number][][]) {
-	let takenLines: [number, number][][] = [];
+	const takenLines: [number, number][][] = [];
 	let takenLinesStart: number;
 	do {
 		takenLinesStart = takenLines.length;
 		for (let l = 0; l < lines.length; l++) {
-			let line = lines[l];
+			const line = lines[l];
 			let success = true;
 			if (line.length > 2) {
 				for (let i = 0; i < takenLines.length; i++) {
 					if (
-						(pointIsInLine(line[0], takenLines[i]) && pointIsInLine(line[1], takenLines[i])) ||
-						(pointIsInLine(line[line.length - 1], takenLines[i]) && pointIsInLine(line[line.length - 2], takenLines[i]))
+						(pointIsInLine(line[0], takenLines[i]) &&
+							pointIsInLine(line[1], takenLines[i])) ||
+						(pointIsInLine(line[line.length - 1], takenLines[i]) &&
+							pointIsInLine(line[line.length - 2], takenLines[i]))
 					) {
 						if (line.length > takenLines[i].length) {
 							takenLines[i] = line;
@@ -77,10 +98,16 @@ function pointIsInLine(point: [number, number], line: [number, number][]) {
 }
 
 function isClose(pointA: [number, number], pointB: [number, number]) {
-	return Math.abs(pointA[0] - pointB[0]) < 2 && Math.abs(pointA[1] - pointB[1]) < 2;
+	return (
+		Math.abs(pointA[0] - pointB[0]) < 2 && Math.abs(pointA[1] - pointB[1]) < 2
+	);
 }
 
-function isoBands(data: number[][], lower: number, upper: number): [number, number][][] {
+function isoBands(
+	data: number[][],
+	lower: number,
+	upper: number,
+): [number, number][][] {
 	const bands: [number, number][][] = [];
 	for (let y = 0; y < data.length - 1; y++) {
 		for (let x = 0; x < data[0].length - 1; x++) {
@@ -97,7 +124,11 @@ function isoBands(data: number[][], lower: number, upper: number): [number, numb
 	return bands;
 }
 
-function marchSquare(square: [number, number, number][], lower: number, upper: number): [number, number][] {
+function marchSquare(
+	square: [number, number, number][],
+	lower: number,
+	upper: number,
+): [number, number][] {
 	const edges: [number, number][] = [];
 	const [a, b, c, d] = square;
 	const cases = [
@@ -120,7 +151,6 @@ function marchSquare(square: [number, number, number][], lower: number, upper: n
 	return edges;
 }
 
-
 export type MusicCanvasOptions = {
 	thumbnailImage?: string;
 	backgroundColor?: string;
@@ -140,7 +170,7 @@ export type MusicCanvasOptions = {
 
 export async function createMusicCanvas(options: MusicCanvasOptions) {
 	const canvas = createCanvas(2458, 837);
-	const ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext("2d");
 
 	// Set defaults with better colors
 	if (!options.progressBarColor) options.progressBarColor = "#5F2D00";
@@ -162,9 +192,17 @@ export async function createMusicCanvas(options: MusicCanvasOptions) {
 		ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
 		// Add gradient overlay
-		const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+		const gradient = ctx.createLinearGradient(
+			0,
+			0,
+			canvas.width,
+			canvas.height,
+		);
 		gradient.addColorStop(0, `rgba(0, 0, 0, ${options.imageDarkness / 100})`);
-		gradient.addColorStop(1, `rgba(0, 0, 0, ${(options.imageDarkness + 20) / 100})`);
+		gradient.addColorStop(
+			1,
+			`rgba(0, 0, 0, ${(options.imageDarkness + 20) / 100})`,
+		);
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 	} else {
@@ -193,15 +231,15 @@ export async function createMusicCanvas(options: MusicCanvasOptions) {
 
 		// Add reflection effect
 		const gradient = ctx.createLinearGradient(0, 100, 0, 700);
-		gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-		gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+		gradient.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+		gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 		ctx.fillStyle = gradient;
 		ctx.fillRect(100, 100, 600, 600);
 		ctx.restore();
 	}
 
 	// Modern text styling
-	ctx.textBaseline = 'top';
+	ctx.textBaseline = "top";
 	ctx.shadowBlur = 0; // Reset shadow for text
 
 	// Title with gradient
@@ -209,12 +247,12 @@ export async function createMusicCanvas(options: MusicCanvasOptions) {
 	titleGradient.addColorStop(0, options.nameColor);
 	titleGradient.addColorStop(1, options.progressColor);
 	ctx.fillStyle = titleGradient;
-	ctx.font = 'bold 90px sans-serif';
+	ctx.font = "bold 90px sans-serif";
 	ctx.fillText(options.name, 750, 150);
 
 	// Artist name with subtle glow
 	ctx.fillStyle = options.authorColor;
-	ctx.font = '60px sans-serif';
+	ctx.font = "60px sans-serif";
 	ctx.globalAlpha = 0.9;
 	ctx.fillText(options.author, 750, 280);
 	ctx.globalAlpha = 1;
@@ -226,47 +264,79 @@ export async function createMusicCanvas(options: MusicCanvasOptions) {
 	const progressY = 400;
 
 	// Progress bar background with gradient
-	const barGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+	const barGradient = ctx.createLinearGradient(
+		progressX,
+		0,
+		progressX + progressWidth,
+		0,
+	);
 	barGradient.addColorStop(0, options.progressBarColor);
 	barGradient.addColorStop(1, adjustColor(options.progressBarColor, -20));
 	ctx.fillStyle = barGradient;
-	ctx.roundRect(progressX, progressY, progressWidth, progressHeight, progressHeight / 2);
+	ctx.roundRect(
+		progressX,
+		progressY,
+		progressWidth,
+		progressHeight,
+		progressHeight / 2,
+	);
 	ctx.fill();
 
 	// Progress indicator with glow
 	const progress = Math.min(100, Math.max(0, options.progress));
-	const progressGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+	const progressGradient = ctx.createLinearGradient(
+		progressX,
+		0,
+		progressX + progressWidth,
+		0,
+	);
 	progressGradient.addColorStop(0, options.progressColor);
 	progressGradient.addColorStop(1, adjustColor(options.progressColor, 20));
 	ctx.fillStyle = progressGradient;
 	ctx.shadowColor = options.progressColor;
 	ctx.shadowBlur = 10;
-	ctx.roundRect(progressX, progressY, progressWidth * (progress / 100), progressHeight, progressHeight / 2);
+	ctx.roundRect(
+		progressX,
+		progressY,
+		progressWidth * (progress / 100),
+		progressHeight,
+		progressHeight / 2,
+	);
 	ctx.fill();
 
 	// Progress knob
 	ctx.beginPath();
-	ctx.arc(progressX + (progressWidth * (progress / 100)), progressY + progressHeight / 2, 12, 0, Math.PI * 2);
-	ctx.fillStyle = '#FFFFFF';
+	ctx.arc(
+		progressX + progressWidth * (progress / 100),
+		progressY + progressHeight / 2,
+		12,
+		0,
+		Math.PI * 2,
+	);
+	ctx.fillStyle = "#FFFFFF";
 	ctx.shadowBlur = 15;
 	ctx.fill();
 
 	// Time indicators with enhanced styling
 	ctx.shadowBlur = 0;
 	ctx.fillStyle = options.timeColor;
-	ctx.font = 'bold 40px sans-serif';
+	ctx.font = "bold 40px sans-serif";
 	ctx.fillText(options.startTime, progressX, progressY + 30);
-	ctx.fillText(options.endTime, progressX + progressWidth - 100, progressY + 30);
+	ctx.fillText(
+		options.endTime,
+		progressX + progressWidth - 100,
+		progressY + 30,
+	);
 
-	return canvas.toBuffer('image/png');
+	return canvas.toBuffer("image/png");
 }
 
 // Helper function to adjust color brightness
 function adjustColor(color: string, amount: number): string {
-	const hex = color.replace('#', '');
-	const num = parseInt(hex, 16);
+	const hex = color.replace("#", "");
+	const num = Number.parseInt(hex, 16);
 	const r = Math.min(255, Math.max(0, (num >> 16) + amount));
 	const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
 	const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
-	return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+	return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }

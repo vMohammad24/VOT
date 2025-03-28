@@ -1,7 +1,6 @@
-import axios from 'axios';
-import UserAgent from 'user-agents';
-
-const API_URL = `https://duckduckgo-ai.vmohammad.workers.dev/`;
+import axios from "axios";
+import { SocksProxyAgent } from "socks-proxy-agent";
+import UserAgent from "user-agents";
 export interface Message {
 	role: string;
 	content: string;
@@ -31,41 +30,13 @@ export interface DDGAIRes {
 }
 
 export const ddgModels = {
-	'gpt-4o-mini': 'GPT-4o Mini',
-	'o3-mini': 'GPT-o3 Mini',
-	'claude-3-haiku-20240307': 'Claude3 Haiku',
-	'meta-llama/Llama-3.3-70B-Instruct-Turbo': 'Llama 3.170B',
-	'mistralai/Mistral-Small-24B-Instruct-2501': 'Mixtral',
+	"gpt-4o-mini": "GPT-4o Mini",
+	"o3-mini": "GPT-o3 Mini",
+	"claude-3-haiku-20240307": "Claude3 Haiku",
+	"meta-llama/Llama-3.3-70B-Instruct-Turbo": "Llama 3.170B",
+	"mistralai/Mistral-Small-24B-Instruct-2501": "Mixtral",
 };
 
-export async function askDDG(
-	message: string,
-	model: keyof typeof ddgModels = 'gpt-4o-mini',
-): Promise<DDGAIRes | { error: string }> {
-	if (!ddgModels[model]) {
-		return { error: 'Invalid model' };
-	}
-	return (
-		await axios.post(
-			`${API_URL}v1/chat/completions`,
-			{
-				model,
-				messages: [
-					{
-						role: 'user',
-						content: message,
-					},
-				],
-			},
-			{
-				headers: {
-					Authorization: `Bearer NOWAYTHISFUCKINGWORKSLMAO`,
-					'Content-Type': 'application/json',
-				},
-			},
-		)
-	).data as DDGAIRes;
-}
 
 interface ResMessage {
 	created: number;
@@ -80,9 +51,14 @@ export class DuckDuckGoChat {
 	private vqd: string | undefined;
 	private messages: { content: string; role: string }[] = [];
 	private userAgent = new UserAgent();
-	constructor(model: string) {
+	private proxyAgent: SocksProxyAgent | undefined;
+
+	constructor(model: string, proxyURL?: string) {
+		if (proxyURL) {
+			this.proxyAgent = new SocksProxyAgent(proxyURL);
+		}
 		if (!Object.keys(ddgModels).includes(model)) {
-			throw new Error('Invalid model');
+			throw new Error("Invalid model");
 		}
 		this.model = model;
 	}
@@ -93,22 +69,26 @@ export class DuckDuckGoChat {
 
 	public setModel(model: string) {
 		if (!Object.keys(ddgModels).includes(model)) {
-			throw new Error('Invalid model');
+			throw new Error("Invalid model");
 		}
 		this.model = model;
 	}
 
 	private async generateVQD() {
-		const response = await axios.get('https://duckduckgo.com/duckchat/v1/status', {
-			headers: {
-				'cache-control': 'no-store',
-				'user-agent': this.userAgent.toString(),
-				'x-vqd-accept': '1',
-				'sec-fetch-site': 'same-origin',
-				referer: 'https://duckduckgo.com/',
+		const response = await axios.get(
+			"https://duckduckgo.com/duckchat/v1/status",
+			{
+				headers: {
+					"cache-control": "no-store",
+					"user-agent": this.userAgent.toString(),
+					"x-vqd-accept": "1",
+					"sec-fetch-site": "same-origin",
+					"referer": "https://duckduckgo.com/",
+				},
+				...(this.proxyAgent ? { httpsAgent: this.proxyAgent } : {}),
 			},
-		});
-		this.vqd = response.headers['x-vqd-4'];
+		);
+		this.vqd = response.headers["x-vqd-4"];
 	}
 
 	public async chat(query: string): Promise<string> {
@@ -116,37 +96,38 @@ export class DuckDuckGoChat {
 			await this.generateVQD();
 		}
 		this.messages.push({
-			role: 'user',
+			role: "user",
 			content: query,
 		});
 		const res = await axios.post(
-			'https://duckduckgo.com/duckchat/v1/chat',
+			"https://duckduckgo.com/duckchat/v1/chat",
 			{
 				messages: this.messages,
 				model: this.model,
 			},
 			{
 				headers: {
-					'cache-control': 'no-store',
-					'user-agent': this.userAgent.toString(),
-					'x-vqd-accept': '1',
-					referer: 'https://duckduckgo.com/',
-					'x-vqd-4': this.vqd,
+					"cache-control": "no-store",
+					"user-agent": this.userAgent.toString(),
+					"x-vqd-accept": "1",
+					"referer": "https://duckduckgo.com/",
+					"x-vqd-4": this.vqd,
 				},
-				responseType: 'stream',
+				responseType: "stream",
+				...(this.proxyAgent ? { httpsAgent: this.proxyAgent } : {}),
 			},
 		);
-		res.headers['x-vqd-4'] && (this.vqd = res.headers['x-vqd-4']);
+		res.headers["x-vqd-4"] && (this.vqd = res.headers["x-vqd-4"]);
 		const responses: ResMessage[] = [];
-		let response = '';
+		let response = "";
 		await new Promise<void>((resolve, reject) => {
-			res.data.on('data', (data: Buffer) => {
+			res.data.on("data", (data: Buffer) => {
 				try {
-					const lines = data.toString().split('\n');
+					const lines = data.toString().split("\n");
 					lines.forEach((line) => {
-						if (line.startsWith('data: ')) {
+						if (line.startsWith("data: ")) {
 							const jsonStr = line.substring(6);
-							if (jsonStr !== '[DONE]') {
+							if (jsonStr !== "[DONE]") {
 								const parsed = JSON.parse(jsonStr);
 								responses.push(parsed);
 							}
@@ -154,19 +135,19 @@ export class DuckDuckGoChat {
 					});
 				} catch (e) { }
 			});
-			res.data.on('end', () => {
+			res.data.on("end", () => {
 				response = responses
 					.map((response) => {
-						return response.message || '';
+						return response.message || "";
 					})
-					.join('');
+					.join("");
 				resolve();
 				this.messages.push({
-					role: 'assistant',
+					role: "assistant",
 					content: response,
 				});
 			});
-			res.data.on('error', (err: Error) => {
+			res.data.on("error", (err: Error) => {
 				reject(err);
 			});
 		});
@@ -184,7 +165,10 @@ export class DuckDuckGoChat {
 		};
 	}
 
-	public import(data: { model: string; messages: { content: string; role: string }[] }) {
+	public import(data: {
+		model: string;
+		messages: { content: string; role: string }[];
+	}) {
 		this.model = data.model;
 		this.messages = data.messages;
 	}
@@ -200,28 +184,36 @@ export class DuckDuckGoTranslate {
 	private userAgent = new UserAgent();
 
 	private async generateVQD() {
-		const response = await axios.get('https://duckduckgo.com/?q=translate&ia=web', {
-			headers: {
-				'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-				'accept-language': 'en-US,en;q=0.9',
-				'cache-control': 'max-age=0',
-				'user-agent': this.userAgent.toString(),
-				'sec-fetch-dest': 'document',
-				'sec-fetch-mode': 'navigate',
-				'sec-fetch-site': 'same-origin'
-			}
-		});
+		const response = await axios.get(
+			"https://duckduckgo.com/?q=translate&ia=web",
+			{
+				headers: {
+					accept:
+						"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+					"accept-language": "en-US,en;q=0.9",
+					"cache-control": "max-age=0",
+					"user-agent": this.userAgent.toString(),
+					"sec-fetch-dest": "document",
+					"sec-fetch-mode": "navigate",
+					"sec-fetch-site": "same-origin",
+				},
+			},
+		);
 
 		const html = response.data;
 		const vqdMatch = html.match(/vqd="([^"]+)"/);
 		if (vqdMatch && vqdMatch[1]) {
 			this.vqd = vqdMatch[1];
 		} else {
-			throw new Error('Failed to extract VQD from DuckDuckGo response');
+			throw new Error("Failed to extract VQD from DuckDuckGo response");
 		}
 	}
 
-	public async translate(text: string, to: string = 'en', from?: string): Promise<string> {
+	public async translate(
+		text: string,
+		to = "en",
+		from?: string,
+	): Promise<string> {
 		if (!this.vqd) {
 			await this.generateVQD();
 		}
@@ -232,18 +224,17 @@ export class DuckDuckGoTranslate {
 		}
 
 		const response = await axios({
-			method: 'post',
+			method: "post",
 			url,
 			headers: {
-				'content-type': 'text/plain',
-				'user-agent': this.userAgent.toString(),
-				'origin': 'https://duckduckgo.com',
-				'referer': 'https://duckduckgo.com/',
-				'x-requested-with': 'XMLHttpRequest',
+				"content-type": "text/plain",
+				"user-agent": this.userAgent.toString(),
+				origin: "https://duckduckgo.com",
+				referer: "https://duckduckgo.com/",
+				"x-requested-with": "XMLHttpRequest",
 			},
 			data: text,
 		});
-
 
 		const result = response.data as TranslationResponse;
 		return result.translated;

@@ -1,8 +1,13 @@
-import { Canvas, createCanvas, Image, SKRSContext2D } from '@napi-rs/canvas';
-import axios from 'axios';
-import type { Guild, GuildTextBasedChannel } from 'discord.js';
-import commandHandler from '..';
-import { getGuild } from './database';
+import {
+	type Canvas,
+	type Image,
+	type SKRSContext2D,
+	createCanvas,
+} from "@napi-rs/canvas";
+import axios from "axios";
+import type { Guild, GuildTextBasedChannel } from "discord.js";
+import commandHandler from "..";
+import { getGuild } from "./database";
 export const getLogChannel = async (guild: Guild) => {
 	const g = await getGuild(guild, { loggingChannel: true });
 	if (!g) return null;
@@ -14,13 +19,15 @@ type RGB = [number, number, number];
 
 function getEuclideanDistance(color1: RGB, color2: RGB): number {
 	return Math.sqrt(
-		Math.pow(color1[0] - color2[0], 2) + Math.pow(color1[1] - color2[1], 2) + Math.pow(color1[2] - color2[2], 2),
+		Math.pow(color1[0] - color2[0], 2) +
+			Math.pow(color1[1] - color2[1], 2) +
+			Math.pow(color1[2] - color2[2], 2),
 	);
 }
 
 function assignClusters(colors: RGB[], centroids: RGB[]): number[] {
 	return colors.map((color) => {
-		let minDistance = Infinity;
+		let minDistance = Number.POSITIVE_INFINITY;
 		let clusterIndex = -1;
 		for (let i = 0; i < centroids.length; i++) {
 			const distance = getEuclideanDistance(color, centroids[i]);
@@ -33,7 +40,11 @@ function assignClusters(colors: RGB[], centroids: RGB[]): number[] {
 	});
 }
 
-function calculateCentroids(colors: RGB[], clusters: number[], k: number): RGB[] {
+function calculateCentroids(
+	colors: RGB[],
+	clusters: number[],
+	k: number,
+): RGB[] {
 	const sums: RGB[] = Array.from({ length: k }, () => [0, 0, 0]);
 	const counts: number[] = Array(k).fill(0);
 
@@ -47,7 +58,9 @@ function calculateCentroids(colors: RGB[], clusters: number[], k: number): RGB[]
 
 	return sums.map((sum, index) => {
 		const count = counts[index];
-		return count === 0 ? [0, 0, 0] : [sum[0] / count, sum[1] / count, sum[2] / count];
+		return count === 0
+			? [0, 0, 0]
+			: [sum[0] / count, sum[1] / count, sum[2] / count];
 	});
 }
 
@@ -59,7 +72,12 @@ function kMeans(colors: RGB[], k: number, maxIterations = 100): RGB[] {
 		const newClusters = assignClusters(colors, centroids);
 		const newCentroids = calculateCentroids(colors, newClusters, k);
 
-		if (newCentroids.every((centroid, index) => getEuclideanDistance(centroid, centroids[index]) < 1)) {
+		if (
+			newCentroids.every(
+				(centroid, index) =>
+					getEuclideanDistance(centroid, centroids[index]) < 1,
+			)
+		) {
 			break;
 		}
 
@@ -71,17 +89,22 @@ function kMeans(colors: RGB[], k: number, maxIterations = 100): RGB[] {
 }
 
 export const rgbToHex = ([r, g, b]: RGB) => {
-	return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 };
 
 export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
 	const time = Date.now();
 	const scale = 0.1;
 	const canvas = createCanvas(img.width * scale, img.height * scale);
-	const ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext("2d");
 
 	ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
-	const imageData = ctx.getImageData(0, 0, img.width * scale, img.height * scale);
+	const imageData = ctx.getImageData(
+		0,
+		0,
+		img.width * scale,
+		img.height * scale,
+	);
 	const data = imageData.data;
 
 	const colors: RGB[] = [];
@@ -102,31 +125,36 @@ export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
 		.map((centroid, index) => ({ centroid, count: counts[index] }))
 		.sort((a, b) => b.count - a.count)
 		.map((item) => item.centroid);
-	const result = sortedCentroids.map((centroid) => centroid.map(Math.round) as RGB);
-	if (commandHandler.verbose) commandHandler.logger.info(`Took ${Date.now() - time}ms to get two most used colors`);
+	const result = sortedCentroids.map(
+		(centroid) => centroid.map(Math.round) as RGB,
+	);
+	if (commandHandler.verbose)
+		commandHandler.logger.info(
+			`Took ${Date.now() - time}ms to get two most used colors`,
+		);
 	return result;
 }
 export function parseTime(timestr: string): number {
 	timestr = timestr
-		.replace(/(\s|,|and)/g, '')
-		.replace(/(-?\d+|[a-z]+)/gi, '$1 ')
+		.replace(/(\s|,|and)/g, "")
+		.replace(/(-?\d+|[a-z]+)/gi, "$1 ")
 		.trim();
 	const vals: string[] = timestr.split(/\s+/);
-	let time: number = 0;
+	let time = 0;
 	try {
 		for (let j = 0; j < vals.length; j += 2) {
-			let num: number = parseInt(vals[j], 10);
+			let num: number = Number.parseInt(vals[j], 10);
 			switch (vals[j + 1].toLowerCase()) {
-				case 'm':
+				case "m":
 					num *= 60;
 					break;
-				case 'h':
+				case "h":
 					num *= 60 * 60;
 					break;
-				case 'd':
+				case "d":
 					num *= 60 * 60 * 24;
 					break;
-				case 'w':
+				case "w":
 					num *= 60 * 60 * 24 * 7;
 					break;
 				default:
@@ -134,12 +162,12 @@ export function parseTime(timestr: string): number {
 			}
 			time += num;
 		}
-	} catch (ignored) { }
+	} catch (ignored) {}
 	return time;
 }
 
 export function timeUntil(timestamp: Date | number): string {
-	if (typeof timestamp === 'number') timestamp = new Date(timestamp);
+	if (typeof timestamp === "number") timestamp = new Date(timestamp);
 	const now = new Date();
 	const diff = timestamp.getTime() - now.getTime();
 
@@ -151,22 +179,22 @@ export function timeUntil(timestamp: Date | number): string {
 	const years = Math.floor(days / 365);
 
 	if (years > 0) {
-		return `${years} year${years > 1 ? 's' : ''}`;
+		return `${years} year${years > 1 ? "s" : ""}`;
 	} else if (months > 0) {
-		return `${months} month${months > 1 ? 's' : ''}`;
+		return `${months} month${months > 1 ? "s" : ""}`;
 	} else if (days > 0) {
-		return `${days} day${days > 1 ? 's' : ''}`;
+		return `${days} day${days > 1 ? "s" : ""}`;
 	} else if (hours > 0) {
-		return `${hours} hour${hours > 1 ? 's' : ''}`;
+		return `${hours} hour${hours > 1 ? "s" : ""}`;
 	} else if (minutes > 0) {
-		return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+		return `${minutes} minute${minutes > 1 ? "s" : ""}`;
 	} else {
-		return `${seconds} second${seconds > 1 ? 's' : ''}`;
+		return `${seconds} second${seconds > 1 ? "s" : ""}`;
 	}
 }
 
-export function timeElapsed(date: Date | number, detailed: boolean = false): string {
-	if (typeof date === 'number') date = new Date(date);
+export function timeElapsed(date: Date | number, detailed = false): string {
+	if (typeof date === "number") date = new Date(date);
 	const now = new Date();
 	const diff = now.getTime() - date.getTime();
 
@@ -177,10 +205,11 @@ export function timeElapsed(date: Date | number, detailed: boolean = false): str
 
 	if (!detailed) {
 		let timeString = "";
-		if (days > 0) timeString = `${days} day${days > 1 ? 's' : ''}`;
-		else if (hours > 0) timeString = `${hours} hour${hours > 1 ? 's' : ''}`;
-		else if (minutes > 0) timeString = `${minutes} minute${minutes > 1 ? 's' : ''}`;
-		else timeString = `${seconds} second${seconds > 1 ? 's' : ''}`;
+		if (days > 0) timeString = `${days} day${days > 1 ? "s" : ""}`;
+		else if (hours > 0) timeString = `${hours} hour${hours > 1 ? "s" : ""}`;
+		else if (minutes > 0)
+			timeString = `${minutes} minute${minutes > 1 ? "s" : ""}`;
+		else timeString = `${seconds} second${seconds > 1 ? "s" : ""}`;
 
 		return timeString;
 	} else {
@@ -189,12 +218,19 @@ export function timeElapsed(date: Date | number, detailed: boolean = false): str
 		const secondsRemaining = seconds % 60;
 
 		const parts = [];
-		if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
-		if (hoursRemaining > 0) parts.push(`${hoursRemaining} hour${hoursRemaining > 1 ? 's' : ''}`);
-		if (minutesRemaining > 0) parts.push(`${minutesRemaining} minute${minutesRemaining > 1 ? 's' : ''}`);
-		if (secondsRemaining > 0) parts.push(`${secondsRemaining} second${secondsRemaining > 1 ? 's' : ''}`);
+		if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+		if (hoursRemaining > 0)
+			parts.push(`${hoursRemaining} hour${hoursRemaining > 1 ? "s" : ""}`);
+		if (minutesRemaining > 0)
+			parts.push(
+				`${minutesRemaining} minute${minutesRemaining > 1 ? "s" : ""}`,
+			);
+		if (secondsRemaining > 0)
+			parts.push(
+				`${secondsRemaining} second${secondsRemaining > 1 ? "s" : ""}`,
+			);
 
-		return parts.join(', ');
+		return parts.join(", ");
 	}
 }
 
@@ -203,13 +239,21 @@ export function isURL(url: string): boolean {
 }
 
 export function isNullish(value: any): boolean {
-	return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0 && value.every(isNullish)) || (typeof value === 'object' && Object.keys(value).length === 0 && Object.values(value).every(isNullish));
+	return (
+		value === null ||
+		value === undefined ||
+		value === "" ||
+		(Array.isArray(value) && value.length === 0 && value.every(isNullish)) ||
+		(typeof value === "object" &&
+			Object.keys(value).length === 0 &&
+			Object.values(value).every(isNullish))
+	);
 }
 
 export function camelToTitleCase(str: string): string {
 	return str
-		.replace(/([a-z])([A-Z])/g, '$1 $2')
-		.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+		.replace(/([a-z])([A-Z])/g, "$1 $2")
+		.replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
 		.trim();
 }
 
@@ -224,26 +268,26 @@ export function randomInt(min?: number, max?: number): number {
 export function parseCurl(curlCommand: string) {
 	const args = curlCommand.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
 	const config: any = {
-		method: 'GET',
+		method: "GET",
 		headers: {},
-		url: ''
+		url: "",
 	};
 
 	for (let i = 1; i < args.length; i++) {
-		const arg = args[i].replace(/^['"]|['"]$/g, '');
+		const arg = args[i].replace(/^['"]|['"]$/g, "");
 
 		switch (arg) {
-			case '-X':
-			case '--request':
+			case "-X":
+			case "--request":
 				config.method = args[++i].toUpperCase();
 				break;
-			case '-H':
-			case '--header':
-				const [key, value] = args[++i].split(':').map(s => s.trim());
+			case "-H":
+			case "--header":
+				const [key, value] = args[++i].split(":").map((s) => s.trim());
 				config.headers[key] = value;
 				break;
-			case '-d':
-			case '--data':
+			case "-d":
+			case "--data":
 				const data = args[++i];
 				try {
 					config.data = JSON.parse(data);
@@ -252,7 +296,7 @@ export function parseCurl(curlCommand: string) {
 				}
 				break;
 			default:
-				if (arg.startsWith('http')) {
+				if (arg.startsWith("http")) {
 					config.url = arg;
 				}
 		}
@@ -261,20 +305,40 @@ export function parseCurl(curlCommand: string) {
 	return config;
 }
 
-const badWords = await axios.get('https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/refs/heads/master/en').then(res => res.data.split('\n').map((word: string) => word.trim()).filter((word: string) => word.length > 0));
+const badWords = await axios
+	.get(
+		"https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/refs/heads/master/en",
+	)
+	.then((res) =>
+		res.data
+			.split("\n")
+			.map((word: string) => word.trim())
+			.filter((word: string) => word.length > 0),
+	);
 export function isProfane(text: string): {
 	containsProfanity: boolean;
 	profanityWords: string[];
 } {
 	const words = text.split(/\s+/);
-	const profanityWords = words.filter((word) => badWords.includes(word.toLowerCase()));
+	const profanityWords = words.filter((word) =>
+		badWords.includes(word.toLowerCase()),
+	);
 	return {
 		containsProfanity: profanityWords.length > 0,
-		profanityWords: profanityWords
+		profanityWords: profanityWords,
 	};
 }
 
-export function wrapText(context: SKRSContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, preparingSentence: string[], lines: string[]) {
+export function wrapText(
+	context: SKRSContext2D,
+	text: string,
+	x: number,
+	y: number,
+	maxWidth: number,
+	lineHeight: number,
+	preparingSentence: string[],
+	lines: string[],
+) {
 	const words = text.split(" ");
 	for (let i = 0; i < words.length; i++) {
 		const workSentence = preparingSentence.join(" ") + " " + words[i];
@@ -289,7 +353,7 @@ export function wrapText(context: SKRSContext2D, text: string, x: number, y: num
 
 	lines.push(preparingSentence.join(" "));
 
-	lines.forEach(element => {
+	lines.forEach((element) => {
 		const lineWidth = context.measureText(element).width;
 		const xOffset = (maxWidth - lineWidth) / 2;
 

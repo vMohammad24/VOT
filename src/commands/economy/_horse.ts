@@ -1,27 +1,50 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import ICommand from '../../handler/interfaces/ICommand';
+import {
+	ActionRowBuilder,
+	ApplicationCommandOptionType,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
-	name: 'horse',
+	name: "horse",
 	cooldown: 60_000,
-	description: 'Bet on a horse race!',
-	aliases: ['horserace', 'race'],
+	description: "Bet on a horse race!",
+	aliases: ["horserace", "race"],
 	options: [
 		{
-			name: 'bet',
-			description: 'The amount of coins you want to bet',
+			name: "bet",
+			description: "The amount of coins you want to bet",
 			type: ApplicationCommandOptionType.Integer,
 			required: true,
 		},
 	],
-	execute: async ({ user, args, handler: { prisma }, interaction, message, editReply }) => {
-		const horses = ['Jess', 'John', 'Berry', 'Peace', 'Bull', 'Lucky', 'Snowball'];
+	execute: async ({
+		user,
+		args,
+		handler: { prisma },
+		interaction,
+		message,
+		editReply,
+	}) => {
+		const horses = [
+			"Jess",
+			"John",
+			"Berry",
+			"Peace",
+			"Bull",
+			"Lucky",
+			"Snowball",
+		];
 		const chooseEmbed = new EmbedBuilder()
-			.setTitle('Horses')
-			.setDescription('Choose a horse to bet on\n' + horses.map((h, i) => `${i + 1}. **${h}**`).join('\n'))
-			.setColor('Random')
-			.setFooter({ text: 'You have 30 seconds to choose a horse' });
-		// choose random 5 horses
+			.setTitle("Horses")
+			.setDescription(
+				"Choose a horse to bet on\n" +
+				horses.map((h, i) => `${i + 1}. **${h}**`).join("\n"),
+			)
+			.setColor("Random")
+			.setFooter({ text: "You have 30 seconds to choose a horse" });
 		const rHorses: string[] = [];
 		while (rHorses.length < 5) {
 			const horse = horses[Math.floor(Math.random() * horses.length)];
@@ -39,22 +62,28 @@ export default {
 		const rMsg = message
 			? await message!.reply({ embeds: [chooseEmbed], components: [row] })
 			: await interaction!.reply({ embeds: [chooseEmbed], components: [row] });
-		const collector = rMsg.createMessageComponentCollector({ filter: (i) => i.user.id == user.id, time: 30_000 });
+		const collector = rMsg.createMessageComponentCollector({
+			filter: (i) => i.user.id == user.id,
+			time: 30_000,
+		});
 		let horse: string;
-		collector.on('collect', async (i) => {
-			if (!horses[parseInt(i.customId) - 1]) return;
-			horse = horses[parseInt(i.customId) - 1];
+		collector.on("collect", async (i) => {
+			if (!horses[Number.parseInt(i.customId) - 1]) return;
+			horse = horses[Number.parseInt(i.customId) - 1];
 			collector.stop();
 		});
-		collector.on('end', async (collected) => {
+		collector.on("end", async (collected) => {
 			if (!horse) {
-				return editReply({ content: 'You did not choose a horse in time!', ephemeral: true }, rMsg);
+				return editReply(
+					{ content: "You did not choose a horse in time!", ephemeral: true },
+					rMsg,
+				);
 			}
 
-			const bet = args.get('bet') as number;
+			const bet = args.get("bet") as number;
 			if (!bet || isNaN(bet) || bet < 1)
 				return {
-					content: 'Please provide a valid amount of coins to bet',
+					content: "Please provide a valid amount of coins to bet",
 					ephemeral: true,
 				};
 
@@ -62,7 +91,13 @@ export default {
 				where: { userId: user.id },
 			});
 			if (!eco || eco.balance < bet) {
-				return editReply({ content: 'You do not have enough coins to bet that amount', ephemeral: true }, rMsg);
+				return editReply(
+					{
+						content: "You do not have enough coins to bet that amount",
+						ephemeral: true,
+					},
+					rMsg,
+				);
 			}
 
 			await prisma.economy.update({
@@ -72,9 +107,9 @@ export default {
 
 			const winningHorse = rHorses[Math.floor(Math.random() * rHorses.length)];
 			const resultEmbed = new EmbedBuilder()
-				.setTitle('Horse Race Result')
+				.setTitle("Horse Race Result")
 				.setDescription(`The winning horse is **${winningHorse}**!`)
-				.setColor('Random');
+				.setColor("Random");
 
 			if (horse === winningHorse) {
 				const payout = bet * 2;
@@ -82,9 +117,15 @@ export default {
 					where: { userId: user.id },
 					data: { balance: eco.balance + payout },
 				});
-				resultEmbed.addFields({ name: 'Congratulations!', value: `You won ${payout} coins!` });
+				resultEmbed.addFields({
+					name: "Congratulations!",
+					value: `You won ${payout} coins!`,
+				});
 			} else {
-				resultEmbed.addFields({ name: 'Better luck next time!', value: `You lost ${bet} coins.` });
+				resultEmbed.addFields({
+					name: "Better luck next time!",
+					value: `You lost ${bet} coins.`,
+				});
 			}
 
 			await editReply({ embeds: [resultEmbed] }, rMsg);

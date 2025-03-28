@@ -1,18 +1,23 @@
-import axios from 'axios';
+import axios from "axios";
 import {
 	ActionRowBuilder,
 	ApplicationCommandOptionType,
 	ButtonBuilder,
 	ButtonStyle,
-	ColorResolvable,
+	type ColorResolvable,
 	EmbedBuilder,
-} from 'discord.js';
-import numeral from 'numeral';
-import ICommand from '../../handler/interfaces/ICommand';
-import { loadImg } from '../../util/database';
-import { addEmojiByURL, getEmoji } from '../../util/emojis';
-import { getTikTokUser } from '../../util/tiktok';
-import { capitalizeString, getTwoMostUsedColors, isNullish, isURL } from '../../util/util';
+} from "discord.js";
+import numeral from "numeral";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { loadImg } from "../../util/database";
+import { addEmojiByURL, getEmoji } from "../../util/emojis";
+import { getTikTokUser } from "../../util/tiktok";
+import {
+	capitalizeString,
+	getTwoMostUsedColors,
+	isNullish,
+	isURL,
+} from "../../util/util";
 
 interface User {
 	avatar: string;
@@ -29,7 +34,6 @@ interface User {
 	uploads: number;
 	username: string;
 }
-
 
 interface Badge {
 	tooltip: string;
@@ -244,11 +248,11 @@ export interface Config {
 	custom_cursor: string;
 	page_views: number;
 	user_badges:
-	| string[]
-	| {
-		enabled: boolean;
-		name: string;
-	}[];
+		| string[]
+		| {
+				enabled: boolean;
+				name: string;
+		  }[];
 	custom_badges: string[][];
 	display_name: string;
 	profile_gradient: boolean;
@@ -278,36 +282,44 @@ export interface GunsUser {
 }
 
 export default {
-	description: 'Lookup a user in a service',
+	description: "Lookup a user in a service",
 	// slashOnly: true,
 	options: [
 		{
-			name: 'service',
-			description: 'The service to lookup the user in',
+			name: "service",
+			description: "The service to lookup the user in",
 			type: ApplicationCommandOptionType.String,
 			required: true,
-			choices: ['nest.rip', 'guns.lol', 'socl.gg', 'ammo.lol', 'tiktok'].map(
+			choices: ["nest.rip", "guns.lol", "socl.gg", "ammo.lol", "tiktok"].map(
 				(service) => ({ name: service, value: service }),
 			),
 		},
 		{
-			name: 'query',
-			description: 'What to use to search for the user (username, id, etc.)',
+			name: "query",
+			description: "What to use to search for the user (username, id, etc.)",
 			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
 	],
-	type: 'all',
+	type: "all",
 	execute: async ({ args, handler, interaction }) => {
-		const service = args.get('service') as string;
-		const query = args.get('query') as string;
-		if (!service) return { ephemeral: true, content: `Please provide a service to lookup the user in.` };
-		if (!query) return { ephemeral: true, content: `Please provide a query to search for the user.` };
-		;
+		const service = args.get("service") as string;
+		const query = args.get("query") as string;
+		if (!service)
+			return {
+				ephemeral: true,
+				content: `Please provide a service to lookup the user in.`,
+			};
+		if (!query)
+			return {
+				ephemeral: true,
+				content: `Please provide a query to search for the user.`,
+			};
 		const ems = await handler.client.application?.emojis.fetch();
-		const regex = /<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
+		const regex =
+			/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
 		switch (service) {
-			case 'nest.rip':
+			case "nest.rip":
 				const response = await axios.get(`https://nest.rip/${query}`);
 				const html = response.data;
 				const match = html.match(regex);
@@ -334,32 +346,62 @@ export default {
 					embeds: [
 						new EmbedBuilder()
 							.setAuthor({
-								name: `${nUser.username} ${nUser.banned ? '(Banned)' : ''}`,
+								name: `${nUser.username} ${nUser.banned ? "(Banned)" : ""}`,
 								url: `https://nest.rip/${nUser.id}`,
-								iconURL: nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : undefined,
+								iconURL: nUser.avatar
+									? `https://cdn.nest.rip/avatars/${nUser.avatar}`
+									: undefined,
 							})
-							.setThumbnail(nUser.avatar ? `https://cdn.nest.rip/avatars/${nUser.avatar}` : null)
+							.setThumbnail(
+								nUser.avatar
+									? `https://cdn.nest.rip/avatars/${nUser.avatar}`
+									: null,
+							)
 							.addFields([
-								{ name: 'ID', value: nUser.uid.toString(), inline: true },
-								{ name: 'Rank', value: capitalizeString(nUser.rank), inline: true },
-								{ name: 'Contributor', value: nUser.contributor ? 'Yes' : 'No', inline: true },
+								{ name: "ID", value: nUser.uid.toString(), inline: true },
+								{
+									name: "Rank",
+									value: capitalizeString(nUser.rank),
+									inline: true,
+								},
+								{
+									name: "Contributor",
+									value: nUser.contributor ? "Yes" : "No",
+									inline: true,
+								},
 								// { name: 'Banned', value: nUser.banned ? 'Yes' : 'No', inline: true },
-								{ name: 'Storage Used', value: numeral(nUser.storage_used).format('0.00b'), inline: true },
-								{ name: 'Uploads', value: numeral(nUser.uploads).format('0,0'), inline: true },
+								{
+									name: "Storage Used",
+									value: numeral(nUser.storage_used).format("0.00b"),
+									inline: true,
+								},
+								{
+									name: "Uploads",
+									value: numeral(nUser.uploads).format("0,0"),
+									inline: true,
+								},
 							])
-							.setDescription(!nUser || !nUser.bio || nUser.bio.trim() == '' ? null : nUser.bio)
+							.setDescription(
+								!nUser || !nUser.bio || nUser.bio.trim() == ""
+									? null
+									: nUser.bio,
+							)
 							.setFooter({
-								text: `Invited by ${nUser.invited_by ? (nUser.invited_by.username ?? 'No one') : 'No one'}`,
+								text: `Invited by ${nUser.invited_by ? (nUser.invited_by.username ?? "No one") : "No one"}`,
 							})
 							.setColor(
 								nUser.avatar
-									? getTwoMostUsedColors(await loadImg(`https://cdn.nest.rip/avatars/${nUser.avatar}`))[0]
-									: 'Random',
+									? getTwoMostUsedColors(
+											await loadImg(
+												`https://cdn.nest.rip/avatars/${nUser.avatar}`,
+											),
+										)[0]
+									: "Random",
 							)
 							.setTimestamp(new Date(nUser.created_at)),
 					],
 				};
-			case 'tiktok':
+			case "tiktok":
 				const tData = await getTikTokUser(query);
 				if (!tData)
 					return {
@@ -369,31 +411,51 @@ export default {
 				const embed = new EmbedBuilder()
 					// .setAuthor({ name: data..nickname, url: `https://www.tiktok.com/@${data..uniqueId}`, iconURL: data..avatarThumb })
 					.setTitle(
-						`${tData.nickname} ${tData.verified ? getEmoji('verified').toString() : ''}`,
+						`${tData.nickname} ${tData.verified ? getEmoji("verified").toString() : ""}`,
 					)
 					.setURL(`https://www.tiktok.com/@${tData.uniqueId}`)
 					.setThumbnail(tData.avatarLarger)
 					.addFields([
 						// { name: 'Username', value: data..uniqueId, inline: true },
-						{ name: 'Followers', value: numeral(tData.followerCount).format('0,0'), inline: true },
-						{ name: 'Following', value: numeral(tData.followingCount).format('0,0'), inline: true },
-						{ name: 'Friends', value: numeral(tData.friendCount).format('0,0'), inline: true },
-						{ name: 'Hearts', value: numeral(tData.heart).format('0,0'), inline: true },
-						{ name: 'Videos', value: numeral(tData.videoCount).format('0,0'), inline: true },
+						{
+							name: "Followers",
+							value: numeral(tData.followerCount).format("0,0"),
+							inline: true,
+						},
+						{
+							name: "Following",
+							value: numeral(tData.followingCount).format("0,0"),
+							inline: true,
+						},
+						{
+							name: "Friends",
+							value: numeral(tData.friendCount).format("0,0"),
+							inline: true,
+						},
+						{
+							name: "Hearts",
+							value: numeral(tData.heart).format("0,0"),
+							inline: true,
+						},
+						{
+							name: "Videos",
+							value: numeral(tData.videoCount).format("0,0"),
+							inline: true,
+						},
 						// { name: 'Verified', value: data..verified ? 'Yes' : 'No', inline: true },
 					])
-					.setDescription(tData.signature || 'No bio')
+					.setDescription(tData.signature || "No bio")
 					.setColor(
 						tData.avatarLarger
 							? getTwoMostUsedColors(await loadImg(tData.avatarLarger))[0]
-							: 'Random',
+							: "Random",
 					)
 					.setTimestamp(new Date(tData.createTime * 1000))
-					.setFooter({ text: 'Account created on' });
+					.setFooter({ text: "Account created on" });
 				return {
 					embeds: [embed],
 				};
-			case 'socl.gg':
+			case "socl.gg":
 				const sHtml = (await axios.get(`https://socl.gg/${query}`)).data;
 				const sMatch = sHtml.match(regex);
 				if (!sMatch) {
@@ -410,7 +472,8 @@ export default {
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
 				}
-				const sColor: ColorResolvable = sUser.bio.customization.metaThemeColor || 'Random';
+				const sColor: ColorResolvable =
+					sUser.bio.customization.metaThemeColor || "Random";
 				const sEmbed = new EmbedBuilder()
 					.setAuthor({
 						name: sUser.username,
@@ -418,13 +481,15 @@ export default {
 						url: `https://socl.gg/${sUser.username}`,
 					})
 					.setDescription(
-						`${sUser.bio.description || 'No bio'}\n\n${sUser.bio.location ? `**Location:** ${sUser.bio.location}\n` : ''}${sUser.bio.education ? `**Education:** ${sUser.bio.education}\n` : ''}${sUser.bio.jobTitle ? `**Job Title:** ${sUser.bio.jobTitle}\n` : ''}\n${sUser.bio.profileButtons.map((button) => button.value).join('\n')}`,
+						`${sUser.bio.description || "No bio"}\n\n${sUser.bio.location ? `**Location:** ${sUser.bio.location}\n` : ""}${sUser.bio.education ? `**Education:** ${sUser.bio.education}\n` : ""}${sUser.bio.jobTitle ? `**Job Title:** ${sUser.bio.jobTitle}\n` : ""}\n${sUser.bio.profileButtons.map((button) => button.value).join("\n")}`,
 					)
 					.setThumbnail(`https://r2.socl.gg${sUser.bio.avatarURL}` || null)
 					.setColor(sColor)
 					.addFields({
-						name: 'Discord',
-						value: sUser.discordConnection.discordId ? `<@${sUser.discordConnection.discordId}>` : 'Not linked',
+						name: "Discord",
+						value: sUser.discordConnection.discordId
+							? `<@${sUser.discordConnection.discordId}>`
+							: "Not linked",
 						inline: true,
 					})
 					// .setFooter({ text: `Created` })
@@ -432,13 +497,13 @@ export default {
 				return {
 					embeds: [sEmbed],
 				};
-			case 'ammo.lol':
+			case "ammo.lol":
 				const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
 					params: {
 						username: query,
 					},
 					headers: {
-						'API-KEY': import.meta.env.AMMO_LOL_API_KEY,
+						"API-KEY": import.meta.env.AMMO_LOL_API_KEY,
 					},
 				});
 				const aData = aRes.data as AmmoUser;
@@ -447,13 +512,14 @@ export default {
 						ephemeral: true,
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
-				const hasBackground = aData.background_url && isURL(aData.background_url);
+				const hasBackground =
+					aData.background_url && isURL(aData.background_url);
 				const hasAvatar = aData.avatar_url && isURL(aData.avatar_url);
 				const hasURL = aData.url && isURL(aData.url);
 				const aColor: ColorResolvable = hasAvatar
 					? getTwoMostUsedColors(await loadImg(aData.avatar_url))[0]
-					: 'Random';
-				const [day, month, year] = aData.created.split('/').map(Number);
+					: "Random";
+				const [day, month, year] = aData.created.split("/").map(Number);
 				const date = new Date(year, month - 1, day);
 				return {
 					embeds: [
@@ -467,37 +533,50 @@ export default {
 							.setThumbnail(hasAvatar ? aData.avatar_url : null)
 							.setImage(hasBackground ? aData.background_url : null)
 							.addFields([
-								{ name: 'Profile Views', value: numeral(aData.profile_views).format('0,0'), inline: true },
-								{ name: 'Premium', value: aData.premium ? 'Yes' : 'No', inline: true },
+								{
+									name: "Profile Views",
+									value: numeral(aData.profile_views).format("0,0"),
+									inline: true,
+								},
+								{
+									name: "Premium",
+									value: aData.premium ? "Yes" : "No",
+									inline: true,
+								},
 							])
 							.setColor(aColor)
 							.setFooter({ text: `UID: ${aData.uid} • Created` })
 							.setTimestamp(date),
 					],
 				};
-			case 'guns.lol':
-				const gRes = await axios.post(`https://guns.lol/api/user/lookup?type=username`, {
-					key: import.meta.env.GUNS_API_KEY!,
-					username: query,
-				});
+			case "guns.lol":
+				const gRes = await axios.post(
+					`https://guns.lol/api/user/lookup?type=username`,
+					{
+						key: import.meta.env.GUNS_API_KEY!,
+						username: query,
+					},
+				);
 				const gData = gRes.data as GunsUser;
 				if (!gData || gData.error)
 					return {
 						ephemeral: true,
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
-				let gColor: ColorResolvable = 'Random';
+				let gColor: ColorResolvable = "Random";
 				if (gData.config.color) {
 					gColor = gData.config.color as ColorResolvable;
 				} else {
 					try {
-						gColor = gData.config.avatar ? getTwoMostUsedColors(await loadImg(gData.config.avatar))[0] : 'Random';
-					} catch (error) { }
+						gColor = gData.config.avatar
+							? getTwoMostUsedColors(await loadImg(gData.config.avatar))[0]
+							: "Random";
+					} catch (error) {}
 				}
-				let gEmojis: string = '';
+				let gEmojis = "";
 				if (gData.config.user_badges && gData.config.user_badges.length != 0) {
 					for (const badge of gData.config.user_badges) {
-						if (typeof badge === 'string') {
+						if (typeof badge === "string") {
 							const emoji = getEmoji(`guns_${badge}_badge`);
 							if (emoji) gEmojis += emoji.toString();
 							continue;
@@ -510,7 +589,11 @@ export default {
 				}
 				if (gData.config.custom_badges) {
 					for (const badge of gData.config.custom_badges) {
-						const emoji = await addEmojiByURL(`guns_${badge[0]}`, badge[1], ems);
+						const emoji = await addEmojiByURL(
+							`guns_${badge[0]}`,
+							badge[1],
+							ems,
+						);
 						gEmojis += emoji?.toString()!;
 					}
 				}
@@ -522,10 +605,14 @@ export default {
 						for (let j = i; j < i + 5; j++) {
 							const button = buttons[j];
 							if (!button) break;
-							const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+							const urlRegex =
+								/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
 							if (!urlRegex.test(button.button_url)) continue;
 							row.addComponents(
-								new ButtonBuilder().setLabel(button.button_title).setStyle(ButtonStyle.Link).setURL(button.button_url),
+								new ButtonBuilder()
+									.setLabel(button.button_title)
+									.setStyle(ButtonStyle.Link)
+									.setURL(button.button_url),
 							);
 						}
 						if (row.components.length > 0) rows.push(row);
@@ -536,11 +623,15 @@ export default {
 						new EmbedBuilder()
 							.setAuthor({
 								name: gData.username,
-								iconURL: isNullish(gData.config.avatar) ? undefined : gData.config.avatar,
+								iconURL: isNullish(gData.config.avatar)
+									? undefined
+									: gData.config.avatar,
 								url: `https://guns.lol/${gData.alias}`,
 							})
 							.setDescription(`## ${gEmojis}\n${gData.config.description}`)
-							.setThumbnail(isNullish(gData.config.avatar) ? null : gData.config.avatar)
+							.setThumbnail(
+								isNullish(gData.config.avatar) ? null : gData.config.avatar,
+							)
 							.addFields(
 								gData.config.socials.map((social) => ({
 									name: capitalizeString(social.social),
@@ -550,7 +641,7 @@ export default {
 							)
 							.setColor(gColor)
 							.setFooter({
-								text: `UID: ${gData.uid} • Views: ${numeral(gData.config.page_views).format('0,0')} • Created`,
+								text: `UID: ${gData.uid} • Views: ${numeral(gData.config.page_views).format("0,0")} • Created`,
 							})
 							.setTimestamp(new Date(gData.account_created * 1000)),
 					],

@@ -1,32 +1,31 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
-import numeral from 'numeral';
-import ICommand from '../../handler/interfaces/ICommand';
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import numeral from "numeral";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
-	name: 'leaderboard',
-	description: 'View the economy leaderboard',
-	aliases: ['lb'],
+	name: "leaderboard",
+	description: "View the economy leaderboard",
+	aliases: ["lb"],
 	options: [
 		{
-			name: 'type',
-			description: 'The type of leaderboard to view (default: Balance)',
+			name: "type",
+			description: "The type of leaderboard to view (default: Balance)",
 			type: ApplicationCommandOptionType.String,
 			required: false,
-			choices: [
-				'Balance',
-				'Commands',
-				'Commands Used'
-			].map((c) => ({ name: c, value: c })),
-		}
+			choices: ["Balance", "Commands", "Commands Used"].map((c) => ({
+				name: c,
+				value: c,
+			})),
+		},
 	],
-	type: 'all',
+	type: "all",
 	execute: async ({ handler: { prisma }, args }) => {
-		const f = args.get('type') as string || 'Balance';
+		const f = (args.get("type") as string) || "Balance";
 		switch (f) {
-			case 'Balance':
+			case "Balance":
 				const users = await prisma.economy.findMany({
 					orderBy: {
-						balance: 'desc',
+						balance: "desc",
 					},
 					select: {
 						user: {
@@ -40,16 +39,21 @@ export default {
 				});
 
 				const embed = new EmbedBuilder()
-					.setTitle('Economy Leaderboard')
+					.setTitle("Economy Leaderboard")
 					.setDescription(
-						users.map((u, i) => `${i + 1}. **${u.user.name}** - $${numeral(u.balance).format('0,0')}`).join('\n'),
+						users
+							.map(
+								(u, i) =>
+									`${i + 1}. **${u.user.name}** - $${numeral(u.balance).format("0,0")}`,
+							)
+							.join("\n"),
 					)
-					.setColor('Random');
+					.setColor("Random");
 				return {
 					embeds: [embed],
 				};
 				break;
-			case 'Commands':
+			case "Commands":
 				const commands = await prisma.command.findMany({
 					select: { commandId: true },
 				});
@@ -60,22 +64,22 @@ export default {
 				return {
 					embeds: [
 						new EmbedBuilder()
-							.setTitle('Commands Leaderboard')
+							.setTitle("Commands Leaderboard")
 							.setDescription(
 								Array.from(map)
 									.sort((a, b) => b[1] - a[1])
 									.map((c, i) => `${i + 1}. **${c[0]}** - ${c[1]}`)
 									.slice(0, 10)
-									.join('\n'),
+									.join("\n"),
 							)
-							.setColor('Random')
-					]
-				}
-			case 'Commands Used':
+							.setColor("Random"),
+					],
+				};
+			case "Commands Used":
 				const users2 = await prisma.user.findMany({
 					orderBy: {
 						commands: {
-							_count: 'desc',
+							_count: "desc",
 						},
 					},
 					select: {
@@ -87,14 +91,15 @@ export default {
 				return {
 					embeds: [
 						new EmbedBuilder()
-							.setTitle('Commands Used Leaderboard')
+							.setTitle("Commands Used Leaderboard")
 							.setDescription(
-								users2.map((u, i) => `${i + 1}. <@${u.id}> - ${u.commands.length}`).join('\n'),
+								users2
+									.map((u, i) => `${i + 1}. <@${u.id}> - ${u.commands.length}`)
+									.join("\n"),
 							)
-							.setColor('Random')
-					]
-				}
+							.setColor("Random"),
+					],
+				};
 		}
-
 	},
 } as ICommand;
