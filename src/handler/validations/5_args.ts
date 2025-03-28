@@ -518,6 +518,23 @@ export default async function (
 
 					case ApplicationCommandOptionType.Attachment:
 						value = message.attachments.first() || null;
+						if (!value) {
+							if (message.embeds.length > 0) {
+								value = message.embeds[0].image || null;
+							}
+							const urlArg = messageArgs[argIndex];
+							if (urlArg && (urlArg.startsWith('http://') || urlArg.startsWith('https://'))) {
+								value = { url: urlArg, name: 'attachment.png' };
+								argIndex++;
+							} else if (message.reference && message.reference.messageId) {
+								const referencedMessage = await message.fetchReference();
+								if (referencedMessage.attachments.size > 0) {
+									value = referencedMessage.attachments.first();
+								} else {
+									value = referencedMessage.embeds[0].image || referencedMessage.embeds[0].thumbnail || null;
+								}
+							}
+						}
 						break;
 				}
 
