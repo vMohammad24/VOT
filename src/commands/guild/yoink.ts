@@ -1,30 +1,33 @@
-import axios from 'axios';
-import { ApplicationCommandOptionType, AttachmentBuilder, Sticker } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { isNullish } from '../../util/util';
-import VOTEmbed from '../../util/VOTEmbed';
+import axios from "axios";
+import {
+	ApplicationCommandOptionType,
+	AttachmentBuilder,
+	type Sticker,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
+import { isNullish } from "../../util/util";
 
 export default {
-	name: 'yoink',
-	description: 'Yoinks emojis from a message and adds them to the guild',
+	name: "yoink",
+	description: "Yoinks emojis from a message and adds them to the guild",
 	options: [
 		{
-			name: 'emojis',
-			description: 'The emojis to yoink',
+			name: "emojis",
+			description: "The emojis to yoink",
 			type: ApplicationCommandOptionType.String,
 			required: false,
 		},
 	],
-	perms: ['CreateGuildExpressions'],
-	aliases: ['yoinkemoji', 'stealemoji', 'steal'],
+	perms: ["CreateGuildExpressions"],
+	aliases: ["yoinkemoji", "stealemoji", "steal"],
 	execute: async ({ args, interaction, guild, member, message }) => {
-		;
-		let text = args.get('emojis') as string | undefined;
+		let text = args.get("emojis") as string | undefined;
 		const err = {
-			content: 'Please provide some emojis to yoink',
+			content: "Please provide some emojis to yoink",
 			ephemeral: true,
 		};
-		const type: 'emojis' | 'stickers' = 'emojis';
+		const type: "emojis" | "stickers" = "emojis";
 		const stickers: Sticker[] = [];
 		if (!text) {
 			if (!message) return err;
@@ -41,22 +44,27 @@ export default {
 			}
 		}
 		if (stickers.length > 0) {
-			let yoined = '';
+			let yoined = "";
 			for (const sticker of stickers) {
 				try {
-					const buffer = (await axios.get(sticker.url, { responseType: 'arraybuffer' })).data;
+					const buffer = (
+						await axios.get(sticker.url, { responseType: "arraybuffer" })
+					).data;
 					const e = await guild.stickers.create({
 						name: sticker.name,
 						description: sticker.description,
 						tags: sticker.tags ?? sticker.name,
-						file: new AttachmentBuilder(buffer, { name: sticker.name + '.png' }).attachment,
+						file: new AttachmentBuilder(buffer, { name: sticker.name + ".png" })
+							.attachment,
 						reason: `Yoinked by ${member.user.tag}`,
 					});
-					yoined += e.url + '\n';
+					yoined += e.url + "\n";
 				} catch (e) {
-					if ((e as any).message.includes('Maximum number of stickers reached')) {
+					if (
+						(e as any).message.includes("Maximum number of stickers reached")
+					) {
 						return {
-							content: 'Maximum number of stickers reached',
+							content: "Maximum number of stickers reached",
 							ephemeral: true,
 						};
 					}
@@ -81,7 +89,7 @@ export default {
 		const emojiMatches = text.match(/<a?:\w+:(\d+)>/g);
 		if (!emojiMatches) {
 			return {
-				content: 'No valid emojis found',
+				content: "No valid emojis found",
 				ephemeral: true,
 			};
 		}
@@ -89,12 +97,12 @@ export default {
 		const results = [];
 		for (const emoji of emojiMatches) {
 			const id = emoji.match(/<a?:\w+:(\d+)>/)?.[1];
-			const name = emoji.match(/<a?:\w+:(\d+)>/)?.[0].split(':')[1];
+			const name = emoji.match(/<a?:\w+:(\d+)>/)?.[0].split(":")[1];
 			const url = `https://cdn.discordapp.com/emojis/${id}.webp?quality=lossless&animated=true`;
 			try {
 				const e = await guild.emojis.create({
 					attachment: url,
-					name: name ?? 'yoinked_' + id,
+					name: name ?? "yoinked_" + id,
 					reason: `Yoinked by ${member.user.tag}`,
 				});
 				results.push(`${e.toString()} (${url})`);
@@ -103,9 +111,9 @@ export default {
 					return {
 						embeds: [
 							new VOTEmbed()
-								.setColor('DarkRed')
-								.setTitle('Error')
-								.setDescription(`> ${e.message}`)
+								.setColor("DarkRed")
+								.setTitle("Error")
+								.setDescription(`> ${e.message}`),
 						],
 						ephemeral: true,
 					};
@@ -114,7 +122,7 @@ export default {
 		}
 
 		return {
-			content: `Successfully yoinked emojis: ${results.join(', ')}`,
+			content: `Successfully yoinked emojis: ${results.join(", ")}`,
 		};
 	},
 } as ICommand;

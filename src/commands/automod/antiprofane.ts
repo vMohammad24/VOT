@@ -1,40 +1,52 @@
-import axios from 'axios';
+import axios from "axios";
 import {
 	ApplicationCommandOptionType,
 	AutoModerationActionType,
 	AutoModerationRuleEventType,
 	AutoModerationRuleKeywordPresetType,
 	AutoModerationRuleTriggerType,
-	Role,
-} from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
+	type Role,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 const profanity: string[] = (
-	(await axios.get('https://raw.githubusercontent.com/censor-text/profanity-list/main/list/en.txt')).data as string
+	(
+		await axios.get(
+			"https://raw.githubusercontent.com/censor-text/profanity-list/main/list/en.txt",
+		)
+	).data as string
 )
-	.split('\n')
+	.split("\n")
 	.slice(0, 1000);
 
 export default {
-	description: 'Adds automod rules to disallow profanity',
+	description: "Adds automod rules to disallow profanity",
 	options: [
 		{
-			name: 'role',
-			description: 'The role to add for automod bypass',
+			name: "role",
+			description: "The role to add for automod bypass",
 			type: ApplicationCommandOptionType.Role,
 			required: false,
 		},
 	],
-	perms: ['ManageGuild'],
+	perms: ["ManageGuild"],
 	execute: async ({ args, guild, member }) => {
-		const role = (args.get('role') as Role) || undefined;
+		const role = (args.get("role") as Role) || undefined;
 		// check if it the rule already exists
 		const rules = await guild.autoModerationRules.fetch();
 		const eRule = rules.find((r) => r.name === `VOT's profanity`);
-		const eRule2 = rules.find((r) => r.name === `discord's profanity filter (VOT)`);
-		const eRule3 = rules.find((r) => r.name === `discord's anti mention spam (VOT)`);
+		const eRule2 = rules.find(
+			(r) => r.name === `discord's profanity filter (VOT)`,
+		);
+		const eRule3 = rules.find(
+			(r) => r.name === `discord's anti mention spam (VOT)`,
+		);
 		if (eRule && eRule2 && eRule3) {
-			await Promise.all([await eRule.delete(), await eRule2.delete(), await eRule3.delete()]);
+			await Promise.all([
+				await eRule.delete(),
+				await eRule2.delete(),
+				await eRule3.delete(),
+			]);
 			return {
 				content: `${eRule.name}, ${eRule2.name}, ${eRule3.name} have been deleted`,
 			};

@@ -1,9 +1,9 @@
-import { apiKey } from '@prisma/client';
-import axios from 'axios';
-import { inspect } from 'bun';
-import { PermissionFlagsBits, type APIGuild, type APIUser } from 'discord.js';
-import commandHandler from '..';
-import { getUserByID } from '../util/database';
+import type { apiKey } from "@prisma/client";
+import axios from "axios";
+import { inspect } from "bun";
+import { type APIGuild, type APIUser, PermissionFlagsBits } from "discord.js";
+import commandHandler from "..";
+import { getUserByID } from "../util/database";
 
 export const discordClientId = import.meta.env.DISCORD_CLIENT_ID!;
 export const discordClientSecret = import.meta.env.DISCORD_CLIENT_SECRET!;
@@ -12,75 +12,77 @@ export const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET!;
 
 const lastUpdateForUser = new Map<string, Date>();
 
-
 export const addAPIKey = async (name: string): Promise<apiKey> => {
 	const key = await commandHandler.prisma.apiKey.create({
 		data: {
-			name
+			name,
 		},
 	});
 	return key;
-}
+};
 
 export const deleteAPIKey = async (id: string): Promise<apiKey> => {
 	const key = await commandHandler.prisma.apiKey.delete({
 		where: {
-			id
-		}
+			id,
+		},
 	});
 	return key;
-}
+};
 
 export const checkKey = async (key?: string | null) => {
 	if (!key) return null;
 	const apiKey = await commandHandler.prisma.apiKey.findUnique({
 		where: {
-			id: key
-		}
+			id: key,
+		},
 	});
 	return !!apiKey;
-}
+};
 
 export const updateGuilds = async (userId: string): Promise<any> => {
 	const { prisma } = commandHandler;
 	if (!prisma) {
-		return { error: 'Prisma not found (somehow)' };
+		return { error: "Prisma not found (somehow)" };
 	}
 	if (!userId) {
-		return { error: 'Invalid user id' };
+		return { error: "Invalid user id" };
 	}
 	const user = (await getUserByID(userId, { discord: true, id: true })) as any;
 	if (!user) {
-		return { error: 'Invalid user' };
+		return { error: "Invalid user" };
 	}
 	if (!user.discord) {
-		return { error: 'user discord not found' };
+		return { error: "user discord not found" };
 	}
 
 	const { discord } = user;
 	try {
 		const lastUpdate = lastUpdateForUser.get(user.id);
 		if (lastUpdate && Date.now() - lastUpdate.getTime() < 60 * 1000) {
-			return { error: 'maybe later' };
+			return { error: "maybe later" };
 		}
 		commandHandler.logger.info(`Updating guilds for ${userId}`);
-		const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds?with_counts=true', {
-			headers: {
-				Authorization: `Bearer ${discord.token}`,
-				'Accept-Encoding': 'identity',
+		const guildsRes = await axios.get(
+			"https://discord.com/api/users/@me/guilds?with_counts=true",
+			{
+				headers: {
+					Authorization: `Bearer ${discord.token}`,
+					"Accept-Encoding": "identity",
+				},
 			},
-		});
+		);
 		const resGuilds = (await guildsRes.data) as APIGuild[];
 		if (guildsRes.status == 401 || guildsRes.status == 400) {
 			const ref = await refreshToken(discord.refreshToken);
-			if (typeof ref !== 'string') {
+			if (typeof ref !== "string") {
 				return ref;
 			}
 			return await updateGuilds(userId);
 		}
 		const why = resGuilds as any;
 		if (why.error_description) {
-			return { error: why.error_description, message: 'NOTE: from discord' };
+			return { error: why.error_description, message: "NOTE: from discord" };
 		}
 		const guilds = resGuilds.filter((g: APIGuild) => {
 			const isOwner = g.owner;
@@ -149,7 +151,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 		lastUpdateForUser.set(user.id, new Date());
 	} catch (e) {
 		console.error(`Error updating guilds for ${userId}`, e);
-		return { error: 'Error updating guilds' };
+		return { error: "Error updating guilds" };
 	}
 	// const allGuilds = commandHandler.client.guilds.cache;
 	// const guildsInAdmin = [];
@@ -212,17 +214,17 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 };
 export const refreshToken = async (refreshToken: string) => {
 	const tokenResponseData = await axios.post(
-		'https://discord.com/api/oauth2/token',
+		"https://discord.com/api/oauth2/token",
 		{
 			client_id: discordClientId,
 			client_secret: discordClientSecret,
 			refresh_token: refreshToken,
-			grant_type: 'refresh_token',
+			grant_type: "refresh_token",
 		},
 		{
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'Accept-Encoding': 'identity',
+				"Content-Type": "application/x-www-form-urlencoded",
+				"Accept-Encoding": "identity",
 			},
 		},
 	);
@@ -232,21 +234,23 @@ export const refreshToken = async (refreshToken: string) => {
 		tokenResponseDataStatus: ${tokenResponseData.statusText} (${tokenResponseData.status})
 		`);
 	const tokenResponse = (await tokenResponseData.data) as any;
-	if (tokenResponse.error === 'invalid_grant') {
-		const u = await commandHandler.prisma.discord.findFirst({ where: { refreshToken } });
+	if (tokenResponse.error === "invalid_grant") {
+		const u = await commandHandler.prisma.discord.findFirst({
+			where: { refreshToken },
+		});
 		if (u) await commandHandler.prisma.discord.delete({ where: { id: u.id } });
 		return {
-			error: 'Invalid refresh token, please reauthorize (2)',
+			error: "Invalid refresh token, please reauthorize (2)",
 			code: 401,
 		};
 	}
 	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
 		return {
-			error: 'Invalid refresh token, please reauthorize',
+			error: "Invalid refresh token, please reauthorize",
 			code: 401,
 		};
 	}
-	const userRes = await axios.get('https://discord.com/api/users/@me', {
+	const userRes = await axios.get("https://discord.com/api/users/@me", {
 		headers: {
 			authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`,
 		},
@@ -255,7 +259,7 @@ export const refreshToken = async (refreshToken: string) => {
 	const errorHandling = resUser as any;
 	if (errorHandling.error_description) {
 		return {
-			error: errorHandling.error_description + ' (D)',
+			error: errorHandling.error_description + " (D)",
 			code: 401,
 		};
 	}
@@ -274,7 +278,7 @@ export const refreshToken = async (refreshToken: string) => {
 					},
 				},
 				avatar: `https://cdn.discordapp.com/avatars/${resUser.id}/${resUser.avatar}.png`,
-				name: resUser.username
+				name: resUser.username,
 			},
 		});
 	}

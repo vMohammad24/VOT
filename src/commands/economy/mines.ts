@@ -1,25 +1,37 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import ICommand from '../../handler/interfaces/ICommand';
+import {
+	ActionRowBuilder,
+	ApplicationCommandOptionType,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
-	name: 'mines',
+	name: "mines",
 	cooldown: 60_000,
-	description: 'Play the mines game!',
-	aliases: ['minefield', 'minesweeper'],
-	type: 'all',
+	description: "Play the mines game!",
+	aliases: ["minefield", "minesweeper"],
+	type: "all",
 	options: [
 		{
-			name: 'bet',
-			description: 'The amount of coins you want to bet',
+			name: "bet",
+			description: "The amount of coins you want to bet",
 			type: ApplicationCommandOptionType.Integer,
 			required: true,
 		},
 	],
-	execute: async ({ user, args, handler: { prisma }, message, interaction }) => {
-		const bet = args.get('bet') as number;
+	execute: async ({
+		user,
+		args,
+		handler: { prisma },
+		message,
+		interaction,
+	}) => {
+		const bet = args.get("bet") as number;
 		if (!bet || isNaN(bet) || bet < 1)
 			return {
-				content: 'Please provide a valid amount of coins to bet',
+				content: "Please provide a valid amount of coins to bet",
 				ephemeral: true,
 			};
 		const eco = await prisma.economy.findFirst({
@@ -29,17 +41,18 @@ export default {
 		});
 		if (!eco)
 			return {
-				content: 'You do not have an economy account, please run the `balance` command to create one',
+				content:
+					"You do not have an economy account, please run the `balance` command to create one",
 				ephemeral: true,
 			};
 		if (eco.balance < 100)
 			return {
-				content: 'You need at least 100 coins to play mines',
+				content: "You need at least 100 coins to play mines",
 				ephemeral: true,
 			};
 		if (eco.balance < bet)
 			return {
-				content: 'You do not have enough coins to bet that amount',
+				content: "You do not have enough coins to bet that amount",
 				ephemeral: true,
 			};
 
@@ -49,7 +62,9 @@ export default {
 		while (mines.size < mineCount) {
 			mines.add(Math.floor(Math.random() * totalTiles));
 		}
-		const embed = new EmbedBuilder().setTitle('Minesweeper').setDescription('Click on the tiles to reveal them');
+		const embed = new EmbedBuilder()
+			.setTitle("Minesweeper")
+			.setDescription("Click on the tiles to reveal them");
 		const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 		for (let i = 0; i < totalTiles / 5; i++) {
 			// 4x5 grid
@@ -59,7 +74,7 @@ export default {
 				row.addComponents(
 					new ButtonBuilder()
 						.setCustomId(`mines-${index}`)
-						.setLabel('᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌')
+						.setLabel("᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌᠌")
 						.setStyle(ButtonStyle.Secondary)
 						.setDisabled(false),
 				);
@@ -69,8 +84,8 @@ export default {
 		rows.push(
 			new ActionRowBuilder<ButtonBuilder>().addComponents(
 				new ButtonBuilder()
-					.setCustomId('mines-end')
-					.setLabel('Collect')
+					.setCustomId("mines-end")
+					.setLabel("Collect")
 					.setStyle(ButtonStyle.Danger)
 					.setDisabled(false),
 			),
@@ -78,43 +93,59 @@ export default {
 		const rMsg = message
 			? await message.reply({ embeds: [embed], components: rows })
 			: await interaction!.reply({ embeds: [embed], components: rows });
-		const collector = rMsg.createMessageComponentCollector({ filter: (i) => i.user.id == user.id, time: 120_000 });
+		const collector = rMsg.createMessageComponentCollector({
+			filter: (i) => i.user.id == user.id,
+			time: 120_000,
+		});
 		let collectedMoney = 0;
-		collector.on('collect', async (i) => {
-			if (i.customId === 'mines-end') {
+		collector.on("collect", async (i) => {
+			if (i.customId === "mines-end") {
 				collector.stop();
 				await prisma.economy.update({
 					where: { userId: user.id },
 					data: { balance: eco.balance + collectedMoney },
 				});
 				const newEmbed = new EmbedBuilder()
-					.setTitle('Minesweeper')
+					.setTitle("Minesweeper")
 					.setDescription(`Congratulations! You won ${collectedMoney} coins!`)
-					.setColor('Green');
-				rows.forEach((row) => row.components.forEach((button) => button.setDisabled(true)));
+					.setColor("Green");
+				rows.forEach((row) =>
+					row.components.forEach((button) => button.setDisabled(true)),
+				);
 				await i.update({ embeds: [newEmbed], components: rows });
 				return;
 			}
-			const index = parseInt(i.customId.split('-')[1]);
+			const index = Number.parseInt(i.customId.split("-")[1]);
 			if (mines.has(index)) {
 				mines.forEach((mine) => {
-					const button = rows[Math.floor(mine / 5)].components[mine % 5] as ButtonBuilder;
-					button.setEmoji('💣').setStyle(ButtonStyle.Danger).setDisabled(true);
+					const button = rows[Math.floor(mine / 5)].components[
+						mine % 5
+					] as ButtonBuilder;
+					button.setEmoji("💣").setStyle(ButtonStyle.Danger).setDisabled(true);
 				});
-				const button = rows[Math.floor(index / 5)].components[index % 5] as ButtonBuilder;
-				button.setEmoji('💥').setStyle(ButtonStyle.Danger).setDisabled(true);
-				const newEmbed = new EmbedBuilder().setTitle('Minesweeper').setDescription('You hit a mine!').setColor('Red');
+				const button = rows[Math.floor(index / 5)].components[
+					index % 5
+				] as ButtonBuilder;
+				button.setEmoji("💥").setStyle(ButtonStyle.Danger).setDisabled(true);
+				const newEmbed = new EmbedBuilder()
+					.setTitle("Minesweeper")
+					.setDescription("You hit a mine!")
+					.setColor("Red");
 				await prisma.economy.update({
 					where: { userId: user.id },
 					data: { balance: eco.balance - bet },
 				});
-				rows.forEach((row) => row.components.forEach((button) => button.setDisabled(true)));
+				rows.forEach((row) =>
+					row.components.forEach((button) => button.setDisabled(true)),
+				);
 				await i.update({ embeds: [newEmbed], components: rows });
 				collector.stop();
 				return;
 			}
-			const button = rows[Math.floor(index / 5)].components[index % 5] as ButtonBuilder;
-			const multiplier = parseFloat((Math.random() + 1).toFixed(2));
+			const button = rows[Math.floor(index / 5)].components[
+				index % 5
+			] as ButtonBuilder;
+			const multiplier = Number.parseFloat((Math.random() + 1).toFixed(2));
 			collectedMoney += bet * multiplier;
 			button.setLabel(multiplier.toString()).setDisabled(true);
 			await i.update({ components: rows });

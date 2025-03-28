@@ -1,9 +1,9 @@
-import type { Spotify } from '@prisma/client';
-import axios from 'axios';
-import commandHandler, { redis } from '..';
+import type { Spotify } from "@prisma/client";
+import axios from "axios";
+import commandHandler, { redis } from "..";
 const spotifyToken = `Basic ${Buffer.from(
 	`${import.meta.env.SPOTIFY_CLIENT_ID}:${import.meta.env.SPOTIFY_CLIENT_SECRET}`,
-).toString('base64')}`;
+).toString("base64")}`;
 export async function getCurrentlyPlaying(userId: string) {
 	const { prisma } = commandHandler;
 	const spotify = await prisma.spotify.findUnique({
@@ -12,19 +12,22 @@ export async function getCurrentlyPlaying(userId: string) {
 		},
 	});
 	if (!spotify || !spotify.expiresAt) return { error: 1 };
-	if (spotify.expiresAt < new Date('UTC')) {
+	if (spotify.expiresAt < new Date("UTC")) {
 		await refreshToken(spotify);
 		return await getCurrentlyPlaying(userId);
 	}
-	const res = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
-		headers: {
-			Authorization: `Bearer ${spotify.token}`,
+	const res = await axios.get(
+		"https://api.spotify.com/v1/me/player/currently-playing",
+		{
+			headers: {
+				Authorization: `Bearer ${spotify.token}`,
+			},
 		},
-	});
+	);
 	const { error } = res.data;
 	if (res.status == 401 || error) {
 		await refreshToken(spotify);
-		await setTimeout(() => { }, 500);
+		await setTimeout(() => {}, 500);
 		return await getCurrentlyPlaying(userId);
 	}
 	return res.data;
@@ -37,13 +40,14 @@ export async function pausePlayer(userId: string) {
 			userId,
 		},
 	});
-	if (!spotify || !spotify.expiresAt) return { error: 'Spotify account not linked.' };
-	if (spotify.expiresAt < new Date('UTC')) {
+	if (!spotify || !spotify.expiresAt)
+		return { error: "Spotify account not linked." };
+	if (spotify.expiresAt < new Date("UTC")) {
 		await refreshToken(spotify);
 		return await pausePlayer(userId);
 	}
 	const res = await axios.put(
-		'https://api.spotify.com/v1/me/player/pause',
+		"https://api.spotify.com/v1/me/player/pause",
 		{},
 		{
 			headers: {
@@ -59,15 +63,19 @@ export async function refreshToken(spotify: Spotify) {
 	const { prisma, logger } = commandHandler;
 	logger.debug(`Refreshing spotify token for ${spotify.userId}`);
 	const params = new URLSearchParams();
-	params.append('grant_type', 'refresh_token');
-	params.append('refresh_token', spotify.refreshToken!);
+	params.append("grant_type", "refresh_token");
+	params.append("refresh_token", spotify.refreshToken!);
 
-	const res = await axios.post('https://accounts.spotify.com/api/token', params, {
-		headers: {
-			Authorization: spotifyToken,
-			'Content-Type': 'application/x-www-form-urlencoded',
+	const res = await axios.post(
+		"https://accounts.spotify.com/api/token",
+		params,
+		{
+			headers: {
+				Authorization: spotifyToken,
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
 		},
-	});
+	);
 	const resData = res.data;
 	await prisma.spotify.update({
 		where: {
@@ -103,31 +111,33 @@ export interface SpotifyFeatures {
 	valence: number;
 }
 
-export async function getTrackFeatures(trackId: string, userId: string): Promise<SpotifyFeatures | string> {
-	const key = 'spotify:features:' + trackId;
+export async function getTrackFeatures(
+	trackId: string,
+	userId: string,
+): Promise<SpotifyFeatures | string> {
+	const key = "spotify:features:" + trackId;
 	return redis.get(key).then(async (cache) => {
 		if (cache) return JSON.parse(cache) as SpotifyFeatures;
 		const url = `https://api.spotify.com/v1/audio-features/${trackId}`;
-		if (!userId) return 'No user id provided';
+		if (!userId) return "No user id provided";
 		const spotify = await commandHandler.prisma.spotify.findFirst({
 			where: {
-				userId
+				userId,
 			},
 		});
-		if (!spotify || !spotify.expiresAt) return 'Spotify account not linked.';
+		if (!spotify || !spotify.expiresAt) return "Spotify account not linked.";
 		if (spotify.expiresAt.getTime() < new Date().getTime()) {
 			await refreshToken(spotify);
 			return await getTrackFeatures(trackId, userId);
 		}
 		const res = await axios.get(url, {
 			headers: {
-				Authorization: 'Bearer ' + spotify.token,
+				Authorization: "Bearer " + spotify.token,
 			},
 		});
-		await redis.set(key, JSON.stringify(res.data), 'EX', 60 * 60 * 24 * 30);
+		await redis.set(key, JSON.stringify(res.data), "EX", 60 * 60 * 24 * 30);
 		return res.data as SpotifyFeatures;
-	})
-
+	});
 }
 
 interface Activity {
@@ -171,16 +181,23 @@ interface UserStatus {
 	voice: unknown[];
 }
 export async function getSpotifyRPC(userId: string) {
-	const res = await axios.get<UserStatus>(`https://us-atlanta2.evade.rest/users/${userId}/status`, {
-		headers: {
-			Authorization: import.meta.env.OTHER_EVADE_API_KEY,
+	const res = await axios.get<UserStatus>(
+		`https://us-atlanta2.evade.rest/users/${userId}/status`,
+		{
+			headers: {
+				Authorization: import.meta.env.OTHER_EVADE_API_KEY,
+			},
 		},
-	});
+	);
 	if (!res.data.activities) {
 		return { error: "No activity found" };
 	}
 	const activities = res.data.activities || [];
-	const spotify = activities.find((activity) => activity.assets?.large_image?.startsWith('spotify:') || activity.name == 'Spotify');
+	const spotify = activities.find(
+		(activity) =>
+			activity.assets?.large_image?.startsWith("spotify:") ||
+			activity.name == "Spotify",
+	);
 	if (!spotify) {
 		return { error: "No spotify activity found" };
 	}
@@ -191,5 +208,5 @@ export async function getSpotifyRPC(userId: string) {
 	return {
 		trackURI,
 		raw: spotify,
-	}
+	};
 }

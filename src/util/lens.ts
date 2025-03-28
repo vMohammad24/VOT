@@ -1,38 +1,48 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
+import axios from "axios";
+import * as cheerio from "cheerio";
 export class GoogleLens {
 	private url: string;
 	private session: any;
 
 	constructor() {
-		this.url = 'https://lens.google.com';
+		this.url = "https://lens.google.com";
 		this.session = axios.create({
-			headers: { 'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0' },
+			headers: {
+				"User-agent":
+					"Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0",
+			},
 		});
 	}
 
 	private async getPrerenderScript(page: string): Promise<any> {
 		const $ = cheerio.load(page);
-		const scriptContent = $('script')
+		const scriptContent = $("script")
 			.filter((_, script) => {
 				const content = $(script).html();
-				return !!content && content.includes('AF_initDataCallback(') && /key: 'ds:(\d+)'/.exec(content)?.[1] === '0';
+				return (
+					!!content &&
+					content.includes("AF_initDataCallback(") &&
+					/key: 'ds:(\d+)'/.exec(content)?.[1] === "0"
+				);
 			})
 			.html();
 
-		if (!scriptContent) throw new Error('Prerender script not found');
+		if (!scriptContent) throw new Error("Prerender script not found");
 
 		const hash = /hash: '(\d+)'/.exec(scriptContent)?.[1];
-		if (!hash) throw new Error('Hash not found in prerender script');
+		if (!hash) throw new Error("Hash not found in prerender script");
 
 		const adjustedScript = scriptContent
-			.replace('AF_initDataCallback(', '')
-			.replace(');', '')
-			.replace(`key: 'ds:0', hash: '${hash}', data:`, `"key": "ds:0", "hash": "${hash}", "data":`)
-			.replace('sideChannel:', '"sideChannel":');
+			.replace("AF_initDataCallback(", "")
+			.replace(");", "")
+			.replace(
+				`key: 'ds:0', hash: '${hash}', data:`,
+				`"key": "ds:0", "hash": "${hash}", "data":`,
+			)
+			.replace("sideChannel:", '"sideChannel":');
 
 		const jsonData = JSON.parse(adjustedScript);
-		return jsonData['data'][1];
+		return jsonData["data"][1];
 	}
 
 	private parsePrerenderScript(prerenderScript: any): any {
@@ -44,7 +54,7 @@ export class GoogleLens {
 				thumbnail: prerenderScript[0][1][8][12][0][2][0][0],
 				pageURL: prerenderScript[0][1][8][12][0][2][0][4],
 			};
-		} catch (e) { }
+		} catch (e) {}
 
 		let visualMatches;
 		if (data.match) {
@@ -71,8 +81,8 @@ export class GoogleLens {
 
 	async searchByFile(buffer: File): Promise<any> {
 		const formData = new FormData();
-		formData.append('encoded_image', buffer, 'image.jpg');
-		formData.append('image_content', '');
+		formData.append("encoded_image", buffer, "image.jpg");
+		formData.append("image_content", "");
 
 		const response = await this.session.post(`${this.url}/upload`, formData, {
 			// headers: formData.getHeaders(),
@@ -80,7 +90,7 @@ export class GoogleLens {
 			// validateStatus: (status) => status >= 200 && status < 400
 		});
 
-		const searchUrl = response.headers['location'];
+		const searchUrl = response.headers["location"];
 		const searchResponse = await this.session.get(searchUrl);
 		const prerenderScript = await this.getPrerenderScript(searchResponse.data);
 
@@ -88,7 +98,10 @@ export class GoogleLens {
 	}
 
 	async searchByUrl(url: string): Promise<any> {
-		const response = await this.session.get(`${this.url}/uploadbyurl`, { params: { url }, maxRedirects: true });
+		const response = await this.session.get(`${this.url}/uploadbyurl`, {
+			params: { url },
+			maxRedirects: true,
+		});
 		const prerenderScript = await this.getPrerenderScript(response.data);
 		return this.parsePrerenderScript(prerenderScript);
 	}

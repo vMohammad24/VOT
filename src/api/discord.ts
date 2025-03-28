@@ -1,19 +1,25 @@
-import axios from 'axios';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, type GuildTextBasedChannel } from 'discord.js';
-import { Elysia, t } from 'elysia';
-import queryString from 'query-string';
-import commandHandler from '..';
-import { getFrontEndURL, getRedirectURL } from '../util/urls';
-import { discordClientId, discordClientSecret, updateGuilds } from './apiUtils';
-export default (elysia: Elysia<'discord'>) => {
+import axios from "axios";
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	ChannelType,
+	type GuildTextBasedChannel,
+} from "discord.js";
+import { type Elysia, t } from "elysia";
+import queryString from "query-string";
+import commandHandler from "..";
+import { getFrontEndURL, getRedirectURL } from "../util/urls";
+import { discordClientId, discordClientSecret, updateGuilds } from "./apiUtils";
+export default (elysia: Elysia<"discord">) => {
 	elysia.get(
-		'/guilds',
+		"/guilds",
 		async ({ headers, set }) => {
 			const token = headers.authorization;
 			if (!token) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const user = await commandHandler.prisma.user.findUnique({
@@ -22,7 +28,7 @@ export default (elysia: Elysia<'discord'>) => {
 			if (!user) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const guilds = await updateGuilds(user.id);
@@ -40,13 +46,13 @@ export default (elysia: Elysia<'discord'>) => {
 	);
 
 	elysia.get(
-		'/guilds/:id',
+		"/guilds/:id",
 		async ({ headers, set, params: { id } }) => {
 			const token = headers.authorization;
 			if (!token) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const user = await commandHandler.prisma.user.findUnique({
@@ -55,7 +61,7 @@ export default (elysia: Elysia<'discord'>) => {
 			if (!user) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			await updateGuilds(user.id);
@@ -68,19 +74,25 @@ export default (elysia: Elysia<'discord'>) => {
 			if (!guild) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
 			if (!isBotInGuild) {
 				set.status = 400;
-				return { error: 'notInGuild' };
+				return { error: "notInGuild" };
 			}
 			const g = await commandHandler.client.guilds.cache.get(guild.id)!;
 			const channels = await g.channels.cache;
-			const textChannels = channels.filter((channel) => channel.type === ChannelType.GuildText);
-			const voiceChannels = channels.filter((channel) => channel.type === ChannelType.GuildVoice);
-			const categoryChannels = channels.filter((channel) => channel.type === ChannelType.GuildCategory);
+			const textChannels = channels.filter(
+				(channel) => channel.type === ChannelType.GuildText,
+			);
+			const voiceChannels = channels.filter(
+				(channel) => channel.type === ChannelType.GuildVoice,
+			);
+			const categoryChannels = channels.filter(
+				(channel) => channel.type === ChannelType.GuildCategory,
+			);
 			const memberCount = g.memberCount;
 			const roles = g.roles.cache.filter((role) => !role.managed);
 			return {
@@ -100,13 +112,13 @@ export default (elysia: Elysia<'discord'>) => {
 	);
 
 	elysia.patch(
-		'/guilds/:id',
+		"/guilds/:id",
 		async ({ headers, set, params: { id }, body }) => {
 			const token = headers.authorization;
 			if (!token) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const user = await commandHandler.prisma.user.findUnique({
@@ -115,7 +127,7 @@ export default (elysia: Elysia<'discord'>) => {
 			if (!user) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			await updateGuilds(user.id);
@@ -125,13 +137,13 @@ export default (elysia: Elysia<'discord'>) => {
 			if (!guild) {
 				set.status = 401;
 				return {
-					error: 'Unauthorized',
+					error: "Unauthorized",
 				};
 			}
 			const isBotInGuild = commandHandler.client.guilds.cache.has(guild.id);
 			if (!isBotInGuild) {
 				set.status = 400;
-				return { error: 'notInGuild' };
+				return { error: "notInGuild" };
 			}
 			const {
 				welcomeChannel,
@@ -144,7 +156,7 @@ export default (elysia: Elysia<'discord'>) => {
 				shouldUpdateTickets,
 				shouldUpdateVerification,
 			} = body as any;
-			let mes = 'Updated';
+			let mes = "Updated";
 			if (prefix) {
 				await commandHandler.prisma.guild.update({
 					where: {
@@ -154,18 +166,18 @@ export default (elysia: Elysia<'discord'>) => {
 						prefix: prefix,
 					},
 				});
-				mes += ' prefix';
+				mes += " prefix";
 			}
 			if (loggingChannel != undefined) {
 				const g = commandHandler.client.guilds.cache.get(guild.id);
 				if (!g) {
 					set.status = 400;
-					return { error: 'Invalid guild' };
+					return { error: "Invalid guild" };
 				} //return res.status(400).send({ error: 'Invalid guild' });
 				const channel = g.channels.cache.get(loggingChannel);
 				if (!channel) {
 					set.status = 400;
-					return { error: 'Invalid channel' };
+					return { error: "Invalid channel" };
 				}
 				await commandHandler.prisma.guild.update({
 					where: {
@@ -175,13 +187,15 @@ export default (elysia: Elysia<'discord'>) => {
 						loggingChannel: loggingChannel,
 					},
 				});
-				mes += ' logging channel';
+				mes += " logging channel";
 			}
 			if (welcomeChannel && welcomeEmbedDescription && welcomeEmbedTitle) {
-				const channel = commandHandler.client.guilds.cache.get(guild.id)?.channels.cache.get(welcomeChannel);
+				const channel = commandHandler.client.guilds.cache
+					.get(guild.id)
+					?.channels.cache.get(welcomeChannel);
 				if (!channel) {
 					set.status = 400;
-					return { error: 'Invalid channel' };
+					return { error: "Invalid channel" };
 				}
 				await commandHandler.prisma.welcomeSettings.upsert({
 					where: {
@@ -199,23 +213,31 @@ export default (elysia: Elysia<'discord'>) => {
 						guildId: guild.id,
 					},
 				});
-				mes += ' welcome channel';
+				mes += " welcome channel";
 			}
 			if (shouldUpdateTickets) {
-				const ticketSettings = await commandHandler.prisma.ticketSettings.findFirst({
-					where: { guildId: guild.id },
-				});
-				if (!ticketSettings || !ticketSettings.embedTitle || !ticketSettings.embedDesc) return;
-				mes += ' ticket embed';
+				const ticketSettings =
+					await commandHandler.prisma.ticketSettings.findFirst({
+						where: { guildId: guild.id },
+					});
+				if (
+					!ticketSettings ||
+					!ticketSettings.embedTitle ||
+					!ticketSettings.embedDesc
+				)
+					return;
+				mes += " ticket embed";
 				if (ticketSettings.channelId) {
 					const channel = commandHandler.client.guilds.cache
 						.get(guild.id)
-						?.channels.cache.get(ticketSettings.channelId) as GuildTextBasedChannel;
+						?.channels.cache.get(
+							ticketSettings.channelId,
+						) as GuildTextBasedChannel;
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 						new ButtonBuilder()
-							.setCustomId('create_ticket')
-							.setLabel('Create Ticket')
-							.setEmoji('🎫')
+							.setCustomId("create_ticket")
+							.setLabel("Create Ticket")
+							.setEmoji("🎫")
 							.setStyle(ButtonStyle.Primary),
 					);
 					const message = await channel.send({
@@ -239,26 +261,29 @@ export default (elysia: Elysia<'discord'>) => {
 				}
 			}
 			if (shouldUpdateVerification) {
-				const verificationSettings = await commandHandler.prisma.verificationSettings.findFirst({
-					where: { guildId: guild.id },
-				});
+				const verificationSettings =
+					await commandHandler.prisma.verificationSettings.findFirst({
+						where: { guildId: guild.id },
+					});
 				if (!verificationSettings) return;
 				if (verificationSettings.channelId) {
 					const channel = commandHandler.client.guilds.cache
 						.get(guild.id)
-						?.channels.cache.get(verificationSettings.channelId) as GuildTextBasedChannel;
+						?.channels.cache.get(
+							verificationSettings.channelId,
+						) as GuildTextBasedChannel;
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 						new ButtonBuilder()
-							.setLabel('Verify')
-							.setEmoji('✅')
-							.setURL(getFrontEndURL() + '/verify/' + guild.id)
+							.setLabel("Verify")
+							.setEmoji("✅")
+							.setURL(getFrontEndURL() + "/verify/" + guild.id)
 							.setStyle(ButtonStyle.Link),
 					);
 					const message = await channel.send({
 						embeds: [
 							{
-								title: verificationSettings.embedTitle || '',
-								description: verificationSettings.embedDesc || '',
+								title: verificationSettings.embedTitle || "",
+								description: verificationSettings.embedDesc || "",
 								color: 0x00ff00,
 							},
 						],
@@ -274,7 +299,7 @@ export default (elysia: Elysia<'discord'>) => {
 					});
 				}
 			}
-			if (mes.split(' ').length < 2) mes += ' Nothing';
+			if (mes.split(" ").length < 2) mes += " Nothing";
 			return { success: true, message: mes };
 		},
 		{
@@ -284,52 +309,52 @@ export default (elysia: Elysia<'discord'>) => {
 		},
 	);
 
-	elysia.get('/callback', async ({ query, redirect, set }) => {
+	elysia.get("/callback", async ({ query, redirect, set }) => {
 		const { code, refresh_token } = query as any;
 		if (!code && !refresh_token)
 			return redirect(
-				'https://discord.com/api/oauth2/authorize?' +
-				queryString.stringify({
-					client_id: discordClientId,
-					response_type: 'code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: 'identify guilds',
-				}),
+				"https://discord.com/api/oauth2/authorize?" +
+					queryString.stringify({
+						client_id: discordClientId,
+						response_type: "code",
+						redirect_uri: getRedirectURL("discord"),
+						scope: "identify guilds",
+					}),
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
-			'https://discord.com/api/oauth2/token',
+			"https://discord.com/api/oauth2/token",
 			isRefresh
 				? {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					refresh_token,
-					grant_type: 'refresh_token',
-				}
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						refresh_token,
+						grant_type: "refresh_token",
+					}
 				: {
-					client_id: discordClientId,
-					client_secret: discordClientSecret,
-					code,
-					grant_type: 'authorization_code',
-					redirect_uri: getRedirectURL('discord'),
-					scope: encodeURI('identify guilds'),
-				},
+						client_id: discordClientId,
+						client_secret: discordClientSecret,
+						code,
+						grant_type: "authorization_code",
+						redirect_uri: getRedirectURL("discord"),
+						scope: encodeURI("identify guilds"),
+					},
 			{
 				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					'Accept-Encoding': 'identity',
+					"Content-Type": "application/x-www-form-urlencoded",
+					"Accept-Encoding": "identity",
 				},
 			},
 		);
 		const tokenResponse = (await tokenResponseData.data) as any;
-		if (tokenResponse.error == 'invalid_grant') {
+		if (tokenResponse.error == "invalid_grant") {
 			set.status = 401;
 			return {
 				success: false,
-				message: 'Invalid code',
+				message: "Invalid code",
 			};
 		}
-		const userRes = await axios.get('https://discord.com/api/users/@me', {
+		const userRes = await axios.get("https://discord.com/api/users/@me", {
 			headers: {
 				authorization: `${tokenResponse.token_type} ${tokenResponse.access_token}`,
 			},
@@ -385,22 +410,38 @@ export default (elysia: Elysia<'discord'>) => {
 				name: resUser.username,
 			},
 		});
-		return redirect(getFrontEndURL() + '/?token=' + user.token);
+		return redirect(getFrontEndURL() + "/?token=" + user.token);
 	});
 
-	elysia.get('/invite', ({ redirect }) => {
-		return redirect('https://discord.com/api/oauth2/authorize?client_id=' + import.meta.env.DISCORD_CLIENT_ID!);
+	elysia.get("/invite", ({ redirect }) => {
+		return redirect(
+			"https://discord.com/api/oauth2/authorize?client_id=" +
+				import.meta.env.DISCORD_CLIENT_ID!,
+		);
 	});
 
-	elysia.get('/guilds/:id/graphs', async ({ params: { id } }) => {
-		const guild = commandHandler.client.guilds.cache.get(id)
-		if (!guild) return { error: 'notInGuild' }
-		const members = guild.members.cache.map(a => a.joinedTimestamp).filter(a => a != null).sort((a, b) => a - b);
-		const activityInTheLastHour = guild.channels.cache.filter(c => c.isTextBased()).map(c => c.messages.cache.filter(m => m.createdTimestamp > Date.now() - 3600000).size).reduce((a, b) => a + b, 0);
-		const activeInTheLastHour = guild.channels.cache.filter(c => c.isTextBased()).map(c => c.messages.cache.filter(m => m.member));
+	elysia.get("/guilds/:id/graphs", async ({ params: { id } }) => {
+		const guild = commandHandler.client.guilds.cache.get(id);
+		if (!guild) return { error: "notInGuild" };
+		const members = guild.members.cache
+			.map((a) => a.joinedTimestamp)
+			.filter((a) => a != null)
+			.sort((a, b) => a - b);
+		const activityInTheLastHour = guild.channels.cache
+			.filter((c) => c.isTextBased())
+			.map(
+				(c) =>
+					c.messages.cache.filter(
+						(m) => m.createdTimestamp > Date.now() - 3600000,
+					).size,
+			)
+			.reduce((a, b) => a + b, 0);
+		const activeInTheLastHour = guild.channels.cache
+			.filter((c) => c.isTextBased())
+			.map((c) => c.messages.cache.filter((m) => m.member));
 		const uniqueActiveMembers = new Set();
-		activeInTheLastHour.forEach(messages => {
-			messages.forEach(message => {
+		activeInTheLastHour.forEach((messages) => {
+			messages.forEach((message) => {
 				if (message.member) {
 					uniqueActiveMembers.add(message.member.id);
 				}
@@ -411,19 +452,30 @@ export default (elysia: Elysia<'discord'>) => {
 				guildId: id,
 			},
 			orderBy: {
-				createdAt: 'desc',
+				createdAt: "desc",
 			},
 			select: {
 				commandId: true,
 			},
-		})
+		});
 		const mostUsedCommandsMap = new Map<string, number>();
-		mostUsedCommands.forEach(command => {
-			mostUsedCommandsMap.set(command.commandId, (mostUsedCommandsMap.get(command.commandId) || 0) + 1);
+		mostUsedCommands.forEach((command) => {
+			mostUsedCommandsMap.set(
+				command.commandId,
+				(mostUsedCommandsMap.get(command.commandId) || 0) + 1,
+			);
 		});
 		const mostUsedCommandsArray = Array.from(mostUsedCommandsMap.entries())
 			.sort((a, b) => b[1] - a[1])
 			.slice(0, 5);
-		return { members, activityInTheLastHour, activeMembers: uniqueActiveMembers.size, mostUsedCommands: mostUsedCommandsArray.map(a => ({ command: a[0], count: a[1] })) };
-	})
+		return {
+			members,
+			activityInTheLastHour,
+			activeMembers: uniqueActiveMembers.size,
+			mostUsedCommands: mostUsedCommandsArray.map((a) => ({
+				command: a[0],
+				count: a[1],
+			})),
+		};
+	});
 };

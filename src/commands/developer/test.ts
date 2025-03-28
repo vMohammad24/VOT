@@ -1,26 +1,36 @@
-import { ApplicationCommandOptionType } from 'discord.js';
-import commandHandler from '../..';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { chat } from '../../util/ai';
-import { pagination } from '../../util/pagination';
+import { ApplicationCommandOptionType } from "discord.js";
+import commandHandler from "../..";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { chat } from "../../util/ai";
+import { pagination } from "../../util/pagination";
 
 export default {
-	description: 'test command for devs',
-	type: 'all',
+	description: "test command for devs",
+	type: "all",
 	disabled: commandHandler.prodMode,
 	options: [
 		{
-			name: 'query',
-			description: 'The search query',
+			name: "query",
+			description: "The search query",
 			type: ApplicationCommandOptionType.String,
 			required: false,
 		},
 	],
-	perms: 'dev',
-	execute: async ({ user, interaction, member, handler, args, guild, channel, message, editReply }) => {
-		const query = args.get('query') as string | null;
-		if (!query) return { content: 'No query provided' };
-		const res = await chat(query, '', 'evil');
+	perms: "dev",
+	execute: async ({
+		user,
+		interaction,
+		member,
+		handler,
+		args,
+		guild,
+		channel,
+		message,
+		editReply,
+	}) => {
+		const query = args.get("query") as string | null;
+		if (!query) return { content: "No query provided" };
+		const res = await chat(query, "", "evil");
 		await pagination({
 			interaction,
 			message,
@@ -30,7 +40,7 @@ export default {
 					allowedMentions: {},
 				},
 			})),
-			type: 'buttons',
+			type: "buttons",
 		});
 		// const client = getClient();
 		// const res = await client.chat.completions.create({

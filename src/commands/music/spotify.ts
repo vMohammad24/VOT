@@ -1,23 +1,18 @@
-import { EmbedBuilder, GuildMember } from 'discord.js';
-import { KazagumoTrack } from 'kazagumo';
-import numeral from 'numeral';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { getEmoji } from '../../util/emojis';
-import { getSpotifyRPC, getTrackFeatures } from '../../util/spotify';
-import VOTEmbed from '../../util/VOTEmbed';
-
-
-
-
+import { EmbedBuilder, type GuildMember } from "discord.js";
+import { KazagumoTrack } from "kazagumo";
+import numeral from "numeral";
+import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
+import { getEmoji } from "../../util/emojis";
+import { getSpotifyRPC, getTrackFeatures } from "../../util/spotify";
 
 export default {
-	description: 'Gets your current playing song from spotify and adds it to the queue',
+	description:
+		"Gets your current playing song from spotify and adds it to the queue",
 	// needsPlayer: true,
-	aliases: ['sp'],
-	type: 'all',
+	aliases: ["sp"],
+	type: "all",
 	execute: async ({ member, handler, player, interaction, guild, user }) => {
-		;
-
 		const res = await getSpotifyRPC(user.id);
 		if (res.error) {
 			return {
@@ -28,19 +23,19 @@ export default {
 		const { trackURI, raw: spotify } = res;
 		if (!trackURI) {
 			return {
-				content: 'No track playing',
+				content: "No track playing",
 				ephemeral: true,
 			};
 		}
 		const track = (
 			await handler.kazagumo.search(trackURI, {
 				requester: member as GuildMember,
-				engine: 'spotify',
+				engine: "spotify",
 			})
 		).tracks[0];
 		if (!track) {
 			return {
-				content: 'No track found',
+				content: "No track found",
 				ephemeral: true,
 			};
 		}
@@ -88,7 +83,9 @@ export default {
 		// 	};
 
 		if (player) {
-			const t = (await (await handler.kazagumo.getLeastUsedNode()).rest.resolve(track.uri!))!.data as any;
+			const t = (await (
+				await handler.kazagumo.getLeastUsedNode()
+			).rest.resolve(track.uri!))!.data as any;
 			const cTrack = new KazagumoTrack(t, member as GuildMember);
 			if (player.queue.current) {
 				await player.queue.add(cTrack);
@@ -97,15 +94,23 @@ export default {
 				await player.play(cTrack);
 			}
 			const embed = new EmbedBuilder()
-				.setTitle('Added to queue')
-				.setColor('Green')
-				.setDescription(`Added [${cTrack.title || 'Error getting title'}](${cTrack.uri}) to the queue`)
+				.setTitle("Added to queue")
+				.setColor("Green")
+				.setDescription(
+					`Added [${cTrack.title || "Error getting title"}](${cTrack.uri}) to the queue`,
+				)
 				.setThumbnail(cTrack.thumbnail || null);
-			if (player.queue.current?.realUri == cTrack.realUri && spotify.timestamps?.start) {
+			if (
+				player.queue.current?.realUri == cTrack.realUri &&
+				spotify.timestamps?.start
+			) {
 				const progress = Math.floor(Date.now() - spotify.timestamps.start);
 				await player.seek(progress);
 				// minute:second
-				embed.setDescription(embed.data.description + ` and seeked to ${numeral(progress / 1000).format('00:00')}`);
+				embed.setDescription(
+					embed.data.description +
+						` and seeked to ${numeral(progress / 1000).format("00:00")}`,
+				);
 			}
 			return {
 				embeds: [embed],
@@ -116,23 +121,40 @@ export default {
 				artistArtworkUrl: string;
 			};
 			const embed = await new VOTEmbed()
-				.setDescription(`### [${track.title || 'Error getting title'}](${track.uri})`)
+				.setDescription(
+					`### [${track.title || "Error getting title"}](${track.uri})`,
+				)
 				.setThumbnail(track.thumbnail || null)
 				.setAuthor({
-					name: track.author || 'Error getting author',
+					name: track.author || "Error getting author",
 					iconURL: info.artistArtworkUrl,
 					url: info.artistUrl,
 				})
-				.setFooter({ text: 'Spotify', iconURL: getEmoji('spotify').imageURL() ?? undefined })
+				.setFooter({
+					text: "Spotify",
+					iconURL: getEmoji("spotify").imageURL() ?? undefined,
+				})
 				.dominant();
 			const trackId = track.identifier;
 			const features = await getTrackFeatures(trackId, user.id);
-			if (typeof features != 'string') {
+			if (typeof features != "string") {
 				if (features.analysis_url) {
 					embed.addFields([
-						{ name: 'Danceability', value: `${(features.danceability * 100).toFixed(1)}%`, inline: true },
-						{ name: 'Energy', value: `${(features.energy * 100).toFixed(1)}%`, inline: true },
-						{ name: 'Mode', value: `${(features.mode * 100).toFixed(1)}%`, inline: true },
+						{
+							name: "Danceability",
+							value: `${(features.danceability * 100).toFixed(1)}%`,
+							inline: true,
+						},
+						{
+							name: "Energy",
+							value: `${(features.energy * 100).toFixed(1)}%`,
+							inline: true,
+						},
+						{
+							name: "Mode",
+							value: `${(features.mode * 100).toFixed(1)}%`,
+							inline: true,
+						},
 					]);
 				}
 			}

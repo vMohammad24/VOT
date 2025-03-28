@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export async function uploadFile(file: any): Promise<{
 	fileName: string;
@@ -8,7 +8,7 @@ export async function uploadFile(file: any): Promise<{
 	accessibleURL: string;
 }> {
 	const formData = new FormData();
-	formData.set('files', file);
+	formData.set("files", file);
 	const res = await axios.post(`https://nest.rip/api/files/upload`, formData, {
 		headers: {
 			Authorization: import.meta.env.NEST_API_KEY,
@@ -24,11 +24,11 @@ export async function shortenUrl(url: string, password?: string) {
 			{
 				url,
 				password,
-				urlType: 'Normal',
+				urlType: "Normal",
 				length: 5,
 				domain: import.meta.env.NEST_SHORTS_DOMAIN,
-				subDomain: '',
-				EmbedType: 'Target',
+				subDomain: "",
+				EmbedType: "Target",
 			},
 			{
 				headers: {

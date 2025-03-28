@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { redis } from '..';
+import axios from "axios";
+import { redis } from "..";
 
 export interface VPNCheckResponse {
 	service_type: string;
@@ -33,12 +33,19 @@ export interface VPNCheckResponse {
 export async function getIpInfo(ip: string): Promise<VPNCheckResponse> {
 	const cache = await redis.get(`vpn:${ip}`);
 	if (cache) return JSON.parse(cache) as VPNCheckResponse;
-	const res = await axios.get<VPNCheckResponse>(`https://detectvpn.io/_check/${ip}/`);
-	await redis.set(`vpn:${ip}`, JSON.stringify(res.data), 'EX', 60 * 60 * 24 * 2);
+	const res = await axios.get<VPNCheckResponse>(
+		`https://detectvpn.io/_check/${ip}/`,
+	);
+	await redis.set(
+		`vpn:${ip}`,
+		JSON.stringify(res.data),
+		"EX",
+		60 * 60 * 24 * 2,
+	);
 	return res.data;
 }
 
-export async function isVPN(ip: string): Promise<Boolean> {
+export async function isVPN(ip: string): Promise<boolean> {
 	const info = await getIpInfo(ip);
 	return info.vpn_service;
 }

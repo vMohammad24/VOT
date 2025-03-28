@@ -1,16 +1,19 @@
-import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
-import { IContextCommand } from '../handler/interfaces/IContextCommand';
-import { makeQuote } from './quote';
+import {
+	ApplicationCommandType,
+	type MessageContextMenuCommandInteraction,
+} from "discord.js";
+import type { IContextCommand } from "../handler/interfaces/IContextCommand";
+import { makeQuote } from "./quote";
 
 export default {
-	name: 'Quote (Grayscale)',
-	description: 'Quote a message in grayscale',
+	name: "Quote (Grayscale)",
+	description: "Quote a message in grayscale",
 	type: ApplicationCommandType.Message,
-	context: 'all',
+	context: "all",
 	execute: async ({ targetMessage }: MessageContextMenuCommandInteraction) => {
 		if (!targetMessage)
 			return {
-				content: 'Please select a message to quote.',
+				content: "Please select a message to quote.",
 				ephemeral: true,
 			};
 		const canvas = await makeQuote(
@@ -18,7 +21,7 @@ export default {
 			targetMessage.author.username,
 			targetMessage.author.displayAvatarURL({ size: 1024 }),
 		);
-		const ctx = canvas.getContext('2d');
+		const ctx = canvas.getContext("2d");
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		const data = imageData.data;
 
@@ -32,8 +35,8 @@ export default {
 		return {
 			files: [
 				{
-					attachment: canvas.toBuffer('image/png'),
-					name: 'VOT-quoteGS.png',
+					attachment: canvas.toBuffer("image/png"),
+					name: "VOT-quoteGS.png",
 				},
 			],
 		};

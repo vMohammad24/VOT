@@ -1,54 +1,71 @@
 import {
-	ApplicationCommandOption,
+	type ApplicationCommandOption,
 	ApplicationCommandOptionType,
-	ApplicationCommandSubCommandData,
-	ApplicationCommandSubGroupData,
+	type ApplicationCommandSubCommandData,
+	type ApplicationCommandSubGroupData,
 	EmbedBuilder,
-	User,
-} from 'discord.js';
-import { getUser } from '../../util/database';
-import type ICommand from '../interfaces/ICommand';
-import type { CommandContext } from '../interfaces/ICommand';
+	type User,
+} from "discord.js";
+import { getUser } from "../../util/database";
+import type ICommand from "../interfaces/ICommand";
+import type { CommandContext } from "../interfaces/ICommand";
 
 const optionTypeCache = new WeakMap<ApplicationCommandOption, string>();
-const optionPropsCache = new WeakMap<ApplicationCommandOption, { hasRequired: boolean, hasOptions: boolean }>();
+const optionPropsCache = new WeakMap<
+	ApplicationCommandOption,
+	{ hasRequired: boolean; hasOptions: boolean }
+>();
 
-function isSubCommandGroup(option: ApplicationCommandOption): option is ApplicationCommandSubGroupData {
+function isSubCommandGroup(
+	option: ApplicationCommandOption,
+): option is ApplicationCommandSubGroupData {
 	let type = optionTypeCache.get(option);
 	if (type === undefined) {
-		type = option.type === ApplicationCommandOptionType.SubcommandGroup ? 'group' : 'other';
+		type =
+			option.type === ApplicationCommandOptionType.SubcommandGroup
+				? "group"
+				: "other";
 		optionTypeCache.set(option, type);
 	}
-	return type === 'group';
+	return type === "group";
 }
 
-function isSubCommand(option: ApplicationCommandOption): option is ApplicationCommandSubCommandData {
+function isSubCommand(
+	option: ApplicationCommandOption,
+): option is ApplicationCommandSubCommandData {
 	let type = optionTypeCache.get(option);
 	if (type === undefined) {
-		type = option.type === ApplicationCommandOptionType.Subcommand ? 'cmd' : 'other';
+		type =
+			option.type === ApplicationCommandOptionType.Subcommand ? "cmd" : "other";
 		optionTypeCache.set(option, type);
 	}
-	return type === 'cmd';
+	return type === "cmd";
 }
 
-function hasRequiredProperty(option: ApplicationCommandOption): option is ApplicationCommandOption & { required: boolean } {
+function hasRequiredProperty(
+	option: ApplicationCommandOption,
+): option is ApplicationCommandOption & { required: boolean } {
 	let props = optionPropsCache.get(option);
 	if (!props) {
 		props = {
-			hasRequired: 'required' in option,
-			hasOptions: 'options' in option && Array.isArray((option as any).options)
+			hasRequired: "required" in option,
+			hasOptions: "options" in option && Array.isArray((option as any).options),
 		};
 		optionPropsCache.set(option, props);
 	}
 	return props.hasRequired;
 }
 
-function hasOptionsProperty(option: ApplicationCommandOption): option is ApplicationCommandOption & { options?: ApplicationCommandOption[] } {
+function hasOptionsProperty(
+	option: ApplicationCommandOption,
+): option is ApplicationCommandOption & {
+	options?: ApplicationCommandOption[];
+} {
 	let props = optionPropsCache.get(option);
 	if (!props) {
 		props = {
-			hasRequired: 'required' in option,
-			hasOptions: 'options' in option && Array.isArray((option as any).options)
+			hasRequired: "required" in option,
+			hasOptions: "options" in option && Array.isArray((option as any).options),
 		};
 		optionPropsCache.set(option, props);
 	}
@@ -72,50 +89,59 @@ export class ArgumentMap<T extends Record<string, any>> {
 	}
 
 	list() {
-		return Array.from(this.map.values()).map(arg => arg.value);
+		return Array.from(this.map.values()).map((arg) => arg.value);
 	}
 }
 
-async function parseMessageArgs(messageContent: string, cmd: ICommand, user: User): Promise<string[]> {
+async function parseMessageArgs(
+	messageContent: string,
+	cmd: ICommand,
+	user: User,
+): Promise<string[]> {
 	if (!cmd.name) return [];
 
 	const userData = await getUser(user, { prefix: true });
-	const prefix = userData.prefix ?? ';';
+	const prefix = userData.prefix ?? ";";
 	const prefixLength = prefix.length;
 
 	if (!messageContent.startsWith(prefix)) return [];
 
 	const commandParts = messageContent.slice(prefixLength).split(/\s+/);
 
-
 	if (cmd.name.includes(" ")) {
 		const parts = cmd.name.split(" ");
 		const partsLength = parts.length;
-		if (parts.join(" ").toLowerCase() === commandParts.slice(0, partsLength).join(" ").toLowerCase()) {
+		if (
+			parts.join(" ").toLowerCase() ===
+			commandParts.slice(0, partsLength).join(" ").toLowerCase()
+		) {
 			return commandParts.slice(partsLength);
 		}
 	}
 
-	if (cmd.aliases?.some(alias => alias.includes(" "))) {
+	if (cmd.aliases?.some((alias) => alias.includes(" "))) {
 		for (const alias of cmd.aliases) {
 			if (!alias.includes(" ")) continue;
 
 			const aliasParts = alias.split(" ");
 			const aliasLength = aliasParts.length;
-			if (aliasParts.join(" ").toLowerCase() === commandParts.slice(0, aliasLength).join(" ").toLowerCase()) {
+			if (
+				aliasParts.join(" ").toLowerCase() ===
+				commandParts.slice(0, aliasLength).join(" ").toLowerCase()
+			) {
 				return commandParts.slice(aliasLength);
 			}
 		}
 	}
-
 
 	const commandName = commandParts[0].toLowerCase();
 	if (cmd.name?.toLowerCase() === commandName) {
 		return commandParts.slice(1);
 	}
 
-
-	const hasMatchingAlias = cmd.aliases?.some(a => !a.includes(" ") && a.toLowerCase() === commandName);
+	const hasMatchingAlias = cmd.aliases?.some(
+		(a) => !a.includes(" ") && a.toLowerCase() === commandName,
+	);
 	if (hasMatchingAlias) {
 		return commandParts.slice(1);
 	}
@@ -123,32 +149,40 @@ async function parseMessageArgs(messageContent: string, cmd: ICommand, user: Use
 	return [];
 }
 
-
-function createErrorResponse(title: string, description: string, ephemeral = true) {
+function createErrorResponse(
+	title: string,
+	description: string,
+	ephemeral = true,
+) {
 	return {
 		ephemeral,
 		embeds: [
 			new EmbedBuilder()
 				.setTitle(title)
 				.setDescription(description)
-				.setColor('DarkRed')
-				.setTimestamp()
-		]
+				.setColor("DarkRed")
+				.setTimestamp(),
+		],
 	};
 }
 
-export default async function (command: ICommand, ctx: CommandContext): Promise<boolean | any> {
+export default async function (
+	command: ICommand,
+	ctx: CommandContext,
+): Promise<boolean | any> {
 	const { args, interaction, message, user } = ctx;
 	const { options } = command;
 
-
 	if (!options || options.length === 0) return true;
 
-
-	const messageArgs = message ? await parseMessageArgs(message.content.trim(), command, ctx.user) : [];
+	const messageArgs = message
+		? await parseMessageArgs(message.content.trim(), command, ctx.user)
+		: [];
 	let argIndex = 0;
 
-	const validateInteractionOptions = async (options: ApplicationCommandOption[]) => {
+	const validateInteractionOptions = async (
+		options: ApplicationCommandOption[],
+	) => {
 		const optionsLength = options.length;
 
 		for (let i = 0; i < optionsLength; i++) {
@@ -158,28 +192,43 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 			if (interaction) {
 				if (command.advancedChoices) {
 					try {
-						const subcommandGroup = interaction.options.getSubcommandGroup(false);
+						const subcommandGroup =
+							interaction.options.getSubcommandGroup(false);
 						const subcommand = interaction.options.getSubcommand(false);
 
 						if (subcommand) {
 							if (!subcommandGroup) {
 								for (const opt of command.options || []) {
 									if (opt.name === subcommand && isSubCommand(opt)) {
-										if ('_originalValue' in opt && '_optionName' in opt) {
-											args.set(opt.name, interaction.options.get(opt.name)?.value);
+										if ("_originalValue" in opt && "_optionName" in opt) {
+											args.set(
+												opt.name,
+												interaction.options.get(opt.name)?.value,
+											);
 											break;
 										}
 									}
 								}
-							}
-							else {
+							} else {
 								for (const optGroup of command.options || []) {
-									if (optGroup.name === subcommandGroup && isSubCommandGroup(optGroup)) {
+									if (
+										optGroup.name === subcommandGroup &&
+										isSubCommandGroup(optGroup)
+									) {
 										if (hasOptionsProperty(optGroup)) {
 											for (const subCmd of optGroup.options || []) {
-												if (subCmd.name === subcommand && isSubCommand(subCmd)) {
-													if ('_originalValue' in subCmd && '_optionName' in subCmd) {
-														args.set(subCmd.name, interaction.options.get(subCmd.name)?.value);
+												if (
+													subCmd.name === subcommand &&
+													isSubCommand(subCmd)
+												) {
+													if (
+														"_originalValue" in subCmd &&
+														"_optionName" in subCmd
+													) {
+														args.set(
+															subCmd.name,
+															interaction.options.get(subCmd.name)?.value,
+														);
 														break;
 													}
 												}
@@ -195,7 +244,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 					}
 				}
 				let value: any = null;
-				let required = hasRequiredProperty(option) ? option.required : false;
+				const required = hasRequiredProperty(option) ? option.required : false;
 				const optionName = option.name;
 				const optionType = option.type;
 
@@ -230,24 +279,25 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 					case ApplicationCommandOptionType.Subcommand:
 					case ApplicationCommandOptionType.SubcommandGroup:
 						const subCommandName = interaction.options.getSubcommand(false);
-						const subCommandGroup = interaction.options.getSubcommandGroup(false);
+						const subCommandGroup =
+							interaction.options.getSubcommandGroup(false);
 
 						let subOptions: ApplicationCommandOption[] | undefined = undefined;
 
 						if (hasOptionsProperty(option)) {
-							subOptions = option.options?.filter(opt => !isSubCommand(opt));
+							subOptions = option.options?.filter((opt) => !isSubCommand(opt));
 						}
 
 						if (subCommandName && subCommandGroup) {
-							const foundGroup = command.options?.find(group =>
-								group.name === subCommandGroup &&
-								isSubCommandGroup(group)
+							const foundGroup = command.options?.find(
+								(group) =>
+									group.name === subCommandGroup && isSubCommandGroup(group),
 							);
 
 							if (foundGroup && hasOptionsProperty(foundGroup)) {
-								const foundCommand = foundGroup.options?.find((cmd): cmd is ApplicationCommandSubCommandData =>
-									cmd.name === subCommandName &&
-									isSubCommand(cmd)
+								const foundCommand = foundGroup.options?.find(
+									(cmd): cmd is ApplicationCommandSubCommandData =>
+										cmd.name === subCommandName && isSubCommand(cmd),
 								);
 
 								if (foundCommand && hasOptionsProperty(foundCommand)) {
@@ -255,9 +305,9 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 								}
 							}
 						} else if (subCommandName) {
-							const foundCommand = command.options?.find((cmd): cmd is ApplicationCommandSubCommandData =>
-								cmd.name === subCommandName &&
-								isSubCommand(cmd)
+							const foundCommand = command.options?.find(
+								(cmd): cmd is ApplicationCommandSubCommandData =>
+									cmd.name === subCommandName && isSubCommand(cmd),
 							);
 
 							if (foundCommand && hasOptionsProperty(foundCommand)) {
@@ -269,35 +319,39 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 						break;
 					default:
 						return createErrorResponse(
-							'Error',
-							`Unknown option type \`${optionType}\` for command \`${command.name}\`.\n\nPlease contact the bot developer to fix this issue.`
+							"Error",
+							`Unknown option type \`${optionType}\` for command \`${command.name}\`.\n\nPlease contact the bot developer to fix this issue.`,
 						);
 				}
 
-				if (optionType !== ApplicationCommandOptionType.Subcommand &&
+				if (
+					optionType !== ApplicationCommandOptionType.Subcommand &&
 					optionType !== ApplicationCommandOptionType.SubcommandGroup &&
-					value === null && required) {
+					value === null &&
+					required
+				) {
 					return createErrorResponse(
-						'Error',
-						`> Required argument \`${optionName}\` is missing for command \`${command.name}\`.`
+						"Error",
+						`> Required argument \`${optionName}\` is missing for command \`${command.name}\`.`,
 					);
 				}
 
 				args.set(optionName, value);
-
 			} else if (message) {
 				let value: any = null;
-				let required = hasRequiredProperty(option) ? option.required : false;
+				const required = hasRequiredProperty(option) ? option.required : false;
 				const optionName = option.name;
 				const optionType = option.type;
 
 				switch (optionType) {
 					case ApplicationCommandOptionType.String:
 						const remainingOptions = options.slice(i + 1);
-						const hasRequiredOptionsAfter = remainingOptions.some(opt => hasRequiredProperty(opt) && (opt as any).required);
+						const hasRequiredOptionsAfter = remainingOptions.some(
+							(opt) => hasRequiredProperty(opt) && (opt as any).required,
+						);
 
 						if (!hasRequiredOptionsAfter && argIndex < messageArgs.length) {
-							value = messageArgs.slice(argIndex).join(' ') || null;
+							value = messageArgs.slice(argIndex).join(" ") || null;
 							argIndex = messageArgs.length;
 						} else {
 							value = messageArgs[argIndex] || null;
@@ -308,7 +362,7 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 					case ApplicationCommandOptionType.Integer:
 						const intArg = messageArgs[argIndex];
 						if (intArg !== undefined) {
-							const parsedInt = parseInt(intArg, 10);
+							const parsedInt = Number.parseInt(intArg, 10);
 							value = !isNaN(parsedInt) ? parsedInt : null;
 							argIndex++;
 						}
@@ -317,7 +371,8 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 					case ApplicationCommandOptionType.Boolean:
 						const boolArg = messageArgs[argIndex]?.toLowerCase();
 						if (boolArg !== undefined) {
-							value = boolArg === 'true' ? true : (boolArg === 'false' ? false : null);
+							value =
+								boolArg === "true" ? true : boolArg === "false" ? false : null;
 							argIndex++;
 						}
 						break;
@@ -330,11 +385,20 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 
 							if (userIdMatch) {
 								const userId = userIdMatch[1];
-								value = (await message.guild?.members.fetch(userId).catch(() => null)) || null;
+								value =
+									(await message.guild?.members
+										.fetch(userId)
+										.catch(() => null)) || null;
 							} else if (/^\d+$/.test(userArg)) {
-								value = (await message.guild?.members.fetch(userArg).catch(() => null)) || null;
+								value =
+									(await message.guild?.members
+										.fetch(userArg)
+										.catch(() => null)) || null;
 							} else {
-								const members = await message.guild?.members.fetch({ query: userArg, limit: 1 });
+								const members = await message.guild?.members.fetch({
+									query: userArg,
+									limit: 1,
+								});
 								value = members?.first() || null;
 							}
 							argIndex++;
@@ -350,11 +414,15 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							const channelIdMatch = channelArg.match(/^<#(\d+)>$/);
 
 							if (channelIdMatch) {
-								value = message.guild?.channels.cache.get(channelIdMatch[1]) || null;
+								value =
+									message.guild?.channels.cache.get(channelIdMatch[1]) || null;
 							} else if (/^\d+$/.test(channelArg)) {
 								value = message.guild?.channels.cache.get(channelArg) || null;
 							} else {
-								value = message.guild?.channels.cache.find(ch => ch.name === channelArg) || null;
+								value =
+									message.guild?.channels.cache.find(
+										(ch) => ch.name === channelArg,
+									) || null;
 							}
 							argIndex++;
 						} else if (message.mentions.channels.size > 0) {
@@ -373,14 +441,19 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							} else if (/^\d+$/.test(roleArg)) {
 								value = message.guild?.roles.cache.get(roleArg) || null;
 							} else {
-								// Optimize role lookup with direct filter + first
-								value = message.guild?.roles.cache
-									.filter(role =>
-										role.name.toLowerCase().includes(roleArg.toLowerCase()) ||
-										role.name.toLowerCase().startsWith(roleArg.toLowerCase())
-									)
-									.sort((a, b) => a.name.length - b.name.length)
-									.first() || null;
+								value =
+									message.guild?.roles.cache
+										.filter(
+											(role) =>
+												role.name
+													.toLowerCase()
+													.includes(roleArg.toLowerCase()) ||
+												role.name
+													.toLowerCase()
+													.startsWith(roleArg.toLowerCase()),
+										)
+										.sort((a, b) => a.name.length - b.name.length)
+										.first() || null;
 							}
 							argIndex++;
 						} else if (message.mentions.roles.size > 0) {
@@ -396,32 +469,48 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 							const roleIdMatch = mentionableArg.match(/^<@&(\d+)>$/);
 
 							if (userIdMatch) {
-								value = (await message.guild?.members.fetch(userIdMatch[1]).catch(() => null)) || null;
+								value =
+									(await message.guild?.members
+										.fetch(userIdMatch[1])
+										.catch(() => null)) || null;
 							} else if (roleIdMatch) {
 								value = message.guild?.roles.cache.get(roleIdMatch[1]) || null;
 							} else if (/^\d+$/.test(mentionableArg)) {
-								// Try member first, then role
-								value = (await message.guild?.members.fetch(mentionableArg).catch(() =>
-									message.guild?.roles.cache.get(mentionableArg) || null
-								)) || null;
+								value =
+									(await message.guild?.members
+										.fetch(mentionableArg)
+										.catch(
+											() =>
+												message.guild?.roles.cache.get(mentionableArg) || null,
+										)) || null;
 							} else {
-								// Combined lookup for members and roles
-								value = message.guild?.members.cache.find(
-									member => member.displayName === mentionableArg || member.user.username === mentionableArg
-								) || message.guild?.roles.cache.find(
-									role => role.name === mentionableArg
-								) || null;
+								value =
+									message.guild?.members.cache.find(
+										(member) =>
+											member.displayName === mentionableArg ||
+											member.user.username === mentionableArg,
+									) ||
+									message.guild?.roles.cache.find(
+										(role) => role.name === mentionableArg,
+									) ||
+									null;
 							}
 							argIndex++;
-						} else if (message.mentions.members?.size || message.mentions.roles.size) {
-							value = message.mentions.members?.first() || message.mentions.roles.first() || null;
+						} else if (
+							message.mentions.members?.size ||
+							message.mentions.roles.size
+						) {
+							value =
+								message.mentions.members?.first() ||
+								message.mentions.roles.first() ||
+								null;
 						}
 						break;
 
 					case ApplicationCommandOptionType.Number:
 						const numArg = messageArgs[argIndex];
 						if (numArg !== undefined) {
-							const parsedNum = parseFloat(numArg);
+							const parsedNum = Number.parseFloat(numArg);
 							value = !isNaN(parsedNum) ? parsedNum : null;
 							argIndex++;
 						}
@@ -434,8 +523,8 @@ export default async function (command: ICommand, ctx: CommandContext): Promise<
 
 				if (value === null && required) {
 					return createErrorResponse(
-						'Error',
-						`> Required argument \`${optionName}\` is missing for command \`${command.name}\`.`
+						"Error",
+						`> Required argument \`${optionName}\` is missing for command \`${command.name}\`.`,
 					);
 				}
 

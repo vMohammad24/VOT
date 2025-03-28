@@ -1,35 +1,43 @@
-import { CaseType } from '@prisma/client';
-import { ApplicationCommandOptionType, GuildMember, Role } from 'discord.js';
-import type ICommand from '../../handler/interfaces/ICommand';
-import { createCase } from '../../util/cases';
+import { CaseType } from "@prisma/client";
+import {
+	ApplicationCommandOptionType,
+	type GuildMember,
+	type Role,
+} from "discord.js";
+import type ICommand from "../../handler/interfaces/ICommand";
+import { createCase } from "../../util/cases";
 
 export default {
-	name: 'role',
-	description: 'Add or remove a role from a user.',
-	aliases: ['r'],
-	perms: ['ManageRoles'],
+	name: "role",
+	description: "Add or remove a role from a user.",
+	aliases: ["r"],
+	perms: ["ManageRoles"],
 	options: [
 		{
-			name: 'member',
-			description: 'The member to add or remove the role from.',
+			name: "member",
+			description: "The member to add or remove the role from.",
 			type: ApplicationCommandOptionType.User,
 			required: true,
 		},
 		{
-			name: 'role',
-			description: 'The role to add or remove.',
+			name: "role",
+			description: "The role to add or remove.",
 			type: ApplicationCommandOptionType.Role,
 			required: true,
 		},
 	],
 	execute: async ({ args, guild, member: ranBy }) => {
-		const member = args.get('member') as GuildMember;
-		const role = args.get('role') as Role;
-		if (!member) return { content: 'Member not found.', ephemeral: true };
-		if (!role) return { content: 'Role not found.', ephemeral: true };
-		if (role.position >= ranBy.roles.highest.position && guild.ownerId != ranBy.id)
+		const member = args.get("member") as GuildMember;
+		const role = args.get("role") as Role;
+		if (!member) return { content: "Member not found.", ephemeral: true };
+		if (!role) return { content: "Role not found.", ephemeral: true };
+		if (
+			role.position >= ranBy.roles.highest.position &&
+			guild.ownerId != ranBy.id
+		)
 			return {
-				content: 'You cannot add or remove a role higher or equal than your own.',
+				content:
+					"You cannot add or remove a role higher or equal than your own.",
 				ephemeral: true,
 			};
 		if (role.members.has(member.id)) {
@@ -39,7 +47,7 @@ export default {
 				CaseType.RoleRemove,
 				member.id,
 				ranBy.id,
-				`Removed role ${role.name}`
+				`Removed role ${role.name}`,
 			);
 			return {
 				content: `Removed ${role} from ${member}.`,
@@ -52,7 +60,7 @@ export default {
 				CaseType.RoleAdd,
 				member.id,
 				ranBy.id,
-				`Added role ${role.name}`
+				`Added role ${role.name}`,
 			);
 			return { content: `Added ${role} to ${member}.`, allowedMentions: {} };
 		}

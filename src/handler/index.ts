@@ -1,32 +1,32 @@
-import { Glob } from 'bun';
+import path from "path";
+import { inspect } from "util";
+import { Glob } from "bun";
 import {
-	ChatInputCommandInteraction,
+	type ChatInputCommandInteraction,
 	CommandInteraction,
 	EmbedBuilder,
 	Events,
-	GuildMember,
-	MessageEditOptions,
-	RESTJSONErrorCodes,
+	type GuildMember,
 	type Interaction,
 	type Message,
-} from 'discord.js';
-import { watch } from 'fs/promises';
-import { nanoid } from 'nanoid/non-secure';
-import path from 'path';
-import PinoLogger, { Logger } from 'pino';
-import { inspect } from 'util';
-import commandHandler from '..';
-import { getEmoji } from '../util/emojis';
-import VOTEmbed from '../util/VOTEmbed';
-import type ICommand from './interfaces/ICommand';
-import type { CommandContext } from './interfaces/ICommand';
-import { IContextCommand } from './interfaces/IContextCommand';
-import type LegacyHandler from './interfaces/ILegacyHandler';
-import type SlashHandler from './interfaces/ISlashHandler';
-import LegacyCommandHandler from './LegacyHandler';
-import ListenerHandler from './ListenerHandler';
-import SlashCommandHandler from './SlashHandler';
-import { ArgumentMap } from './validations/5_args';
+	type MessageEditOptions,
+	RESTJSONErrorCodes,
+} from "discord.js";
+import { watch } from "fs/promises";
+import { nanoid } from "nanoid/non-secure";
+import PinoLogger, { type Logger } from "pino";
+import commandHandler from "..";
+import VOTEmbed from "../util/VOTEmbed";
+import { getEmoji } from "../util/emojis";
+import LegacyCommandHandler from "./LegacyHandler";
+import ListenerHandler from "./ListenerHandler";
+import SlashCommandHandler from "./SlashHandler";
+import type ICommand from "./interfaces/ICommand";
+import type { CommandContext } from "./interfaces/ICommand";
+import type { IContextCommand } from "./interfaces/IContextCommand";
+import type LegacyHandler from "./interfaces/ILegacyHandler";
+import type SlashHandler from "./interfaces/ISlashHandler";
+import { ArgumentMap } from "./validations/5_args";
 interface RequiredShits {
 	commandsDir: string;
 	contextCommandsDir: string;
@@ -36,9 +36,17 @@ interface RequiredShits {
 
 type ICommandHandler = LegacyHandler & SlashHandler & RequiredShits;
 // same as the above but without some types so we can declare it in the constructor
-interface IMCommandHandler extends Omit<LegacyHandler & SlashHandler & RequiredShits, 'categoryDirs' | 'commands'> { }
+interface IMCommandHandler
+	extends Omit<
+		LegacyHandler & SlashHandler & RequiredShits,
+		"categoryDirs" | "commands"
+	> {}
 
-const createCommand = async (commandContext: CommandContext, command: ICommand, validationTime: number) => {
+const createCommand = async (
+	commandContext: CommandContext,
+	command: ICommand,
+	validationTime: number,
+) => {
 	try {
 		const cId = commandContext.cID || nanoid(10);
 		await commandContext.handler.prisma.user.upsert({
@@ -47,7 +55,7 @@ const createCommand = async (commandContext: CommandContext, command: ICommand, 
 			},
 			update: {
 				name: commandContext.user.username,
-				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+				avatar: commandContext.user.displayAvatarURL({ extension: "png" }),
 				commands: {
 					create: {
 						commandId: command.name!,
@@ -60,51 +68,51 @@ const createCommand = async (commandContext: CommandContext, command: ICommand, 
 						},
 						id: `cmd_${cId}`,
 						guildId: commandContext.guild?.id,
-						validationTime
+						validationTime,
 					},
 				},
 			},
 			create: {
 				id: commandContext.user.id,
 				name: commandContext.user.username,
-				avatar: commandContext.user.displayAvatarURL({ extension: 'png' }),
+				avatar: commandContext.user.displayAvatarURL({ extension: "png" }),
 				commands: {
 					create: {
 						commandId: command.name!,
 						commandInfo: {
 							args: (commandContext.args as any) || null,
-							guild: (commandContext?.guild?.id) || null,
+							guild: commandContext?.guild?.id || null,
 							channel: commandContext?.channel?.id || null,
 							message: commandContext?.message?.id || null,
 							interaction: commandContext?.interaction?.id || null,
 						},
 						id: `cmd_${cId}`,
 						guildId: commandContext.guild?.id,
-						validationTime
+						validationTime,
 					},
 				},
 			},
 			select: {
-				commands: { orderBy: { createdAt: 'desc' } },
+				commands: { orderBy: { createdAt: "desc" } },
 			},
 		});
-	} catch (e) { }
+	} catch (e) {}
 };
 export default class CommandHandler {
-	public prisma: ICommandHandler['prisma'];
-	public kazagumo: ICommandHandler['kazagumo'];
-	public client: ICommandHandler['client'];
-	public developers: ICommandHandler['developers'];
-	public commands: ICommandHandler['commands'] | undefined;
-	public prodMode: ICommandHandler['prodMode'];
-	public verbose: ICommandHandler['verbose'];
-	private glob = new Glob('**/*.{ts,js}');
+	public prisma: ICommandHandler["prisma"];
+	public kazagumo: ICommandHandler["kazagumo"];
+	public client: ICommandHandler["client"];
+	public developers: ICommandHandler["developers"];
+	public commands: ICommandHandler["commands"] | undefined;
+	public prodMode: ICommandHandler["prodMode"];
+	public verbose: ICommandHandler["verbose"];
+	private glob = new Glob("**/*.{ts,js}");
 	private validations: Function[] = [];
 	public logger: Logger;
 	private slashHandler: SlashCommandHandler | null = null;
 	private legacyHandler: LegacyCommandHandler | null = null;
-	private commandsDir: string = '';
-	private contextCommandsDir: string = '';
+	private commandsDir = "";
+	private contextCommandsDir = "";
 
 	constructor(mHandler: IMCommandHandler) {
 		const handler = mHandler as ICommandHandler;
@@ -113,8 +121,8 @@ export default class CommandHandler {
 		this.contextCommandsDir = contextCommandsDir;
 		this.prodMode = handler.prodMode;
 		this.logger = PinoLogger({
-			name: path.basename(path.resolve(import.meta.dir, '../../')),
-			level: this.prodMode ? 'info' : 'debug',
+			name: path.basename(path.resolve(import.meta.dir, "../../")),
+			level: this.prodMode ? "info" : "debug",
 		});
 		this.prisma = handler.prisma;
 		this.kazagumo = handler.kazagumo;
@@ -124,14 +132,14 @@ export default class CommandHandler {
 		handler.commands = [];
 		handler.client.once(Events.ClientReady, async () => {
 			const time = Date.now();
-			this.logger.debug('Fetching guilds...');
+			this.logger.debug("Fetching guilds...");
 			this.client.guilds.cache.map(async (guild) => {
 				const fetchedGuild = await guild.fetch();
 				return fetchedGuild.members.fetch();
 			}),
 				this.logger.debug(`Fetched guilds in ${Date.now() - time}ms`);
 			this.validations = await (async () => {
-				const validationDir = path.join(import.meta.dir, 'validations');
+				const validationDir = path.join(import.meta.dir, "validations");
 				const validationFiles = [];
 				const glob = this.glob.scanSync({ cwd: validationDir });
 				for await (const vFile of glob) {
@@ -165,12 +173,13 @@ export default class CommandHandler {
 			const loadCommand = async (file: string) => {
 				const start = Date.now();
 				const splitPath = file.split(path.sep);
-				const categoryName = splitPath[splitPath.length - 2]?.replace(/\\/g, '/') || 'uncategorized';
-				const fileName = file.split(path.sep).pop()!.split('.')[0];
-				if (categoryName.startsWith('_') || fileName.startsWith('_')) return;
+				const categoryName =
+					splitPath[splitPath.length - 2]?.replace(/\\/g, "/") ||
+					"uncategorized";
+				const fileName = file.split(path.sep).pop()!.split(".")[0];
+				if (categoryName.startsWith("_") || fileName.startsWith("_")) return;
 
 				const modulePath = path.join(commandsDir, file);
-
 
 				delete require.cache[require.resolve(modulePath)];
 
@@ -185,7 +194,8 @@ export default class CommandHandler {
 
 				const modifiedData: ICommand = Object.assign({}, command, {
 					name: commandName,
-					category: categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
+					category:
+						categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
 					aliases: command.aliases || [],
 				});
 
@@ -212,13 +222,17 @@ export default class CommandHandler {
 			await Promise.all(
 				contextCommandPaths.map(async (file) => {
 					const commandName = path.basename(file, path.extname(file));
-					const command = (await import(path.join(contextCommandsDir, file))).default as IContextCommand;
+					const command = (await import(path.join(contextCommandsDir, file)))
+						.default as IContextCommand;
 					if (command.disabled) return;
 					const modifiedData: IContextCommand = Object.assign({}, command, {
 						name: command.name || commandName,
 					});
 					handler.commands.push(modifiedData);
-					if (mHandler.verbose) this.logger.info(`Initialized Context Command ${modifiedData.name}`);
+					if (mHandler.verbose)
+						this.logger.info(
+							`Initialized Context Command ${modifiedData.name}`,
+						);
 				}),
 			);
 			Promise.all(
@@ -227,7 +241,9 @@ export default class CommandHandler {
 				}),
 			);
 			const total = Date.now() - start;
-			this.logger.info(`Initialized ${handler.commands.length} commands in ${total}ms`);
+			this.logger.info(
+				`Initialized ${handler.commands.length} commands in ${total}ms`,
+			);
 			const Ilegacy = handler as LegacyHandler;
 			const Islash = handler as SlashHandler;
 			this.slashHandler = new SlashCommandHandler(Islash, this);
@@ -241,7 +257,10 @@ export default class CommandHandler {
 		});
 	}
 
-	private async setupFileWatcher(commandsDir: string, contextCommandsDir: string) {
+	private async setupFileWatcher(
+		commandsDir: string,
+		contextCommandsDir: string,
+	) {
 		try {
 			const debounce = (func: Function, delay: number) => {
 				let timeout: any;
@@ -264,15 +283,14 @@ export default class CommandHandler {
 					this.logger.info(`File change detected: ${filename}`);
 					const fileInfo = path.parse(filename);
 
-					if (fileInfo.ext === '.ts' || fileInfo.ext === '.js') {
+					if (fileInfo.ext === ".ts" || fileInfo.ext === ".js") {
 						await this.reloadCommandByPath(filename);
 
 						if (this.slashHandler) {
 							await this.slashHandler.initCommands(this.client);
 						}
 					}
-				} catch (ignored) {
-				}
+				} catch (ignored) {}
 			}, 300);
 
 			const handleContextCommandChange = debounce(async (filename: string) => {
@@ -283,9 +301,7 @@ export default class CommandHandler {
 					if (this.slashHandler) {
 						await this.slashHandler.initCommands(this.client);
 					}
-				} catch (ignored) {
-
-				}
+				} catch (ignored) {}
 			}, 300);
 
 			const cmdWatcher = watch(commandsDir, {
@@ -303,7 +319,10 @@ export default class CommandHandler {
 					}
 				} catch (error) {
 					this.logger.error(`Command watcher error: ${error}`);
-					setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+					setTimeout(
+						() => this.setupFileWatcher(commandsDir, contextCommandsDir),
+						5000,
+					);
 				}
 			})();
 
@@ -322,13 +341,19 @@ export default class CommandHandler {
 					}
 				} catch (error) {
 					this.logger.error(`Context command watcher error: ${error}`);
-					setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+					setTimeout(
+						() => this.setupFileWatcher(commandsDir, contextCommandsDir),
+						5000,
+					);
 				}
 			})();
 		} catch (error) {
 			this.logger.error(`Error setting up file watcher: ${error}`);
 
-			setTimeout(() => this.setupFileWatcher(commandsDir, contextCommandsDir), 5000);
+			setTimeout(
+				() => this.setupFileWatcher(commandsDir, contextCommandsDir),
+				5000,
+			);
 		}
 	}
 
@@ -337,17 +362,19 @@ export default class CommandHandler {
 			if (!this.commands) return null;
 
 			const splitPath = filePath.split(path.sep);
-			const categoryName = splitPath[splitPath.length - 2]?.replace(/\\/g, '/') || 'uncategorized';
-			const fileName = splitPath[splitPath.length - 1].split('.')[0];
+			const categoryName =
+				splitPath[splitPath.length - 2]?.replace(/\\/g, "/") || "uncategorized";
+			const fileName = splitPath[splitPath.length - 1].split(".")[0];
 
-			if (categoryName.startsWith('_') || fileName.startsWith('_')) return null;
+			if (categoryName.startsWith("_") || fileName.startsWith("_")) return null;
 
 			const modulePath = path.join(this.commandsDir, filePath);
 
 			const commandName = fileName;
-			const oldCommandIndex = this.commands.findIndex(cmd =>
-				cmd.name === commandName ||
-				(cmd.name?.toLowerCase() === commandName.toLowerCase())
+			const oldCommandIndex = this.commands.findIndex(
+				(cmd) =>
+					cmd.name === commandName ||
+					cmd.name?.toLowerCase() === commandName.toLowerCase(),
 			);
 
 			let oldCommand = null;
@@ -367,7 +394,9 @@ export default class CommandHandler {
 
 				if (oldCommand) {
 					this.commands.push(oldCommand);
-					this.logger.info(`Restored old command: ${oldCommand.name} due to import failure`);
+					this.logger.info(
+						`Restored old command: ${oldCommand.name} due to import failure`,
+					);
 				}
 
 				return null;
@@ -404,11 +433,12 @@ export default class CommandHandler {
 
 			return modifiedData;
 		} catch (error) {
-			this.logger.error(`Failed to reload command from path ${filePath}: ${error}`);
+			this.logger.error(
+				`Failed to reload command from path ${filePath}: ${error}`,
+			);
 			return null;
 		}
 	}
-
 
 	private clearModuleCache(modulePath: string) {
 		try {
@@ -426,12 +456,15 @@ export default class CommandHandler {
 		try {
 			if (!this.commands) return null;
 
-			const filePath = path.join(this.contextCommandsDir, `${commandName}${path.extname(commandName) ? '' : '.ts'}`);
+			const filePath = path.join(
+				this.contextCommandsDir,
+				`${commandName}${path.extname(commandName) ? "" : ".ts"}`,
+			);
 
-
-			const oldCommandIndex = this.commands.findIndex(cmd =>
-				cmd.name === commandName ||
-				(cmd.name?.toLowerCase() === commandName.toLowerCase())
+			const oldCommandIndex = this.commands.findIndex(
+				(cmd) =>
+					cmd.name === commandName ||
+					cmd.name?.toLowerCase() === commandName.toLowerCase(),
 			);
 
 			let oldCommand = null;
@@ -441,15 +474,15 @@ export default class CommandHandler {
 				this.logger.info(`Removed old context command: ${oldCommand.name}`);
 			}
 
-
 			this.clearModuleCache(filePath);
-
 
 			let commandModule;
 			try {
 				commandModule = await import(filePath);
 			} catch (error) {
-				this.logger.error(`Failed to import context command at ${filePath}: ${error}`);
+				this.logger.error(
+					`Failed to import context command at ${filePath}: ${error}`,
+				);
 				if (oldCommand) {
 					this.commands.push(oldCommand);
 				}
@@ -460,7 +493,9 @@ export default class CommandHandler {
 			const commandData = commandModule.default as IContextCommand;
 
 			if (!commandData) {
-				this.logger.warn(`Context command ${commandName} has no default export`);
+				this.logger.warn(
+					`Context command ${commandName} has no default export`,
+				);
 				return null;
 			}
 
@@ -469,23 +504,30 @@ export default class CommandHandler {
 			});
 
 			this.commands.push(modifiedData);
-			this.logger.info(`Successfully reloaded context command: ${modifiedData.name}`);
+			this.logger.info(
+				`Successfully reloaded context command: ${modifiedData.name}`,
+			);
 			return modifiedData;
 		} catch (error) {
-			this.logger.error(`Failed to reload context command ${commandName}: ${error}`);
+			this.logger.error(
+				`Failed to reload context command ${commandName}: ${error}`,
+			);
 			return null;
 		}
 	}
 
 	public async reloadCommand(commandName: string) {
-		if (!this.commands) throw new Error('Commands not initialized');
+		if (!this.commands) throw new Error("Commands not initialized");
 
 		const command = this.commands.find((c) => c.name === commandName);
-		if (!command) throw new Error('Command not found');
+		if (!command) throw new Error("Command not found");
 
 		try {
-			if ('category' in command) {
-				const filePath = path.join(command.category!.toLowerCase(), `${commandName}.ts`);
+			if ("category" in command) {
+				const filePath = path.join(
+					command.category!.toLowerCase(),
+					`${commandName}.ts`,
+				);
 				const reloaded = await this.reloadCommandByPath(filePath);
 
 				if (reloaded && this.slashHandler) {
@@ -507,11 +549,14 @@ export default class CommandHandler {
 		}
 	}
 
-	public async executeCommand(cmd: ICommand | IContextCommand, ctx: Interaction | Message) {
+	public async executeCommand(
+		cmd: ICommand | IContextCommand,
+		ctx: Interaction | Message,
+	) {
 		const cId = nanoid(5);
 
 		try {
-			if ('aliases' in cmd) {
+			if ("aliases" in cmd) {
 				const start = Date.now();
 				const command = cmd as ICommand;
 				if (command.disabled) return;
@@ -547,7 +592,8 @@ export default class CommandHandler {
 						member: interaction.member! as GuildMember,
 						args: new ArgumentMap(),
 						message: null,
-						player: (await getPlayer(interaction.member as GuildMember)) || undefined,
+						player:
+							(await getPlayer(interaction.member as GuildMember)) || undefined,
 						editReply: async (content) => {
 							await interaction.editReply(content);
 						},
@@ -566,7 +612,8 @@ export default class CommandHandler {
 						member: message.member!,
 						args: new ArgumentMap(),
 						message,
-						player: (await getPlayer(message.member as GuildMember)) || undefined,
+						player:
+							(await getPlayer(message.member as GuildMember)) || undefined,
 						editReply: async (content, rMsg) => {
 							if (!rMsg) return;
 							await rMsg.edit(content as string | MessageEditOptions);
@@ -593,7 +640,7 @@ export default class CommandHandler {
 							}
 						}
 					}, 2700);
-				} catch (e) { }
+				} catch (e) {}
 
 				await createCommand(commandContext, command, validationTime);
 				const result = await command.execute(commandContext);
@@ -616,7 +663,8 @@ export default class CommandHandler {
 			} else {
 				const command = cmd as IContextCommand;
 				const start = Date.now();
-				if (command.disabled) return { content: 'This command is disabled', ephemeral: true };
+				if (command.disabled)
+					return { content: "This command is disabled", ephemeral: true };
 				const startExecution = Date.now();
 				const result = await command.execute(ctx as any);
 				const executionTime = Date.now() - startExecution;
@@ -631,15 +679,14 @@ export default class CommandHandler {
 		} catch (e: any) {
 			if ((e as any).code in RESTJSONErrorCodes) {
 				if (e.code == 10005 || e.code == 40060) {
-
 				}
 				try {
 					return {
 						embeds: [
 							new VOTEmbed()
-								.setTitle('Error')
+								.setTitle("Error")
 								.setDescription(`An error occurred: ${(e as any).message}`)
-								.setColor('DarkRed')
+								.setColor("DarkRed")
 								.setTimestamp(),
 						],
 						ephemeral: true,
@@ -650,9 +697,7 @@ export default class CommandHandler {
 							content: `An error occurred: ${(e as any).message}`,
 							ephemeral: true,
 						};
-					} catch (e) {
-
-					}
+					} catch (e) {}
 				}
 			}
 			this.logger.error(e);
@@ -672,11 +717,11 @@ export default class CommandHandler {
 			return {
 				embeds: [
 					new EmbedBuilder()
-						.setTitle(`${getEmoji('warn').toString()} Error`)
+						.setTitle(`${getEmoji("warn").toString()} Error`)
 						.setDescription(
 							`There was an error while executing this command, Please submit the id below to the developer in the [discord server](https://discord.gg/X42fBGVRtR).\n\n-# ${cId}`,
 						)
-						.setColor('Red')
+						.setColor("Red")
 						.setTimestamp(),
 				],
 				ephemeral: true,
