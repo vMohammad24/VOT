@@ -5,6 +5,7 @@ import {
 	EmbedBuilder,
 } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { pagination } from "../../util/pagination";
 export default {
 	description: "Extract text from an image",
 	category: "ai",
@@ -18,7 +19,7 @@ export default {
 		},
 	],
 	type: "all",
-	execute: async ({ args, interaction }) => {
+	execute: async ({ args, interaction, message }) => {
 		const attachment = args.get("image") as Attachment | undefined;
 		if (!attachment)
 			return {
@@ -45,15 +46,29 @@ export default {
 		}
 		if (res.status !== 200)
 			return { ephemeral: true, content: "Failed to upload image" };
-		const { response, status } = res.data;
-		return {
-			embeds: [
-				new EmbedBuilder()
-					.setTitle("Extracted Text")
-					.setDescription(response ?? "> Failed to extract text")
-					.setColor("Green")
-					.setImage(attachment.url),
-			],
-		};
+		let { response } = res.data;
+		if (response && response.length > 1) {
+			const midpoint = Math.floor(response.length / 2);
+			const firstHalf = response.substring(0, midpoint);
+			const secondHalf = response.substring(midpoint);
+
+			if (firstHalf === secondHalf) {
+				response = firstHalf;
+			}
+		}
+		await pagination({
+			interaction,
+			message,
+			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+				page: {
+					embeds: [new EmbedBuilder()
+						.setTitle("Extracted Text")
+						.setDescription(text ?? "> Failed to extract text")
+						.setColor("Green")
+						.setImage(attachment.url)],
+					allowedMentions: {},
+				},
+			})),
+		})
 	},
 } as ICommand;

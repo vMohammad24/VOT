@@ -1,13 +1,8 @@
-import {
-	ActionRowBuilder,
-	ApplicationCommandOptionType,
-	ButtonBuilder,
-	ButtonStyle,
-	EmbedBuilder,
-	StringSelectMenuBuilder,
-} from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
 import { chatllm, searchBrave } from "../../util/brave";
+import { pagination } from "../../util/pagination";
+import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
 	description: "Ask brave a question",
@@ -51,12 +46,8 @@ export default {
 					ephemeral: true,
 				});
 			});
-			const embed = new EmbedBuilder()
-				.setTitle("Search results")
-				.setDescription(llm.raw_response || "No results found")
-				.setAuthor({ name: user.tag, iconURL: user.displayAvatarURL() });
-			editReply(
-				{
+			const res = llm.raw_response || "No results found";
+			/* {
 					embeds: [embed],
 					content: `> ${query}`,
 					components: [
@@ -82,9 +73,49 @@ export default {
 						attachment: v.src,
 						name: "image.png",
 					})),
-				},
-				rMsg,
-			);
+				},*/
+			await pagination({
+				interaction: inter,
+				message,
+				rMsg: rMsg as any,
+				pages:
+					res.match(/[\s\S]{1,1999}/g)!.map((text: string, i) => ({
+						page: {
+							embeds: [
+								new VOTEmbed()
+									.setTitle("Search results")
+									.setDescription(text ?? "> No results found")
+									.setColor("Green")
+									.author(user)
+							],
+							content: `> ${query}`,
+							components: [
+								new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+									new StringSelectMenuBuilder()
+										.setCustomId("followup")
+										.setPlaceholder("Select a follow up")
+										.addOptions(
+											llm.followups!.map((v, i) => ({
+												label: v.slice(0, 99),
+												value: i.toString(),
+											})),
+										),
+								),
+								new ActionRowBuilder<ButtonBuilder>().addComponents(
+									new ButtonBuilder()
+										.setLabel("View sources")
+										.setStyle(ButtonStyle.Primary)
+										.setCustomId(`enrichments_${rMsg.id}`),
+								),
+							],
+							files: llm.images.map((v) => ({
+								attachment: v.src,
+								name: "image.png",
+							})),
+						}
+					}))
+
+			})
 			const collector2 = rMsg.createMessageComponentCollector({
 				filter: (i) => i.customId == "followup" && i.user.id == user.id,
 				time: 60_000 * 60,
