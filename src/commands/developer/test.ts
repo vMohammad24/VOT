@@ -42,6 +42,7 @@ export default {
 			})),
 			type: "buttons",
 		});
+
 		// const client = getClient();
 		// const res = await client.chat.completions.create({
 		// 	stream: false,

@@ -4,7 +4,7 @@ import { swagger } from "@elysiajs/swagger";
 import axios, { type AxiosInstance } from "axios";
 import * as cheerio from "cheerio";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-import { ApplicationCommandOptionType, Collection } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import { Elysia, t } from "elysia";
 import { Client } from "genius-lyrics";
 import { nanoid } from "nanoid/non-secure";
@@ -17,7 +17,6 @@ import {
 	loadExchangeRates,
 } from "../util/currency";
 import { getInstallCounts, loadImg } from "../util/database";
-import { DuckDuckGoChat } from "../util/ddg";
 import { GoogleLens } from "../util/lens";
 import { camelToTitleCase, getTwoMostUsedColors, rgbToHex } from "../util/util";
 import { getIpInfo } from "../util/vpn";
@@ -325,50 +324,50 @@ elysia.post(
 		},
 	},
 );
-const col = new Collection<string, DuckDuckGoChat>();
-elysia.post(
-	"/askDDG",
-	async ({ body, headers, set }) => {
-		const { query, model } = body;
-		let { sessionId } = body;
-		if (!sessionId) sessionId = nanoid(20);
-		if (!col.has(sessionId)) {
-			col.set(
-				sessionId,
-				new DuckDuckGoChat(
-					model as
-					| "gpt-4o-mini"
-					| "claude-3-haiku-20240307"
-					| "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
-					| "mistralai/Mixtral-8x7B-Instruct-v0.1",
-				),
-			);
-		}
-		const chat = col.get(sessionId)!;
-		const res = await chat.chat(query);
-		return {
-			response: res,
-			sessionId,
-		};
-	},
-	{
-		body: t.Object({
-			query: t.String(),
-			model: t.String(),
-			sessionId: t.Optional(t.String()),
-		}),
-		headers: t.Object({
-			authorization: t.String(),
-		}),
-		response: t.Object({
-			response: t.String(),
-			sessionId: t.String(),
-		}),
-		detail: {
-			description: "Ask a question using DuckDuckGo Chat",
-		},
-	},
-);
+// const col = new Collection<string, DuckDuckGoChat>();
+// elysia.post(
+// 	"/askDDG",
+// 	async ({ body, headers, set }) => {
+// 		const { query, model } = body;
+// 		let { sessionId } = body;
+// 		if (!sessionId) sessionId = nanoid(20);
+// 		if (!col.has(sessionId)) {
+// 			col.set(
+// 				sessionId,
+// 				new DuckDuckGoChat(
+// 					model as
+// 					| "gpt-4o-mini"
+// 					| "claude-3-haiku-20240307"
+// 					| "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+// 					| "mistralai/Mixtral-8x7B-Instruct-v0.1",
+// 				),
+// 			);
+// 		}
+// 		const chat = col.get(sessionId)!;
+// 		const res = await chat.chat(query);
+// 		return {
+// 			response: res,
+// 			sessionId,
+// 		};
+// 	},
+// 	{
+// 		body: t.Object({
+// 			query: t.String(),
+// 			model: t.String(),
+// 			sessionId: t.Optional(t.String()),
+// 		}),
+// 		headers: t.Object({
+// 			authorization: t.String(),
+// 		}),
+// 		response: t.Object({
+// 			response: t.String(),
+// 			sessionId: t.String(),
+// 		}),
+// 		detail: {
+// 			description: "Ask a question using DuckDuckGo Chat",
+// 		},
+// 	},
+// );
 
 elysia.get(
 	"/ipinfo",

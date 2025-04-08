@@ -1,183 +1,13 @@
 import axios from "axios";
-import { SocksProxyAgent } from "socks-proxy-agent";
 import UserAgent from "user-agents";
-export interface Message {
-	role: string;
-	content: string;
-}
 
-export interface Choices {
-	index: number;
-	message: Message;
-	logprobs: string;
-	finish_reason: string;
-}
-
-export interface Usage {
-	prompt_tokens: number;
-	completion_tokens: number;
-	total_tokens: number;
-}
-
-export interface DDGAIRes {
-	id: string;
-	object: string;
-	created: number;
-	model: string;
-	system_fingerprint: string;
-	choices: Choices[];
-	usage: Usage;
-}
-
-export const ddgModels = {
-	"gpt-4o-mini": "GPT-4o Mini",
-	"o3-mini": "GPT-o3 Mini",
-	"claude-3-haiku-20240307": "Claude3 Haiku",
-	"meta-llama/Llama-3.3-70B-Instruct-Turbo": "Llama 3.170B",
-	"mistralai/Mistral-Small-24B-Instruct-2501": "Mixtral",
-};
-
-
-interface ResMessage {
-	created: number;
-	id: string;
-	action: string;
-	model: string;
-	message?: string;
-}
-
-export class DuckDuckGoChat {
-	private model: string;
-	private vqd: string | undefined;
-	private messages: { content: string; role: string }[] = [];
-	private userAgent = new UserAgent();
-	private proxyAgent: SocksProxyAgent | undefined;
-
-	constructor(model: string, proxyURL?: string) {
-		if (proxyURL) {
-			this.proxyAgent = new SocksProxyAgent(proxyURL);
-		}
-		if (!Object.keys(ddgModels).includes(model)) {
-			throw new Error("Invalid model");
-		}
-		this.model = model;
-	}
-
-	public getModel() {
-		return this.model;
-	}
-
-	public setModel(model: string) {
-		if (!Object.keys(ddgModels).includes(model)) {
-			throw new Error("Invalid model");
-		}
-		this.model = model;
-	}
-
-	private async generateVQD() {
-		const response = await axios.get(
-			"https://duckduckgo.com/duckchat/v1/status",
-			{
-				headers: {
-					"cache-control": "no-store",
-					"user-agent": this.userAgent.toString(),
-					"x-vqd-accept": "1",
-					"sec-fetch-site": "same-origin",
-					"referer": "https://duckduckgo.com/",
-				},
-				...(this.proxyAgent ? { httpsAgent: this.proxyAgent } : {}),
-			},
-		);
-		this.vqd = response.headers["x-vqd-4"];
-	}
-
-	public async chat(query: string): Promise<string> {
-		if (!this.vqd) {
-			await this.generateVQD();
-		}
-		this.messages.push({
-			role: "user",
-			content: query,
-		});
-		const res = await axios.post(
-			"https://duckduckgo.com/duckchat/v1/chat",
-			{
-				messages: this.messages,
-				model: this.model,
-			},
-			{
-				headers: {
-					"cache-control": "no-store",
-					"user-agent": this.userAgent.toString(),
-					"x-vqd-accept": "1",
-					"referer": "https://duckduckgo.com/",
-					"x-vqd-4": this.vqd,
-				},
-				responseType: "stream",
-				...(this.proxyAgent ? { httpsAgent: this.proxyAgent } : {}),
-			},
-		);
-		res.headers["x-vqd-4"] && (this.vqd = res.headers["x-vqd-4"]);
-		const responses: ResMessage[] = [];
-		let response = "";
-		await new Promise<void>((resolve, reject) => {
-			res.data.on("data", (data: Buffer) => {
-				try {
-					const lines = data.toString().split("\n");
-					lines.forEach((line) => {
-						if (line.startsWith("data: ")) {
-							const jsonStr = line.substring(6);
-							if (jsonStr !== "[DONE]") {
-								const parsed = JSON.parse(jsonStr);
-								responses.push(parsed);
-							}
-						}
-					});
-				} catch (e) { }
-			});
-			res.data.on("end", () => {
-				response = responses
-					.map((response) => {
-						return response.message || "";
-					})
-					.join("");
-				resolve();
-				this.messages.push({
-					role: "assistant",
-					content: response,
-				});
-			});
-			res.data.on("error", (err: Error) => {
-				reject(err);
-			});
-		});
-
-		if (!response || response.length < 1) {
-			return await this.chat(query);
-		}
-		return response;
-	}
-
-	public export() {
-		return {
-			model: this.model,
-			messages: this.messages,
-		};
-	}
-
-	public import(data: {
-		model: string;
-		messages: { content: string; role: string }[];
-	}) {
-		this.model = data.model;
-		this.messages = data.messages;
-	}
-}
 
 export interface TranslationResponse {
 	detected_language: string | null;
 	translated: string;
 }
+
+
 
 export class DuckDuckGoTranslate {
 	private vqd: string | undefined;
@@ -239,4 +69,294 @@ export class DuckDuckGoTranslate {
 		const result = response.data as TranslationResponse;
 		return result.translated;
 	}
+}
+
+interface DuckDuckGoWeather {
+	currentWeather: CurrentWeather;
+	forecastDaily: ForecastDaily;
+	forecastHourly: ForecastHourly;
+	location: string;
+	timezone: string;
+	error?: string;
+}
+
+interface CurrentWeather {
+	asOf: Date;
+	cloudCover: number;
+	cloudCoverHighAltPct: number;
+	cloudCoverLowAltPct: number;
+	cloudCoverMidAltPct: number;
+	conditionCode: ConditionCode;
+	daylight: boolean;
+	humidity: number;
+	metadata: Metadata;
+	name: string;
+	precipitationIntensity: number;
+	pressure: number;
+	pressureTrend: PressureTrend;
+	temperature: number;
+	temperatureApparent: number;
+	temperatureDewPoint: number;
+	uvIndex: number;
+	visibility: number;
+	windDirection: number;
+	windGust: number;
+	windSpeed: number;
+}
+
+enum ConditionCode {
+	Clear = "Clear",
+	Drizzle = "Drizzle",
+	MostlyClear = "MostlyClear",
+	MostlyCloudy = "MostlyCloudy",
+	PartlyCloudy = "PartlyCloudy",
+	Windy = "Windy",
+}
+
+interface Metadata {
+	attributionURL: string;
+	expireTime: Date;
+	latitude: number;
+	longitude: number;
+	readTime: Date;
+	reportedTime: Date;
+	sourceType: string;
+	units: string;
+	version: number;
+}
+
+enum PressureTrend {
+	Falling = "falling",
+	Rising = "rising",
+	Steady = "steady",
+}
+
+interface ForecastDaily {
+	days: Day[];
+	metadata: Metadata;
+	name: string;
+}
+
+interface Day {
+	conditionCode: ConditionCode;
+	daytimeForecast: Forecast;
+	forecastEnd: Date;
+	forecastStart: Date;
+	maxUvIndex: number;
+	moonPhase: MoonPhase;
+	moonrise: Date;
+	moonset: Date;
+	overnightForecast: Forecast;
+	precipitationAmount: number;
+	precipitationChance: number;
+	precipitationType: PrecipitationType;
+	restOfDayForecast?: Forecast;
+	snowfallAmount: number;
+	solarMidnight: Date;
+	solarNoon: Date;
+	sunrise: Date;
+	sunriseAstronomical: Date;
+	sunriseCivil: Date;
+	sunriseNautical: Date;
+	sunset: Date;
+	sunsetAstronomical: Date;
+	sunsetCivil: Date;
+	sunsetNautical: Date;
+	temperatureMax: number;
+	temperatureMin: number;
+	windGustSpeedMax: number;
+	windSpeedAvg: number;
+	windSpeedMax: number;
+}
+
+interface Forecast {
+	cloudCover: number;
+	conditionCode: ConditionCode;
+	forecastEnd: Date;
+	forecastStart: Date;
+	humidity: number;
+	precipitationAmount: number;
+	precipitationChance: number;
+	precipitationType: PrecipitationType;
+	snowfallAmount: number;
+	temperatureMax: number;
+	temperatureMin: number;
+	windDirection: number;
+	windGustSpeedMax: number;
+	windSpeed: number;
+	windSpeedMax: number;
+}
+
+enum PrecipitationType {
+	Clear = "clear",
+	Rain = "rain",
+}
+
+enum MoonPhase {
+	Full = "full",
+	WaningGibbous = "waningGibbous",
+	WaxingGibbous = "waxingGibbous",
+}
+
+interface ForecastHourly {
+	hours: Hour[];
+	metadata: Metadata;
+	name: string;
+}
+
+interface Hour {
+	cloudCover: number;
+	conditionCode: ConditionCode;
+	daylight: boolean;
+	forecastStart: Date;
+	humidity: number;
+	precipitationAmount: number;
+	precipitationChance: number;
+	precipitationIntensity: number;
+	precipitationType: PrecipitationType;
+	pressure: number;
+	pressureTrend: PressureTrend;
+	snowfallAmount: number;
+	snowfallIntensity: number;
+	temperature: number;
+	temperatureApparent: number;
+	temperatureDewPoint: number;
+	uvIndex: number;
+	visibility: number;
+	windDirection: number;
+	windGust: number;
+	windSpeed: number;
+}
+
+
+interface DuckDuckGoTime {
+	version: number;
+	info: string;
+	locations: Location[];
+	error?: string;
+}
+
+interface Location {
+	id: string;
+	geo: Geo;
+	matches: Matches;
+	score: number;
+	time: TimeClass;
+	timechanges: Timechange[];
+	astronomy: Astronomy;
+}
+
+interface Astronomy {
+	objects: Object[];
+}
+
+interface Object {
+	name: Name;
+	events: Event[];
+}
+
+interface Event {
+	type: Type;
+	hour: number;
+	minute: number;
+}
+
+export enum Type {
+	Rise = "rise",
+	Set = "set",
+}
+
+export enum Name {
+	Sun = "sun",
+}
+
+interface Geo {
+	name: string;
+	country: Country;
+	latitude: number;
+	longitude: number;
+	zonename: string;
+	state?: string;
+}
+
+interface Country {
+	id: string;
+	name: string;
+}
+
+export enum Matches {
+	Location = "location",
+}
+
+interface TimeClass {
+	iso: Date;
+	datetime: Datetime;
+	timezone: Timezone;
+}
+
+interface Datetime {
+	year: number;
+	month: number;
+	day: number;
+	hour: number;
+	minute: number;
+	second: number;
+}
+
+interface Timezone {
+	offset: string;
+	zoneabb: string;
+	zonename: string;
+	zoneoffset: number;
+	zonedst: number;
+	zonetotaloffset: number;
+}
+
+
+interface Timechange {
+	newdst: number;
+	newzone: null;
+	newoffset: number;
+	utctime: Date;
+	oldlocaltime: Date;
+	newlocaltime: Date;
+	verbose: Verbose;
+}
+
+interface Verbose {
+	utctime: NewlocaltimeClass;
+	oldlocaltime: NewlocaltimeClass;
+	newlocaltime: NewlocaltimeClass;
+}
+
+interface NewlocaltimeClass {
+	datetime: Datetime;
+}
+
+
+
+export const DDGWeather = async (location: string) => {
+	const response = await axios.get(
+		`https://duckduckgo.com/js/spice/forecast/${location}/en`,
+		{
+			headers: {
+				"user-agent": new UserAgent().toString(),
+			},
+		},
+	);
+	const data = response.data as string;
+	return JSON.parse(data.slice(19, -3)) as DuckDuckGoWeather
+}
+
+export const DDGTime = async (location: string) => {
+	const response = await axios.get(
+		`https://duckduckgo.com/js/spice/time/${location}`,
+		{
+			headers: {
+				"user-agent": new UserAgent().toString(),
+			},
+		},
+	);
+	const data = response.data as string;
+	return JSON.parse(data.slice(15, -2)) as DuckDuckGoTime
 }

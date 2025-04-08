@@ -1,11 +1,7 @@
-import { ApplicationCommandOptionType } from "discord.js";
-import Fuse from "fuse.js";
-import moment from "moment-timezone";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import { DDGTime } from "../../util/ddg";
 
-const fuse = new Fuse(moment.tz.names());
-const fuzzySearch = (query: string) =>
-	fuse.search(query).map((result) => result.item);
 export default {
 	name: "time",
 	description: "Show the current time for a specific timezone",
@@ -14,51 +10,69 @@ export default {
 		{
 			type: ApplicationCommandOptionType.String,
 			name: "zone",
-			description: "Timezone (e.g. CST or America/Chicago)",
+			description: "Timezone or location",
 			required: true,
-			autocomplete: true,
 		},
 	],
-	autocomplete: async (inter) => {
-		const zone = inter.options.getString("zone")?.toLowerCase();
-		if (!zone)
-			return inter.respond([
-				{
-					name: "Please provide a timezone.",
-					value: "",
-				},
-			]);
-		const results = fuzzySearch(zone);
-		if (results.length === 0)
-			return inter.respond([
-				{
-					name: "No results found.",
-					value: "",
-				},
-			]);
-		return inter.respond(
-			results.slice(0, 25).map((result) => ({
-				name: result,
-				value: result,
-			})),
-		);
-	},
 	execute: async ({ args }) => {
 		const zone = (args.get("zone") as string)?.trim();
 		if (!zone)
 			return { ephemeral: true, content: "Please provide a timezone." };
 
-		let currentTime;
-		try {
-			currentTime = moment().tz(zone).format("HH:mm DD/MM ([UTC]Z)");
-		} catch {
-			return {
-				ephemeral: true,
-				content: 'Invalid timezone. Try "America/Chicago" or "CST".',
-			};
+		const time = await DDGTime(zone);
+		if (!time || time.error || !time.locations || time.locations.length === 0) {
+			return { ephemeral: true, content: "No results found." };
 		}
 
-		const replyContent = `The current time in ${zone} is: **${currentTime}**`;
-		return { ephemeral: false, content: replyContent };
+		const location = time.locations[0];
+		const datetime = location.time.datetime;
+		const formattedTime = `${datetime.hour.toString().padStart(2, '0')}:${datetime.minute.toString().padStart(2, '0')}:${datetime.second.toString().padStart(2, '0')}`;
+		const formattedDate = `${datetime.year}-${datetime.month.toString().padStart(2, '0')}-${datetime.day.toString().padStart(2, '0')}`;
+
+		const sunriseEvent = location.astronomy.objects[0].events.find(e => e.type === "rise");
+		const sunsetEvent = location.astronomy.objects[0].events.find(e => e.type === "set");
+		const sunrise = sunriseEvent ? `${sunriseEvent.hour.toString().padStart(2, '0')}:${sunriseEvent.minute.toString().padStart(2, '0')}` : "N/A";
+		const sunset = sunsetEvent ? `${sunsetEvent.hour.toString().padStart(2, '0')}:${sunsetEvent.minute.toString().padStart(2, '0')}` : "N/A";
+
+		const locationName = location.geo.name;
+		const country = location.geo.country.name;
+		const state = location.geo.state ? `, ${location.geo.state}` : "";
+		const coords = `${location.geo.latitude.toFixed(2)}° ${location.geo.latitude >= 0 ? 'N' : 'S'}, ${location.geo.longitude.toFixed(2)}° ${location.geo.longitude >= 0 ? 'E' : 'W'}`;
+
+		const embed = new EmbedBuilder()
+			.setTitle(`🕒 Time in ${locationName}${state}, ${country}`)
+			.setDescription(`Current local time in ${locationName} is **${formattedTime}** on **${formattedDate}**`)
+			.addFields(
+				{
+					name: "🗓️ Date & Time",
+					value: `${formattedDate} ${formattedTime} (${location.time.timezone.offset})`,
+					inline: false,
+				},
+				{
+					name: "🌐 Timezone",
+					value: `${location.time.timezone.zonename} (${location.time.timezone.zoneabb})`,
+					inline: false,
+				},
+				{
+					name: "📍 Coordinates",
+					value: coords,
+					inline: false,
+				},
+				{
+					name: "🌅 Sunrise",
+					value: sunrise,
+					inline: true,
+				},
+				{
+					name: "🌇 Sunset",
+					value: sunset,
+					inline: true,
+				}
+			)
+			.setColor("#FFA500")
+			.setTimestamp()
+			.setFooter({ text: `Timezone: ${location.geo.zonename} • Requested for: ${zone}` });
+
+		return { embeds: [embed] };
 	},
 } as ICommand;
