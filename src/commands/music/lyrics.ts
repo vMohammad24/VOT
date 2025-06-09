@@ -171,12 +171,12 @@ export default {
 								: null,
 						)
 						.setFooter(
-							song.release_date_components ? { text: `Released` } : null,
+							song.release_date_components ? { text: "Released" } : null,
 						)
 						.dominant(),
 				],
 				files:
-					song.previewURL && i == 0
+					song.previewURL && i === 0
 						? [
 								new AttachmentBuilder(song.previewURL, {
 									name: `${song.title} Preview.m4a`,

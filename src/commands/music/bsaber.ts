@@ -53,7 +53,7 @@ export default {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle(mapName)
-								.setDescription(description == "" ? null : description)
+								.setDescription(description === "" ? null : description)
 								.setFields([
 									{ name: "Upvotes", value: upvotes, inline: true },
 									{ name: "Downvotes", value: downvotes, inline: true },

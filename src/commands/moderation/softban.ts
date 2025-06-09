@@ -30,7 +30,7 @@ export default {
 		const user = args.get("user") as GuildMember;
 		const reason =
 			args.get("reason") ||
-			"No reason provided" + ` - Softbanned by ${member.user.tag}`;
+			`No reason provided - Softbanned by ${member.user.tag}`;
 		if (!user) return "User not found";
 		if (!user.bannable)
 			return { content: "I cannot ban this user", ephemeral: true };

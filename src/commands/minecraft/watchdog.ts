@@ -8,7 +8,7 @@ export default {
 	type: "installable",
 	execute: async () => {
 		const res = await axios.get(
-			`https://api.plancke.io/hypixel/v1/punishmentStats`,
+			"https://api.plancke.io/hypixel/v1/punishmentStats",
 		);
 		if (res.data.success === true) {
 			const {
@@ -31,8 +31,7 @@ export default {
 					"https://cdn.nest.rip/uploads/99c9a424-071a-4199-b01d-af62b55dfa6b.png",
 				);
 			return { embeds: [embed] };
-		} else {
-			return "No results found";
 		}
+		return "No results found";
 	},
 } as ICommand;

@@ -41,12 +41,12 @@ export default {
 	type: "all",
 	execute: async ({ args, interaction }) => {
 		const tag = (args.get("tag") as string) || undefined;
-		const reqUrl = `https://cataas.com/cat${tag ? "/" + encodeURIComponent(tag.split(" ")[0]) : ""}?html=true`;
+		const reqUrl = `https://cataas.com/cat${tag ? `/${encodeURIComponent(tag.split(" ")[0])}` : ""}?html=true`;
 		const res = await axios.get(reqUrl, {
 			responseType: "json",
 		});
 		const { data } = res;
-		const url = "https://cataas.com/cat/" + data._id;
+		const url = `https://cataas.com/cat/${data._id}`;
 		if (res.status !== 200) {
 			return {
 				content: "An error has occured",
@@ -62,9 +62,9 @@ export default {
 		const yes = data.mimetype.split("/")[1];
 		const embed = new EmbedBuilder()
 			.setTitle("Cat")
-			.setImage(url + `.${yes}`)
+			.setImage(`${url}.${yes}`)
 			.setColor("Random")
-			.setFooter({ text: `Powered by cataas.com` });
+			.setFooter({ text: "Powered by cataas.com" });
 		if (tag && tag.split(" ").length > 1) {
 			embed.setDescription(`Showing cats a with tag of "${tag.split(" ")[0]}"`);
 		}

@@ -43,7 +43,7 @@ export default {
 		if (!res.data.scans)
 			return {
 				ephemeral: true,
-				content: `Invalid site.`,
+				content: "Invalid site.",
 			};
 		for (const [name, s] of Object.entries(res.data.scans)) {
 			const scan = s as any;
@@ -58,8 +58,7 @@ export default {
 			return {
 				embeds: [embed],
 			};
-		} else {
-			return "No results found";
 		}
+		return "No results found";
 	},
 } as ICommand;

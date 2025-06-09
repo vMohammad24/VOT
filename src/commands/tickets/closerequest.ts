@@ -27,7 +27,7 @@ export default {
 		const ticket = await prisma.ticket.findFirst({
 			where: {
 				guildId: guild?.id!,
-				channelId: channel!.id!,
+				channelId: channel?.id!,
 			},
 			include: {
 				members: true,
@@ -40,7 +40,7 @@ export default {
 			};
 		}
 		const ticketSettings = await prisma.ticketSettings.findUnique({
-			where: { guildId: guild!.id },
+			where: { guildId: guild?.id },
 		});
 		if (!ticketSettings)
 			return {
@@ -48,12 +48,12 @@ export default {
 				ephemeral: true,
 			};
 		const ticketsRole = ticketSettings.roleId
-			? await guild!.roles.fetch(ticketSettings.roleId)
+			? await guild?.roles.fetch(ticketSettings.roleId)
 			: null;
 
 		if (
 			ticket.ownerId !== executer.id &&
-			!executer.roles.cache.has(ticketsRole!.id)
+			!executer.roles.cache.has(ticketsRole?.id)
 		) {
 			return {
 				content: "You are not the owner of this ticket",
@@ -81,7 +81,7 @@ export default {
 				.setStyle(ButtonStyle.Danger)
 				.setEmoji("🔒"),
 			new ButtonBuilder()
-				.setCustomId(`cancel_close_req`)
+				.setCustomId("cancel_close_req")
 				.setLabel("Cancel Close")
 				.setStyle(ButtonStyle.Secondary)
 				.setEmoji("❌"),

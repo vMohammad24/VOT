@@ -1,8 +1,15 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } from "discord.js";
+import {
+	ActionRowBuilder,
+	ApplicationCommandOptionType,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+	StringSelectMenuBuilder,
+} from "discord.js";
 import type ICommand from "../../handler/interfaces/ICommand";
+import VOTEmbed from "../../util/VOTEmbed";
 import { chatllm, searchBrave } from "../../util/brave";
 import { pagination } from "../../util/pagination";
-import VOTEmbed from "../../util/VOTEmbed";
 
 export default {
 	description: "Ask brave a question",
@@ -20,7 +27,7 @@ export default {
 		const q = (args.get("question") as string) || "test";
 		let rMsg = message
 			? await message.reply("Thinking...")
-			: await inter!.deferReply();
+			: await inter?.deferReply();
 		const func = async (query: string, params?: string) => {
 			const queryResponse = (await searchBrave(query, params)).data.body
 				.response;
@@ -30,7 +37,7 @@ export default {
 			const summary = queryResponse.chatllm.summary_og;
 			const llm = await chatllm(queryResponse.chatllm);
 			const collector = rMsg.createMessageComponentCollector({
-				filter: (i) => i.customId == `enrichments_${rMsg.id}`,
+				filter: (i) => i.customId === `enrichments_${rMsg.id}`,
 				time: 60_000 * 60,
 			});
 			collector.on("collect", async (i) => {
@@ -78,52 +85,50 @@ export default {
 				interaction: inter,
 				message,
 				rMsg: rMsg as any,
-				pages:
-					res.match(/[\s\S]{1,1999}/g)!.map((text: string, i) => ({
-						page: {
-							embeds: [
-								new VOTEmbed()
-									.setTitle("Search results")
-									.setDescription(text ?? "> No results found")
-									.setColor("Green")
-									.author(user)
-							],
-							content: `> ${query}`,
-							components: [
-								new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-									new StringSelectMenuBuilder()
-										.setCustomId("followup")
-										.setPlaceholder("Select a follow up")
-										.addOptions(
-											llm.followups!.map((v, i) => ({
-												label: v.slice(0, 99),
-												value: i.toString(),
-											})),
-										),
-								),
-								new ActionRowBuilder<ButtonBuilder>().addComponents(
-									new ButtonBuilder()
-										.setLabel("View sources")
-										.setStyle(ButtonStyle.Primary)
-										.setCustomId(`enrichments_${rMsg.id}`),
-								),
-							],
-							files: llm.images.map((v) => ({
-								attachment: v.src,
-								name: "image.png",
-							})),
-						}
-					}))
-
-			})
+				pages: res.match(/[\s\S]{1,1999}/g)?.map((text: string, i) => ({
+					page: {
+						embeds: [
+							new VOTEmbed()
+								.setTitle("Search results")
+								.setDescription(text ?? "> No results found")
+								.setColor("Green")
+								.author(user),
+						],
+						content: `> ${query}`,
+						components: [
+							new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+								new StringSelectMenuBuilder()
+									.setCustomId("followup")
+									.setPlaceholder("Select a follow up")
+									.addOptions(
+										llm.followups?.map((v, i) => ({
+											label: v.slice(0, 99),
+											value: i.toString(),
+										})),
+									),
+							),
+							new ActionRowBuilder<ButtonBuilder>().addComponents(
+								new ButtonBuilder()
+									.setLabel("View sources")
+									.setStyle(ButtonStyle.Primary)
+									.setCustomId(`enrichments_${rMsg.id}`),
+							),
+						],
+						files: llm.images.map((v) => ({
+							attachment: v.src,
+							name: "image.png",
+						})),
+					},
+				})),
+			});
 			const collector2 = rMsg.createMessageComponentCollector({
-				filter: (i) => i.customId == "followup" && i.user.id == user.id,
+				filter: (i) => i.customId === "followup" && i.user.id === user.id,
 				time: 60_000 * 60,
 			});
 			collector2.on("collect", async (i) => {
 				if (!i.isStringSelectMenu()) return;
 				const page = Number.parseInt(i.values[0]);
-				const followUp = llm.followups![page];
+				const followUp = llm.followups?.[page];
 				if (!followUp) return;
 				rMsg = await i.deferReply();
 				await func(
@@ -132,6 +137,6 @@ export default {
 				);
 			});
 		};
-		await func(q, `&source=llm`);
+		await func(q, "&source=llm");
 	},
 } as ICommand;

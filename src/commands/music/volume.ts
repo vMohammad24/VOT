@@ -21,7 +21,7 @@ export default {
 			};
 		}
 		const volume = args.get("volume");
-		if (isNaN(volume))
+		if (Number.isNaN(volume))
 			return {
 				content: "Invalid volume",
 				ephemeral: true,

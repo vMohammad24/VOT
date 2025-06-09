@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import axios from "axios";
 import {
@@ -24,7 +24,7 @@ const assestsDir = join(
 );
 const loadChessPiece = async (name: string) => {
 	return await loadImage(
-		Buffer.from(await Bun.file(join(assestsDir, name + ".png")).arrayBuffer()),
+		Buffer.from(await Bun.file(join(assestsDir, `${name}.png`)).arrayBuffer()),
 	);
 };
 const pieceImages = {
@@ -158,7 +158,7 @@ class ChessGame {
 				try {
 					await interaction.update({});
 				} catch (e) {}
-				await this.gameMessage!.edit({
+				await this.gameMessage?.edit({
 					components: [],
 					content: "Your turn: (Format: e2-e4)",
 				});
@@ -173,35 +173,35 @@ class ChessGame {
 						await msg.delete();
 						this.makeMove(userMove, true);
 						if (this.isCheckmate(false)) {
-							await this.gameMessage!.edit({
-								content: `Checkmate! You win!`,
+							await this.gameMessage?.edit({
+								content: "Checkmate! You win!",
 								components: [],
 							});
 							return;
 						}
 						if (this.isStalemate(false)) {
-							await this.gameMessage!.edit({
+							await this.gameMessage?.edit({
 								content: `Stalemate! It's a draw!`,
 								components: [],
 							});
 							return;
 						}
 						await this.drawBoard();
-						await this.gameMessage!.edit({
+						await this.gameMessage?.edit({
 							content: `Your move: ${userMove}\nMy move: Processing`,
 							components: [],
 						});
 						const bestMove = await this.getBestMove();
 						this.makeMove(bestMove, false);
 						if (this.isCheckmate(true)) {
-							await this.gameMessage!.edit({
-								content: `Checkmate! I win!`,
+							await this.gameMessage?.edit({
+								content: "Checkmate! I win!",
 								components: [],
 							});
 							return;
 						}
 						if (this.isStalemate(true)) {
-							await this.gameMessage!.edit({
+							await this.gameMessage?.edit({
 								content: `Stalemate! It's a draw!`,
 								components: [],
 							});
@@ -209,12 +209,12 @@ class ChessGame {
 						}
 						await this.drawBoard();
 						await this.sendBoard();
-						await this.gameMessage!.edit({
+						await this.gameMessage?.edit({
 							content: `Your move: ${userMove}\nMy move: ${bestMove}`,
 							components: [row],
 						});
 					} catch (error: any) {
-						await this.gameMessage!.edit({
+						await this.gameMessage?.edit({
 							content: `Error: ${error.message} try again`,
 							components: [row],
 						});
@@ -231,7 +231,7 @@ class ChessGame {
 
 		collector.on("end", (collected) => {
 			if (collected.size === 0) {
-				this.gameMessage!.edit({ components: [] });
+				this.gameMessage?.edit({ components: [] });
 			}
 		});
 	}
@@ -245,17 +245,16 @@ class ChessGame {
 						if (cell === " ") {
 							emptyCount++;
 							return "";
-						} else {
-							const result = emptyCount > 0 ? emptyCount + cell : cell;
-							emptyCount = 0;
-							return result;
 						}
+						const result = emptyCount > 0 ? emptyCount + cell : cell;
+						emptyCount = 0;
+						return result;
 					})
 					.join("") + (emptyCount > 0 ? emptyCount : "")
 			);
 		});
 		const fen = fenRows.join("/");
-		return fen + " b KQkq - 0 1"; // Set to black's turn
+		return `${fen} b KQkq - 0 1`; // Set to black's turn
 	}
 
 	private async getBestMove() {
@@ -271,10 +270,9 @@ class ChessGame {
 			if (!bestMoveMatch) {
 				throw new Error("Failed to parse best move");
 			}
-			return bestMoveMatch[1] + "-" + bestMoveMatch[2];
-		} else {
-			throw new Error("Failed to get best move");
+			return `${bestMoveMatch[1]}-${bestMoveMatch[2]}`;
 		}
+		throw new Error("Failed to get best move");
 	}
 
 	private makeMove(move: string, isUserMove = true) {

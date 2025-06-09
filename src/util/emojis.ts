@@ -1,4 +1,4 @@
-import { basename, extname, join } from "path";
+import { basename, extname, join } from "node:path";
 import axios from "axios";
 import { file, write } from "bun";
 import type { ApplicationEmoji, Collection } from "discord.js";
@@ -36,8 +36,8 @@ export async function addEmoji(
 			const dims = 128;
 			let emojiData = Buffer.from(await f.arrayBuffer());
 			logger.info(`Creating emoji ${emojiName}`);
-			if (f.type == "image/svg+xml") {
-				if (verbose) logger.info(`Converting SVG to PNG`);
+			if (f.type === "image/svg+xml") {
+				if (verbose) logger.info("Converting SVG to PNG");
 				const svg = (await f.text()).replace(
 					'width="16" height="16" fill="currentColor"',
 					`width="${dims}" height="${dims}" fill="white"`,
@@ -95,9 +95,7 @@ export async function initEmojis() {
 			emoji.delete();
 		}
 	});
-	logger.info(
-		"Finished initializing emojis, took " + (Date.now() - start) + "ms",
-	);
+	logger.info(`Finished initializing emojis, took ${Date.now() - start}ms`);
 }
 
 export async function addEmojiByURL(

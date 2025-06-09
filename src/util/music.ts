@@ -17,51 +17,51 @@ import { getTwoMostUsedColors, rgbToHex } from "./util";
 
 export function getRows(player: KazagumoPlayer) {
 	const status = player.paused ? "Resume" : "Pause";
-	const looping = player.loop != "none";
+	const looping = player.loop !== "none";
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		status === "Pause"
 			? new ButtonBuilder()
 					.setCustomId("pause")
 					.setLabel("Pause")
 					.setStyle(ButtonStyle.Danger)
-					.setEmoji(getEmoji("pause")!.id)
+					.setEmoji(getEmoji("pause")?.id)
 			: new ButtonBuilder()
 					.setCustomId("resume")
 					.setLabel("Resume")
 					.setStyle(ButtonStyle.Success)
-					.setEmoji(getEmoji("play")!.id),
+					.setEmoji(getEmoji("play")?.id),
 		new ButtonBuilder()
 			.setCustomId("skip")
 			.setLabel("Skip")
 			.setStyle(ButtonStyle.Primary)
-			.setEmoji(getEmoji("skip")!.id),
+			.setEmoji(getEmoji("skip")?.id),
 		new ButtonBuilder()
 			.setCustomId("queue")
 			.setLabel("Queue")
 			.setStyle(ButtonStyle.Success)
-			.setEmoji(getEmoji("queue")!.id),
+			.setEmoji(getEmoji("queue")?.id),
 		new ButtonBuilder()
 			.setCustomId("stop")
 			.setLabel("Stop")
 			.setStyle(ButtonStyle.Secondary)
-			.setEmoji(getEmoji("stop")!.id),
+			.setEmoji(getEmoji("stop")?.id),
 	);
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
 			.setCustomId("loop")
 			.setLabel(looping ? "Looping" : "Loop")
 			.setStyle(ButtonStyle.Primary)
-			.setEmoji(getEmoji("loop")!.id),
+			.setEmoji(getEmoji("loop")?.id),
 		new ButtonBuilder()
 			.setCustomId("shuffle")
 			.setLabel("Shuffle")
 			.setStyle(ButtonStyle.Primary)
-			.setEmoji(getEmoji("shuffle")!.id),
+			.setEmoji(getEmoji("shuffle")?.id),
 		new ButtonBuilder()
 			.setCustomId("volume")
 			.setLabel("Volume")
 			.setStyle(ButtonStyle.Primary)
-			.setEmoji(getEmoji("volume")!.id),
+			.setEmoji(getEmoji("volume")?.id),
 	);
 	return [row, row2];
 }
@@ -75,10 +75,10 @@ export async function sendPanel(kazagumo: Kazagumo, guild: Guild) {
 	const playingEmbed = new EmbedBuilder()
 		.setTitle("Now Playing")
 		.setDescription(
-			`[${player.queue.current!.title}](${player.queue.current!.uri})`,
+			`[${player.queue.current?.title}](${player.queue.current?.uri})`,
 		)
 		.setColor("Green")
-		.setThumbnail(player.queue.current!.thumbnail!)
+		.setThumbnail(player.queue.current?.thumbnail!)
 		.setTimestamp()
 		.setFooter({
 			text: `Requested by ${member.user.tag}`,
@@ -153,7 +153,7 @@ export async function getPanel(kazagumo: Kazagumo, guild: Guild) {
 	} else {
 		msg = (
 			(await guild.channels.cache.get(
-				player!.voiceId!,
+				player?.voiceId!,
 			)) as GuildTextBasedChannel
 		).messages.cache.get(messageId);
 	}

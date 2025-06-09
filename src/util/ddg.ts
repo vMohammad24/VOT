@@ -1,13 +1,10 @@
 import axios from "axios";
 import UserAgent from "user-agents";
 
-
 export interface TranslationResponse {
 	detected_language: string | null;
 	translated: string;
 }
-
-
 
 export class DuckDuckGoTranslate {
 	private vqd: string | undefined;
@@ -32,7 +29,7 @@ export class DuckDuckGoTranslate {
 
 		const html = response.data;
 		const vqdMatch = html.match(/vqd="([^"]+)"/);
-		if (vqdMatch && vqdMatch[1]) {
+		if (vqdMatch?.[1]) {
 			this.vqd = vqdMatch[1];
 		} else {
 			throw new Error("Failed to extract VQD from DuckDuckGo response");
@@ -228,7 +225,6 @@ interface Hour {
 	windSpeed: number;
 }
 
-
 interface DuckDuckGoTime {
 	version: number;
 	info: string;
@@ -312,7 +308,6 @@ interface Timezone {
 	zonetotaloffset: number;
 }
 
-
 interface Timechange {
 	newdst: number;
 	newzone: null;
@@ -333,8 +328,6 @@ interface NewlocaltimeClass {
 	datetime: Datetime;
 }
 
-
-
 export const DDGWeather = async (location: string) => {
 	const response = await axios.get(
 		`https://duckduckgo.com/js/spice/forecast/${location}/en`,
@@ -345,8 +338,8 @@ export const DDGWeather = async (location: string) => {
 		},
 	);
 	const data = response.data as string;
-	return JSON.parse(data.slice(19, -3)) as DuckDuckGoWeather
-}
+	return JSON.parse(data.slice(19, -3)) as DuckDuckGoWeather;
+};
 
 export const DDGTime = async (location: string) => {
 	const response = await axios.get(
@@ -358,5 +351,5 @@ export const DDGTime = async (location: string) => {
 		},
 	);
 	const data = response.data as string;
-	return JSON.parse(data.slice(15, -2)) as DuckDuckGoTime
-}
+	return JSON.parse(data.slice(15, -2)) as DuckDuckGoTime;
+};

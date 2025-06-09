@@ -22,7 +22,7 @@ export default {
 	execute: async ({ handler: { prisma }, args }) => {
 		const f = (args.get("type") as string) || "Balance";
 		switch (f) {
-			case "Balance":
+			case "Balance": {
 				const users = await prisma.economy.findMany({
 					orderBy: {
 						balance: "desc",
@@ -53,7 +53,8 @@ export default {
 					embeds: [embed],
 				};
 				break;
-			case "Commands":
+			}
+			case "Commands": {
 				const commands = await prisma.command.findMany({
 					select: { commandId: true },
 				});
@@ -75,7 +76,8 @@ export default {
 							.setColor("Random"),
 					],
 				};
-			case "Commands Used":
+			}
+			case "Commands Used": {
 				const users2 = await prisma.user.findMany({
 					orderBy: {
 						commands: {
@@ -100,6 +102,7 @@ export default {
 							.setColor("Random"),
 					],
 				};
+			}
 		}
 	},
 } as ICommand;

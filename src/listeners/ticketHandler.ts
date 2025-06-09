@@ -48,7 +48,7 @@ export default {
 				await modalSubmit.editReply({
 					content: `Ticket created <#${tick.channel?.id}>`,
 				});
-			} else if (interaction.customId == "close_ticket") {
+			} else if (interaction.customId === "close_ticket") {
 				const ticket = await closeTicket(
 					interaction.channel as GuildTextBasedChannel,
 					interaction.member as GuildMember,
@@ -66,11 +66,11 @@ export default {
 					await interaction.reply({ embeds: ticket.embeds, ephemeral: true });
 					return;
 				}
-			} else if (interaction.customId == "cancel_close_req") {
+			} else if (interaction.customId === "cancel_close_req") {
 				const close = await cancelCloseTimer(
 					interaction.channel as GuildTextBasedChannel,
 				);
-				if (close && close.error) {
+				if (close?.error) {
 					const embed = new EmbedBuilder()
 						.setTitle("Error")
 						.setDescription(close.error)

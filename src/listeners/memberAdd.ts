@@ -27,7 +27,7 @@ export default {
 			if (wSettings) {
 				if (wSettings.channelId) {
 					const channel = user.guild.channels.cache.get(wSettings.channelId);
-					if (channel && channel.isTextBased()) {
+					if (channel?.isTextBased()) {
 						const embed = new EmbedBuilder();
 						const userMention = user.toString();
 						const embedDescription = wSettings.embedDesc?.replaceAll(
@@ -68,7 +68,7 @@ export default {
 						.setDescription(vSettings.embedDesc)
 						.setFooter({ text: "Do NOT share the link below with anyone!" })
 						.setColor("Random");
-					if (dmChannel && dmChannel.isSendable()) {
+					if (dmChannel?.isSendable()) {
 						const pUser = await getUser(user.user);
 						dmChannel.send({
 							embeds: [embed],
@@ -85,7 +85,7 @@ export default {
 							],
 						});
 					}
-				} catch (e) { }
+				} catch (e) {}
 			}
 
 			if (guild.autoRole) {

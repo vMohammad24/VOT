@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 import { GlobalFonts, type SKRSContext2D, createCanvas } from "@napi-rs/canvas";
 import {
 	ApplicationCommandType,
@@ -129,11 +129,11 @@ function wrapText(
 	let currentLine = "";
 
 	words.forEach((word) => {
-		const testLine = currentLine + word + " ";
+		const testLine = `${currentLine + word} `;
 		const metrics = ctx.measureText(testLine);
 		if (metrics.width > maxWidth && currentLine.length > 0) {
 			lines.push(currentLine);
-			currentLine = word + " ";
+			currentLine = `${word} `;
 		} else {
 			currentLine = testLine;
 		}

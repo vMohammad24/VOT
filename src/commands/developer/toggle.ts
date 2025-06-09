@@ -18,8 +18,8 @@ export default {
 		const cmdName = args.get("command") as string | undefined;
 		if (!cmdName)
 			return { ephemeral: true, content: "Please provide a command to toggle" };
-		const cmd = handler.commands!.find(
-			(c) => c.name?.toLowerCase() == cmdName.toLowerCase(),
+		const cmd = handler.commands?.find(
+			(c) => c.name?.toLowerCase() === cmdName.toLowerCase(),
 		);
 		if (!cmd) return { ephemeral: true, content: "Command not found" };
 		cmd.disabled = !cmd.disabled;

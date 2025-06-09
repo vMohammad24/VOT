@@ -19,9 +19,9 @@ type RGB = [number, number, number];
 
 function getEuclideanDistance(color1: RGB, color2: RGB): number {
 	return Math.sqrt(
-		Math.pow(color1[0] - color2[0], 2) +
-			Math.pow(color1[1] - color2[1], 2) +
-			Math.pow(color1[2] - color2[2], 2),
+		(color1[0] - color2[0]) ** 2 +
+			(color1[1] - color2[1]) ** 2 +
+			(color1[2] - color2[2]) ** 2,
 	);
 }
 
@@ -89,7 +89,7 @@ function kMeans(colors: RGB[], k: number, maxIterations = 100): RGB[] {
 }
 
 export const rgbToHex = ([r, g, b]: RGB) => {
-	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+	return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
 export function getTwoMostUsedColors(img: Image | Canvas): RGB[] {
@@ -180,17 +180,20 @@ export function timeUntil(timestamp: Date | number): string {
 
 	if (years > 0) {
 		return `${years} year${years > 1 ? "s" : ""}`;
-	} else if (months > 0) {
-		return `${months} month${months > 1 ? "s" : ""}`;
-	} else if (days > 0) {
-		return `${days} day${days > 1 ? "s" : ""}`;
-	} else if (hours > 0) {
-		return `${hours} hour${hours > 1 ? "s" : ""}`;
-	} else if (minutes > 0) {
-		return `${minutes} minute${minutes > 1 ? "s" : ""}`;
-	} else {
-		return `${seconds} second${seconds > 1 ? "s" : ""}`;
 	}
+	if (months > 0) {
+		return `${months} month${months > 1 ? "s" : ""}`;
+	}
+	if (days > 0) {
+		return `${days} day${days > 1 ? "s" : ""}`;
+	}
+	if (hours > 0) {
+		return `${hours} hour${hours > 1 ? "s" : ""}`;
+	}
+	if (minutes > 0) {
+		return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+	}
+	return `${seconds} second${seconds > 1 ? "s" : ""}`;
 }
 
 export function timeElapsed(date: Date | number, detailed = false): string {
@@ -212,26 +215,21 @@ export function timeElapsed(date: Date | number, detailed = false): string {
 		else timeString = `${seconds} second${seconds > 1 ? "s" : ""}`;
 
 		return timeString;
-	} else {
-		const hoursRemaining = hours % 24;
-		const minutesRemaining = minutes % 60;
-		const secondsRemaining = seconds % 60;
-
-		const parts = [];
-		if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
-		if (hoursRemaining > 0)
-			parts.push(`${hoursRemaining} hour${hoursRemaining > 1 ? "s" : ""}`);
-		if (minutesRemaining > 0)
-			parts.push(
-				`${minutesRemaining} minute${minutesRemaining > 1 ? "s" : ""}`,
-			);
-		if (secondsRemaining > 0)
-			parts.push(
-				`${secondsRemaining} second${secondsRemaining > 1 ? "s" : ""}`,
-			);
-
-		return parts.join(", ");
 	}
+	const hoursRemaining = hours % 24;
+	const minutesRemaining = minutes % 60;
+	const secondsRemaining = seconds % 60;
+
+	const parts = [];
+	if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+	if (hoursRemaining > 0)
+		parts.push(`${hoursRemaining} hour${hoursRemaining > 1 ? "s" : ""}`);
+	if (minutesRemaining > 0)
+		parts.push(`${minutesRemaining} minute${minutesRemaining > 1 ? "s" : ""}`);
+	if (secondsRemaining > 0)
+		parts.push(`${secondsRemaining} second${secondsRemaining > 1 ? "s" : ""}`);
+
+	return parts.join(", ");
 }
 
 export function isURL(url: string): boolean {
@@ -282,12 +280,13 @@ export function parseCurl(curlCommand: string) {
 				config.method = args[++i].toUpperCase();
 				break;
 			case "-H":
-			case "--header":
+			case "--header": {
 				const [key, value] = args[++i].split(":").map((s) => s.trim());
 				config.headers[key] = value;
 				break;
+			}
 			case "-d":
-			case "--data":
+			case "--data": {
 				const data = args[++i];
 				try {
 					config.data = JSON.parse(data);
@@ -295,6 +294,7 @@ export function parseCurl(curlCommand: string) {
 					config.data = data;
 				}
 				break;
+			}
 			default:
 				if (arg.startsWith("http")) {
 					config.url = arg;
@@ -341,7 +341,7 @@ export function wrapText(
 ) {
 	const words = text.split(" ");
 	for (let i = 0; i < words.length; i++) {
-		const workSentence = preparingSentence.join(" ") + " " + words[i];
+		const workSentence = `${preparingSentence.join(" ")} ${words[i]}`;
 
 		if (context.measureText(workSentence).width > maxWidth) {
 			lines.push(preparingSentence.join(" "));

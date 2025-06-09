@@ -20,7 +20,7 @@ export default {
 					const channel = member.guild.channels.cache.get(
 						loggingChannel.loggingChannel,
 					);
-					if (channel && channel.isTextBased())
+					if (channel?.isTextBased())
 						await channel.send({
 							embeds: [
 								new EmbedBuilder()

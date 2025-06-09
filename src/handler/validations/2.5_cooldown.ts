@@ -57,9 +57,8 @@ export default async function (
 				],
 				ephemeral: true,
 			};
-		} else {
-			timestamps.delete(user.id);
 		}
+		timestamps.delete(user.id);
 	}
 
 	timestamps.set(user.id, now + cooldown);

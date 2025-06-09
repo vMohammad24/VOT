@@ -24,10 +24,10 @@ export default {
 			.addFields([
 				{
 					name: "Websocket Latency",
-					value: `${wsLatency == -1 ? "N/A" : `${wsLatency}ms`}`,
+					value: `${wsLatency === -1 ? "N/A" : `${wsLatency}ms`}`,
 				},
 				{ name: "Database Latency", value: `${(pEnd - pStart).toFixed(1)}ms` },
-				...(llStats && llStats.playingPlayers != 0
+				...(llStats && llStats.playingPlayers !== 0
 					? [
 							{
 								name: "Playing Players",
@@ -36,7 +36,7 @@ export default {
 							},
 							{
 								name: "Players CPU",
-								value: numeral(llStats.cpu.lavalinkLoad).format("0,0") + "%",
+								value: `${numeral(llStats.cpu.lavalinkLoad).format("0,0")}%`,
 								inline: true,
 							},
 						]

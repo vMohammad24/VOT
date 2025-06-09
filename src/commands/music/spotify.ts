@@ -83,9 +83,11 @@ export default {
 		// 	};
 
 		if (player) {
-			const t = (await (
-				await handler.kazagumo.getLeastUsedNode()
-			).rest.resolve(track.uri!))!.data as any;
+			const t = (
+				await (
+					await handler.kazagumo.getLeastUsedNode()
+				).rest.resolve(track.uri!)
+			)?.data as any;
 			const cTrack = new KazagumoTrack(t, member as GuildMember);
 			if (player.queue.current) {
 				await player.queue.add(cTrack);
@@ -101,66 +103,64 @@ export default {
 				)
 				.setThumbnail(cTrack.thumbnail || null);
 			if (
-				player.queue.current?.realUri == cTrack.realUri &&
+				player.queue.current?.realUri === cTrack.realUri &&
 				spotify.timestamps?.start
 			) {
 				const progress = Math.floor(Date.now() - spotify.timestamps.start);
 				await player.seek(progress);
 				// minute:second
 				embed.setDescription(
-					embed.data.description +
-						` and seeked to ${numeral(progress / 1000).format("00:00")}`,
+					`${embed.data.description} and seeked to ${numeral(progress / 1000).format("00:00")}`,
 				);
 			}
 			return {
 				embeds: [embed],
 			};
-		} else {
-			const info = track.getRaw()._raw.pluginInfo as {
-				artistUrl: string;
-				artistArtworkUrl: string;
-			};
-			const embed = await new VOTEmbed()
-				.setDescription(
-					`### [${track.title || "Error getting title"}](${track.uri})`,
-				)
-				.setThumbnail(track.thumbnail || null)
-				.setAuthor({
-					name: track.author || "Error getting author",
-					iconURL: info.artistArtworkUrl,
-					url: info.artistUrl,
-				})
-				.setFooter({
-					text: "Spotify",
-					iconURL: getEmoji("spotify").imageURL() ?? undefined,
-				})
-				.dominant();
-			const trackId = track.identifier;
-			const features = await getTrackFeatures(trackId, user.id);
-			if (typeof features != "string") {
-				if (features.analysis_url) {
-					embed.addFields([
-						{
-							name: "Danceability",
-							value: `${(features.danceability * 100).toFixed(1)}%`,
-							inline: true,
-						},
-						{
-							name: "Energy",
-							value: `${(features.energy * 100).toFixed(1)}%`,
-							inline: true,
-						},
-						{
-							name: "Mode",
-							value: `${(features.mode * 100).toFixed(1)}%`,
-							inline: true,
-						},
-					]);
-				}
-			}
-			return {
-				embeds: [embed],
-			};
 		}
+		const info = track.getRaw()._raw.pluginInfo as {
+			artistUrl: string;
+			artistArtworkUrl: string;
+		};
+		const embed = await new VOTEmbed()
+			.setDescription(
+				`### [${track.title || "Error getting title"}](${track.uri})`,
+			)
+			.setThumbnail(track.thumbnail || null)
+			.setAuthor({
+				name: track.author || "Error getting author",
+				iconURL: info.artistArtworkUrl,
+				url: info.artistUrl,
+			})
+			.setFooter({
+				text: "Spotify",
+				iconURL: getEmoji("spotify").imageURL() ?? undefined,
+			})
+			.dominant();
+		const trackId = track.identifier;
+		const features = await getTrackFeatures(trackId, user.id);
+		if (typeof features !== "string") {
+			if (features.analysis_url) {
+				embed.addFields([
+					{
+						name: "Danceability",
+						value: `${(features.danceability * 100).toFixed(1)}%`,
+						inline: true,
+					},
+					{
+						name: "Energy",
+						value: `${(features.energy * 100).toFixed(1)}%`,
+						inline: true,
+					},
+					{
+						name: "Mode",
+						value: `${(features.mode * 100).toFixed(1)}%`,
+						inline: true,
+					},
+				]);
+			}
+		}
+		return {
+			embeds: [embed],
+		};
 	},
 } as ICommand;

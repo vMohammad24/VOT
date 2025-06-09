@@ -73,7 +73,7 @@ function hasOptionsProperty(
 }
 
 export class Argument<T> {
-	constructor(public value: T) { }
+	constructor(public value: T) {}
 }
 
 export class ArgumentMap<T extends Record<string, any>> {
@@ -277,7 +277,7 @@ export default async function (
 						value = interaction.options.getAttachment(optionName, required);
 						break;
 					case ApplicationCommandOptionType.Subcommand:
-					case ApplicationCommandOptionType.SubcommandGroup:
+					case ApplicationCommandOptionType.SubcommandGroup: {
 						const subCommandName = interaction.options.getSubcommand(false);
 						const subCommandGroup =
 							interaction.options.getSubcommandGroup(false);
@@ -317,6 +317,7 @@ export default async function (
 
 						if (subOptions) return await validateInteractionOptions(subOptions);
 						break;
+					}
 					default:
 						return createErrorResponse(
 							"Error",
@@ -344,7 +345,7 @@ export default async function (
 				const optionType = option.type;
 
 				switch (optionType) {
-					case ApplicationCommandOptionType.String:
+					case ApplicationCommandOptionType.String: {
 						const remainingOptions = options.slice(i + 1);
 						const hasRequiredOptionsAfter = remainingOptions.some(
 							(opt) => hasRequiredProperty(opt) && (opt as any).required,
@@ -358,17 +359,19 @@ export default async function (
 							if (value !== null) argIndex++;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Integer:
+					case ApplicationCommandOptionType.Integer: {
 						const intArg = messageArgs[argIndex];
 						if (intArg !== undefined) {
 							const parsedInt = Number.parseInt(intArg, 10);
-							value = !isNaN(parsedInt) ? parsedInt : null;
+							value = !Number.isNaN(parsedInt) ? parsedInt : null;
 							argIndex++;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Boolean:
+					case ApplicationCommandOptionType.Boolean: {
 						const boolArg = messageArgs[argIndex]?.toLowerCase();
 						if (boolArg !== undefined) {
 							value =
@@ -376,8 +379,9 @@ export default async function (
 							argIndex++;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.User:
+					case ApplicationCommandOptionType.User: {
 						const userArg = messageArgs[argIndex];
 
 						if (userArg) {
@@ -406,8 +410,9 @@ export default async function (
 							value = message.mentions.members?.first() || null;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Channel:
+					case ApplicationCommandOptionType.Channel: {
 						const channelArg = messageArgs[argIndex];
 
 						if (channelArg) {
@@ -429,8 +434,9 @@ export default async function (
 							value = message.mentions.channels.first() || null;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Role:
+					case ApplicationCommandOptionType.Role: {
 						const roleArg = messageArgs[argIndex];
 
 						if (roleArg) {
@@ -460,8 +466,9 @@ export default async function (
 							value = message.mentions.roles.first() || null;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Mentionable:
+					case ApplicationCommandOptionType.Mentionable: {
 						const mentionableArg = messageArgs[argIndex];
 
 						if (mentionableArg) {
@@ -506,15 +513,17 @@ export default async function (
 								null;
 						}
 						break;
+					}
 
-					case ApplicationCommandOptionType.Number:
+					case ApplicationCommandOptionType.Number: {
 						const numArg = messageArgs[argIndex];
 						if (numArg !== undefined) {
 							const parsedNum = Number.parseFloat(numArg);
-							value = !isNaN(parsedNum) ? parsedNum : null;
+							value = !Number.isNaN(parsedNum) ? parsedNum : null;
 							argIndex++;
 						}
 						break;
+					}
 
 					case ApplicationCommandOptionType.Attachment:
 						value = message.attachments.first() || null;
@@ -523,15 +532,21 @@ export default async function (
 								value = message.embeds[0].image || null;
 							}
 							const urlArg = messageArgs[argIndex];
-							if (urlArg && (urlArg.startsWith('http://') || urlArg.startsWith('https://'))) {
-								value = { url: urlArg, name: 'attachment.png' };
+							if (
+								urlArg &&
+								(urlArg.startsWith("http://") || urlArg.startsWith("https://"))
+							) {
+								value = { url: urlArg, name: "attachment.png" };
 								argIndex++;
-							} else if (message.reference && message.reference.messageId) {
+							} else if (message.reference?.messageId) {
 								const referencedMessage = await message.fetchReference();
 								if (referencedMessage.attachments.size > 0) {
 									value = referencedMessage.attachments.first();
 								} else {
-									value = referencedMessage.embeds[0].image || referencedMessage.embeds[0].thumbnail || null;
+									value =
+										referencedMessage.embeds[0].image ||
+										referencedMessage.embeds[0].thumbnail ||
+										null;
 								}
 							}
 						}

@@ -24,23 +24,24 @@ export default {
 			};
 		const reqUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 		const res = await axios.get(reqUrl);
-		if (res.status == 404) {
+		if (res.status === 404) {
 			const urbanRes = await axios.get(
 				`https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(word)}`,
 			);
 			const { data: urbanData, status } = urbanRes;
-			if (status == 404) {
+			if (status === 404) {
 				return {
 					content: "No results found",
 					ephemeral: true,
 				};
-			} else if (status != 200) {
+			}
+			if (status !== 200) {
 				return {
 					content: "An error occured while fetching data from UrbanDictionary",
 					ephemeral: true,
 				};
 			}
-			if (urbanData.list.length == 0)
+			if (urbanData.list.length === 0)
 				return {
 					content: "No results found",
 					ephemeral: true,
@@ -98,7 +99,7 @@ export default {
 					page: {
 						embeds: [
 							new EmbedBuilder()
-								.setTitle(data[0].word + " - " + meaning.partOfSpeech)
+								.setTitle(`${data[0].word} - ${meaning.partOfSpeech}`)
 								.setDescription(
 									meaning.definitions
 										.map((def: { definition: string; example: string }) => {

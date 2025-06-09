@@ -48,7 +48,7 @@
 // 				ephemeral: true,
 // 			};
 
-import ICommand from "../../handler/interfaces/ICommand";
+import type ICommand from "../../handler/interfaces/ICommand";
 
 // 		let context = "";
 // 		const web = args.get("web") ?? false;
@@ -97,4 +97,4 @@ import ICommand from "../../handler/interfaces/ICommand";
 // 		});
 // 	},
 // } as ICommand;
-export default { disabled: true } as ICommand; 
+export default { disabled: true } as ICommand;

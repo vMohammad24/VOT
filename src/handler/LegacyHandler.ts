@@ -8,7 +8,7 @@ import type LegacyHandler from "./interfaces/ILegacyHandler";
 export const getPrefix = async (message: Message<boolean>) => {
 	let prefix = null;
 	const pUser = await getUserByID(message.author.id, { prefix: true });
-	if (pUser && pUser.prefix) {
+	if (pUser?.prefix) {
 		prefix = pUser.prefix;
 	} else {
 		if (message.guild) {
@@ -37,19 +37,17 @@ export default class LegacyCommandHandler {
 		client.on(Events.MessageCreate, async (message) => {
 			if (message.author.bot) return;
 
-			this.commands.forEach(
-				(c) => c.messageHandler && c.messageHandler(message),
-			);
+			this.commands.forEach((c) => c.messageHandler?.(message));
 
 			const prefix = (await getPrefix(message)) ?? gPrefix;
 			if (!message.content.startsWith(prefix)) {
 				if (
-					message.mentions.users.has(client.user!.id) &&
+					message.mentions.users.has(client.user?.id) &&
 					!message.mentions.everyone &&
 					!message.mentions.roles.size &&
 					!message.mentions.repliedUser
 				) {
-					if (message.content.trim() === `<@${client.user!.id}>`) {
+					if (message.content.trim() === `<@${client.user?.id}>`) {
 						message.reply({
 							embeds: [
 								new EmbedBuilder().setDescription(
@@ -121,7 +119,8 @@ export default class LegacyCommandHandler {
 					const msg = await message.reply(execution);
 					if (
 						msg.embeds.length > 0 &&
-						(msg.embeds[0].title === "Error" || msg.embeds[0].color == 10038562)
+						(msg.embeds[0].title === "Error" ||
+							msg.embeds[0].color === 10038562)
 					) {
 						setTimeout(async () => {
 							await Promise.all([msg.delete(), message.delete()]);
@@ -141,7 +140,7 @@ export default class LegacyCommandHandler {
 						if (
 							msg.embeds.length > 0 &&
 							(msg.embeds[0].title === "Error" ||
-								msg.embeds[0].color == 10038562)
+								msg.embeds[0].color === 10038562)
 						) {
 							setTimeout(async () => {
 								await Promise.all([msg.delete(), message.delete()]);

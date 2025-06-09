@@ -81,14 +81,14 @@ export default class SlashCommandHandler {
 			.filter((a) => a.category != null && !a.disabled)
 			.forEach((cmd: ICommand) => {
 				let perms: bigint | null = 0n;
-				if (cmd.type == "legacy") return;
+				if (cmd.type === "legacy") return;
 				if (!cmd.options) cmd.options = [];
-				if (cmd.perms && cmd.perms != "dev") {
+				if (cmd.perms && cmd.perms !== "dev") {
 					for (const perm of cmd.perms) {
 						for (const [key, value] of Object.entries(
 							PermissionsBitField.Flags,
 						)) {
-							if (key == perm && typeof perms === "bigint") {
+							if (key === perm && typeof perms === "bigint") {
 								perms = perms | value;
 							}
 						}
@@ -102,15 +102,15 @@ export default class SlashCommandHandler {
 				};
 
 				if (!cmd.type) cmd.type = "guildOnly";
-				if (cmd.type == "installable" || cmd.type == "all") {
+				if (cmd.type === "installable" || cmd.type === "all") {
 					uInstall.contexts.push(2);
 					uInstall.integration_types.push(1);
 				}
-				if (cmd.type == "guildOnly" || cmd.type == "all") {
+				if (cmd.type === "guildOnly" || cmd.type === "all") {
 					uInstall.contexts.push(0);
 					uInstall.integration_types.push(0);
 				}
-				if (cmd.type == "dmOnly") {
+				if (cmd.type === "dmOnly") {
 					uInstall.contexts.push(1);
 					uInstall.integration_types.push(0);
 				}
@@ -214,29 +214,31 @@ export default class SlashCommandHandler {
 				} else if (initCommands.has(command.name!)) {
 					const oldCmd = initCommands.get(command.name!);
 					command.options = merge(
-						oldCmd!.options!,
+						oldCmd?.options!,
 						command.options!,
 						(a, b) => a.name === b.name,
 					);
 				}
-				if (cmd.name!.includes(" ")) {
-					const subCommands = cmd.name!.split(" ");
+				if (cmd.name?.includes(" ")) {
+					const subCommands = cmd.name?.split(" ");
 					// const cmdName = subCommands.shift()!;
 					for (const subCommand of subCommands) {
 						const oldOptions = merge(
 							command.options || [],
 							cmd.options || [],
 							(a, b) => a.name === b.name,
-						)!.filter((o) => o.type != ApplicationCommandOptionType.Subcommand);
-						command.options!.push({
+						)?.filter(
+							(o) => o.type !== ApplicationCommandOptionType.Subcommand,
+						);
+						command.options?.push({
 							name: subCommand.trim(),
 							description: cmd.description,
 							type: ApplicationCommandOptionType.Subcommand,
 							options: (oldOptions as any[]) || [],
 						});
-						command.options = command.options!.filter(
+						command.options = command.options?.filter(
 							(o: ApplicationCommandOption) =>
-								o.type == ApplicationCommandOptionType.Subcommand,
+								o.type === ApplicationCommandOptionType.Subcommand,
 						);
 					}
 				}
@@ -250,9 +252,8 @@ export default class SlashCommandHandler {
 				}
 				initCommands.set(command.name!, command as any);
 			});
-		const contextCommands = this.commands!.filter(
-			(a) => (a as IContextCommand).context != null,
-		)
+		const contextCommands = this.commands
+			?.filter((a) => (a as IContextCommand).context != null)
 			.map((c) => {
 				const cmd = c as IContextCommand;
 				if (cmd.disabled) return null;
@@ -263,16 +264,16 @@ export default class SlashCommandHandler {
 
 				if (!cmd.context) cmd.context = "guildOnly";
 
-				if (cmd.context == "installable" || cmd.context == "all") {
+				if (cmd.context === "installable" || cmd.context === "all") {
 					uInstall.contexts.push(2);
 					uInstall.integration_types.push(1);
 				}
-				if (cmd.context == "guildOnly" || cmd.context == "all") {
+				if (cmd.context === "guildOnly" || cmd.context === "all") {
 					uInstall.contexts.push(0);
 					uInstall.integration_types.push(0);
 				}
 
-				if (cmd.context == "dmOnly") {
+				if (cmd.context === "dmOnly") {
 					uInstall.contexts.push(1);
 					uInstall.integration_types.push(0);
 				}
@@ -297,7 +298,7 @@ export default class SlashCommandHandler {
 				);
 			const startTime = Date.now();
 			const res = await client.rest.put(
-				Routes.applicationCommands(client.user!.id),
+				Routes.applicationCommands(client.user?.id),
 				{
 					body: JSON.parse(
 						JSON.stringify(
@@ -318,15 +319,13 @@ export default class SlashCommandHandler {
 				`Successfully reloaded ${(res as any[]).length} (/) commands. Took ${endTime - startTime}ms`,
 			);
 		} catch (error) {
-			commandHandler.logger.error("Error refreshing (/) commands: " + error);
+			commandHandler.logger.error(`Error refreshing (/) commands: ${error}`);
 		}
 	}
 
 	public initListener(client: Client) {
 		client.on(Events.InteractionCreate, async (interaction) => {
-			this.commands.forEach(
-				(c) => c.interactionHandler && c.interactionHandler(interaction),
-			);
+			this.commands.forEach((c) => c.interactionHandler?.(interaction));
 			if (interaction.isCommand() || interaction.isContextMenuCommand()) {
 				const command = this.commands.find((cmd) => {
 					if (interaction.isContextMenuCommand())
@@ -352,7 +351,7 @@ export default class SlashCommandHandler {
 						ephemeral: true,
 					});
 				}
-				if (command.type == "legacy") return;
+				if (command.type === "legacy") return;
 				let result = {};
 				let err;
 				let errorId;
@@ -416,12 +415,12 @@ export default class SlashCommandHandler {
 				);
 				if (!cmd) return;
 				try {
-					await cmd.autocomplete!(interaction);
+					await cmd.autocomplete?.(interaction);
 				} catch (error) {
 					if (this.handler.verbose)
 						this.handler.logger.error(
 							error,
-							"Got an error while executing autocomplete for " + cmd.name,
+							`Got an error while executing autocomplete for ${cmd.name}`,
 						);
 				}
 			}

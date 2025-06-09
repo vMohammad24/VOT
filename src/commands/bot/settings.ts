@@ -4,7 +4,7 @@ import type ICommand from "../../handler/interfaces/ICommand";
 
 export default {
 	name: "settings",
-	description: `VOT settings`,
+	description: "VOT settings",
 	slashOnly: true,
 	options: [
 		{
@@ -63,7 +63,7 @@ export default {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle("Invalid value")
-								.setDescription(`The value must be less than 4 characters`)
+								.setDescription("The value must be less than 4 characters")
 								.setColor("DarkRed"),
 						],
 						ephemeral: true,
@@ -94,7 +94,7 @@ export default {
 					},
 					data: {
 						ArgumentMode:
-							value == "n" ? ArgumentMode.Normal : ArgumentMode.Advanced,
+							value === "n" ? ArgumentMode.Normal : ArgumentMode.Advanced,
 					},
 				});
 				return {

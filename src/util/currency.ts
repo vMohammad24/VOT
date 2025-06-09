@@ -16,7 +16,7 @@ export const loadExchangeRates = async () => {
 		return exchangeRates;
 	}
 	const res = await axios.get(
-		`https://api.coingecko.com/api/v3/exchange_rates`,
+		"https://api.coingecko.com/api/v3/exchange_rates",
 	);
 	const rates = res.data.rates;
 	exchangeRates.length = 0;
@@ -36,7 +36,7 @@ export const parseAbbreviatedNumber = (input: string): number => {
 
 	const [_, num, modifier] = match;
 	const value = Number.parseFloat(num);
-	if (isNaN(value)) return Number.NaN;
+	if (Number.isNaN(value)) return Number.NaN;
 
 	const multipliers: Record<string, number> = {
 		t: 1e12,

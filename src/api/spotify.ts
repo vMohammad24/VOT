@@ -13,14 +13,13 @@ export default (server: Elysia<"spotify">) => {
 		const state = crypto.randomUUID();
 		if (!code)
 			return redirect(
-				"https://accounts.spotify.com/authorize?" +
-					queryString.stringify({
-						response_type: "code",
-						client_id: spotifyClientId,
-						scope: scopes,
-						redirect_uri: getRedirectURL("spotify"),
-						state,
-					}),
+				`https://accounts.spotify.com/authorize?${queryString.stringify({
+					response_type: "code",
+					client_id: spotifyClientId,
+					scope: scopes,
+					redirect_uri: getRedirectURL("spotify"),
+					state,
+				})}`,
 			);
 		if (!token) return redirect("/discord/callback");
 		const user = await commandHandler.prisma.user.findUnique({
@@ -43,11 +42,9 @@ export default (server: Elysia<"spotify">) => {
 					method: "POST",
 					headers: {
 						"content-type": "application/x-www-form-urlencoded",
-						Authorization:
-							"Basic " +
-							Buffer.from(spotifyClientId + ":" + spotifyClientSecret).toString(
-								"base64",
-							),
+						Authorization: `Basic ${Buffer.from(
+							`${spotifyClientId}:${spotifyClientSecret}`,
+						).toString("base64")}`,
 					},
 				},
 			)

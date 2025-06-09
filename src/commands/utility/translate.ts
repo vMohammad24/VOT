@@ -27,7 +27,7 @@ export default {
 		let text = args.get("text") as string | undefined;
 		const lang = (args.get("lang") as string | undefined) || "en";
 		if (!text) {
-			if (message && message.reference) {
+			if (message?.reference) {
 				const m = await message.fetchReference();
 				if (!m)
 					return {

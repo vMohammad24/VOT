@@ -29,7 +29,7 @@ export default {
 	execute: async ({ user, args, handler: { prisma } }) => {
 		const bet = args.get("bet") as number;
 		const choice = args.get("choice") as string;
-		if (!bet || isNaN(bet) || bet < 1)
+		if (!bet || Number.isNaN(bet) || bet < 1)
 			return {
 				content: "Please provide a valid amount of coins to bet",
 				ephemeral: true,

@@ -63,7 +63,7 @@ export default {
 				{ name: "Loudness", value: `${features.loudness}db`, inline: true },
 			]);
 		}
-		if (np.item.progressMs != 0) {
+		if (np.item.progressMs !== 0) {
 			const formatTime = (ms: number) => {
 				return new Date(ms).toISOString().slice(11, 19).replace(/^00:/, "");
 			};
@@ -76,7 +76,7 @@ export default {
 			files: previewURL
 				? [
 						new AttachmentBuilder(previewURL, {
-							name: "preview." + fileEx,
+							name: `preview.${fileEx}`,
 						}),
 					]
 				: [],

@@ -59,16 +59,18 @@ export default {
 		await pagination({
 			interaction,
 			message,
-			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: response.match(/[\s\S]{1,1999}/g)?.map((text: string) => ({
 				page: {
-					embeds: [new EmbedBuilder()
-						.setTitle("Extracted Text")
-						.setDescription(text ?? "> Failed to extract text")
-						.setColor("Green")
-						.setImage(attachment.url)],
+					embeds: [
+						new EmbedBuilder()
+							.setTitle("Extracted Text")
+							.setDescription(text ?? "> Failed to extract text")
+							.setColor("Green")
+							.setImage(attachment.url),
+					],
 					allowedMentions: {},
 				},
 			})),
-		})
+		});
 	},
 } as ICommand;

@@ -1,5 +1,5 @@
-import { join } from "path";
-import { URL } from "url";
+import { join } from "node:path";
+import { URL } from "node:url";
 import { ApplicationCommandOptionType } from "discord.js";
 import commandHandler from "../..";
 import type ICommand from "../../handler/interfaces/ICommand";
@@ -69,7 +69,7 @@ export default {
 		if (blacklist.includes(urlObject.hostname))
 			return {
 				ephemeral: true,
-				content: `This site is blacklisted.`,
+				content: "This site is blacklisted.",
 			};
 		const time = Date.now();
 		const cached = await getCachedSite(url, wait);
@@ -92,7 +92,7 @@ export default {
 			console.error(e);
 			return {
 				ephemeral: true,
-				content: `This site is not reachable.`,
+				content: "This site is not reachable.",
 			};
 		}
 		const b = await page.$("body");
@@ -107,7 +107,7 @@ export default {
 		} catch (e) {
 			return {
 				ephemeral: true,
-				content: `This site has screenshotting disabled.`,
+				content: "This site has screenshotting disabled.",
 			};
 		}
 		if (wait)

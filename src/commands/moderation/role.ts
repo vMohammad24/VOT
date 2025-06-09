@@ -33,7 +33,7 @@ export default {
 		if (!role) return { content: "Role not found.", ephemeral: true };
 		if (
 			role.position >= ranBy.roles.highest.position &&
-			guild.ownerId != ranBy.id
+			guild.ownerId !== ranBy.id
 		)
 			return {
 				content:
@@ -53,16 +53,15 @@ export default {
 				content: `Removed ${role} from ${member}.`,
 				allowedMentions: {},
 			};
-		} else {
-			await member.roles.add(role, `added by ${ranBy.user.tag}.`);
-			await createCase(
-				guild.id,
-				CaseType.RoleAdd,
-				member.id,
-				ranBy.id,
-				`Added role ${role.name}`,
-			);
-			return { content: `Added ${role} to ${member}.`, allowedMentions: {} };
 		}
+		await member.roles.add(role, `added by ${ranBy.user.tag}.`);
+		await createCase(
+			guild.id,
+			CaseType.RoleAdd,
+			member.id,
+			ranBy.id,
+			`Added role ${role.name}`,
+		);
+		return { content: `Added ${role} to ${member}.`, allowedMentions: {} };
 	},
 } as ICommand;

@@ -42,7 +42,7 @@ export class GoogleLens {
 			.replace("sideChannel:", '"sideChannel":');
 
 		const jsonData = JSON.parse(adjustedScript);
-		return jsonData["data"][1];
+		return jsonData.data[1];
 	}
 
 	private parsePrerenderScript(prerenderScript: any): any {
@@ -90,7 +90,7 @@ export class GoogleLens {
 			// validateStatus: (status) => status >= 200 && status < 400
 		});
 
-		const searchUrl = response.headers["location"];
+		const searchUrl = response.headers.location;
 		const searchResponse = await this.session.get(searchUrl);
 		const prerenderScript = await this.getPrerenderScript(searchResponse.data);
 

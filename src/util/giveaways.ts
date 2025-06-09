@@ -28,7 +28,7 @@ export async function createGiveaway(
 		.setColor("Random")
 		.setTimestamp()
 		.setDescription(
-			`${description && description + "\n\n"}Ends: <t:${Math.floor(
+			`${description && `${description}\n\n`}Ends: <t:${Math.floor(
 				(Date.now() + duration * 1000) / 1000,
 			)}:R>\nHosted by: ${hoster}`,
 		);
@@ -151,7 +151,7 @@ export async function endGiveaway(giveawayId: string) {
 		.setTitle(oldEmbed.title)
 		.setColor(oldEmbed.color)
 		.setTimestamp()
-		.setDescription(oldEmbed.description!.replace(/Ends/, `Ended`));
+		.setDescription(oldEmbed.description?.replace(/Ends/, "Ended"));
 	await prisma.giveaway.update({
 		where: { id: giveaway.id },
 		data: {

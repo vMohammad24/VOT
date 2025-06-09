@@ -40,8 +40,7 @@ export default {
 		const chooseEmbed = new EmbedBuilder()
 			.setTitle("Horses")
 			.setDescription(
-				"Choose a horse to bet on\n" +
-				horses.map((h, i) => `${i + 1}. **${h}**`).join("\n"),
+				`Choose a horse to bet on\n${horses.map((h, i) => `${i + 1}. **${h}**`).join("\n")}`,
 			)
 			.setColor("Random")
 			.setFooter({ text: "You have 30 seconds to choose a horse" });
@@ -60,10 +59,10 @@ export default {
 			);
 		}
 		const rMsg = message
-			? await message!.reply({ embeds: [chooseEmbed], components: [row] })
-			: await interaction!.reply({ embeds: [chooseEmbed], components: [row] });
+			? await message?.reply({ embeds: [chooseEmbed], components: [row] })
+			: await interaction?.reply({ embeds: [chooseEmbed], components: [row] });
 		const collector = rMsg.createMessageComponentCollector({
-			filter: (i) => i.user.id == user.id,
+			filter: (i) => i.user.id === user.id,
 			time: 30_000,
 		});
 		let horse: string;
@@ -81,7 +80,7 @@ export default {
 			}
 
 			const bet = args.get("bet") as number;
-			if (!bet || isNaN(bet) || bet < 1)
+			if (!bet || Number.isNaN(bet) || bet < 1)
 				return {
 					content: "Please provide a valid amount of coins to bet",
 					ephemeral: true,

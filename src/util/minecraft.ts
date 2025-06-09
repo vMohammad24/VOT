@@ -2,7 +2,6 @@ import axios from "axios";
 import UserAgent from "user-agents";
 import { redis } from "..";
 
-
 interface Usernames {
 	id: string;
 	username: string;
@@ -271,11 +270,11 @@ export async function getBadges(input: string) {
 
 export async function searchSkins(params: {
 	order?:
-	| "trending_30d"
-	| "trending_7d"
-	| "trending_24h"
-	| "most_used"
-	| "latest";
+		| "trending_30d"
+		| "trending_7d"
+		| "trending_24h"
+		| "most_used"
+		| "latest";
 	size?: number;
 	offset?: number;
 	page?: number;

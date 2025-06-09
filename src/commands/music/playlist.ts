@@ -70,7 +70,7 @@ export default {
 	slashOnly: true,
 	autocomplete: async (interaction) => {
 		const { prisma, kazagumo } = commandHandler;
-		if (interaction.options.getSubcommand() == "play") {
+		if (interaction.options.getSubcommand() === "play") {
 			const playlists = await getPlaylists(
 				prisma,
 				interaction.guildId!,
@@ -83,7 +83,7 @@ export default {
 				};
 			});
 			interaction.respond(choices);
-		} else if (interaction.options.getSubcommand() == "update") {
+		} else if (interaction.options.getSubcommand() === "update") {
 			const playlistName = interaction.options.getString("name", true);
 			const trackName = interaction.options.getString("track", true);
 			const action = interaction.options.getString("action", true);
@@ -221,8 +221,8 @@ export default {
 							tracks: {
 								connect: await transferTracksTDB(
 									[
-										player!.queue.current!,
-										...player!.queue.map((track) => track),
+										player?.queue.current!,
+										...player?.queue.map((track) => track),
 									],
 									handler.prisma,
 								),

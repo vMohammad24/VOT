@@ -30,37 +30,37 @@ export default {
 		const embed = new VOTEmbed();
 		if (!u.item.privacySettings.currentlyPlaying) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Currently Playing\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Currently Playing`` from working",
 			);
 		}
 		if (!u.item.privacySettings.recentlyPlayed) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Recently Played\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Recently Played`` from working",
 			);
 		}
 		if (!u.item.privacySettings.topTracks) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Top Tracks\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Top Tracks`` from working",
 			);
 		}
 		if (!u.item.privacySettings.topArtists) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Top Artists\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Top Artists`` from working",
 			);
 		}
 		if (!u.item.privacySettings.topGenres) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Top Genres\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Top Genres`` from working",
 			);
 		}
 		if (!u.item.privacySettings.topAlbums) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Top Albums\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Top Albums`` from working",
 			);
 		}
 		if (!u.item.privacySettings.profile) {
 			embed.addDescription(
-				`**WARNING**: Your privacy settings are preventing \`\`Profile\`\` from working`,
+				"**WARNING**: Your privacy settings are preventing ``Profile`` from working",
 			);
 		}
 		embed.setAuthor({ name: u.item.displayName, iconURL: u.item.image });

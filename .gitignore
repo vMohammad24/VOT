@@ -10,3 +10,4 @@ assets/brainrot
 plugins
 caddy/config/
 caddy/data/
+application.yml

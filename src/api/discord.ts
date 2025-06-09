@@ -168,7 +168,7 @@ export default (elysia: Elysia<"discord">) => {
 				});
 				mes += " prefix";
 			}
-			if (loggingChannel != undefined) {
+			if (loggingChannel !== undefined) {
 				const g = commandHandler.client.guilds.cache.get(guild.id);
 				if (!g) {
 					set.status = 400;
@@ -276,7 +276,7 @@ export default (elysia: Elysia<"discord">) => {
 						new ButtonBuilder()
 							.setLabel("Verify")
 							.setEmoji("✅")
-							.setURL(getFrontEndURL() + "/verify/" + guild.id)
+							.setURL(`${getFrontEndURL()}/verify/${guild.id}`)
 							.setStyle(ButtonStyle.Link),
 					);
 					const message = await channel.send({
@@ -313,13 +313,12 @@ export default (elysia: Elysia<"discord">) => {
 		const { code, refresh_token } = query as any;
 		if (!code && !refresh_token)
 			return redirect(
-				"https://discord.com/api/oauth2/authorize?" +
-					queryString.stringify({
-						client_id: discordClientId,
-						response_type: "code",
-						redirect_uri: getRedirectURL("discord"),
-						scope: "identify guilds",
-					}),
+				`https://discord.com/api/oauth2/authorize?${queryString.stringify({
+					client_id: discordClientId,
+					response_type: "code",
+					redirect_uri: getRedirectURL("discord"),
+					scope: "identify guilds",
+				})}`,
 			);
 		const isRefresh = refresh_token && !code;
 		const tokenResponseData = await axios.post(
@@ -347,7 +346,7 @@ export default (elysia: Elysia<"discord">) => {
 			},
 		);
 		const tokenResponse = (await tokenResponseData.data) as any;
-		if (tokenResponse.error == "invalid_grant") {
+		if (tokenResponse.error === "invalid_grant") {
 			set.status = 401;
 			return {
 				success: false,
@@ -364,7 +363,7 @@ export default (elysia: Elysia<"discord">) => {
 			return resUser;
 		}
 		const guildsRes = await updateGuilds(resUser.id);
-		if (guildsRes && (guildsRes.code == 401 || guildsRes.code == 400)) {
+		if (guildsRes && (guildsRes.code === 401 || guildsRes.code === 400)) {
 			set.status = 401;
 			return guildsRes;
 		}
@@ -410,13 +409,12 @@ export default (elysia: Elysia<"discord">) => {
 				name: resUser.username,
 			},
 		});
-		return redirect(getFrontEndURL() + "/?token=" + user.token);
+		return redirect(`${getFrontEndURL()}/?token=${user.token}`);
 	});
 
 	elysia.get("/invite", ({ redirect }) => {
 		return redirect(
-			"https://discord.com/api/oauth2/authorize?client_id=" +
-				import.meta.env.DISCORD_CLIENT_ID!,
+			`https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.DISCORD_CLIENT_ID!}`,
 		);
 	});
 

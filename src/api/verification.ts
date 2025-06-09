@@ -14,7 +14,7 @@ const hCaptchaSiteKey = process.env.HCAPTCHA_SITE_KEY;
 const hCaptchaSecret = process.env.HCAPTCHA_SECRET;
 
 const verifyCaptcha = async (token: string, ip: string) => {
-	const res = await axios(`https://hcaptcha.com/siteverify`, {
+	const res = await axios("https://hcaptcha.com/siteverify", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
@@ -51,7 +51,7 @@ export default (server: Elysia<"guilds">) => {
 				ws.close();
 				return;
 			}
-			const token = ws.data.cookie["token"].value || ws.data.query.uToken;
+			const token = ws.data.cookie.token.value || ws.data.query.uToken;
 			const id = ws.data.params.id;
 			if (!token) {
 				ws.send(JSON.stringify({ error: "Unauthorized" }));
@@ -142,12 +142,12 @@ export default (server: Elysia<"guilds">) => {
 				return;
 			}
 			const verifyMember = async () => {
-				await member.roles.add(guild.VerificationSettings!.roleId!);
+				await member.roles.add(guild.VerificationSettings?.roleId!);
 				try {
 					ws.send(JSON.stringify({ success: true }));
 					ws.close();
-				} catch (e) { }
-				if (channel && channel.isTextBased()) {
+				} catch (e) {}
+				if (channel?.isTextBased()) {
 					try {
 						await channel.send({
 							embeds: [
@@ -159,7 +159,7 @@ export default (server: Elysia<"guilds">) => {
 							content: `<@${member.id}>`,
 							allowedMentions: {},
 						});
-					} catch (error) { }
+					} catch (error) {}
 				}
 				return {
 					success: true,
@@ -172,7 +172,7 @@ export default (server: Elysia<"guilds">) => {
 					}),
 				);
 				ws.close();
-				if (channel && channel.isTextBased()) {
+				if (channel?.isTextBased()) {
 					try {
 						const msg = await channel.send({
 							embeds: [
@@ -203,18 +203,18 @@ export default (server: Elysia<"guilds">) => {
 							if (!ver.success) {
 								i.editReply("An error occurred while verifying the user.");
 							}
-							i.reply(member.user.tag + " has been verified by " + i.user.tag);
+							i.reply(`${member.user.tag} has been verified by ${i.user.tag}`);
 						});
-					} catch (error) { }
+					} catch (error) {}
 				}
 				try {
 					ws.close();
-				} catch (e) { }
+				} catch (e) {}
 				return;
 			}
 
 			const hashedIp = hashIP(ip);
-			if (user.previousIps.includes(hashedIp) || user.hashedIp == hashedIp)
+			if (user.previousIps.includes(hashedIp) || user.hashedIp === hashedIp)
 				return;
 			await commandHandler.prisma.user.update({
 				where: { id: user.id },

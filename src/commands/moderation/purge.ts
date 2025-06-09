@@ -56,7 +56,7 @@ export default {
 		const after = args.get("after") as string | undefined;
 		const contains = args.get("contains") as string | undefined;
 
-		if (!amount || isNaN(amount)) {
+		if (!amount || Number.isNaN(amount)) {
 			return {
 				content: "Invalid amount",
 				ephemeral: true,

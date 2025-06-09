@@ -43,7 +43,7 @@ export default {
 				),
 			});
 		}
-		if (user && user.afkSince && user.afkReason) {
+		if (user?.afkSince && user.afkReason) {
 			await commandHandler.prisma.user.update({
 				where: { id: message.author.id },
 				data: { afkReason: null, afkSince: null },

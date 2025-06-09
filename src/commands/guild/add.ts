@@ -149,7 +149,7 @@ export default {
 				} catch (err) {
 					embed.setColor("Red");
 					embed.setDescription(
-						"Failed to add sticker (" + (err as any).message + ")",
+						`Failed to add sticker (${(err as any).message})`,
 					);
 				}
 				break;
@@ -165,9 +165,7 @@ export default {
 					content = emoji.url;
 				} catch (err) {
 					embed.setColor("Red");
-					embed.setDescription(
-						"Failed to add emoji (" + (err as any).message + ")",
-					);
+					embed.setDescription(`Failed to add emoji (${(err as any).message})`);
 				}
 				break;
 			default:

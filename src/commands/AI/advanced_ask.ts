@@ -46,7 +46,7 @@ export default {
 			};
 		}
 		const shouldSearch =
-			searchActivators.find((a) => question.includes(a)) != undefined;
+			searchActivators.find((a) => question.includes(a)) !== undefined;
 		const rMsg = await message?.reply("Thinking...");
 		const channelMessages =
 			channel && channel instanceof BaseGuildTextChannel
@@ -84,8 +84,7 @@ export default {
 
 			const content =
 				m.embeds && m.embeds.length > 0
-					? "Embeds:\n" +
-						m.embeds.map((e) => JSON.stringify(e.toJSON())).join("\n")
+					? `Embeds:\n${m.embeds.map((e) => JSON.stringify(e.toJSON())).join("\n")}`
 					: m.cleanContent;
 
 			let threadContent = "";
@@ -251,7 +250,7 @@ export default {
 			interaction,
 			message,
 			rMsg,
-			pages: response.match(/[\s\S]{1,1999}/g)!.map((text: string) => ({
+			pages: response.match(/[\s\S]{1,1999}/g)?.map((text: string) => ({
 				page: {
 					content: text,
 					allowedMentions: {},

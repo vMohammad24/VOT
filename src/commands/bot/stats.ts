@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 import axios from "axios";
 import {
 	ActionRowBuilder,
@@ -78,9 +78,9 @@ export default {
 		const listenerCount = Object.entries(Events)
 			.map(([key, value]) => {
 				const count = handler.client.listenerCount(value);
-				if (count != 0) return count;
+				if (count !== 0) return count;
 			})
-			.filter((a) => a != undefined)
+			.filter((a) => a !== undefined)
 			.reduce((acc, curr) => acc + curr, 0);
 		const commitMessage = (
 			commit.message.includes("---")
@@ -99,7 +99,7 @@ export default {
 				},
 				{
 					name: "Commands",
-					value: `${handler.commands!.length}`,
+					value: `${handler.commands?.length}`,
 					inline: true,
 				},
 				{

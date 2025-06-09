@@ -642,21 +642,23 @@ const getQueryResult = async (
 	params?: string,
 ) => {
 	switch (type) {
-		case "query":
+		case "query": {
 			const cache = await redis.get(`brave:${query}`);
 			if (cache && commandHandler.prodMode) return JSON.parse(cache);
 			const res = await braveAxios.get(
 				`/search?q=${encodeURIComponent(query)}&rich=true${params ? params : ""}`,
 			);
 			return res.data as string;
-		case "images":
+		}
+		case "images": {
 			const imageCache = await redis.get(`braveImages:${query}`);
 			if (imageCache && commandHandler.prodMode) return JSON.parse(imageCache);
 			const imagesRes = await braveAxios.get(
 				`/images?q=${encodeURIComponent(query)}`,
 			);
 			return imagesRes.data as string;
-		case "goggles":
+		}
+		case "goggles": {
 			const gogglesCache = await redis.get(`braveGoggles:${query}`);
 			if (gogglesCache && commandHandler.prodMode)
 				return JSON.parse(gogglesCache);
@@ -664,6 +666,7 @@ const getQueryResult = async (
 				`/goggles?q=${encodeURIComponent(query)}`,
 			);
 			return gogglesRes.data as string;
+		}
 	}
 };
 
@@ -678,7 +681,7 @@ function extractData(data: string) {
 
 export async function searchBrave(query: string, params?: string) {
 	const data = await getQueryResult(query, "query", params);
-	if (typeof data == "string") {
+	if (typeof data === "string") {
 		const end = extractData(data);
 		try {
 			const json = new Function(
@@ -696,7 +699,7 @@ export async function searchBrave(query: string, params?: string) {
 
 export async function searchBraveImages(query: string) {
 	const data = await getQueryResult(query, "images");
-	if (typeof data == "string") {
+	if (typeof data === "string") {
 		const end = extractData(data);
 		const json = new Function(
 			`"use strict";return ${end}`,
@@ -708,14 +711,13 @@ export async function searchBraveImages(query: string) {
 			60 * 60,
 		);
 		return json;
-	} else {
-		return data as BraveSearchImages;
 	}
+	return data as BraveSearchImages;
 }
 
 export async function searchBraveGoggles(query: string) {
 	const data = await getQueryResult(query, "goggles");
-	if (typeof data == "string") {
+	if (typeof data === "string") {
 		const end = extractData(data);
 		const json = new Function(`"use strict";return ${end}`)()[1];
 		await redis.set(
@@ -725,9 +727,8 @@ export async function searchBraveGoggles(query: string) {
 			60 * 60,
 		);
 		return json as BraveSearchGoggles;
-	} else {
-		return data as BraveSearchGoggles;
 	}
+	return data as BraveSearchGoggles;
 }
 
 export async function chatllm(

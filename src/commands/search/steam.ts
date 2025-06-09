@@ -20,7 +20,7 @@ async function getProtonDB(appId: number): Promise<ProtonDBGame | null> {
 	const res = await axios.get(
 		`https://www.protondb.com/api/v1/reports/summaries/${appId}.json`,
 	);
-	if (res.status == 404) {
+	if (res.status === 404) {
 		return null;
 	}
 	return res.data;
@@ -255,15 +255,14 @@ async function getGameInfo(appId: number) {
 		} | null,
 		requiredAge: data.required_age,
 		categories: data.categories.map((category: any) => category.description),
-		rating:
-			data.ratings && data.ratings.pegi
-				? (data.ratings.pegi as {
-						rating: string;
-						descriptors: string;
-						use_age_gate: string;
-						required_age: string;
-					} | null)
-				: null,
+		rating: data.ratings?.pegi
+			? (data.ratings.pegi as {
+					rating: string;
+					descriptors: string;
+					use_age_gate: string;
+					required_age: string;
+				} | null)
+			: null,
 	};
 }
 
@@ -301,7 +300,7 @@ export default {
 				content: "Please provide a game to search for",
 				ephemeral: true,
 			};
-		if (isNaN(Number(query))) {
+		if (Number.isNaN(Number(query))) {
 			const results = await searchGames(query);
 			if (!results || results.length === 0) {
 				return {

@@ -443,7 +443,7 @@ export async function getTikTokUser(
 	username: string,
 ): Promise<TikTokUser | null> {
 	try {
-		const res = await client.get("https://www.tiktok.com/@" + username);
+		const res = await client.get(`https://www.tiktok.com/@${username}`);
 		const data = res.data as string;
 		const lookFor =
 			'<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">';
@@ -452,8 +452,8 @@ export async function getTikTokUser(
 		const json = data.substring(index + lookFor.length, index2);
 		const obj = JSON.parse(json);
 		return {
-			...obj["__DEFAULT_SCOPE__"]["webapp.user-detail"].userInfo.user,
-			...obj["__DEFAULT_SCOPE__"]["webapp.user-detail"].userInfo.stats,
+			...obj.__DEFAULT_SCOPE__["webapp.user-detail"].userInfo.user,
+			...obj.__DEFAULT_SCOPE__["webapp.user-detail"].userInfo.stats,
 		};
 	} catch (e) {}
 	return null;

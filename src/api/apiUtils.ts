@@ -73,7 +73,7 @@ export const updateGuilds = async (userId: string): Promise<any> => {
 			},
 		);
 		const resGuilds = (await guildsRes.data) as APIGuild[];
-		if (guildsRes.status == 401 || guildsRes.status == 400) {
+		if (guildsRes.status === 401 || guildsRes.status === 400) {
 			const ref = await refreshToken(discord.refreshToken);
 			if (typeof ref !== "string") {
 				return ref;
@@ -244,7 +244,7 @@ export const refreshToken = async (refreshToken: string) => {
 			code: 401,
 		};
 	}
-	if (tokenResponseData.status != 200 || !tokenResponseData.data) {
+	if (tokenResponseData.status !== 200 || !tokenResponseData.data) {
 		return {
 			error: "Invalid refresh token, please reauthorize",
 			code: 401,
@@ -259,7 +259,7 @@ export const refreshToken = async (refreshToken: string) => {
 	const errorHandling = resUser as any;
 	if (errorHandling.error_description) {
 		return {
-			error: errorHandling.error_description + " (D)",
+			error: `${errorHandling.error_description} (D)`,
 			code: 401,
 		};
 	}

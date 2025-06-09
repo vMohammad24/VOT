@@ -54,11 +54,11 @@ export default {
 						name: sticker.name,
 						description: sticker.description,
 						tags: sticker.tags ?? sticker.name,
-						file: new AttachmentBuilder(buffer, { name: sticker.name + ".png" })
+						file: new AttachmentBuilder(buffer, { name: `${sticker.name}.png` })
 							.attachment,
 						reason: `Yoinked by ${member.user.tag}`,
 					});
-					yoined += e.url + "\n";
+					yoined += `${e.url}\n`;
 				} catch (e) {
 					if (
 						(e as any).message.includes("Maximum number of stickers reached")
@@ -79,11 +79,10 @@ export default {
 					content: "Couldn't yoink any stickers",
 					ephemeral: true,
 				};
-			} else {
-				return {
-					content: `Successfully yoinked stickers: ${yoined}`,
-				};
 			}
+			return {
+				content: `Successfully yoinked stickers: ${yoined}`,
+			};
 		}
 		if (!text) return err;
 		const emojiMatches = text.match(/<a?:\w+:(\d+)>/g);
@@ -102,7 +101,7 @@ export default {
 			try {
 				const e = await guild.emojis.create({
 					attachment: url,
-					name: name ?? "yoinked_" + id,
+					name: name ?? `yoinked_${id}`,
 					reason: `Yoinked by ${member.user.tag}`,
 				});
 				results.push(`${e.toString()} (${url})`);

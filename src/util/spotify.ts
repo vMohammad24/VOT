@@ -25,7 +25,7 @@ export async function getCurrentlyPlaying(userId: string) {
 		},
 	);
 	const { error } = res.data;
-	if (res.status == 401 || error) {
+	if (res.status === 401 || error) {
 		await refreshToken(spotify);
 		await setTimeout(() => {}, 500);
 		return await getCurrentlyPlaying(userId);
@@ -115,7 +115,7 @@ export async function getTrackFeatures(
 	trackId: string,
 	userId: string,
 ): Promise<SpotifyFeatures | string> {
-	const key = "spotify:features:" + trackId;
+	const key = `spotify:features:${trackId}`;
 	return redis.get(key).then(async (cache) => {
 		if (cache) return JSON.parse(cache) as SpotifyFeatures;
 		const url = `https://api.spotify.com/v1/audio-features/${trackId}`;
@@ -132,7 +132,7 @@ export async function getTrackFeatures(
 		}
 		const res = await axios.get(url, {
 			headers: {
-				Authorization: "Bearer " + spotify.token,
+				Authorization: `Bearer ${spotify.token}`,
 			},
 		});
 		await redis.set(key, JSON.stringify(res.data), "EX", 60 * 60 * 24 * 30);
@@ -196,7 +196,7 @@ export async function getSpotifyRPC(userId: string) {
 	const spotify = activities.find(
 		(activity) =>
 			activity.assets?.large_image?.startsWith("spotify:") ||
-			activity.name == "Spotify",
+			activity.name === "Spotify",
 	);
 	if (!spotify) {
 		return { error: "No spotify activity found" };

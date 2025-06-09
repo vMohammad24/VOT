@@ -1,5 +1,5 @@
-import { exec } from "child_process";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import { inspect } from "bun";
 import { ApplicationCommandOptionType, Colors, EmbedBuilder } from "discord.js";
 import numeral from "numeral";
@@ -94,21 +94,23 @@ export default {
 					evaluatedResult = await eval(code);
 					break;
 				case "sh":
-				case "shell":
+				case "shell": {
 					const { stdout: shellStdout, stderr: shellStderr } =
 						await execAsync(code);
 					evaluatedResult = shellStdout || shellStderr;
 					break;
+				}
 				case "src":
-				case "source":
-					const command = await commandHandler.commands!.find(
+				case "source": {
+					const command = await commandHandler.commands?.find(
 						(c) => c.name === code || c.aliases?.includes(code!),
 					);
 					if (!command)
 						return { content: "Command not found", ephemeral: true };
-					evaluatedResult = "" + command.execute;
+					evaluatedResult = `${command.execute}`;
 					lang = "ts";
 					break;
+				}
 				default:
 					evaluatedResult = await new Function(`
 						return (async () => { 

@@ -29,7 +29,7 @@ export default {
 			};
 		const brave = await searchBraveImages(query);
 		const { results } = brave.data.body.response;
-		if (!results || results.length == 0)
+		if (!results || results.length === 0)
 			return {
 				content: "No results found",
 				ephemeral: true,

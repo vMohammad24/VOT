@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import * as crypto from "node:crypto";
 
 const SECRET_KEY = import.meta.env.SECRET_KEY!;
 

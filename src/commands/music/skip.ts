@@ -20,7 +20,7 @@ export default {
 				ephemeral: true,
 			};
 		const amount = args.get("amount") || 1;
-		if (member.voice && member.voice.channelId == player.voiceId) {
+		if (member.voice && member.voice.channelId === player.voiceId) {
 			let skippedSongs = 0;
 			for (let i = 0; i < amount - 1; i++) {
 				if (player.queue.length > 0) {

@@ -99,7 +99,7 @@ export default {
 				? user.roles.cache
 						.filter(
 							(role) =>
-								!role.managed && role.id != user.guild.roles.everyone.id,
+								!role.managed && role.id !== user.guild.roles.everyone.id,
 						)
 						.map((role) => role.toString())
 						.join(" ")
@@ -114,15 +114,15 @@ export default {
 
 		let description = "";
 
-		if (pUser && pUser.tier != UserTier.Normal) {
+		if (pUser && pUser.tier !== UserTier.Normal) {
 			description += `**Tier**: ${emojiTierMap.get(pUser.tier)} VOT ${pUser.tier}\n`;
 		}
 
-		if (pUser && pUser.commands) {
+		if (pUser?.commands) {
 			description += `**Commands ran**: ${pUser.commands.length}\n`;
 		}
 
-		if (pUser && pUser.commands && pUser.commands.length > 0) {
+		if (pUser?.commands && pUser.commands.length > 0) {
 			// check commandId inside of every command for most used
 			const commands = pUser.commands;
 			const commandMap = new Map<string, number>();
@@ -225,7 +225,7 @@ export default {
 
 		const finalDesc = description
 			.split("\n")
-			.filter((l) => l.trim() != "")
+			.filter((l) => l.trim() !== "")
 			.join("\n");
 
 		embed.setDescription(isNullish(finalDesc) ? null : finalDesc);
@@ -267,7 +267,7 @@ export default {
 
 		const sentMessage = message
 			? await message.reply(content)
-			: await interaction!.editReply(content);
+			: await interaction?.editReply(content);
 
 		const collector = sentMessage?.createMessageComponentCollector({
 			filter: (i) => i.customId === buttonId || i.customId === userPfpId,

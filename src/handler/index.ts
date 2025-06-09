@@ -1,5 +1,3 @@
-import path from "path";
-import { inspect } from "util";
 import { Glob } from "bun";
 import {
 	type ChatInputCommandInteraction,
@@ -8,12 +6,14 @@ import {
 	Events,
 	type GuildMember,
 	type Interaction,
-	type Message,
+	InteractionEditReplyOptions, type Message,
 	type MessageEditOptions,
-	RESTJSONErrorCodes,
+	RESTJSONErrorCodes
 } from "discord.js";
-import { watch } from "fs/promises";
 import { nanoid } from "nanoid/non-secure";
+import { watch } from "node:fs/promises";
+import path from "node:path";
+import { inspect } from "node:util";
 import PinoLogger, { type Logger } from "pino";
 import commandHandler from "..";
 import VOTEmbed from "../util/VOTEmbed";
@@ -40,7 +40,7 @@ interface IMCommandHandler
 	extends Omit<
 		LegacyHandler & SlashHandler & RequiredShits,
 		"categoryDirs" | "commands"
-	> {}
+	> { }
 
 const createCommand = async (
 	commandContext: CommandContext,
@@ -61,7 +61,7 @@ const createCommand = async (
 						commandId: command.name!,
 						commandInfo: {
 							args: (commandContext.args as any) || null,
-							guild: (commandContext?.guild && commandContext.guild.id) || null,
+							guild: commandContext?.guild?.id || null,
 							channel: commandContext?.channel?.id || null,
 							message: commandContext?.message?.id || null,
 							interaction: commandContext?.interaction?.id || null,
@@ -96,7 +96,7 @@ const createCommand = async (
 				commands: { orderBy: { createdAt: "desc" } },
 			},
 		});
-	} catch (e) {}
+	} catch (e) { }
 };
 export default class CommandHandler {
 	public prisma: ICommandHandler["prisma"];
@@ -176,8 +176,8 @@ export default class CommandHandler {
 				const categoryName =
 					splitPath[splitPath.length - 2]?.replace(/\\/g, "/") ||
 					"uncategorized";
-				const fileName = file.split(path.sep).pop()!.split(".")[0];
-				if (categoryName.startsWith("_") || fileName.startsWith("_")) return;
+				const fileName = file.split(path.sep).pop()?.split(".")[0];
+				if (categoryName.startsWith("_") || fileName?.startsWith("_")) return;
 
 				const modulePath = path.join(commandsDir, file);
 
@@ -290,7 +290,7 @@ export default class CommandHandler {
 							await this.slashHandler.initCommands(this.client);
 						}
 					}
-				} catch (ignored) {}
+				} catch (ignored) { }
 			}, 300);
 
 			const handleContextCommandChange = debounce(async (filename: string) => {
@@ -301,7 +301,7 @@ export default class CommandHandler {
 					if (this.slashHandler) {
 						await this.slashHandler.initCommands(this.client);
 					}
-				} catch (ignored) {}
+				} catch (ignored) { }
 			}, 300);
 
 			const cmdWatcher = watch(commandsDir, {
@@ -525,7 +525,7 @@ export default class CommandHandler {
 		try {
 			if ("category" in command) {
 				const filePath = path.join(
-					command.category!.toLowerCase(),
+					command.category?.toLowerCase()!,
 					`${commandName}.ts`,
 				);
 				const reloaded = await this.reloadCommandByPath(filePath);
@@ -535,14 +535,13 @@ export default class CommandHandler {
 				}
 
 				return reloaded;
-			} else {
-				const reloaded = await this.reloadContextCommand(commandName);
-				if (reloaded && this.slashHandler) {
-					await this.slashHandler.initCommands(this.client);
-				}
-
-				return reloaded;
 			}
+			const reloaded = await this.reloadContextCommand(commandName);
+			if (reloaded && this.slashHandler) {
+				await this.slashHandler.initCommands(this.client);
+			}
+
+			return reloaded;
 		} catch (error) {
 			this.logger.error(`Error in reloadCommand: ${error}`);
 			throw error;
@@ -595,7 +594,7 @@ export default class CommandHandler {
 						player:
 							(await getPlayer(interaction.member as GuildMember)) || undefined,
 						editReply: async (content) => {
-							await interaction.editReply(content);
+							await interaction.editReply(content as InteractionEditReplyOptions);
 						},
 						cID: cId,
 					};
@@ -640,7 +639,7 @@ export default class CommandHandler {
 							}
 						}
 					}, 2700);
-				} catch (e) {}
+				} catch (e) { }
 
 				await createCommand(commandContext, command, validationTime);
 				const result = await command.execute(commandContext);
@@ -678,7 +677,7 @@ export default class CommandHandler {
 			}
 		} catch (e: any) {
 			if ((e as any).code in RESTJSONErrorCodes) {
-				if (e.code == 10005 || e.code == 40060) {
+				if (e.code === 10005 || e.code === 40060) {
 				}
 				try {
 					return {
@@ -697,7 +696,7 @@ export default class CommandHandler {
 							content: `An error occurred: ${(e as any).message}`,
 							ephemeral: true,
 						};
-					} catch (e) {}
+					} catch (e) { }
 				}
 			}
 			this.logger.error(e);

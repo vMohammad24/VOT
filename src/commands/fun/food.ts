@@ -33,7 +33,7 @@ export default {
 	type: "all",
 	execute: async ({ args }) => {
 		const tag = (args.get("tag") as string) || undefined;
-		const reqUrl = `https://foodish-api.com/api${tag ? "/images/" + tag : ""}`;
+		const reqUrl = `https://foodish-api.com/api${tag ? `/images/${tag}` : ""}`;
 		const res = await axios.get(reqUrl);
 		const url = res.data.image;
 		if (!url) {

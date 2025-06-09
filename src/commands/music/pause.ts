@@ -4,7 +4,7 @@ export default {
 	description: "Pauses the current playing song",
 	needsPlayer: true,
 	execute: async ({ player, member }) => {
-		if (player && member.voice && member.voice.channelId == player.voiceId) {
+		if (player && member.voice && member.voice.channelId === player.voiceId) {
 			if (player.paused)
 				return {
 					content: "Song is already paused",

@@ -27,7 +27,7 @@ export default {
 		let attachment = args.get("file") as Attachment | undefined;
 		const format = (args.get("format") as string | undefined) || "gif";
 		if (!attachment) {
-			if (message && message.reference) {
+			if (message?.reference) {
 				const m = await message.fetchReference();
 				if (!m)
 					return {

@@ -26,17 +26,17 @@ export default {
 	],
 	type: "all",
 	execute: async ({ message, interaction, handler, args, member }) => {
-		const categories = handler
-			.commands!.filter((a) => a.category)
+		const categories = handler.commands
+			?.filter((a) => a.category)
 			.map((cmd) => cmd.category)
 			.filter((value, index, self) => self.indexOf(value) === index)
-			.filter((cat) => cat != "Developer")
+			.filter((cat) => cat !== "Developer")
 			.sort() as string[];
 		const command = args.get("command") as string | undefined;
 		if (!command) {
 			const embeds = categories.map((category) => {
-				const commands = handler
-					.commands!.filter((cmd) => cmd.category === category)
+				const commands = handler.commands
+					?.filter((cmd) => cmd.category === category)
 					.sort();
 				return {
 					name: category,
@@ -68,8 +68,8 @@ export default {
 			});
 		} else {
 			const cmd =
-				handler.commands!.find((cmd) => cmd.name === command) ??
-				handler.commands!.find((cmd) => cmd.aliases?.includes(command!));
+				handler.commands?.find((cmd) => cmd.name === command) ??
+				handler.commands?.find((cmd) => cmd.aliases?.includes(command!));
 			if (!cmd)
 				return { content: `Command \`${command}\` not found`, ephemeral: true };
 			const embed = new VOTEmbed();
@@ -87,7 +87,7 @@ export default {
 			}
 			const prefix = message ? await getPrefix(message) : "/";
 			cmd.perms &&
-				cmd.perms != "dev" &&
+				cmd.perms !== "dev" &&
 				embed.addFields({
 					name: "Permissions",
 					value:

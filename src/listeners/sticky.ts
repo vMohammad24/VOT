@@ -20,8 +20,8 @@ export default {
 									.fetch(stickyMessage.messageId)
 									.catch(() => null)
 							: null;
-						if (message && message.channel.lastMessageId == message.id) return;
-						if (message && message.deletable) await message.delete();
+						if (message && message.channel.lastMessageId === message.id) return;
+						if (message?.deletable) await message.delete();
 						const newMessage = await textChannel.send(stickyMessage.content);
 						// (await newMessage.pin()).delete();
 						await prisma.stickyMessage.update({

@@ -188,7 +188,7 @@ export default {
 						content: `Queue shuffled by ${inter.user}`,
 					});
 					break;
-				case "volume":
+				case "volume": {
 					const volume = player.volume;
 					inter.update({
 						content: `${inter.member}, Current volume is ${volume}. Please enter a new volume level from 1-100\n-# Volume request will expire in 15 seconds`,
@@ -202,7 +202,7 @@ export default {
 					collector.on("collect", async (m) => {
 						await m.delete();
 						const newVolume = Number.parseInt(m.content);
-						if (isNaN(newVolume) || newVolume < 1 || newVolume > 100) {
+						if (Number.isNaN(newVolume) || newVolume < 1 || newVolume > 100) {
 							inter.followUp({
 								content:
 									"Invalid volume level, please enter a number from 1-100",
@@ -217,12 +217,13 @@ export default {
 						});
 					});
 					collector.on("end", (_, reason) => {
-						if (reason == "time")
+						if (reason === "time")
 							inter.editReply({
 								content: "",
 							});
 					});
 					break;
+				}
 				default:
 					inter.reply({ content: "Invalid command", ephemeral: true });
 					break;

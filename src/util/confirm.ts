@@ -65,7 +65,7 @@ export default class Confirm {
 		const usr =
 			this.context instanceof Message ? this.context.author : this.context.user;
 		const collector = msg.createMessageComponentCollector({
-			filter: (int) => int.user.id == usr.id,
+			filter: (int) => int.user.id === usr.id,
 			time: 15_000,
 			max: 1,
 		});
@@ -84,7 +84,7 @@ export default class Confirm {
 		});
 		collector.on("end", async (_) => {
 			msg.components.forEach((row, index) => {
-				if (index != 0) return;
+				if (index !== 0) return;
 				row.components.forEach((comp) => {
 					if (comp instanceof ButtonBuilder) comp.setDisabled(true);
 				});

@@ -24,19 +24,19 @@ export default {
 	name: "Logs Handler",
 	execute: ({ client, kazagumo }) => {
 		client.on("messageDelete", async (message) => {
-			if (message.author!.bot) return;
+			if (message.author?.bot) return;
 			const logChannel = await getLogChannel(message.guild!);
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
 				.setTitle("🗑️ Message Deleted")
 				.author(message.author!)
 				.addFields(
-					{ name: "Channel", value: `<#${message.channel!.id}>`, inline: true },
+					{ name: "Channel", value: `<#${message.channel?.id}>`, inline: true },
 					{
 						name: "Content",
 						value:
-							message.content!.length > 1024
-								? message.content!.slice(0, 1024)
+							message.content?.length > 1024
+								? message.content?.slice(0, 1024)
 								: message.content!,
 					},
 				)
@@ -45,7 +45,7 @@ export default {
 				.setTimestamp();
 			if (message.attachments.size > 0)
 				embed.setDescription(
-					`NOTE: This message contained attachments, that are gonna be present in this message`,
+					"NOTE: This message contained attachments, that are gonna be present in this message",
 				);
 			const messageBefore = (
 				await message.channel.messages.fetch({ before: message.id, limit: 1 })
@@ -70,20 +70,20 @@ export default {
 			});
 		});
 		client.on("messageUpdate", async (oldMessage, newMessage) => {
-			if (oldMessage.author!.bot) return;
+			if (oldMessage.author?.bot) return;
 			if (oldMessage.content === newMessage.content) return;
 			const logChannel = await getLogChannel(oldMessage.guild!);
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
 				.setTitle("✏️ Message Updated")
 				.setAuthor({
-					name: oldMessage.author!.tag,
-					iconURL: oldMessage.author!.displayAvatarURL(),
+					name: oldMessage.author?.tag,
+					iconURL: oldMessage.author?.displayAvatarURL(),
 				})
 				.addFields(
 					{
 						name: "Channel",
-						value: `<#${oldMessage.channel!.id}>`,
+						value: `<#${oldMessage.channel?.id}>`,
 						inline: true,
 					},
 					{ name: "Old Content", value: oldMessage.content! },
@@ -107,7 +107,7 @@ export default {
 		});
 
 		client.on("channelDelete", async (channel) => {
-			if (channel.type == ChannelType.DM) return;
+			if (channel.type === ChannelType.DM) return;
 			const logChannel = await getLogChannel(channel.guild!);
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
@@ -201,7 +201,7 @@ export default {
 			const logChannel = await getLogChannel(oldMember.guild!);
 			if (!logChannel) return;
 			const embed = new VOTEmbed().setColor("Orange").setTimestamp();
-			if (oldMember.nickname != newMember.nickname) {
+			if (oldMember.nickname !== newMember.nickname) {
 				embed
 					.setTitle("🔄 Nickname Updated")
 					.addFields(
@@ -238,17 +238,17 @@ export default {
 			}
 		});
 		client.on("messageDeleteBulk", async (messages) => {
-			const logChannel = await getLogChannel(messages.first()!.guild!);
+			const logChannel = await getLogChannel(messages.first()?.guild!);
 			if (!logChannel) return;
 			const embed = new VOTEmbed()
 				.setTitle("🗑️ Bulk Message Deleted")
-				.setDescription(`Bulk messages have been deleted`)
+				.setDescription("Bulk messages have been deleted")
 				.setColor("DarkRed")
-				.setFooter({ text: `Bulk delete` })
+				.setFooter({ text: "Bulk delete" })
 				.setFields([
 					{
 						name: "Channel",
-						value: `<#${messages.first()!.channel!.id}>`,
+						value: `<#${messages.first()?.channel?.id}>`,
 						inline: true,
 					},
 				])
@@ -256,7 +256,7 @@ export default {
 			const file = messages
 				.map(
 					(message) =>
-						`${message.author!.tag}: ${message.content} ${message.attachments.size > 0 ? `(attachments: ${message.attachments.map((a) => a.url).join(" , ")})` : ""}`,
+						`${message.author?.tag}: ${message.content} ${message.attachments.size > 0 ? `(attachments: ${message.attachments.map((a) => a.url).join(" , ")})` : ""}`,
 				)
 				.join("\n");
 			const messageBefore = (

@@ -42,7 +42,7 @@ export default {
 		const type = args.get("type") as "tracks" | "genres" | "artists";
 
 		switch (type) {
-			case "genres":
+			case "genres": {
 				const genres = await getUserTopGenres(statsFm);
 				if (!genres)
 					return {
@@ -58,14 +58,15 @@ export default {
 									.slice(0, 10)
 									.sort((a, b) => a.position - b.position)
 									.map((g, i) =>
-										`${i + 1}. ${g.genre.tag} - ${g.artistCount ?? "??"} artist${g.artistCount == 1 ? "" : "s"}`.trim(),
+										`${i + 1}. ${g.genre.tag} - ${g.artistCount ?? "??"} artist${g.artistCount === 1 ? "" : "s"}`.trim(),
 									)
 									.join("\n"),
 							)
 							.dominant(),
 					],
 				};
-			case "artists":
+			}
+			case "artists": {
 				const artists = await getUserTopArtists(statsFm);
 				if (!artists)
 					return {
@@ -88,7 +89,8 @@ export default {
 							.dominant(),
 					],
 				};
-			case "tracks":
+			}
+			case "tracks": {
 				const tracks = await getUserTopTracks(statsFm, "weeks");
 				if (!tracks)
 					return {
@@ -121,6 +123,7 @@ export default {
 							.dominant(),
 					],
 				};
+			}
 			default:
 				return {
 					content: "Invalid type",

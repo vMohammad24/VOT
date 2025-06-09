@@ -35,7 +35,7 @@ export default function (command: ICommand, ctx: CommandContext) {
 					.setColor("DarkRed")
 					.setDescription(
 						`You're missing the following permissions: ${missingPerms
-							.map((a) => "``" + camelToTitleCase(a.toString()) + "``")
+							.map((a) => `\`\`${camelToTitleCase(a.toString())}\`\``)
 							.join(", ")}`,
 					),
 			],

@@ -3,7 +3,7 @@ import type ICommand from "../../handler/interfaces/ICommand";
 export default {
 	description: "Resumes the current playing song",
 	execute: async ({ player, member }) => {
-		if (player && member.voice && member.voice.channelId == player.voiceId) {
+		if (player && member.voice && member.voice.channelId === player.voiceId) {
 			if (player.playing)
 				return {
 					content: "Song is already resumed",

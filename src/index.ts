@@ -128,10 +128,10 @@ client.on(Events.ClientReady, async (c) => {
 
 	axios.defaults.headers.common["User-Agent"] = new UserAgent().toString();
 	axios.defaults.headers.common["Accept-Language"] = "en-US,en;q=0.9";
-	axios.defaults.headers.common["Accept"] =
+	axios.defaults.headers.common.Accept =
 		"text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7";
 	axios.defaults.headers.common["cache-control"] = "max-age=0";
-	axios.defaults.headers.common["dnt"] = "1";
+	axios.defaults.headers.common.dnt = "1";
 	axios.defaults.headers.common["sec-ch-prefers-color-scheme"] = "dark";
 	axios.defaults.headers.common["sec-ch-ua"] =
 		'"Not;A=Brand";v="24", "Chromium";v="128"';
@@ -178,7 +178,7 @@ client.on(Events.ClientReady, async (c) => {
 			: latestVOTCommit.message;
 		const VOTcommitAuthor = latestVOTCommit.author.name;
 		const embed = new EmbedBuilder()
-			.setTitle(`Changelog - VOT`)
+			.setTitle("Changelog - VOT")
 			.setDescription(VOTcommitMessage)
 			.setFooter({ text: `Committed by ${VOTcommitAuthor}` })
 			.setTimestamp();
@@ -233,7 +233,7 @@ process.on("unhandledRejection", (reason, p) => {
 
 process.on("uncaughtException", (err, origin) => {
 	commandHandler.logger.error(
-		"Uncaught Exception at: " + origin + " reason: " + err,
+		`Uncaught Exception at: ${origin} reason: ${err}`,
 	);
 	const embed = new EmbedBuilder();
 	embed
@@ -256,8 +256,8 @@ process.on("uncaughtException", (err, origin) => {
 
 process.on("uncaughtExceptionMonitor", (err, origin) => {
 	commandHandler.logger.error(
-		"Uncaught Exception at: " + origin,
-		" reason: " + err,
+		`Uncaught Exception at: ${origin}`,
+		` reason: ${err}`,
 	);
 	const embed = new EmbedBuilder();
 	embed
@@ -300,7 +300,7 @@ process.on("warning", (warn) => {
 });
 
 client.on(Events.Error, (err) => {
-	commandHandler.logger.error("Discord Client Error: " + inspect(err));
+	commandHandler.logger.error(`Discord Client Error: ${inspect(err)}`);
 	const embed = new EmbedBuilder();
 	embed
 		.setTitle("Discord API Error")

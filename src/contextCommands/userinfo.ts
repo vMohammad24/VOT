@@ -12,7 +12,7 @@ export default {
 	context: "all",
 	execute: async (interaction: UserContextMenuCommandInteraction) => {
 		commandHandler.executeCommand.bind(commandHandler)(
-			commandHandler.commands?.find((c) => c.name == "userinfo")!,
+			commandHandler.commands?.find((c) => c.name === "userinfo")!,
 			interaction,
 		);
 	},

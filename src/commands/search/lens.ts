@@ -43,7 +43,7 @@ export default {
 				thumbnail: string | null;
 			}) => {
 				let emojiName = item.sourceWebsite.toLowerCase().split(" ")[0].trim();
-				if (emojiName == "X") emojiName = "twitter";
+				if (emojiName === "X") emojiName = "twitter";
 				const emoji = (getEmoji(emojiName) || "").toString() || "🔍";
 				return {
 					name: item.sourceWebsite.substring(0, 99) || "No source",

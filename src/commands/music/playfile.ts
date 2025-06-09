@@ -39,16 +39,17 @@ export default {
 			.search(url, { requester: member as GuildMember })
 			.then(async (res) => {
 				switch (res.type) {
-					case "TRACK":
+					case "TRACK": {
 						const track = res.tracks[0];
-						player!.queue.add(track);
+						player?.queue.add(track);
 						embed.setDescription(
 							`Added [${track.title || "Error getting title"}]${track.uri ? `(${track.uri})` : ""} to the queue`,
 						);
 						break;
+					}
 					case "SEARCH":
 						if (res.tracks[0]) {
-							player!.queue.add(res.tracks[0]);
+							player?.queue.add(res.tracks[0]);
 							embed.setDescription(
 								`Added [${res.tracks[0].title || "Error getting title"}]${res.tracks[0].uri ? `(${res.tracks[0].uri})` : ""} to the queue`,
 							);
@@ -56,8 +57,8 @@ export default {
 							embed.setDescription("No tracks found");
 						}
 						break;
-					case "PLAYLIST":
-						player!.queue.add(res.tracks);
+					case "PLAYLIST": {
+						player?.queue.add(res.tracks);
 						embed.setTitle("Added Playlist to queue.");
 						embed.setColor("Orange");
 						let duration = 0;
@@ -70,6 +71,7 @@ export default {
 							)}:R>`,
 						);
 						break;
+					}
 					default:
 						break;
 				}
@@ -77,7 +79,7 @@ export default {
 		embed.setDescription(
 			`${embed.data.description}\n\nGo to <#${member.voice.channelId}> to manage the queue`,
 		);
-		if (!player!.playing) player!.play();
+		if (!player?.playing) player?.play();
 		return {
 			embeds: [embed],
 			ephemeral: true,

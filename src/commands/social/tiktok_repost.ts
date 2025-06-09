@@ -62,7 +62,7 @@ export default {
 			};
 		}
 		const video: TikTokVideo =
-			parsed["__DEFAULT_SCOPE__"]["webapp.video-detail"].itemInfo.itemStruct;
+			parsed.__DEFAULT_SCOPE__["webapp.video-detail"].itemInfo.itemStruct;
 		const cookies = headers["set-cookie"]
 			? headers["set-cookie"]
 					.map((cookie: string) => cookie.split(";")[0])

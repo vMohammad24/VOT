@@ -1,9 +1,9 @@
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { swagger } from "@elysiajs/swagger";
 import axios, { type AxiosInstance } from "axios";
 import * as cheerio from "cheerio";
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { ApplicationCommandOptionType } from "discord.js";
 import { Elysia, t } from "elysia";
 import { Client } from "genius-lyrics";
@@ -61,7 +61,7 @@ const elysia = new Elysia()
 	.use(braveElysia)
 	.on("start", () => {
 		apiAxios = axios.create({
-			baseURL: elysia.server?.url!.toString(),
+			baseURL: elysia.server?.url?.toString(),
 			headers: {
 				authorization: globalAPIKey,
 			},
@@ -101,10 +101,10 @@ let totalCommands = -1;
 let lastPing: number | "N/A" = -1;
 const blacklistedServers = ["1283542021231087728", "1199089040734035969"]; // vimnet, goreguild
 elysia.get("/", async () => {
-	if (totalCommands == -1) totalCommands = commandHandler.commands!.length;
+	if (totalCommands === -1) totalCommands = commandHandler.commands?.length;
 	const actualPing = commandHandler.client.ws.ping;
 	const ping =
-		(actualPing == -1 ? lastPing : actualPing) == -1 ? "N/A" : lastPing;
+		(actualPing === -1 ? lastPing : actualPing) === -1 ? "N/A" : lastPing;
 	lastPing = ping;
 	const { approximate_guild_count, approximate_user_install_count } =
 		await getInstallCounts(commandHandler.client);
@@ -112,9 +112,9 @@ elysia.get("/", async () => {
 		.filter((g) =>
 			commandHandler.prodMode
 				? g.memberCount >= 100 &&
-				g.nsfwLevel != 1 &&
-				g.nsfwLevel != 3 &&
-				!blacklistedServers.includes(g.id)
+					g.nsfwLevel !== 1 &&
+					g.nsfwLevel !== 3 &&
+					!blacklistedServers.includes(g.id)
 				: true,
 		)
 		.map((g) => ({
@@ -150,7 +150,7 @@ elysia.get(
 		const commands: Command[] = [];
 		const cmds = commandHandler.commands!;
 		for (const command of cmds) {
-			if (command.perms == "dev" || command.disabled) continue;
+			if (command.perms === "dev" || command.disabled) continue;
 			const perms = (command.perms || []).map((a) =>
 				camelToTitleCase(a.toString()),
 			);
@@ -160,7 +160,7 @@ elysia.get(
 				category: command.category || "All",
 				perms,
 				type:
-					typeof command.type == "string"
+					typeof command.type === "string"
 						? command.type
 						: "context" in command
 							? (command.context as string)
@@ -169,7 +169,7 @@ elysia.get(
 			};
 			if (command.options) {
 				for (const option of command.options!) {
-					if (option.type == ApplicationCommandOptionType.Subcommand) {
+					if (option.type === ApplicationCommandOptionType.Subcommand) {
 						if (!cmd.subcommands) cmd.subcommands = [];
 						cmd.subcommands.push({
 							name: option.name,
@@ -219,13 +219,13 @@ elysia.get("/commands/:name", ({ params: { name }, set }) => {
 	const cmds = commandHandler.commands!;
 	const commands = [];
 	for (const command of cmds) {
-		if (command.perms == "dev" || command.disabled) continue;
+		if (command.perms === "dev" || command.disabled) continue;
 		const perms = (command.perms || []).map((a) =>
 			camelToTitleCase(a.toString()),
 		);
 		if (command.options) {
 			for (const option of command.options!) {
-				if (option.type == ApplicationCommandOptionType.Subcommand) {
+				if (option.type === ApplicationCommandOptionType.Subcommand) {
 					commands.push({
 						name: `${command.name} ${option.name}`,
 						description: option.description,
@@ -244,7 +244,7 @@ elysia.get("/commands/:name", ({ params: { name }, set }) => {
 			category: command.category || "All",
 			perms,
 			type:
-				typeof command.type == "string"
+				typeof command.type === "string"
 					? command.type
 					: "context" in command
 						? (command.context as string)
@@ -253,7 +253,7 @@ elysia.get("/commands/:name", ({ params: { name }, set }) => {
 		});
 	}
 	const command = commands.find(
-		(c) => c.name.localeCompare(name, undefined, { sensitivity: "base" }) == 0,
+		(c) => c.name.localeCompare(name, undefined, { sensitivity: "base" }) === 0,
 	);
 	return command || { error: "Command not found" };
 });

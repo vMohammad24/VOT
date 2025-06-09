@@ -35,7 +35,7 @@ export default {
 		},
 	],
 	autocomplete: async (interaction) => {
-		if (exchangeRates.length == 0) await loadExchangeRates();
+		if (exchangeRates.length === 0) await loadExchangeRates();
 		const from = interaction.options.getFocused();
 		interaction.respond(
 			exchangeRates
@@ -71,7 +71,7 @@ export default {
 			};
 
 		const amount = parseAbbreviatedNumber(a as string);
-		if (isNaN(amount))
+		if (Number.isNaN(amount))
 			return {
 				content: "Invalid amount format. Examples: 100, 1k, 1m, 1b, 1t",
 				ephemeral: true,

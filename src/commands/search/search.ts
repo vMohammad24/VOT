@@ -40,7 +40,7 @@ export default {
 		let pages = results.map((result) => {
 			const emojiName = (() => {
 				let r = result.profile.name.toLowerCase().split(" ")[0].trim();
-				if (r == "x") r = "twitter";
+				if (r === "x") r = "twitter";
 				return r;
 			})();
 			return {

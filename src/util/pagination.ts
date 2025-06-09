@@ -51,7 +51,7 @@ export async function pagination({
 	}
 
 	const id = Buffer.from(
-		`${interaction ? interaction.id : message!.id}_${Date.now()}`,
+		`${interaction ? interaction.id : message?.id}_${Date.now()}`,
 	).toString("base64");
 	if (!type) type = "buttons";
 
@@ -137,7 +137,7 @@ export async function pagination({
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) =>
-					i.isButton() && i.customId.startsWith(id) && i.user.id == userId,
+					i.isButton() && i.customId.startsWith(id) && i.user.id === userId,
 				time: 60_000 * 60,
 			});
 
@@ -153,7 +153,7 @@ export async function pagination({
 			});
 
 			collector?.on("end", async (_, reason) => {
-				if (reason == "time")
+				if (reason === "time")
 					interaction
 						? interaction.editReply({ components: [] })
 						: sentMessage?.edit({ components: [] });
@@ -227,7 +227,7 @@ export async function pagination({
 			const userId = interaction?.user.id || message?.author.id;
 			const collector = sentMessage?.createMessageComponentCollector({
 				filter: (i) =>
-					i.isStringSelectMenu() && i.customId === id && i.user.id == userId,
+					i.isStringSelectMenu() && i.customId === id && i.user.id === userId,
 				time: 60_000 * 60,
 			});
 
@@ -245,7 +245,7 @@ export async function pagination({
 			});
 
 			collector?.on("end", async (_, reason) => {
-				if (reason == "time")
+				if (reason === "time")
 					interaction
 						? interaction.editReply({ components: [] })
 						: sentMessage?.edit({ components: [] });
@@ -340,7 +340,7 @@ export async function pagination({
 				filter: (i) =>
 					i.isStringSelectMenu() &&
 					i.customId.startsWith(id) &&
-					i.user.id == userId,
+					i.user.id === userId,
 				time: 60_000 * 60,
 			});
 
@@ -356,7 +356,7 @@ export async function pagination({
 			});
 
 			collector?.on("end", async (_, reason) => {
-				if (reason == "time")
+				if (reason === "time")
 					interaction
 						? interaction.editReply({ components: [] })
 						: sentMessage?.edit({ components: [] });

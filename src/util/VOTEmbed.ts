@@ -31,7 +31,7 @@ class VOTEmbed extends EmbedBuilder {
 	}
 
 	public setColor(color: ColorResolvable | null): this {
-		if (color == "Random") {
+		if (color === "Random") {
 			const r = Math.floor(Math.random() * 256);
 			const g = Math.floor(Math.random() * 256);
 			const b = Math.floor(Math.random() * 256);
@@ -42,7 +42,7 @@ class VOTEmbed extends EmbedBuilder {
 
 	addDescription(description: string) {
 		const org = this.toJSON().description;
-		return this.setDescription((org ? org + "\n" : "") + description);
+		return this.setDescription((org ? `${org}\n` : "") + description);
 	}
 
 	setDescription(description: string | null | undefined): this {

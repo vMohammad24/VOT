@@ -308,18 +308,18 @@ export default {
 		if (!service)
 			return {
 				ephemeral: true,
-				content: `Please provide a service to lookup the user in.`,
+				content: "Please provide a service to lookup the user in.",
 			};
 		if (!query)
 			return {
 				ephemeral: true,
-				content: `Please provide a query to search for the user.`,
+				content: "Please provide a query to search for the user.",
 			};
 		const ems = await handler.client.application?.emojis.fetch();
 		const regex =
 			/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/;
 		switch (service) {
-			case "nest.rip":
+			case "nest.rip": {
 				const response = await axios.get(`https://nest.rip/${query}`);
 				const html = response.data;
 				const match = html.match(regex);
@@ -337,10 +337,10 @@ export default {
 						content: `I'm sorry, but I couldn't find a user with the query \`${query}\` on \`${service}\``,
 					};
 				}
-				if (nUser && nUser.private_profile)
+				if (nUser?.private_profile)
 					return {
 						ephemeral: true,
-						content: `This user has a private profile.`,
+						content: "This user has a private profile.",
 					};
 				return {
 					embeds: [
@@ -382,7 +382,7 @@ export default {
 								},
 							])
 							.setDescription(
-								!nUser || !nUser.bio || nUser.bio.trim() == ""
+								!nUser || !nUser.bio || nUser.bio.trim() === ""
 									? null
 									: nUser.bio,
 							)
@@ -401,7 +401,8 @@ export default {
 							.setTimestamp(new Date(nUser.created_at)),
 					],
 				};
-			case "tiktok":
+			}
+			case "tiktok": {
 				const tData = await getTikTokUser(query);
 				if (!tData)
 					return {
@@ -455,7 +456,8 @@ export default {
 				return {
 					embeds: [embed],
 				};
-			case "socl.gg":
+			}
+			case "socl.gg": {
 				const sHtml = (await axios.get(`https://socl.gg/${query}`)).data;
 				const sMatch = sHtml.match(regex);
 				if (!sMatch) {
@@ -497,8 +499,9 @@ export default {
 				return {
 					embeds: [sEmbed],
 				};
-			case "ammo.lol":
-				const aRes = await axios.get(`https://ammo.lol/api/v1/public/user`, {
+			}
+			case "ammo.lol": {
+				const aRes = await axios.get("https://ammo.lol/api/v1/public/user", {
 					params: {
 						username: query,
 					},
@@ -549,9 +552,10 @@ export default {
 							.setTimestamp(date),
 					],
 				};
-			case "guns.lol":
+			}
+			case "guns.lol": {
 				const gRes = await axios.post(
-					`https://guns.lol/api/user/lookup?type=username`,
+					"https://guns.lol/api/user/lookup?type=username",
 					{
 						key: import.meta.env.GUNS_API_KEY!,
 						username: query,
@@ -574,7 +578,7 @@ export default {
 					} catch (error) {}
 				}
 				let gEmojis = "";
-				if (gData.config.user_badges && gData.config.user_badges.length != 0) {
+				if (gData.config.user_badges && gData.config.user_badges.length !== 0) {
 					for (const badge of gData.config.user_badges) {
 						if (typeof badge === "string") {
 							const emoji = getEmoji(`guns_${badge}_badge`);
@@ -647,6 +651,7 @@ export default {
 					],
 					components: rows,
 				};
+			}
 			default:
 				return {
 					ephemeral: true,

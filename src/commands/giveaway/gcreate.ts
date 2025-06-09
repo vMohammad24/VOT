@@ -43,7 +43,7 @@ export default {
 			return;
 		}
 		const winnersValue = Number.parseInt(winners);
-		if (isNaN(winnersValue)) {
+		if (Number.isNaN(winnersValue)) {
 			await interaction.reply({ content: "Invalid winners", ephemeral: true });
 			return;
 		}

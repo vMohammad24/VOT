@@ -26,22 +26,32 @@ export default {
 
 		const location = time.locations[0];
 		const datetime = location.time.datetime;
-		const formattedTime = `${datetime.hour.toString().padStart(2, '0')}:${datetime.minute.toString().padStart(2, '0')}:${datetime.second.toString().padStart(2, '0')}`;
-		const formattedDate = `${datetime.year}-${datetime.month.toString().padStart(2, '0')}-${datetime.day.toString().padStart(2, '0')}`;
+		const formattedTime = `${datetime.hour.toString().padStart(2, "0")}:${datetime.minute.toString().padStart(2, "0")}:${datetime.second.toString().padStart(2, "0")}`;
+		const formattedDate = `${datetime.year}-${datetime.month.toString().padStart(2, "0")}-${datetime.day.toString().padStart(2, "0")}`;
 
-		const sunriseEvent = location.astronomy.objects[0].events.find(e => e.type === "rise");
-		const sunsetEvent = location.astronomy.objects[0].events.find(e => e.type === "set");
-		const sunrise = sunriseEvent ? `${sunriseEvent.hour.toString().padStart(2, '0')}:${sunriseEvent.minute.toString().padStart(2, '0')}` : "N/A";
-		const sunset = sunsetEvent ? `${sunsetEvent.hour.toString().padStart(2, '0')}:${sunsetEvent.minute.toString().padStart(2, '0')}` : "N/A";
+		const sunriseEvent = location.astronomy.objects[0].events.find(
+			(e) => e.type === "rise",
+		);
+		const sunsetEvent = location.astronomy.objects[0].events.find(
+			(e) => e.type === "set",
+		);
+		const sunrise = sunriseEvent
+			? `${sunriseEvent.hour.toString().padStart(2, "0")}:${sunriseEvent.minute.toString().padStart(2, "0")}`
+			: "N/A";
+		const sunset = sunsetEvent
+			? `${sunsetEvent.hour.toString().padStart(2, "0")}:${sunsetEvent.minute.toString().padStart(2, "0")}`
+			: "N/A";
 
 		const locationName = location.geo.name;
 		const country = location.geo.country.name;
 		const state = location.geo.state ? `, ${location.geo.state}` : "";
-		const coords = `${location.geo.latitude.toFixed(2)}° ${location.geo.latitude >= 0 ? 'N' : 'S'}, ${location.geo.longitude.toFixed(2)}° ${location.geo.longitude >= 0 ? 'E' : 'W'}`;
+		const coords = `${location.geo.latitude.toFixed(2)}° ${location.geo.latitude >= 0 ? "N" : "S"}, ${location.geo.longitude.toFixed(2)}° ${location.geo.longitude >= 0 ? "E" : "W"}`;
 
 		const embed = new EmbedBuilder()
 			.setTitle(`🕒 Time in ${locationName}${state}, ${country}`)
-			.setDescription(`Current local time in ${locationName} is **${formattedTime}** on **${formattedDate}**`)
+			.setDescription(
+				`Current local time in ${locationName} is **${formattedTime}** on **${formattedDate}**`,
+			)
 			.addFields(
 				{
 					name: "🗓️ Date & Time",
@@ -67,11 +77,13 @@ export default {
 					name: "🌇 Sunset",
 					value: sunset,
 					inline: true,
-				}
+				},
 			)
 			.setColor("#FFA500")
 			.setTimestamp()
-			.setFooter({ text: `Timezone: ${location.geo.zonename} • Requested for: ${zone}` });
+			.setFooter({
+				text: `Timezone: ${location.geo.zonename} • Requested for: ${zone}`,
+			});
 
 		return { embeds: [embed] };
 	},

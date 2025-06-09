@@ -57,7 +57,8 @@ export default {
 						.setDescription(`\`\`\`${key.id}\`\`\``),
 				],
 			};
-		} else if (subcommand === "delete") {
+		}
+		if (subcommand === "delete") {
 			if (!key)
 				return {
 					ephemeral: true,

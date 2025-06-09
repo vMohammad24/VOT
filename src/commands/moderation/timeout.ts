@@ -43,7 +43,7 @@ export default {
 			(owner.roles.highest.comparePositionTo(member.roles.highest) <= 0 ||
 				guild.ownerId === member.id) &&
 			member.id !== owner.id &&
-			guild.ownerId != owner.id
+			guild.ownerId !== owner.id
 		) {
 			return {
 				content:

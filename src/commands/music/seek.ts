@@ -26,7 +26,7 @@ export default {
 		const parts = to.split(":");
 		const minutes = Number.parseInt(parts[0], 10);
 		const seconds = Number.parseInt(parts[1], 10);
-		if (isNaN(minutes) || isNaN(seconds)) {
+		if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
 			return {
 				content:
 					"Invalid input format. Expected numbers for minutes and seconds.\n-# For example: 2:30",
@@ -34,7 +34,7 @@ export default {
 			};
 		}
 		const time = minutes * 60000 + seconds * 1000;
-		await player!.seek(time);
+		await player?.seek(time);
 		return {
 			content: `Seeked to ${to}`,
 			ephemeral: true,

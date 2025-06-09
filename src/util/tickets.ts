@@ -36,8 +36,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 	});
 	if (alreadyExists) {
 		return {
-			error:
-				"You already have an open ticket <#" + alreadyExists.channelId + ">",
+			error: `You already have an open ticket <#${alreadyExists.channelId}>`,
 		};
 	}
 	const channel = await guild?.channels.create({
@@ -80,7 +79,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 	});
 	const embed = new EmbedBuilder()
 		.setTitle("Ticket Created")
-		.setDescription("Open Reason:\n```" + reason + "```")
+		.setDescription(`Open Reason:\n\`\`\`${reason}\`\`\``)
 		.setColor("Green");
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
@@ -89,7 +88,7 @@ export async function createTicket(member: GuildMember, reason: string) {
 			.setStyle(ButtonStyle.Danger)
 			.setEmoji("🔒"),
 	);
-	channel!.send({
+	channel?.send({
 		embeds: [embed],
 		components: [row],
 		content: `<@${member.id}>, please wait for a staff member to respond`,
@@ -352,7 +351,7 @@ export async function cancelCloseTimer(channel: GuildTextBasedChannel) {
 	const id = ticket.closeReqId;
 	if (!id) {
 		return {
-			error: "No close request id found for ticket " + ticket.id,
+			error: `No close request id found for ticket ${ticket.id}`,
 		};
 	}
 	const timer = map.get(id);

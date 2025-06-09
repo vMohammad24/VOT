@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 import { GlobalFonts, createCanvas } from "@napi-rs/canvas";
 import {
 	ApplicationCommandType,
@@ -57,11 +57,11 @@ export const makeQuote = async (
 			let line = "";
 
 			words.forEach((word, index) => {
-				const testLine = line + word + " ";
+				const testLine = `${line + word} `;
 				const testWidth = ctx.measureText(testLine).width;
 				if (testWidth > maxWidth && line.length > 0) {
 					lines.push(line);
-					line = word + " ";
+					line = `${word} `;
 				} else {
 					line = testLine;
 				}

@@ -29,7 +29,7 @@ export default {
 		interaction,
 	}) => {
 		const bet = args.get("bet") as number;
-		if (!bet || isNaN(bet) || bet < 1)
+		if (!bet || Number.isNaN(bet) || bet < 1)
 			return {
 				content: "Please provide a valid amount of coins to bet",
 				ephemeral: true,
@@ -92,9 +92,9 @@ export default {
 		);
 		const rMsg = message
 			? await message.reply({ embeds: [embed], components: rows })
-			: await interaction!.reply({ embeds: [embed], components: rows });
+			: await interaction?.reply({ embeds: [embed], components: rows });
 		const collector = rMsg.createMessageComponentCollector({
-			filter: (i) => i.user.id == user.id,
+			filter: (i) => i.user.id === user.id,
 			time: 120_000,
 		});
 		let collectedMoney = 0;

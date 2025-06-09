@@ -302,7 +302,7 @@ export default {
 				}
 				break;
 		}
-		player!.shoukaku.setFilters(filterOptions);
+		player?.shoukaku.setFilters(filterOptions);
 		const embed = new EmbedBuilder()
 			.setColor("Random")
 			.setTitle("Filter Changed");
