@@ -64,6 +64,7 @@ export default {
 		message,
 		guild,
 	}) => {
+		interaction?.deferReply();
 		const user =
 			(args.get("user") as GuildMember | User) || (guild ? member : usr) || usr;
 
