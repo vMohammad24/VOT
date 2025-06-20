@@ -1,0 +1,289 @@
+services:
+  # frontend:
+  #   build: ../VOT-frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     - SERVICE_FQDN_FRONTEND=${SERVICE_FQDN_FRONTEND}
+  #     - NEXT_PUBLIC_API_URL=${SERVICE_URL_API}
+  #     - NODE_ENV=production
+  #   env_file:
+  #     - .env.prod.frontend
+  #   expose:
+  #     - "3000"
+  #   depends_on:
+  #     - api
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+  #   labels:
+  #     - coolify.managed=true
+  #     - traefik.enable=true
+  #     - traefik.http.routers.frontend.rule=Host(`${SERVICE_FQDN_FRONTEND}`)
+  #     - traefik.http.routers.frontend.entryPoints=websecure
+  #     - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+  #     - traefik.http.services.frontend.loadbalancer.server.port=3000
+  bot:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SERVICE_FQDN_API=${SERVICE_FQDN_API_8000=/api}
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${SERVICE_USER_DB}:${SERVICE_PASSWORD_DB}@postgres:5432/${POSTGRES_DB:-vot}
+      - REDIS_URL=redis://redis:6379
+      - LAVALINK_HOST=lavalink
+      - LAVALINK_PORT=2333
+      - G4F_URL=http://g4f:8080      
+      - TOKEN=${TOKEN}
+      - FRONTEND_URL=${SERVICE_URL_FRONTEND}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - REDIRECT_URL=${REDIRECT_URL}
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - REDIRECT_SPOTIFY=${REDIRECT_SPOTIFY}
+      - LAVALINK_URL=${LAVALINK_URL}
+      - LAVALINK_PASSWORD=${LAVALINK_PASSWORD}
+      - NEST_API_KEY=${NEST_API_KEY}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+      - NEST_SHORTS_DOMAIN=${NEST_SHORTS_DOMAIN}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - DEVELOPERS=${DEVELOPERS}
+      - SECRET_KEY=${SERVICE_BASE64_SECRET_KEY}
+      - AMMO_LOL_API_KEY=${AMMO_LOL_API_KEY}
+      - GUNS_API_KEY=${GUNS_API_KEY}
+      - HCAPTCHA_SITE_KEY=${HCAPTCHA_SITE_KEY}
+      - HCAPTCHA_SECRET=${HCAPTCHA_SECRET}
+      - PORT=${PORT:-8000}
+      - PROXY_URL=${PROXY_URL}
+    env_file:
+      - .env.prod
+    expose:
+      - "8000"
+    user: '1001:1001'
+    depends_on:
+      - postgres
+      - redis
+      - lavalink
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - coolify.managed=true
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`${SERVICE_FQDN_API}`) && PathPrefix(`/api`)
+      - traefik.http.routers.api.entryPoints=websecure
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.services.api.loadbalancer.server.port=8000
+      - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
+      - traefik.http.routers.api.middlewares=api-stripprefix
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_DB}
+      - POSTGRES_USER=${SERVICE_USER_DB}
+      - POSTGRES_DB=${POSTGRES_DB:-vot}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SERVICE_USER_DB} -d ${POSTGRES_DB:-vot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - coolify.managed=true
+
+  redis:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    restart: unless-stopped
+    command: ["dragonfly", "--logtostderr", "--port=6379"]
+    ulimits:
+      memlock: -1
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s      
+      retries: 5
+      start_period: 30s
+    labels:
+      - coolify.managed=true
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:latest
+    restart: unless-stopped
+    environment:     
+      - _JAVA_OPTIONS=-Xmx6G
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=${SERVICE_PASSWORD_LAVALINK}
+    expose:
+      - "2333"
+    volumes:
+      - type: bind
+        source: ./application.yml
+        target: /opt/Lavalink/application.yml
+        content: |
+          plugins:
+            youtube:
+              enabled: true
+              allowSearch: true
+              allowDirectVideoIds: true
+              allowDirectPlaylistIds: true
+              clients:
+                - MUSIC
+                - ANDROID_VR
+                - WEB
+                - WEBEMBEDDED
+                - MWEB
+            lavasrc:
+              providers:
+                - 'ytsearch:"%ISRC%"'
+                - 'ytmsearch:"%ISRC%"'
+                - 'ytsearch:%QUERY%'
+                - 'ytmsearch:%QUERY%'
+              sources:
+                spotify: true
+                applemusic: false
+                deezer: false
+                yandexmusic: false
+                flowerytts: false
+                youtube: true
+                vkmusic: false
+                tidal: false
+                qobuz: false
+                ytdlp: false
+              lyrics-sources:
+                spotify: true
+                deezer: false
+                youtube: true
+                yandexmusic: false
+                vkmusic: false              spotify:
+                clientId: '${SPOTIFY_CLIENT_ID}'
+                clientSecret: '${SPOTIFY_CLIENT_SECRET}'
+                countryCode: 'US'
+                playlistLoadLimit: 10
+                albumLoadLimit: 10
+                resolveArtistsInSearch: false
+                localFiles: false
+                preferAnonymousToken: true
+              youtube:
+                countryCode: 'US'
+                language: 'en'
+              vkmusic:
+                userToken: 'your user token'
+                playlistLoadLimit: 3
+                artistLoadLimit: 3
+                recommendationsLoadLimit: 15
+              tidal:
+                countryCode: 'US'
+                searchLimit: 10
+                token: 'your tidal token'
+              qobuz:
+                userOauthToken: 'your user oauth token'
+          server:
+            port: 2333
+            address: 0.0.0.0
+            http2:
+              enabled: true
+          lavalink:
+            plugins:
+              - dependency: 'com.github.topi314.lavasrc:lavasrc-plugin:4.7.0'
+              - dependency: 'dev.lavalink.youtube:youtube-plugin:1.13.2'
+            server:
+              password: "${SERVICE_PASSWORD_LAVALINK}"
+              sources:
+                youtube: false
+                bandcamp: true
+                soundcloud: true
+                twitch: true
+                vimeo: true
+                nico: true
+                http: true
+                local: false
+              filters:
+                volume: true
+                equalizer: true
+                karaoke: true
+                timescale: true
+                tremolo: true
+                vibrato: true
+                distortion: true
+                rotation: true
+                channelMix: true
+                lowPass: true
+              nonAllocatingFrameBuffer: false
+              bufferDurationMs: 400
+              frameBufferDurationMs: 5000
+              opusEncodingQuality: 10
+              resamplingQuality: LOW
+              trackStuckThresholdMs: 10000
+              useSeekGhosting: true
+              youtubePlaylistLoadLimit: 10
+              playerUpdateInterval: 5
+              youtubeSearchEnabled: true
+              soundcloudSearchEnabled: true
+              gc-warnings: true
+          metrics:
+            prometheus:
+              enabled: false
+              endpoint: /metrics
+          sentry:
+            dsn: ""
+            environment: ""
+          logging:
+            file:
+              path: ./logs/
+            level:
+              root: INFO
+              lavalink: INFO
+            logback:
+              rollingpolicy:
+                max-file-size: 1GB
+                max-history: 30
+      - type: bind
+        source: ./plugins
+        target: /opt/Lavalink/plugins
+        is_directory: true
+      - lavalink_logs:/opt/Lavalink/logs
+    labels:
+      - coolify.managed=true
+
+  g4f:
+    image: hlohaus789/g4f:latest-slim
+    restart: unless-stopped
+    command: python -m g4f --debug --port 8080
+    expose:
+      - "8080"
+      - "1337"
+    shm_size: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/v1/models || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    exclude_from_hc: true
+    labels:
+      - coolify.managed=true
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  lavalink_logs:
+    driver: local

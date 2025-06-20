@@ -1,4 +1,3 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { swagger } from "@elysiajs/swagger";
@@ -8,6 +7,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import { Elysia, t } from "elysia";
 import { Client } from "genius-lyrics";
 import { nanoid } from "nanoid/non-secure";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import numeral from "numeral";
 import UserAgent from "user-agents";
 import commandHandler, { redis, upSince } from "..";
@@ -38,7 +38,6 @@ const globalAPIKey =
 	Math.random().toString(36).substring(2, 15);
 export let apiAxios: AxiosInstance;
 const elysia = new Elysia()
-	.use(html())
 	.use(cors())
 	.use(
 		swagger({
@@ -55,6 +54,7 @@ const elysia = new Elysia()
 			exclude: [/^\/discord\/.*/, /^\/spotify\/.*/],
 		}),
 	)
+	.use(html())
 	.use(discordElysia)
 	.use(spotifyElysia)
 	.use(guildsElysia)
@@ -99,9 +99,8 @@ const elysia = new Elysia()
 	});
 let totalCommands = -1;
 let lastPing: number | "N/A" = -1;
-const blacklistedServers = ["1283542021231087728", "1199089040734035969"]; // vimnet, goreguild
 elysia.get("/", async () => {
-	if (totalCommands === -1) totalCommands = commandHandler.commands?.length;
+	if (totalCommands === -1) totalCommands = commandHandler.commands?.length ?? 0;
 	const actualPing = commandHandler.client.ws.ping;
 	const ping =
 		(actualPing === -1 ? lastPing : actualPing) === -1 ? "N/A" : lastPing;
@@ -112,9 +111,8 @@ elysia.get("/", async () => {
 		.filter((g) =>
 			commandHandler.prodMode
 				? g.memberCount >= 100 &&
-					g.nsfwLevel !== 1 &&
-					g.nsfwLevel !== 3 &&
-					!blacklistedServers.includes(g.id)
+				g.nsfwLevel !== 1 &&
+				g.nsfwLevel !== 3
 				: true,
 		)
 		.map((g) => ({
@@ -559,6 +557,10 @@ elysia.get(
 	},
 );
 
+
+elysia.get("/health", () => {
+	return "OK";
+})
 elysia.get(
 	"/hypixel",
 	async ({ query }) => {

@@ -23,6 +23,8 @@ import { launchPuppeteer } from "./util/puppeteer";
 const isProduction = process.env.NODE_ENV === "production";
 export const upSince = Date.now();
 
+
+
 const nodes: NodeOption[] = [
 	{
 		url: `${process.env.LAVALINK_URL}:2333`,
@@ -150,63 +152,6 @@ client.on(Events.ClientReady, async (c) => {
 		if (commandHandler.verbose)
 			commandHandler.logger.info(`API listening on port ${app.server?.port}`);
 	});
-
-	const { CHANGELOG_WEBHOOK: clwb, GITHUB_TOKEN: ghToken } = import.meta.env;
-	if (clwb && ghToken && commandHandler.prodMode) {
-		const webhook = new WebhookClient(
-			{
-				url: clwb,
-			},
-			{
-				allowedMentions: {},
-			},
-		);
-		const headers = {
-			Authorization: `Bearer ${ghToken}`,
-			Accept: "application/vnd.github+json",
-			"X-GitHub-Api-Version": "2022-11-28",
-		};
-		const { data } = await axios.get(
-			"https://api.github.com/repos/vMohammad24/VOT/commits",
-			{
-				headers,
-			},
-		);
-		const latestVOTCommit = data[0].commit;
-		const VOTcommitMessage = (latestVOTCommit.message as string).includes("---")
-			? latestVOTCommit.message.split("---")[1]
-			: latestVOTCommit.message;
-		const VOTcommitAuthor = latestVOTCommit.author.name;
-		const embed = new EmbedBuilder()
-			.setTitle("Changelog - VOT")
-			.setDescription(VOTcommitMessage)
-			.setFooter({ text: `Committed by ${VOTcommitAuthor}` })
-			.setTimestamp();
-
-		const { data: data2 } = await axios.get(
-			"https://api.github.com/repos/vMohammad24/VOT-Frontend/commits",
-			{
-				headers,
-			},
-		);
-		const latestVOTFrontendCommit = data2[0].commit;
-		const VOTFrontendcommitMessage = latestVOTFrontendCommit.message;
-		const VOTFrontendcommitAuthor = latestVOTFrontendCommit.author.name;
-		const embed2 = new EmbedBuilder()
-			.setTitle(`Changelog - VOT's frontend`)
-			.setDescription(VOTFrontendcommitMessage)
-			.setFooter({ text: `Committed by ${VOTFrontendcommitAuthor}` })
-			.setTimestamp();
-		const embeds = [embed, embed2];
-		if (VOTcommitMessage.startsWith("[silent]")) {
-			embeds.shift();
-		}
-		if (VOTFrontendcommitMessage.startsWith("[silent]")) {
-			embeds.pop();
-		}
-		if (embeds.length === 0) return;
-		webhook.send({ embeds, username: "VOT Changelog", content: "New Update!" });
-	}
 });
 
 process.on("unhandledRejection", (reason, p) => {

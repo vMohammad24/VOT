@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=iamlikewaytoooolazy
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=vot
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+
+  g4f:
+    image: hlohaus789/g4f:latest
+    container_name: g4f_dev
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+      - '1337:1337'
+    shm_size: 2g
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:latest
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx6G
+    volumes:
+      - ./application.yml:/opt/Lavalink/application.yml
+      - ./plugins/:/opt/Lavalink/plugins/:rw
+    ports:
+      - '2333:2333'
+  
+  redis:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    container_name: redis
+    restart: unless-stopped
+    ulimits:
+      memlock: -1
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./db/cache:/data

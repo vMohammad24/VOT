@@ -1,11 +1,11 @@
-import { join } from "node:path";
-import axios from "axios";
+import { env } from "bun";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	Events,
 } from "discord.js";
+import { join } from "node:path";
 import numeral from "numeral";
 import { upSince } from "../..";
 import type ICommand from "../../handler/interfaces/ICommand";
@@ -42,24 +42,6 @@ async function getLines() {
 
 let globalLines = "";
 getLines();
-async function getCurrentCommit(): Promise<{ message: string; date: Date }> {
-	const headers = {
-		Authorization: `Bearer ${import.meta.env.GITHUB_TOKEN}`,
-		Accept: "application/vnd.github+json",
-		"X-GitHub-Api-Version": "2022-11-28",
-	};
-	const { data } = await axios.get(
-		"https://api.github.com/repos/vMohammad24/VOT/commits",
-		{
-			headers,
-		},
-	);
-	const commit = data[0].commit;
-	const message = commit.message;
-	const date = new Date(commit.committer.date);
-	return { message, date };
-}
-const commit = await getCurrentCommit();
 
 export default {
 	name: "stats",
@@ -82,13 +64,6 @@ export default {
 			})
 			.filter((a) => a !== undefined)
 			.reduce((acc, curr) => acc + curr, 0);
-		const commitMessage = (
-			commit.message.includes("---")
-				? commit.message.split("---")[0]
-				: commit.message
-		)
-			.trim()
-			.replace("[silent]", "");
 		const embed = await new VOTEmbed()
 			.setTitle("Bot Stats")
 			.addFields(
@@ -138,8 +113,7 @@ export default {
 					inline: true,
 				},
 			)
-			.setTimestamp(commit.date)
-			.setFooter({ text: commitMessage })
+			.setFooter({ text: env.SOURCE_COMMIT || "trust" })
 			.setDescription(`Up since: <t:${Math.round(upSince / 1000)}>`)
 			.setThumbnail(
 				client.user?.displayAvatarURL({ extension: "webp", size: 1024 })!,
