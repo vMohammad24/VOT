@@ -1,3 +1,6 @@
+import { watch } from "node:fs/promises";
+import path from "node:path";
+import { inspect } from "node:util";
 import { Glob } from "bun";
 import {
 	type ChatInputCommandInteraction,
@@ -6,14 +9,12 @@ import {
 	Events,
 	type GuildMember,
 	type Interaction,
-	InteractionEditReplyOptions, type Message,
+	type InteractionEditReplyOptions,
+	type Message,
 	type MessageEditOptions,
-	RESTJSONErrorCodes
+	RESTJSONErrorCodes,
 } from "discord.js";
 import { nanoid } from "nanoid/non-secure";
-import { watch } from "node:fs/promises";
-import path from "node:path";
-import { inspect } from "node:util";
 import PinoLogger, { type Logger } from "pino";
 import commandHandler from "..";
 import VOTEmbed from "../util/VOTEmbed";
@@ -40,7 +41,7 @@ interface IMCommandHandler
 	extends Omit<
 		LegacyHandler & SlashHandler & RequiredShits,
 		"categoryDirs" | "commands"
-	> { }
+	> {}
 
 const createCommand = async (
 	commandContext: CommandContext,
@@ -96,7 +97,7 @@ const createCommand = async (
 				commands: { orderBy: { createdAt: "desc" } },
 			},
 		});
-	} catch (e) { }
+	} catch (e) {}
 };
 export default class CommandHandler {
 	public prisma: ICommandHandler["prisma"];
@@ -290,7 +291,7 @@ export default class CommandHandler {
 							await this.slashHandler.initCommands(this.client);
 						}
 					}
-				} catch (ignored) { }
+				} catch (ignored) {}
 			}, 300);
 
 			const handleContextCommandChange = debounce(async (filename: string) => {
@@ -301,7 +302,7 @@ export default class CommandHandler {
 					if (this.slashHandler) {
 						await this.slashHandler.initCommands(this.client);
 					}
-				} catch (ignored) { }
+				} catch (ignored) {}
 			}, 300);
 
 			const cmdWatcher = watch(commandsDir, {
@@ -594,7 +595,9 @@ export default class CommandHandler {
 						player:
 							(await getPlayer(interaction.member as GuildMember)) || undefined,
 						editReply: async (content) => {
-							await interaction.editReply(content as InteractionEditReplyOptions);
+							await interaction.editReply(
+								content as InteractionEditReplyOptions,
+							);
 						},
 						cID: cId,
 					};
@@ -639,7 +642,7 @@ export default class CommandHandler {
 							}
 						}
 					}, 2700);
-				} catch (e) { }
+				} catch (e) {}
 
 				await createCommand(commandContext, command, validationTime);
 				const result = await command.execute(commandContext);
@@ -696,7 +699,7 @@ export default class CommandHandler {
 							content: `An error occurred: ${(e as any).message}`,
 							ephemeral: true,
 						};
-					} catch (e) { }
+					} catch (e) {}
 				}
 			}
 			this.logger.error(e);

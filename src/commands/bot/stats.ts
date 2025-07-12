@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { env } from "bun";
 import {
 	ActionRowBuilder,
@@ -5,7 +6,6 @@ import {
 	ButtonStyle,
 	Events,
 } from "discord.js";
-import { join } from "node:path";
 import numeral from "numeral";
 import { upSince } from "../..";
 import type ICommand from "../../handler/interfaces/ICommand";
