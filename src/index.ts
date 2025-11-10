@@ -70,9 +70,10 @@ const kazagumo = new Kazagumo(
 );
 
 const prisma = new PrismaClient();
-export const redis = new Redis({
-	host: process.env.REDIS_URL ?? (process.env.NODE_ENV === "production" ? "redis" : "localhost"),
-});
+export const redis = new Redis(
+	process.env.REDIS_URL ??
+	(process.env.NODE_ENV === "production" ? "redis" : "localhost"),
+);
 
 const commandHandler = new CommandHandler({
 	client,
